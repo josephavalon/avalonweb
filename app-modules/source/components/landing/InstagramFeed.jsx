@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight, Instagram, Pause, Play } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
@@ -74,6 +74,7 @@ function RibbonTile({ post }) {
         alt={post.caption}
         loading="lazy"
         decoding="async"
+        draggable="false"
         className="absolute inset-0 h-full w-full object-cover"
       />
       <span
@@ -88,10 +89,12 @@ function RibbonTile({ post }) {
 
 export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS, handleUrl = IG_HANDLE_URL }) {
   const [paused, setPaused] = useState(false);
-  // Marquee ignores prefers-reduced-motion — this ribbon is a decorative
-  // element where motion is the point; iOS "Reduce Motion" would otherwise
-  // freeze the strip entirely on many users' phones.
-  const reduce = false;
+  const [hoverPaused, setHoverPaused] = useState(false);
+  const [mobileDragging, setMobileDragging] = useState(false);
+  const [mobileHovered, setMobileHovered] = useState(false);
+  const mobileScrollerRef = useRef(null);
+  const resumeTimerRef = useRef(null);
+  const reduce = useReducedMotion();
   const posts = useLiveInstagramFeed(initialPosts);
 
   // Cap source at 30 (most-recent). Marquee doubles the strip for a seamless
@@ -101,7 +104,55 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
   const source = Array.from({ length: IG_LIMIT }, (_, i) => seed[i % seed.length]).slice(0, IG_LIMIT);
   const loop = [...source, ...source];
 
-  const isRunning = !paused && !reduce;
+  const isRunning = !paused && !hoverPaused && !reduce;
+  const mobileInteractionPaused = mobileDragging || mobileHovered;
+
+  useEffect(() => {
+    if (reduce || mobileInteractionPaused || typeof window === 'undefined') return undefined;
+
+    const scroller = mobileScrollerRef.current;
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    if (!scroller || !mobileQuery.matches) return undefined;
+
+    let frameId;
+    let previousTime = window.performance.now();
+    let position = scroller.scrollLeft;
+    const pixelsPerSecond = 14;
+
+    const move = (time) => {
+      // Clamp elapsed time so returning to a backgrounded tab never causes a jump.
+      const elapsed = Math.min(time - previousTime, 64);
+      previousTime = time;
+      const loopWidth = scroller.scrollWidth / 2;
+
+      if (loopWidth > 0) {
+        // Keep the fractional position in JavaScript. Some mobile engines
+        // round scrollLeft assignments to whole pixels; adding ~0.23px to the
+        // DOM value every frame would otherwise round almost all movement away.
+        position += (pixelsPerSecond * elapsed) / 1000;
+        if (position >= loopWidth) position -= loopWidth;
+        scroller.scrollLeft = position;
+      }
+
+      frameId = window.requestAnimationFrame(move);
+    };
+
+    frameId = window.requestAnimationFrame(move);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [mobileInteractionPaused, reduce]);
+
+  useEffect(() => () => window.clearTimeout(resumeTimerRef.current), []);
+
+  const pauseForDrag = () => {
+    window.clearTimeout(resumeTimerRef.current);
+    setMobileDragging(true);
+  };
+
+  const resumeAfterDrag = () => {
+    window.clearTimeout(resumeTimerRef.current);
+    // Let native touch momentum finish before the automatic movement resumes.
+    resumeTimerRef.current = window.setTimeout(() => setMobileDragging(false), 1000);
+  };
 
   return (
     <section id="instagram" className="pt-10 pb-10 md:pt-16 md:pb-16 scroll-mt-20 overflow-hidden">
@@ -143,7 +194,11 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
           - Extra layer-promoting wrapper (translateZ(0) + will-change) so the
             animation lives on its own compositor layer.
           - Edge fades are gradient overlays outside the animated pipeline. */}
-      <div className="av-ig-marquee relative w-full overflow-hidden">
+      <div
+        className="av-ig-marquee relative hidden w-full overflow-hidden md:block"
+        onMouseEnter={() => setHoverPaused(true)}
+        onMouseLeave={() => setHoverPaused(false)}
+      >
         <div
           className="av-ig-strip-wrap"
           style={{ transform: 'translateZ(0)', willChange: 'transform', WebkitTransform: 'translateZ(0)' }}
@@ -180,6 +235,47 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             0%   { -webkit-transform: translate3d(0, 0, 0); }
             100% { -webkit-transform: translate3d(-50%, 0, 0); }
           }
+        `}</style>
+      </div>
+
+      {/* Mobile uses a native scroll surface so the ribbon can be swiped. The
+          two identical groups make the slow automatic scroll loop seamlessly. */}
+      <div className="relative w-full md:hidden">
+        <div
+          ref={mobileScrollerRef}
+          className="av-ig-mobile-scroller overflow-x-auto"
+          aria-label="Avalon Vitality Instagram posts"
+          onPointerDown={pauseForDrag}
+          onPointerUp={resumeAfterDrag}
+          onPointerCancel={resumeAfterDrag}
+          onPointerEnter={(event) => {
+            if (event.pointerType === 'mouse') setMobileHovered(true);
+          }}
+          onPointerLeave={(event) => {
+            if (event.pointerType === 'mouse') setMobileHovered(false);
+          }}
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorX: 'contain',
+            scrollbarWidth: 'none',
+          }}
+        >
+          <div className="flex w-max select-none">
+            {[0, 1].map((group) => (
+              <div key={group} className="flex gap-2 pr-2" aria-hidden={group === 1 ? 'true' : undefined}>
+                {source.map((post, i) => (
+                  <RibbonTile key={`${group}-${post.id}-${i}`} post={post} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black to-transparent" />
+
+        <style>{`
+          .av-ig-mobile-scroller::-webkit-scrollbar { display: none; }
         `}</style>
       </div>
 

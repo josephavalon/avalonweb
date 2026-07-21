@@ -120,7 +120,7 @@ const INTEGRATIONS = [
     id: 'int5',
     service: 'Dispatch',
     badgeStatus: 'Manual',
-    description: 'Avalon owns nurse assignment, broadcasts, Y/N replies, route handoff, and client ETA messaging.',
+    description: 'Avalon owns nurse assignment, broadcasts, Y/N replies, route handoff, and client messaging.',
   },
   {
     id: 'int6',

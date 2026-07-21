@@ -10,6 +10,7 @@ import { seedDemoState } from './platformOps';
 import { isDemoAuthAllowed, demoAuthLockReason, PRE_API_SECURITY_MODE } from './preApiSecurity';
 import { supabase, hasSupabase } from './supabase';
 import { authProviderConfig } from './authProviderConfig';
+import { clearPortalIntent, readPortalIntent, rememberPortalIntent, resolvePortalSession } from './portalAccess';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
@@ -63,6 +64,8 @@ const DEMO_USERS = {
   'NURSE':        { role: 'nurse',     name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
   'NURSE001':     { role: 'nurse',     name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
   'NURSE0001':    { role: 'nurse',     name: 'Stephanie R.',      redirect: '/provider/shift',    status: 'active', canonical: 'NURSE001' },
+  'ORGANIZER':    { role: 'promoter',  name: 'Event Organizer',   redirect: '/organizer',         status: 'active', canonical: 'ORGANIZER001' },
+  'ORGANIZER001': { role: 'promoter',  name: 'Event Organizer',   redirect: '/organizer',         status: 'active', canonical: 'ORGANIZER001' },
 };
 // Beta/demo passcode. It must be supplied per environment and is still gated to
 // beta/local hosts by isDemoAuthAllowed().
@@ -74,6 +77,7 @@ const ROLE_REDIRECT = {
   staff: '/admin',
   client: '/members/dashboard',
   nurse: '/provider/shift',
+  promoter: '/organizer',
 };
 function redirectForRole(role) {
   return ROLE_REDIRECT[role] || '/members/dashboard';
@@ -159,21 +163,44 @@ function createSessionId() {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-// Build the app's user object from a Supabase session user. Role comes from
-// public.profiles.role (default 'client'); admins are set there directly.
-async function buildSupabaseUser(authUser) {
-  if (!authUser) return null;
-  let role = 'client';
-  let mustChangePassword = false;
-  try {
-    const { data } = await supabase
+const PROFILE_READ_RETRY_MS = [0, 140, 420];
+
+async function loadSupabaseProfile(authUser) {
+  let lastError = null;
+  for (const delay of PROFILE_READ_RETRY_MS) {
+    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+    const { data, error } = await supabase
       .from('profiles')
-      .select('role, must_change_password')
+      .select('role, status, must_change_password')
       .eq('id', authUser.id)
       .maybeSingle();
-    if (data?.role) role = data.role;
-    if (data?.must_change_password) mustChangePassword = true;
-  } catch { /* RLS/no row → default to client */ }
+    if (!error) return data || null;
+    lastError = error;
+  }
+  const unavailable = new Error('Account access could not be loaded.');
+  unavailable.code = 'profile_unavailable';
+  unavailable.cause = lastError;
+  throw unavailable;
+}
+
+// Build the app's user object from a Supabase session user. A missing profile
+// remains a new client, but a failed read never fabricates a client role for an
+// Admin; transient reads retry and then fail closed.
+async function buildSupabaseUser(authUser) {
+  if (!authUser) return null;
+  let canonicalRole = 'client';
+  let status = 'active';
+  let mustChangePassword = false;
+  const data = await loadSupabaseProfile(authUser);
+  if (data?.role) canonicalRole = data.role;
+  if (data?.status) status = data.status;
+  if (data?.must_change_password) mustChangePassword = true;
+  if (!['active', 'approved'].includes(String(status).toLowerCase())) return null;
+  const portalSession = resolvePortalSession({
+    canonicalRole,
+    authUser,
+    requestedPortal: readPortalIntent(authUser),
+  });
   const meta = authUser.user_metadata || {};
   const name = meta.name || meta.full_name || authUser.email || authUser.phone || 'Member';
   return {
@@ -181,9 +208,12 @@ async function buildSupabaseUser(authUser) {
     email: authUser.email || '',
     phone: authUser.phone || '',
     name,
-    role,
+    role: portalSession.role,
+    primaryRole: canonicalRole,
+    activePortal: portalSession.activePortal,
+    portalAccess: portalSession.portalAccess,
     mustChangePassword,
-    redirect: redirectForRole(role),
+    redirect: portalSession.redirect,
     authMode: 'supabase',
     mfa: supabaseMfaState(authUser),
     lastActiveAt: new Date().toISOString(),
@@ -210,6 +240,7 @@ export function AuthStoreProvider({ children }) {
       return u;
     } catch {
       setUser(null);
+      setError('Could not load account access. Please try signing in again.');
       return null;
     } finally {
       setLoading(false);
@@ -234,8 +265,17 @@ export function AuthStoreProvider({ children }) {
       // login button spins forever after sign-in). setTimeout(0) lets the lock
       // release first. supabase-js documents this exact pitfall.
       setTimeout(async () => {
-        const u = await buildSupabaseUser(session?.user || null);
-        if (active) { setUser(u); setLoading(false); clearTimeout(loadingSafety); }
+        try {
+          const u = await buildSupabaseUser(session?.user || null);
+          if (active) { setUser(u); setLoading(false); clearTimeout(loadingSafety); }
+        } catch {
+          if (active) {
+            setUser(null);
+            setError('Could not load account access. Please try signing in again.');
+            setLoading(false);
+            clearTimeout(loadingSafety);
+          }
+        }
       }, 0);
     });
     return () => { active = false; clearTimeout(loadingSafety); listener?.subscription?.unsubscribe?.(); };
@@ -347,10 +387,11 @@ export function AuthStoreProvider({ children }) {
   // Email + password (Supabase). Used by staff who set a password via the
   // invite-accept flow; customers stay passwordless (magic link). On success
   // onAuthStateChange sets the session.
-  const signInWithPassword = useCallback(async ({ email, password } = {}) => {
+  const signInWithPassword = useCallback(async ({ email, password, portal } = {}) => {
     if (!hasSupabase) return { ok: false, error: 'Password sign-in is not configured yet.' };
     setLoading(true); setError(null);
     try {
+      rememberPortalIntent(portal, email);
       const { error: err } = await supabase.auth.signInWithPassword({
         email: String(email || '').trim(),
         password: String(password || ''),
@@ -413,8 +454,13 @@ export function AuthStoreProvider({ children }) {
     try {
       const { data, error: err } = await supabase.auth.updateUser({ password: String(newPassword || '') });
       if (err) throw err;
-      // Clear the must-change flag now that they've rotated it.
-      try { await supabase.from('profiles').update({ must_change_password: false }).eq('id', data?.user?.id); } catch { /* non-fatal */ }
+      // Clear the must-change flag through the narrow security-definer RPC.
+      // Fall back only for environments where migration 041 is not applied yet;
+      // once the authority guard exists, the broad update is rejected.
+      try {
+        const { error: clearError } = await supabase.rpc('clear_own_password_rotation_flag');
+        if (clearError) await supabase.from('profiles').update({ must_change_password: false }).eq('id', data?.user?.id);
+      } catch { /* non-fatal — the password itself has already changed */ }
       const u = await buildSupabaseUser(data?.user || null);
       if (u) setUser(u);
       return { ok: true };
@@ -514,7 +560,7 @@ export function AuthStoreProvider({ children }) {
 
   // Back-compat entry point: Supabase mode routes an email to a magic link
   // (passwordless); demo mode runs the original roster check.
-  const signIn = useCallback(async ({ email, password } = {}) => {
+  const signIn = useCallback(async ({ email, password, portal } = {}) => {
     // Demo-roster accounts (CLIENT001 / ADMIN001 …) stay usable on beta/local even
     // when Supabase is configured — a simulation backdoor gated by isDemoAuthAllowed().
     // Anything that isn't a known roster ID falls through to Supabase magic-link.
@@ -537,7 +583,7 @@ export function AuthStoreProvider({ children }) {
     const isDemoAccount = isDemoAuthAllowed() && matchesDemoRoster;
     // Staff with a password sign in directly; passwordless customers (no
     // password supplied) get a magic link as before.
-    if (hasSupabase && !isDemoAccount && String(password || '').length > 0) return signInWithPassword({ email, password });
+    if (hasSupabase && !isDemoAccount && String(password || '').length > 0) return signInWithPassword({ email, password, portal });
     if (hasSupabase && !isDemoAccount) return signInWithEmail(email);
 
     setLoading(true); setError(null);
@@ -577,6 +623,12 @@ export function AuthStoreProvider({ children }) {
         mfa: demoMfaState(),
         securityWall: 'pre-api-hard-wall',
       };
+      const portalSession = resolvePortalSession({ canonicalRole: profile.role, requestedPortal: portal });
+      sessionUser.primaryRole = profile.role;
+      sessionUser.activePortal = portalSession.activePortal;
+      sessionUser.portalAccess = portalSession.portalAccess;
+      sessionUser.role = portalSession.role;
+      sessionUser.redirect = portalSession.redirect;
       seedDemoState(profile.canonical || usernameKey);
       setUser(sessionUser);
       writeSession(sessionUser);
@@ -613,6 +665,7 @@ export function AuthStoreProvider({ children }) {
     // can stall on the navigator.locks auth lock; awaiting it before clearing left
     // the UI hung on "Signing out…" forever. Fire it best-effort in the background.
     setUser(null);
+    clearPortalIntent();
     if (!hasSupabase) writeSession(null);
     clearLastActivity();
     clearAllAvLocal();

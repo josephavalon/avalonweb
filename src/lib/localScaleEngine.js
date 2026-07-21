@@ -65,10 +65,10 @@ export const SCALE_SOP_LIBRARY = [
     proof: ['Y/N loop', 'Nurse fit', 'Value shown', 'Accepted nurse record'],
   },
   {
-    id: 'eta-route',
-    label: 'ETA + Route',
+    id: 'route-handoff',
+    label: 'Route Handoff',
     owner: 'Nurse',
-    proof: ['Nurse final ETA', 'Maps handoff', 'Client text hold', 'Route owner'],
+    proof: ['Maps handoff', 'Client contact', 'Accepted nurse', 'Route owner'],
   },
   {
     id: 'kit-stock',

@@ -297,7 +297,7 @@ function normalizeVisit(raw = {}, index = 0) {
     status: text(raw.status, 'New Request'),
     service: text(raw.service || raw.therapy || raw.protocol, 'Protocol pending'),
     nurse: text(raw.nurse || raw.assignedNurse, 'Unassigned'),
-    eta: text(raw.eta || raw.routeEta, 'Nurse sets final ETA'),
+    eta: text(raw.eta || raw.routeEta, 'Route timing pending'),
     closeoutStatus: text(raw.closeoutStatus, 'Open'),
     clinicalMode: 'placeholder-only',
   }, raw.source || 'visit-seed');
@@ -628,10 +628,10 @@ export function buildCrossPortalSyncSnapshot(seed = {}) {
   const bookings = snapshot.entities.filter((entity) => entity.type === 'booking');
   const visits = snapshot.entities.filter((entity) => entity.type === 'visit');
   const assignments = bookings.filter((entity) => entity.data.nurse && entity.data.nurse !== 'Unassigned').length;
-  const etaReady = visits.filter((entity) => entity.data.eta && entity.data.eta !== 'Nurse sets final ETA').length;
+  const routeReady = visits.filter((entity) => entity.data.status && !/pending|new request/i.test(entity.data.status)).length;
   const channels = [
     { id: 'admin', label: 'Admin Command', status: 'Live', proof: `${snapshot.entityCount} entities visible` },
-    { id: 'client', label: 'Client Portal', status: assignments || etaReady ? 'Synced' : 'Ready', proof: 'Booking, visit, ETA, message state' },
+    { id: 'client', label: 'Client Portal', status: assignments || routeReady ? 'Synced' : 'Ready', proof: 'Booking, visit, route, message state' },
     { id: 'nurse', label: 'Nurse Portal', status: assignments ? 'Synced' : 'Ready', proof: 'Mission, kit, route, closeout state' },
     { id: 'inventory', label: 'Inventory', status: snapshot.entities.some((entity) => entity.type === 'inventoryTransaction') ? 'Synced' : 'Ready', proof: 'Projected and actual deductions' },
     { id: 'audit', label: 'Audit', status: events.length || ledgerEvents.length ? 'Recording' : 'Ready', proof: `${events.length + ledgerEvents.length} local sync events` },
@@ -654,7 +654,7 @@ export function buildCrossPortalSyncSnapshot(seed = {}) {
     events: eventRows.slice(0, 12),
     eventCount: eventRows.length,
     assignments,
-    etaReady,
+    routeReady,
     channels,
   };
 }

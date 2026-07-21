@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   const delivery = ['email', 'sms', 'both'].includes(body.delivery) ? body.delivery : 'email';
 
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'A valid email is required.' });
-  if (!isValidTier(role)) return res.status(400).json({ error: "Role must be 'staff' or 'admin'." });
+  if (!isValidTier(role) || !['staff', 'admin'].includes(role)) return res.status(400).json({ error: "Role must be 'staff' or 'admin'." });
   if ((delivery === 'sms' || delivery === 'both') && !phone) {
     return res.status(400).json({ error: 'A phone number is required for SMS delivery.' });
   }

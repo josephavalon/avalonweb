@@ -6,6 +6,68 @@
 
 export const FALLBACK_EVENTS = [
   {
+    slug: 'after-hours-recovery-club',
+    name: 'After Hours Recovery Club',
+    venue: 'Fort Mason, San Francisco',
+    startsAt: '2026-08-22T19:00:00-07:00',
+    endsAt: '2026-08-23T01:00:00-07:00',
+    priceFromCents: 6500,
+    status: 'presale',
+    capacity: 220,
+    attendeeCount: 148,
+    hostName: 'North Coast Social',
+    cohosts: ['Avalon Vitality'],
+    descriptionBlocks: {
+      vibe: 'Late-night recovery, built into the room.',
+      description:
+        'A private after-hours club with music, hospitality, and a dedicated recovery lounge. Built for the last hour of a great night.',
+      included: [
+        'Entry to After Hours Recovery Club',
+        'Recovery lounge access',
+        'Non-alcoholic drinks and hospitality',
+        'Live music and late-night programming',
+      ],
+      goodToKnow: [
+        'Exact arrival details are shared after purchase',
+        'Guests must be 21+ with a valid photo ID',
+      ],
+    },
+    tiers: [
+      {
+        id: 'demo-ticket-1',
+        name: 'Early Entry',
+        description: 'Event entry before 9 PM.',
+        priceCents: 6500,
+        experienceOnly: true,
+        remaining: 12,
+        presaleOpensAt: '2026-07-20T09:00:00-07:00',
+        publicOpensAt: '2026-07-24T09:00:00-07:00',
+      },
+      {
+        id: 'demo-ticket-2',
+        name: 'All Night Access',
+        description: 'General event access and hospitality.',
+        priceCents: 9500,
+        experienceOnly: true,
+        remaining: 60,
+        presaleOpensAt: '2026-07-20T09:00:00-07:00',
+        publicOpensAt: '2026-07-24T09:00:00-07:00',
+      },
+      {
+        id: 'demo-clinical-1',
+        name: 'Recovery IV',
+        description: 'Optional clinician-reviewed hydration service from Avalon.',
+        priceCents: 22500,
+        experienceOnly: false,
+        serviceId: 'recovery-iv',
+        remaining: 24,
+      },
+    ],
+    services: [
+      { id: 'recovery-iv', name: 'Recovery IV', serviceClass: 'flow', requiresGfe: true, backOnFloorMinutes: 45 },
+    ],
+  },
+  {
     slug: 'vital-ice-recovery-house',
     name: 'Vital Ice Recovery House',
     venue: 'Pacific Heights, San Francisco',

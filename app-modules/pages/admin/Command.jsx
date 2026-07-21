@@ -2467,10 +2467,10 @@ function ShiftMarketplacePanel({ requests, nurses, inventory, booking }) {
           <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.025] p-4">
             <p className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/45">Offer Layer</p>
             <h3 className="mt-3 font-heading text-4xl uppercase leading-none tracking-[0.03em] text-foreground">
-              Nurse Accepts. Nurse Sets ETA.
+              Nurse Accepts. Route Unlocks.
             </h3>
             <p className="mt-3 font-body text-[12px] leading-relaxed text-foreground/52">
-              Open visits become local Y/N shift offers with pay, city, time, acceptance locks, and ETA authority. SMS and payroll stay placeholder handoffs.
+              Open visits become local Y/N shift offers with pay, city, time, acceptance locks, and route handoff. SMS and payroll stay placeholder handoffs.
             </p>
           </div>
 
@@ -2547,7 +2547,7 @@ function ShiftMarketplacePanel({ requests, nurses, inventory, booking }) {
                   <div key={lock.id} className="rounded-xl border border-accent/15 bg-accent/[0.045] px-3 py-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/62">{lock.client}</p>
-                      <span className="shrink-0 font-body text-[8px] uppercase tracking-[0.10em] text-accent">{lock.etaOwner}</span>
+                      <span className="shrink-0 font-body text-[8px] uppercase tracking-[0.10em] text-accent">{lock.routeStatus}</span>
                     </div>
                     <p className="mt-1 truncate font-body text-[9px] text-foreground/45">{lock.confirmation}</p>
                   </div>
@@ -2585,7 +2585,6 @@ function ArrivalMissionPanel({ requests, nurses, inventory, booking }) {
   const metrics = [
     ['Visits', snapshot.metrics.visits],
     ['Accepted', snapshot.metrics.accepted],
-    ['ETA', snapshot.metrics.etaNeeded],
     ['Route', snapshot.metrics.routeReady],
     ['Texts', snapshot.metrics.clientTexts],
     ['Escalate', snapshot.metrics.escalations],
@@ -2593,7 +2592,6 @@ function ArrivalMissionPanel({ requests, nurses, inventory, booking }) {
   const stageClass = {
     Hold: 'border-red-400/25 bg-red-400/[0.06] text-red-300',
     'Await Accept': 'border-yellow-400/25 bg-yellow-400/[0.07] text-yellow-300',
-    'ETA Needed': 'border-yellow-400/25 bg-yellow-400/[0.07] text-yellow-300',
     'Route Needs Address': 'border-red-400/25 bg-red-400/[0.06] text-red-300',
     'Client Text Ready': 'border-accent/20 bg-accent/[0.06] text-accent',
   };
@@ -2603,17 +2601,17 @@ function ArrivalMissionPanel({ requests, nurses, inventory, booking }) {
       title="Arrival Command"
       icon={Navigation}
       meta={`${snapshot.metrics.routeReady} routes`}
-      defaultOpen={snapshot.metrics.etaNeeded > 0 || snapshot.metrics.escalations > 0}
+      defaultOpen={snapshot.metrics.escalations > 0}
     >
       <div className="grid gap-3 xl:grid-cols-[0.72fr_1.28fr]">
         <div className="space-y-3">
           <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.025] p-4">
             <p className="font-body text-[9px] uppercase tracking-[0.22em] text-foreground/45">Route Layer</p>
             <h3 className="mt-3 font-heading text-4xl uppercase leading-none tracking-[0.03em] text-foreground">
-              No ETA. No Client Text.
+              Accept. Route. Notify.
             </h3>
             <p className="mt-3 font-body text-[12px] leading-relaxed text-foreground/52">
-              Accepted shifts unlock nurse route, map handoff, client ETA copy, arrival actions, and Acuity closeout placeholders.
+              Accepted shifts unlock nurse route, map handoff, a concise client update, arrival actions, and Acuity closeout placeholders.
             </p>
           </div>
 
@@ -2648,7 +2646,7 @@ function ArrivalMissionPanel({ requests, nurses, inventory, booking }) {
                     <div className="min-w-0">
                       <p className="truncate font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/62">{mission.client}</p>
                       <p className="mt-1 truncate font-body text-[9px] text-foreground/45">
-                        {mission.nurseName} - {mission.eta} - {mission.city}
+                        {mission.nurseName} - {mission.city}
                       </p>
                     </div>
                     <span className={`shrink-0 rounded-full border px-2 py-0.5 font-body text-[8px] uppercase tracking-[0.12em] ${stageClass[mission.stage] || stageClass['Await Accept']}`}>
@@ -2686,7 +2684,7 @@ function ArrivalMissionPanel({ requests, nurses, inventory, booking }) {
                   </div>
                 )) : (
                   <p className="rounded-xl border border-foreground/[0.06] bg-background/[0.22] px-3 py-3 font-body text-[10px] uppercase tracking-[0.12em] text-foreground/45">
-                    No ETA text ready
+                    No route update ready
                   </p>
                 )}
               </div>
@@ -3217,7 +3215,7 @@ function LocalExecutionEnginePanel({ requests, nurses, inventory, booking }) {
               Local Execution
             </h3>
             <p className="mt-3 font-body text-[12px] leading-relaxed text-foreground/52">
-              Booking state, nurse acceptance, annual GFE, ETA authority, inventory reservation, closeout, and launch gates run locally before APIs arrive.
+              Booking state, nurse acceptance, annual GFE, route handoff, inventory reservation, closeout, and launch gates run locally before APIs arrive.
             </p>
             <button
               type="button"
@@ -3270,7 +3268,7 @@ function LocalExecutionEnginePanel({ requests, nurses, inventory, booking }) {
                       <span className="shrink-0 font-body text-[8px] uppercase tracking-[0.10em] opacity-80">{row.stage}</span>
                     </div>
                     <p className="mt-1 truncate font-body text-[9px] text-foreground/42">
-                      {row.service} - {row.nurse} - {row.etaAuthority}
+                      {row.service} - {row.nurse} - {row.routeStatus}
                     </p>
                     <p className="mt-1 truncate font-body text-[9px] text-foreground/45">{row.nextAction}</p>
                   </div>
@@ -4524,7 +4522,7 @@ function EnterpriseSpinePanel({ requests, nurses, inventory, booking }) {
             <p className="font-body text-[9px] uppercase tracking-[0.22em] text-accent">Mission Packet</p>
             <p className="mt-2 font-heading text-2xl uppercase leading-none text-foreground">{snapshot.missionPacket.client}</p>
             <p className="mt-2 font-body text-[11px] leading-relaxed text-foreground/48">
-              {snapshot.missionPacket.route.etaRule}
+              {snapshot.missionPacket.route.routeRule}
             </p>
             <div className="mt-3 grid gap-1.5">
               {[

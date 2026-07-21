@@ -50,6 +50,9 @@ export default async function handler(req, res) {
     return res.status(404).json(INVALID);
   }
   if (!invite) return res.status(404).json(INVALID);
+  if (invite.invited_role === 'promoter' && !invite.event_container_id) {
+    return res.status(409).json({ error: 'This organizer invite is missing its approved event.', code: 'event_assignment_missing' });
+  }
 
   try {
     // Create the auth user, or upgrade an existing account (e.g. a former client
@@ -109,6 +112,16 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' });
     if (profErr) throw profErr;
+
+    if (invite.invited_role === 'promoter') {
+      const { error: assignmentErr } = await db.from('event_promoters').upsert({
+        tenant_id: invite.tenant_id,
+        profile_id: userId,
+        container_id: invite.event_container_id,
+        created_by: invite.invited_by || null,
+      }, { onConflict: 'profile_id,container_id' });
+      if (assignmentErr) throw assignmentErr;
+    }
 
     const { error: invErr } = await db.from('invitations')
       .update({ status: 'accepted', accepted_at: new Date().toISOString(), updated_at: new Date().toISOString() })

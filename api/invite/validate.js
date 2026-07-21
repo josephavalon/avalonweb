@@ -44,7 +44,7 @@ async function bumpFailedAttempts(db, invitationIds) {
 export async function resolveInvite(db, { token, email, code, role }) {
   if (token) {
     const { data, error } = await db.from('invitations')
-      .select('id, tenant_id, email, full_name, invited_role, status, expires_at, token_hash, locked_at, failed_attempts')
+      .select('id, tenant_id, email, full_name, invited_role, invited_by, event_container_id, status, expires_at, token_hash, locked_at, failed_attempts')
       .eq('token_hash', hashToken(token)).maybeSingle();
     if (error) throw error;
     if (!data || data.locked_at || !isInviteLive(data)) return null;
@@ -53,7 +53,7 @@ export async function resolveInvite(db, { token, email, code, role }) {
   if (email && code) {
     const normEmail = String(email).trim().toLowerCase();
     let q = db.from('invitations')
-      .select('id, tenant_id, email, full_name, invited_role, status, expires_at, code_hash, locked_at, failed_attempts')
+      .select('id, tenant_id, email, full_name, invited_role, invited_by, event_container_id, status, expires_at, code_hash, locked_at, failed_attempts')
       .eq('email', normEmail).eq('status', 'pending').is('locked_at', null)
       // Newest invite wins — fixes the arbitrary-row race when multiple
       // pending invites coexist for the same (email, role).

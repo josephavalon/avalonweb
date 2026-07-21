@@ -38,7 +38,7 @@ function skippedEmailError(message, reason) {
   return Object.assign(new Error(message), { code: 'email_delivery_skipped', reason });
 }
 
-const ROLE_LABEL = { admin: 'Full Admin', staff: 'Staff (Customer · Scheduling · Billing)' };
+const ROLE_LABEL = { admin: 'Full Admin', staff: 'Staff (Customer · Scheduling · Billing)', promoter: 'Event Organizer' };
 
 function shell(innerHtml) {
   return `
@@ -65,8 +65,9 @@ export async function sendInviteEmail({ to, inviteUrl, code, role, inviterName }
   const roleLabel = ROLE_LABEL[role] || role || 'team member';
   const by = inviterName ? `${escapeHtml(inviterName)} invited you` : 'You\'ve been invited';
   const resend = new Resend(process.env.RESEND_API_KEY);
+  const destination = role === 'promoter' ? 'Event Hub' : 'admin console';
   const html = shell(`
-    <p style="font-size:15px;">${by} to the Avalon Vitality admin console as <strong>${escapeHtml(roleLabel)}</strong>.</p>
+    <p style="font-size:15px;">${by} to the Avalon Vitality ${destination} as <strong>${escapeHtml(roleLabel)}</strong>.</p>
     ${inviteUrl ? `<p style="margin:24px 0;"><a href="${escapeHtml(inviteUrl)}" style="background:#0a0a0a;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-size:14px;display:inline-block;">Accept invite &amp; set password</a></p>` : ''}
     ${code ? `<p style="font-size:14px;">Or finish from any device: go to the accept-invite page and enter this code with your email:</p>
     <p style="font-size:26px;font-weight:700;letter-spacing:0.18em;margin:8px 0 0;">${escapeHtml(code)}</p>` : ''}
@@ -76,7 +77,7 @@ export async function sendInviteEmail({ to, inviteUrl, code, role, inviterName }
   const result = await resend.emails.send({
     from: fromAddress(),
     to: recipient,
-    subject: 'Your Avalon Vitality admin invite',
+    subject: role === 'promoter' ? 'Your Avalon Event Hub invite' : 'Your Avalon Vitality admin invite',
     html,
   });
   if (result?.error) throw Object.assign(new Error(result.error.message || 'Invite email failed'), { body: result.error });

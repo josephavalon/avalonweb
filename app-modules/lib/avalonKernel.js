@@ -41,7 +41,7 @@ export const KERNEL_BUILD_ITEMS = [
   ['protocol-gfe-map', 'Protocol-to-GFE map'],
   ['nurse-eligibility', 'Nurse eligibility matching'],
   ['kit-readiness', 'Kit readiness score'],
-  ['nurse-eta', 'Nurse final ETA flow'],
+  ['route-handoff', 'Nurse route handoff'],
   ['no-acceptance', 'No-acceptance escalation'],
   ['late-risk', 'Late-risk detection'],
   ['thin-chart', 'Thin chart'],
@@ -351,7 +351,6 @@ export function buildKernelExceptions({ booking = readLastBooking(), nurses = []
   const kit = buildKernelKitReadiness({ booking });
   const status = booking?.status || 'Draft';
   const nurseName = booking?.nurse || '';
-  const eta = readLocal(`routeEta.${booking?.id || booking?.reference || 'latest'}`, null);
   const chart = readThinChart(booking?.id || booking?.reference || 'latest');
   const broadcasts = readAssignmentBroadcasts();
 
@@ -364,14 +363,11 @@ export function buildKernelExceptions({ booking = readLastBooking(), nurses = []
   if (!nurseName || nurseName === 'Unassigned') {
     exceptions.push({ id: 'nurse-open', severity: 'High', label: 'No nurse accepted', owner: 'Dispatch', action: 'Broadcast shift or assign manually.' });
   }
-  if (nurseName && nurseName !== 'Unassigned' && DISPATCH_STATUSES.includes(status) && !eta) {
-    exceptions.push({ id: 'eta-missing', severity: 'High', label: 'Nurse ETA missing', owner: 'Nurse', action: 'Nurse sets final ETA before client route text.' });
-  }
   if (broadcasts.some((item) => item.status !== 'Assigned')) {
     exceptions.push({ id: 'acceptance-open', severity: 'Medium', label: 'Open shift acceptance', owner: 'Dispatch', action: 'Escalate if no Y/N reply.' });
   }
   if (isLateRisk(booking)) {
-    exceptions.push({ id: 'late-risk', severity: 'High', label: 'Late-risk visit', owner: 'Dispatch', action: 'Confirm ETA, traffic, and client text.' });
+    exceptions.push({ id: 'late-risk', severity: 'High', label: 'Late-risk visit', owner: 'Dispatch', action: 'Confirm route status, traffic, and client text.' });
   }
   if (status === 'Completed' && (!chart || chart.status !== CHART_LOCKED_STATUS)) {
     exceptions.push({ id: 'chart-open', severity: 'High', label: 'Completed visit needs locked chart', owner: 'Nurse', action: 'Save thin chart, lock, then add addendum only.' });
@@ -392,25 +388,6 @@ export function isLateRisk(booking = {}) {
   if (!Number.isFinite(time)) return false;
   const minutes = (time - Date.now()) / 60000;
   return minutes > 0 && minutes <= 90 && (!booking.nurse || booking.nurse === 'Unassigned' || !booking.eta);
-}
-
-export function setKernelNurseEta(visitId = 'latest', eta = '', actor = 'Nurse') {
-  const record = { visitId, eta, finalSay: true, actor, updatedAt: nowIso() };
-  writeLocal(`routeEta.${visitId}`, record);
-  upsertRepositoryEntity('visit', {
-    id: visitId,
-    client: 'Client visible after assignment',
-    status: 'En Route',
-    eta,
-  }, actor);
-  queueCrossPortalEvent({
-    type: 'nurse.eta_set',
-    visitId,
-    payload: { visitId, eta, finalSay: true, clientVisible: true, nurseVisible: true },
-    actor,
-  });
-  emitKernelEvent('nurse.eta_set', record, actor);
-  return record;
 }
 
 export function readThinChart(visitId = 'latest') {
@@ -488,13 +465,11 @@ export function estimateRefundState({ booking = readLastBooking() } = {}) {
 export function buildClientTracker({ booking = readLastBooking() } = {}) {
   const gfe = resolveGfeRequirement(booking || {});
   const validation = validateTransition(booking || {}, booking?.status || 'Draft', { override: true });
-  const eta = readLocal(`routeEta.${booking?.id || booking?.reference || 'latest'}`, null);
   return {
     reference: booking?.reference || booking?.id || 'Pending',
     status: booking?.status || 'Draft',
-    next: gfe.required ? 'Clinical clearance' : booking?.nurse && booking.nurse !== 'Unassigned' ? 'Nurse ETA' : 'Nurse assignment',
+    next: gfe.required ? 'Clinical clearance' : booking?.nurse && booking.nurse !== 'Unassigned' ? 'Route handoff' : 'Nurse assignment',
     gfe,
-    eta,
     validation,
     visibleCopy: gfe.required
       ? 'Clinical clearance is required before your visit.'
@@ -550,7 +525,7 @@ export function buildFounderCommandIntelligence({ requests = [], nurses = [], bo
   const capacity = estimateLaunchCapacity({ requests, nurses });
   return {
     score: Math.max(0, 100 - exceptions.filter((item) => item.severity === 'Critical').length * 30 - exceptions.filter((item) => item.severity === 'High').length * 12),
-    thesis: 'Fast premium recovery depends on clearance, nurse acceptance, ETA, kit readiness, and locked chart proof.',
+    thesis: 'Fast premium recovery depends on clearance, nurse acceptance, route readiness, kit readiness, and locked chart proof.',
     topMove: exceptions[0]?.action || (capacity.remaining < 2 ? 'Add nurse coverage before adding demand.' : 'Push booked visits through dispatch.'),
     economics,
     capacity,
@@ -780,7 +755,7 @@ export function buildNurseRoutePacket({ booking = readLastBooking() } = {}) {
   return {
     client: booking?.contact?.name || [booking?.contact?.firstName, booking?.contact?.lastName].filter(Boolean).join(' ') || 'Client',
     address: booking?.address || 'Address pending',
-    eta: readLocal(`routeEta.${booking?.id || booking?.reference || 'latest'}`, null)?.eta || 'Nurse sets final ETA',
+    routeStatus: 'Open navigation after assignment',
     parking: booking?.parking || 'Ask client/concierge if unclear',
     maps: {
       apple: booking?.address ? `https://maps.apple.com/?q=${encodeURIComponent(booking.address)}` : '',
@@ -853,7 +828,7 @@ export function triageCommsInbox() {
 export function buildEscalationLadder({ booking = readLastBooking() } = {}) {
   const gfe = resolveGfeRequirement(booking || {});
   return [
-    { step: 1, owner: 'Nurse', trigger: 'ETA missing or late risk' },
+    { step: 1, owner: 'Nurse', trigger: 'Late risk or route issue' },
     { step: 2, owner: 'Dispatch', trigger: 'No Y/N acceptance' },
     { step: 3, owner: 'NP on call', trigger: gfe.required ? 'GFE required' : 'Clinical question' },
     { step: 4, owner: 'Founder', trigger: 'VIP, incident, refund, or reputational risk' },

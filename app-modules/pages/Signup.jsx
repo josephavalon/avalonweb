@@ -8,6 +8,7 @@ import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
 import { authProviderConfig, socialAuthEnabled } from '@/lib/authProviderConfig';
+import { newCustomerDestinationForUser } from '@/lib/portalAccess';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -133,7 +134,7 @@ export default function Signup() {
   }, []);
 
   useEffect(() => {
-    if (user) navigate(user.redirect || '/members/dashboard', { replace: true });
+    if (user) navigate(newCustomerDestinationForUser(user), { replace: true });
   }, [user, navigate]);
 
   const handleSubmit = async (event) => {

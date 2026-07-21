@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import AvalonMark from '@/components/AvalonMark';
 import {
   ArrowRight,
-  CalendarClock,
   Check,
   GraduationCap,
   LogOut,
@@ -19,7 +18,6 @@ import {
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { readLastBooking } from '@/lib/localOs';
-import { setKernelNurseEta } from '@/lib/avalonKernel';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import { readQuickPatients } from '@/lib/clientIntakeStore';
@@ -172,7 +170,6 @@ export default function NurseDashboard() {
                 triggerClassName="flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground transition-transform active:scale-[0.98]"
                 onCreated={(patient) => setLatestPatient(patient)}
               />
-              <Action onClick={() => setKernelNurseEta(visit.id, '20 min', nurseName)} icon={CalendarClock} label="Set ETA" />
               <Action href={`sms:+14159807708?body=${encodeURIComponent('Avalon nurse online.')}`} icon={MessageCircle} label="Text Ops" />
             </div>
             {latestPatient && (
@@ -204,7 +201,7 @@ export default function NurseDashboard() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 ['Pay', visit.value],
-                ['ETA', 'Nurse set'],
+                ['Route', 'Ready'],
                 ['Chart', 'External'],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-2xl p-3 text-center" style={{ background: CARD, border: `1px solid ${BORDER}` }}>

@@ -32,12 +32,63 @@ const SERVICES = [
   { key: 'Other', icon: MoreHorizontal },
 ];
 
+const UPCOMING_EVENTS = [
+  { name: 'Cannabis CE Night', date: '2026-08-28T19:00:00-07:00', status: 'Details coming soon' },
+];
+
+const PAST_EVENTS = [
+  { name: 'Maxim Superbowl Party', date: '2026-02-07T19:00:00-08:00', status: 'Event complete' },
+];
+
 const inputClass = 'min-h-[52px] w-full rounded-xl border border-foreground/14 bg-background/60 px-4 font-body text-sm font-semibold text-foreground outline-none transition placeholder:text-foreground/36 focus:border-foreground/34';
 const whiteBtn = { background: '#fff', color: '#000' };   // true white — the global bg-white neutralizer would repaint it dark
 
 function formatEventDate(iso) {
   if (!iso) return 'Date TBA';
   return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function formatListingDate(iso) {
+  if (!iso) return 'Date TBA';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function EventList({ title, events, past = false }) {
+  return (
+    <section aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-title`}>
+      <div className="flex items-end justify-between gap-4 border-b border-foreground/[0.12] pb-3">
+        <h2
+          id={`${title.toLowerCase().replace(/\s+/g, '-')}-title`}
+          className="font-heading text-4xl uppercase leading-none tracking-tight text-foreground md:text-5xl"
+        >
+          {title}
+        </h2>
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/38">
+          {events.length} event
+        </span>
+      </div>
+      <div className="mt-3 grid gap-3">
+        {events.map((event) => (
+          <article
+            key={`${event.name}-${event.date}`}
+            className={`av-treatment-card grid gap-4 rounded-[1.35rem] border px-5 py-5 sm:grid-cols-[1fr_auto] sm:items-end ${past ? 'opacity-58' : ''}`}
+          >
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-foreground/50">
+                {formatListingDate(event.date)}
+              </p>
+              <h3 className="mt-2 font-heading text-[2.25rem] uppercase leading-[0.9] tracking-tight text-foreground md:text-5xl">
+                {event.name}
+              </h3>
+            </div>
+            <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45 sm:pb-1">
+              {event.status}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function sectionLabel(text) {
@@ -304,6 +355,11 @@ export default function Events() {
           </div>
           <EventPlanner />
         </section>
+
+        <div className="mt-20 grid gap-16 md:mt-24">
+          <EventList title="Upcoming Events" events={UPCOMING_EVENTS} />
+          <EventList title="Past Events" events={PAST_EVENTS} past />
+        </div>
       </main>
 
       <Footer />

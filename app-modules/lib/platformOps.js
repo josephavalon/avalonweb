@@ -25,7 +25,7 @@ export const DEFAULT_PREP_CHECKLIST = [
   { key: 'hydrate', label: 'Drink 16 oz of water', done: false },
   { key: 'id', label: 'Have ID ready', done: false },
   { key: 'sleeves', label: 'Wear loose sleeves', done: false },
-  { key: 'phone', label: 'Keep phone nearby for RN ETA', done: false },
+  { key: 'phone', label: 'Keep phone nearby for route updates', done: false },
 ];
 
 export const ORDER_PRODUCT_FAMILIES = [
@@ -118,7 +118,7 @@ export const COMMUNICATION_CHANNELS = [
     label: 'Client Texts',
     audience: 'Clients',
     owner: 'Care team',
-    scope: 'GFE prompts, ETA, arrival, prep, receipt, follow-up, and rebooking.',
+    scope: 'GFE prompts, route updates, arrival, prep, receipt, follow-up, and rebooking.',
     channels: ['sms', 'in_app'],
   },
   {
@@ -156,7 +156,7 @@ export const BROADCAST_TEMPLATES = [
     audience: 'Client',
     priority: 'info',
     requiresAck: false,
-    body: 'Avalon: {{nurse}} accepted your visit. ETA and route updates will follow before arrival.',
+    body: 'Avalon: {{nurse}} accepted your visit. We will update you when your nurse is on the way.',
   },
   {
     id: 'gfe-required',
@@ -168,13 +168,13 @@ export const BROADCAST_TEMPLATES = [
     body: 'Avalon: please complete your GFE before the visit. Clearance stays valid for one year.',
   },
   {
-    id: 'eta',
-    label: 'ETA',
+    id: 'route-update',
+    label: 'On My Way',
     channelId: 'client-texts',
     audience: 'Client',
     priority: 'info',
     requiresAck: false,
-    body: 'Avalon: your RN is on the way. ETA {{eta}}. Please keep your phone nearby.',
+    body: 'Avalon: your RN is on the way. Please keep your phone nearby.',
   },
   {
     id: 'arrival',
@@ -296,7 +296,7 @@ export function assignLatestBooking(nurseName) {
     reason: `Assigned ${nurseName}`,
     patch: {
       nurse: nurseName,
-      nextStep: `${nurseName} assigned. Arrival ETA follows before the visit.`,
+      nextStep: `${nurseName} assigned. A route update follows before the visit.`,
     },
   });
   if (!result.ok) return result;
@@ -331,7 +331,7 @@ export function advanceLatestBooking(status, extra = {}) {
   const nextStep = {
     Confirmed: 'Clinical review complete. RN assignment next.',
     Cleared: 'Clinical review complete. RN assignment next.',
-    'Nurse Assigned': 'RN assigned. Arrival ETA follows before the visit.',
+    'Nurse Assigned': 'RN assigned. A route update follows before the visit.',
     'Ready for Visit': 'RN is preparing supplies.',
     'En Route': 'RN is on the way.',
     Arrived: 'RN has arrived.',
@@ -595,7 +595,7 @@ const DEFAULT_ANNOUNCEMENTS = [
   {
     id: 'ann-client-prep',
     title: 'Prep stays simple',
-    body: 'Complete intake, watch for GFE if needed, and keep your phone nearby for nurse ETA.',
+    body: 'Complete intake, watch for GFE if needed, and keep your phone nearby for route updates.',
     priority: 'info',
     audience: ['client'],
     status: 'published',
@@ -1190,7 +1190,7 @@ export function acceptShiftBroadcast(broadcastId, nurseName = 'Assigned nurse') 
       reason: 'Nurse accepted shift by Y reply',
       patch: {
         nurse: nurseName,
-        nextStep: `${nurseName} accepted. ETA and route are ready.`,
+        nextStep: `${nurseName} accepted. Route handoff is ready.`,
       },
     });
     if (result.ok) saveLastBooking(result.booking);
@@ -1214,7 +1214,7 @@ export function acceptShiftBroadcast(broadcastId, nurseName = 'Assigned nurse') 
       status: 'Queued',
       channels: ['sms'],
       relatedBroadcastId: `${broadcast.id}-nurse-confirmed`,
-      text: `Avalon: ${nurseName} accepted your visit. ETA and route updates will follow before arrival.`,
+      text: `Avalon: ${nurseName} accepted your visit. We will update you when your nurse is on the way.`,
     });
   }
   appendActivity(`Shift accepted by ${nurseName}`, { role: 'nurse', broadcastId, replyId: replies.id });
@@ -4055,7 +4055,7 @@ export function runDispatchControlSweep({
 
 export const FIELD_VISIT_STAGES = [
   { key: 'assigned', label: 'Assigned', owner: 'Dispatch' },
-  { key: 'eta', label: 'ETA', owner: 'Text' },
+  { key: 'update', label: 'Update', owner: 'Text' },
   { key: 'route', label: 'Route', owner: 'Maps' },
   { key: 'arrived', label: 'Arrived', owner: 'RN' },
   { key: 'start', label: 'Start', owner: 'RN' },
@@ -4066,7 +4066,7 @@ export const FIELD_VISIT_STAGES = [
 
 export const FIELD_VISIT_GUARDRAILS = [
   { label: 'Acuity is the chart', detail: 'Avalon tracks field state and proof only. Clinical record stays in Acuity.' },
-  { label: 'Text is operational', detail: 'ETA, arrival, and completion texts never include clinical notes, meds, vitals, or GFE content.' },
+  { label: 'Text is operational', detail: 'Route, arrival, and completion texts never include clinical notes, meds, vitals, or GFE content.' },
   { label: 'Closeout blocks completion', detail: 'Local completion requires an Acuity-ready closeout packet and RN attestation.' },
   { label: 'Incident lane', detail: 'Adverse-event notes are routed to clinical/admin review and excluded from CRM/finance payloads.' },
 ];
@@ -4139,7 +4139,6 @@ function normalizeFieldVisit(input = {}, clients = [], services = [], staff = []
       apple: appleMapsUrl(address),
       google: googleMapsUrl(address),
     },
-    eta: readFieldVisitStatus()[id]?.eta || '20 min',
     closeout,
     closeoutDone: Boolean(closeout?.status === 'Complete' || /entered in acuity/i.test(closeout?.acuityStatus || '')),
     textProof,
@@ -4183,14 +4182,14 @@ function readFieldTextProof(visitId) {
   ));
 }
 
-export function queueFieldVisitText(visit = {}, type = 'eta', options = {}) {
+export function queueFieldVisitText(visit = {}, type = 'route', options = {}) {
   const templates = {
-    eta: `Avalon: ${visit.nurseName || 'Your RN'} confirmed ETA ${options.eta || visit.eta || '20 min'}. Please keep your phone nearby.`,
+    route: `Avalon: ${visit.nurseName || 'Your RN'} is on the way. Please keep your phone nearby.`,
     arrival: `Avalon: ${visit.nurseName || 'your RN'} has arrived. Please have ID ready.`,
     start: 'Avalon: your visit has started.',
     complete: 'Avalon: your visit is complete. Hydrate and message us if you need anything.',
   };
-  const text = options.text || templates[type] || templates.eta;
+  const text = options.text || templates[type] || templates.route;
   const relatedBroadcastId = `field-${visit.id || visit.bookingId}-${type}`;
   const existing = readOpsMessages().find((message) => message.relatedBroadcastId === relatedBroadcastId);
   if (existing && !options.force) return existing;
@@ -4217,7 +4216,7 @@ function statusRanksRouteStep(status = '') {
   if (/completed|complete/.test(value)) return 4;
   if (/in progress|started|post_visit/.test(value)) return 3;
   if (/arrived/.test(value)) return 2;
-  if (/en route|confirmed eta|route/.test(value)) return 1;
+  if (/en route|route/.test(value)) return 1;
   return 0;
 }
 
@@ -4246,28 +4245,25 @@ export function buildClientRouteBridge({
   const id = statusEntry?.id || bookingId || broadcast?.bookingId || broadcast?.id || 'route-pending';
   const nurseName = statusEntry?.nurseName || statusEntry?.actor || latestBooking?.nurse || broadcast?.assignedTo || 'RN pending';
   const status = statusEntry?.status || latestBooking?.status || (broadcast?.status === 'Assigned' ? 'Nurse Assigned' : 'Pending');
-  const eta = statusEntry?.eta || latestBooking?.eta || '';
   const clientName = statusEntry?.client || latestBooking?.contact?.name || [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || broadcast?.client || 'Client';
   const address = statusEntry?.address || latestBooking?.address || broadcast?.address || '';
   const service = statusEntry?.service || latestBooking?.service || broadcast?.service || 'Avalon visit';
   const rank = statusRanksRouteStep(status);
   const texts = readOpsMessages().filter((message) => (
     message.threadId === 'client-texts' &&
-    (String(message.relatedBroadcastId || '').includes(id) || /ETA|arrived|visit has started|visit is complete/i.test(message.text || ''))
+    (String(message.relatedBroadcastId || '').includes(id) || /on the way|arrived|visit has started|visit is complete/i.test(message.text || ''))
   ));
 
-  const etaLabel = eta || 'Nurse sets ETA after confirmation';
   return {
     id,
     clientName,
     service,
     nurseName,
     status,
-    eta: etaLabel,
-    headline: eta ? 'Nurse-confirmed ETA' : 'ETA Pending',
-    body: eta
-      ? `${nurseName} set this ETA after confirming the route.`
-      : 'Your RN sets the ETA after accepting and confirming the route.',
+    headline: rank >= 1 ? 'Nurse on the way' : 'Route pending',
+    body: rank >= 1
+      ? `${nurseName} started the route.`
+      : 'The route unlocks after nurse acceptance.',
     address,
     maps: {
       apple: address ? appleMapsUrl(address) : '',
@@ -4277,7 +4273,7 @@ export function buildClientRouteBridge({
     texts,
     steps: [
       { key: 'assigned', label: 'Nurse', done: Boolean(nurseName && nurseName !== 'RN pending'), detail: nurseName },
-      { key: 'eta', label: 'ETA', done: rank >= 1 || Boolean(eta), detail: etaLabel },
+      { key: 'route', label: 'Route', done: rank >= 1, detail: rank >= 1 ? 'On the way' : 'Pending' },
       { key: 'arrived', label: 'Arrived', done: rank >= 2, detail: rank >= 2 ? 'On site' : 'Pending' },
       { key: 'started', label: 'Started', done: rank >= 3, detail: rank >= 3 ? 'Active' : 'Pending' },
       { key: 'done', label: 'Done', done: rank >= 4, detail: rank >= 4 ? 'Complete' : 'Pending' },
@@ -4288,7 +4284,6 @@ export function buildClientRouteBridge({
 export function queueClientRouteBridgeUpdate({
   visitId,
   status = 'En Route',
-  eta = '',
   nurseName = 'Nurse',
   client = '',
   clientPhone = '',
@@ -4297,9 +4292,7 @@ export function queueClientRouteBridgeUpdate({
   source = 'Nurse Shift',
 } = {}) {
   const id = visitId || routeVisitIdFromBooking(readLastBooking()) || `route-${Date.now()}`;
-  const normalizedEta = /arrived/i.test(status) ? 'Arrived' : /completed|complete/i.test(status) ? 'Complete' : eta;
   const nextStatus = setFieldVisitStatus(id, status, {
-    eta: normalizedEta,
     nurseName,
     actor: nurseName,
     client,
@@ -4308,9 +4301,9 @@ export function queueClientRouteBridgeUpdate({
     service,
     source,
   });
-  const textType = /arrived/i.test(status) ? 'arrival' : /in progress|started/i.test(status) ? 'start' : /completed|complete/i.test(status) ? 'complete' : 'eta';
-  const visit = { id, client, clientPhone, nurseName, address, service, eta: normalizedEta };
-  queueFieldVisitText(visit, textType, { force: true, eta: normalizedEta });
+  const textType = /arrived/i.test(status) ? 'arrival' : /in progress|started/i.test(status) ? 'start' : /completed|complete/i.test(status) ? 'complete' : 'route';
+  const visit = { id, client, clientPhone, nurseName, address, service };
+  queueFieldVisitText(visit, textType, { force: true });
 
   const latest = readLastBooking();
   const latestId = routeVisitIdFromBooking(latest);
@@ -4318,7 +4311,6 @@ export function queueClientRouteBridgeUpdate({
     saveLastBooking({
       ...latest,
       status,
-      eta: normalizedEta,
       nurse: nurseName,
       address: address || latest.address,
       service: service || latest.service,
@@ -4326,7 +4318,7 @@ export function queueClientRouteBridgeUpdate({
         ? `${nurseName} has arrived.`
         : /completed|complete/i.test(status)
           ? 'Visit complete. Aftercare follows.'
-          : `${nurseName} controls ETA and route updates.`,
+          : `${nurseName} started the route.`,
     });
   }
   appendActivity(`Client route update: ${status} · ${id}`, { role: 'nurse', visitId: id, source });
@@ -4347,7 +4339,7 @@ export const NURSE_CLIENT_CONTACT_TEMPLATES = [
   {
     id: 'delay',
     label: 'Delay',
-    text: 'Avalon: your RN is running a few minutes behind and will update the ETA as needed.',
+    text: 'Avalon: your RN is running a few minutes behind. We will keep you updated.',
   },
   {
     id: 'ready',
@@ -4520,7 +4512,7 @@ export function buildFieldVisitControlTower({
         ...visit,
         active,
         risk: visit.incidentFlagged ? 'critical' : visit.closeoutDone || /completed/i.test(visit.status) ? 'ready' : /assigned|en route|arrived|in progress/i.test(visit.status) ? 'action' : 'default',
-        nextAction: visit.closeoutDone ? 'Follow up.' : /in progress/i.test(visit.status) ? 'Finish Acuity closeout.' : /arrived/i.test(visit.status) ? 'Start visit.' : /en route/i.test(visit.status) ? 'Mark arrived.' : 'Send ETA.',
+        nextAction: visit.closeoutDone ? 'Follow up.' : /in progress/i.test(visit.status) ? 'Finish Acuity closeout.' : /arrived/i.test(visit.status) ? 'Start visit.' : /en route/i.test(visit.status) ? 'Mark arrived.' : 'Send route update.',
       };
     });
   const textMessages = readOpsMessages().filter((message) => message.threadId === 'client-texts');
@@ -4529,7 +4521,7 @@ export function buildFieldVisitControlTower({
   const stageSummaries = FIELD_VISIT_STAGES.map((stage) => {
     const count = {
       assigned: visits.filter((item) => /assigned|en route|arrived|in progress|completed/i.test(item.status)).length,
-      eta: visits.filter((item) => item.textProof.some((message) => /on the way|ETA/i.test(message.text || ''))).length,
+      update: visits.filter((item) => item.textProof.some((message) => /on the way/i.test(message.text || ''))).length,
       route: visits.filter((item) => item.address && item.address !== 'Address pending').length,
       arrived: visits.filter((item) => /arrived|in progress|completed/i.test(item.status)).length,
       start: visits.filter((item) => /in progress|completed/i.test(item.status)).length,
@@ -4570,9 +4562,9 @@ export function runFieldVisitControlSweep({
   const tower = buildFieldVisitControlTower({ requests, appointments, clients, services, staff });
   const actions = [];
   tower.activeVisits.forEach((visit) => {
-    if (!visit.textProof.some((message) => /ETA|on the way/i.test(message.text || ''))) {
-      queueFieldVisitText(visit, 'eta');
-      actions.push({ type: 'eta', id: visit.id });
+    if (!visit.textProof.some((message) => /on the way/i.test(message.text || ''))) {
+      queueFieldVisitText(visit, 'route');
+      actions.push({ type: 'route', id: visit.id });
     }
     if (!visit.closeoutDone && /completed/i.test(visit.rawStatus || '')) {
       upsertCommunicationAlert({
@@ -5680,7 +5672,7 @@ const DEMO_BOOKING = {
 
 const DEMO_SUPPORT = [
   { id: 'welcome', from: 'care', text: 'Care team standing by for Acuity scheduling, prep, and visit questions.', at: 'Today' },
-  { id: 'prep', from: 'care', text: 'Your visit is confirmed. Hydrate, keep ID nearby, and keep your phone available for RN ETA.', at: 'Today' },
+  { id: 'prep', from: 'care', text: 'Your visit is confirmed. Hydrate, keep ID nearby, and keep your phone available for route updates.', at: 'Today' },
 ];
 
 export function seedDemoState(username = 'CLIENT001') {
@@ -5701,7 +5693,7 @@ export function seedDemoState(username = 'CLIENT001') {
     { key: 'hydrate', label: 'Drink 16 oz of water', done: true },
     { key: 'id', label: 'Have ID ready', done: false },
     { key: 'sleeves', label: 'Wear loose sleeves', done: false },
-    { key: 'phone', label: 'Keep phone nearby for RN ETA', done: false },
+    { key: 'phone', label: 'Keep phone nearby for route updates', done: false },
   ]);
   writeLocal('savedAddresses', [
     { id: 'demo-home', label: 'Home', address: roleBooking.address, note: 'Default visit location' },
@@ -5713,7 +5705,6 @@ export function seedDemoState(username = 'CLIENT001') {
   if (key === 'NURSE001') {
     const now = new Date().toISOString();
     writeLocal('visitStatus.demo-nurse-shift-001', 'confirmed');
-    writeLocal('routeEta.demo-nurse-shift-001', '20 min');
     writeLocal('clientContact.demo-nurse-shift-001', '');
     writeLocal('kitDeductionLedger', []);
     writeLocal('kitRestockQueue', []);

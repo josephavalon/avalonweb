@@ -17,7 +17,6 @@ import {
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { readLastBooking } from '@/lib/localOs';
-import { setKernelNurseEta } from '@/lib/avalonKernel';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import { APPOINTMENTS, getClient, getService, formatTime } from '@/fixtures/commandMockData';
@@ -84,23 +83,6 @@ function Action({ to, href, onClick, icon: Icon, label, primary = false }) {
   return <Link to={to} className={className} style={style}>{body}</Link>;
 }
 
-function EtaButton({ eta, selected, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="min-h-[52px] rounded-2xl px-3 font-body text-[10px] font-bold uppercase tracking-[0.16em] transition-transform active:scale-[0.98]"
-      style={{
-        background: selected ? TEXT : CARD,
-        color: selected ? INVERT : TEXT,
-        border: `1px solid ${selected ? TEXT : BORDER}`,
-      }}
-    >
-      {eta}
-    </button>
-  );
-}
-
 function Checklist({ items }) {
   return (
     <div className="grid gap-2">
@@ -119,7 +101,7 @@ function Checklist({ items }) {
 export default function NurseShift() {
   useSeo({
     title: 'Nurse Shift — Avalon Vitality',
-    description: 'Low-input Avalon nurse shift view for ETA, route, client text, kit, and protocol review.',
+    description: 'Low-input Avalon nurse shift view for route, client text, kit, and protocol review.',
     path: '/provider/shift',
     robots: 'noindex, nofollow',
   });
@@ -127,16 +109,10 @@ export default function NurseShift() {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
   const visit = activeVisit();
-  const [eta, setEta] = useState('20 min');
   const [stage, setStage] = useState('Ready');
   const [latestPatient, setLatestPatient] = useState(null);
   const mapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(visit.address)}`;
-  const textUrl = `sms:${visit.phone}?body=${encodeURIComponent(`Hi, this is ${user?.name || 'your Avalon nurse'}. My ETA is ${eta}.`)}`;
-
-  const chooseEta = (value) => {
-    setEta(value);
-    setKernelNurseEta(visit.id, value, user?.name || 'Avalon Nurse');
-  };
+  const textUrl = `sms:${visit.phone}?body=${encodeURIComponent(`Hi, this is ${user?.name || 'your Avalon nurse'}. I'm on my way.`)}`;
 
   const handleSignOut = () => {
     signOut();
@@ -178,15 +154,6 @@ export default function NurseShift() {
           <div className="mt-5 flex min-h-[48px] items-center gap-3 rounded-2xl px-3" style={{ background: CARD_STRONG }}>
             <MapPin className="h-4 w-4 shrink-0" style={{ color: DIM }} strokeWidth={1.7} />
             <span className="truncate text-sm" style={{ color: MUTED }}>{visit.address}</span>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-[28px] p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
-          <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: DIM }}>Set ETA</p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {['10 min', '20 min', '30 min'].map((value) => (
-              <EtaButton key={value} eta={value} selected={eta === value} onClick={() => chooseEta(value)} />
-            ))}
           </div>
         </div>
 

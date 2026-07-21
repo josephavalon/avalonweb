@@ -104,24 +104,28 @@ function TierRow({ tier, active, onClick }) {
           </span>
         ) : null}
       </span>
-      <span className="shrink-0 text-right font-heading text-2xl leading-none tabular-nums text-foreground/82">
-        {priceLabel}
+      <span className="shrink-0 text-right">
+        <span className="block font-mono text-sm font-medium leading-none tabular-nums text-foreground/82">{priceLabel}</span>
+        {Number.isFinite(tier.remaining) && !tier.soldOut ? (
+          <span className="mt-2 block font-mono text-[9px] uppercase tracking-[0.14em] text-foreground/38">
+            {tier.remaining} left
+          </span>
+        ) : null}
       </span>
     </button>
   );
 }
 
-function QuietList({ kicker, title, items }) {
+function QuietList({ title, items }) {
   if (!items.length) return null;
   return (
-    <div className="mt-8">
-      <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/42">{kicker}</p>
-      <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">
+    <div className="mt-6">
+      <h3 className="font-body text-[10px] font-bold uppercase leading-none tracking-[0.24em] text-foreground/48">
         {title}
       </h3>
-      <div className="mt-3">
+      <div className="mt-2">
         {items.map((item) => (
-          <p key={item} className="border-t border-foreground/[0.08] py-2.5 font-body text-[13px] leading-relaxed text-foreground/60 first:border-t-0">
+          <p key={item} className="border-t border-foreground/[0.08] py-2 font-body text-[12px] leading-relaxed text-foreground/58 first:border-t-0">
             {item}
           </p>
         ))}
@@ -131,7 +135,7 @@ function QuietList({ kicker, title, items }) {
 }
 
 function pickDefaultTierId(data) {
-  const open = (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated && !t.experienceOnly)
+  const open = (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated && t.experienceOnly)
     || (data?.tiers || []).find((t) => !t.soldOut && !t.applicationGated)
     || data?.tiers?.[0];
   return open?.id || '';
@@ -216,8 +220,10 @@ export default function EventPage() {
   const blocks = blocksOf(event);
   const photos = uploadedPhotos(event);
   const tiers = event.tiers || [];
+  const hasExperienceLane = tiers.some((item) => item.experienceOnly === true);
+  const experienceTiers = hasExperienceLane ? tiers.filter((item) => item.experienceOnly === true) : tiers;
   const addOns = event.addOns || [];
-  const tier = tiers.find((t) => t.id === tierId) || tiers[0];
+  const tier = experienceTiers.find((t) => t.id === tierId) || experienceTiers[0];
   const addOnTotalCents = addOns
     .filter((ao) => selectedAddOns.includes(ao.id))
     .reduce((sum, ao) => sum + (ao.priceCents || 0), 0);
@@ -231,7 +237,7 @@ export default function EventPage() {
       : reserveTotalCents > 0
         ? `Reserve — ${formatPriceCents(reserveTotalCents)}`
         : 'Reserve';
-  const ctaTarget = closed ? '/events' : `/presale/${event.slug}`;
+  const ctaTarget = closed ? '/events' : `/presale/${event.slug}${tier?.id ? `?tier=${encodeURIComponent(tier.id)}` : ''}`;
 
   return (
     <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
@@ -246,30 +252,41 @@ export default function EventPage() {
           All events
         </Link>
 
-        {/* Poster title — matches PLANS / IV THERAPY / EVENTS scale */}
-        <h1 className="mt-6 font-heading text-[13vw] uppercase leading-[0.9] tracking-tight text-foreground md:text-7xl lg:text-8xl">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <span className="rounded-full border border-[#C8F135]/30 px-3 py-1 font-mono text-[9px] font-medium uppercase tracking-[0.16em] text-[#C8F135]">
+            {event.status === 'presale' ? 'Presale now' : event.status === 'sold_out' ? 'Sold out' : 'On sale'}
+          </span>
+          <span className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/42">
+            Presented by {event.hostName || 'Avalon Vitality'}
+          </span>
+          {tier ? (
+            <span className="ml-auto font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/72 md:hidden">
+              From {formatPriceCents(tier.priceCents || 0)}
+            </span>
+          ) : null}
+        </div>
+
+        {/* The first viewport behaves like a poster: one statement, then facts. */}
+        <h1 className="mt-5 max-w-[14ch] font-heading text-[17vw] uppercase leading-[0.78] tracking-[-0.025em] text-foreground sm:text-[13vw] md:text-[7.7rem] lg:text-[9.5rem]">
           {event.name}
         </h1>
-
-        <div className="mt-10 grid gap-8 md:grid-cols-[360px_1fr] md:gap-12">
+        <div className="mt-6 grid gap-8 md:mt-10 md:grid-cols-[360px_1fr] md:gap-12">
           {/* Left rail: poster, hosted-by, about */}
-          <aside className="md:sticky md:top-24 md:self-start">
+          <aside className="order-2 md:order-1 md:sticky md:top-24 md:self-start">
             {photos.length > 0 ? (
-              <div className="relative aspect-square overflow-hidden rounded-[1.55rem] border border-foreground/12">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-[1.55rem] border border-foreground/12 md:aspect-square">
                 <img src={photos[0]} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
             ) : (
-              <div className="flex aspect-square items-center justify-center rounded-[1.55rem] border border-foreground/12 bg-foreground/[0.035]">
+              <div className="flex aspect-[16/10] items-center justify-center rounded-[1.55rem] border border-foreground/12 bg-foreground/[0.035] md:aspect-square">
                 <AvalonMark className="h-16 w-11 text-foreground/45" />
               </div>
             )}
 
             <div className="mt-8">
               <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/42">Hosted by</p>
-              <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">
-                The host
-              </h3>
+              <h3 className="mt-1.5 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">The host</h3>
               <div className="mt-3 flex items-center gap-3 border-t border-foreground/[0.08] pt-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-foreground/[0.045]">
                   <AvalonMark className="h-4 w-3 text-foreground" />
@@ -278,9 +295,7 @@ export default function EventPage() {
                   <span className="font-heading text-xl uppercase leading-none tracking-normal text-foreground md:text-2xl">
                     {event.hostName || 'Avalon Vitality'}
                   </span>
-                  <span className="mt-1 font-body text-[11px] uppercase tracking-[0.18em] text-foreground/45">
-                    We deliver care
-                  </span>
+                  <span className="mt-1 font-body text-[11px] uppercase tracking-[0.18em] text-foreground/45">{event.cohosts?.length ? `With ${event.cohosts.join(' · ')}` : 'We deliver care'}</span>
                 </span>
               </div>
             </div>
@@ -296,13 +311,13 @@ export default function EventPage() {
             ) : null}
 
             <div className="hidden md:block">
-              <QuietList kicker="What's included" title="Included" items={blocks.included} />
-              <QuietList kicker="Good to know" title="The fine print" items={blocks.goodToKnow} />
+              <QuietList title="Included" items={blocks.included} />
+              <QuietList title="Good to know" items={blocks.goodToKnow} />
             </div>
           </aside>
 
           {/* Right: date/place rows + reserve card */}
-          <section>
+          <section className="order-1 md:order-2">
             <div className="flex flex-col gap-2.5">
               <InfoRow
                 chip={<CalendarChip iso={event.startsAt} />}
@@ -320,10 +335,20 @@ export default function EventPage() {
               />
             </div>
 
+            <Link
+              to={ctaTarget}
+              className="mt-3 flex min-h-[56px] w-full items-center justify-between rounded-full bg-foreground px-5 font-body text-[11px] font-bold uppercase tracking-[0.18em] text-background transition-colors hover:bg-foreground/90 md:hidden"
+            >
+              <span>{closed ? 'See upcoming events' : applicationOnly ? 'Request to join' : 'Get tickets'}</span>
+              <span className="font-mono tracking-[0.1em]">
+                {closed || applicationOnly ? <ArrowRight className="h-4 w-4" strokeWidth={2} /> : formatPriceCents(reserveTotalCents)}
+              </span>
+            </Link>
+
             <div className="av-treatment-card mt-6 rounded-[1.55rem] border p-5 md:p-6">
               <p className="font-body text-[11px] uppercase tracking-[0.22em] text-foreground/45">Reserve</p>
               <div className="mt-4 flex flex-col gap-2.5">
-                {tiers.map((t) => (
+                {experienceTiers.map((t) => (
                   <TierRow key={t.id || t.name} tier={t} active={t.id === tier?.id} onClick={() => setTierId(t.id)} />
                 ))}
               </div>
@@ -378,9 +403,6 @@ export default function EventPage() {
                 {ctaLabel}
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" strokeWidth={2} />
               </Link>
-              <p className="mt-4 text-center font-body text-[11px] uppercase leading-relaxed tracking-[0.18em] text-foreground/45">
-                90-second health check clears you before the event
-              </p>
             </div>
 
             {blocks.description ? (
@@ -393,8 +415,8 @@ export default function EventPage() {
               </div>
             ) : null}
             <div className="md:hidden">
-              <QuietList kicker="What's included" title="Included" items={blocks.included} />
-              <QuietList kicker="Good to know" title="The fine print" items={blocks.goodToKnow} />
+              <QuietList title="Included" items={blocks.included} />
+              <QuietList title="Good to know" items={blocks.goodToKnow} />
             </div>
           </section>
         </div>

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle, ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight, Eye, EyeOff, Fingerprint,
-  Link2, LockKeyhole, Mail, MailCheck, MessageCircle, RefreshCw, ShieldCheck, Smartphone, Stethoscope, UserPlus,
+  AlertCircle, ArrowLeft, ArrowRight, ArrowUpRight, Check, Eye, EyeOff, Fingerprint,
+  Link2, MailCheck, MessageCircle, RefreshCw, ShieldCheck, Smartphone, Stethoscope, Ticket,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
-import AvalonMark from '@/components/AvalonMark';
 import { isDemoAuthAllowed } from '@/lib/preApiSecurity';
 import { authProviderConfig } from '@/lib/authProviderConfig';
 
@@ -49,7 +48,7 @@ function AppleMark() {
   );
 }
 
-function Field({ id, label, type = 'text', value, onChange, placeholder, autoComplete, autoCapitalize = 'none', children }) {
+function Field({ id, name, label, type = 'text', value, onChange, placeholder, autoComplete, autoCapitalize = 'none', children }) {
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">
@@ -58,6 +57,7 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, autoCom
       <div className="relative">
         <input
           id={id}
+          name={name || id}
           type={type}
           value={value}
           onChange={onChange}
@@ -221,19 +221,27 @@ export default function Login({ defaultAudience = 'patient' }) {
   const supabaseMode = authBackend === 'supabase';
   const demoAuthAvailable = isDemoAuthAllowed();
 
-  const [audience, setAudience] = useState(defaultAudience === 'admin' ? 'admin' : 'patient');
-  const isAdmin = audience === 'admin';
-  // Patient-facing tab: 'returning' (sign in) or 'new' (create account). The
-  // 'nurse' tab is a nav action, not a persistent mode — it routes to /nurses.
-  const [mode, setMode] = useState(() => (searchParams.get('role') === 'nurse' ? 'nurse' : 'returning'));
-  const isNew = !isAdmin && mode === 'new';
-  const isNurse = !isAdmin && mode === 'nurse';
+  const requestedNurse = searchParams.get('role') === 'nurse';
+  const requestedOrganizer = searchParams.get('portal') === 'organizer';
+  const [audience, setAudience] = useState(requestedOrganizer ? 'organizer' : defaultAudience === 'admin' || requestedNurse ? 'staff' : 'patient');
+  const [staffMode, setStaffMode] = useState(defaultAudience === 'admin' ? 'admin' : 'nurse');
+  const isStaff = audience === 'staff';
+  const isAdmin = isStaff && staffMode === 'admin';
+  const isNurse = isStaff && staffMode === 'nurse';
+  const isOrganizer = audience === 'organizer';
+  const isPortalUser = isStaff || isOrganizer;
+  // Customer sign-in stays deliberately small: returning or new. Nurse and
+  // Admin now live together behind the Avalon Staff entry point.
+  const [mode, setMode] = useState('returning');
+  const isNew = !isStaff && mode === 'new';
+  const requestedPortal = isOrganizer ? 'organizer' : isAdmin ? 'admin' : isNurse ? 'nurse' : 'customer';
 
   // 'methods' is the passwordless launchpad; 'email'/'phone' are the expanded forms.
   const [view, setView] = useState('methods');
-  const [identifier, setIdentifier] = useState(''); // demo client ID / admin operator ID
+  const localOrganizerDemo = requestedOrganizer && !supabaseMode && demoAuthAvailable;
+  const [identifier, setIdentifier] = useState(localOrganizerDemo ? 'ORGANIZER001' : ''); // demo client ID / admin operator ID
   const [email, setEmail] = useState('');           // supabase magic-link address
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(localOrganizerDemo ? (import.meta.env.VITE_AVALON_DEMO_PASSWORD || '') : '');
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -256,14 +264,16 @@ export default function Login({ defaultAudience = 'patient' }) {
   const [resendError, setResendError] = useState('');
 
   useSeo({
-    title: isAdmin ? 'Admin Sign In — Avalon Vitality' : isNurse ? 'Nurse Portal Sign In — Avalon Vitality' : 'Client Sign In — Avalon Vitality',
+    title: isAdmin ? 'Admin Sign In — Avalon Vitality' : isNurse ? 'Nurse Portal Sign In — Avalon Vitality' : isOrganizer ? 'Event Organizer Sign In — Avalon Vitality' : 'Client Sign In — Avalon Vitality',
     description: isAdmin
       ? 'Avalon operations sign-in.'
       : isNurse
         ? 'Secure sign-in for Avalon nurses.'
-      : 'Client sign in for Avalon Vitality visits, preparation, and support.',
+        : isOrganizer
+          ? 'Secure sign-in for approved Avalon event organizers.'
+          : 'Client sign in for Avalon Vitality visits, preparation, and support.',
     path: isAdmin ? '/admin/login' : '/login',
-    robots: isAdmin || isNurse ? 'noindex, nofollow, noarchive' : undefined,
+    robots: isAdmin || isNurse || isOrganizer ? 'noindex, nofollow, noarchive' : undefined,
   });
 
   useEffect(() => {
@@ -285,16 +295,18 @@ export default function Login({ defaultAudience = 'patient' }) {
 
   const destinationFor = (sessionUser) => {
     const localPath = safeLoginRedirectPath(searchParams.get('redirect'));
-    if (localPath && sessionUser?.role === 'client') return localPath;
-    if (localPath?.startsWith('/provider/') && ['nurse', 'admin'].includes(sessionUser?.role)) return localPath;
+    if (localPath && sessionUser?.activePortal === 'customer') return localPath;
+    if (localPath?.startsWith('/provider/') && sessionUser?.activePortal === 'nurse') return localPath;
+    if (localPath?.startsWith('/organizer') && sessionUser?.activePortal === 'organizer') return localPath;
     return sessionUser?.redirect || '/members/dashboard';
   };
 
   // Reset transient state whenever the audience flips so the patient and admin
   // panels never leak each other's input or errors.
-  const switchAudience = (next) => {
+  const switchAudience = (next, nextStaffMode = 'nurse') => {
     if (next === audience) return;
     setAudience(next);
+    if (next === 'staff') setStaffMode(nextStaffMode);
     setMode('returning');
     setView('methods');
     setFieldError('');
@@ -304,6 +316,22 @@ export default function Login({ defaultAudience = 'patient' }) {
     setOtp('');
     setResendOtpCooldown(0);
     setResendOtpDone(false);
+    if (next === 'organizer' && !supabaseMode && demoAuthAvailable) {
+      setIdentifier((current) => current.trim() || 'ORGANIZER001');
+      setPassword(import.meta.env.VITE_AVALON_DEMO_PASSWORD || '');
+    } else {
+      setPassword('');
+    }
+    clearUnconfirmed();
+  };
+
+  const switchStaffMode = (next) => {
+    if (next === staffMode) return;
+    setStaffMode(next);
+    setView('methods');
+    setFieldError('');
+    setLinkSent('');
+    setResetSent('');
     setPassword('');
     clearUnconfirmed();
   };
@@ -344,30 +372,26 @@ export default function Login({ defaultAudience = 'patient' }) {
     else setResendError(result.error || 'Could not resend the confirmation email.');
   };
 
-  // Single redirect authority for every backend/audience combination. Admin
-  // sessions are role-gated: a non-admin who lands here is bounced and signed
-  // out, matching the legacy operations screen.
+  // Redirect only when the authenticated session resolved the portal selected
+  // on this card. A canonical admin can enter all three portals without role
+  // mutation; unsupported portal requests fail closed and leave a clear error.
   useEffect(() => {
     if (!user) return;
-    if (isAdmin) {
-      if (user.role === 'admin' || user.role === 'staff') {
-        navigate('/admin', { replace: true });
-      } else {
-        setFieldError('This account is not an Avalon team account. Sign out and try the customer sign-in.');
-        signOut().catch(() => {});
-      }
+    if (user.activePortal && user.activePortal !== requestedPortal) {
+      setFieldError(`This account does not have access to the ${requestedPortal === 'organizer' ? 'event organizer' : requestedPortal} portal.`);
+      signOut().catch(() => {});
       return;
     }
     navigate(destinationFor(user), { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, audience]);
+  }, [user, audience, staffMode]);
 
   // Supabase email magic-link (patient or admin).
   const handleEmailLink = async (event) => {
     event.preventDefault();
     setFieldError('');
     if (!email.trim()) {
-      setFieldError(isAdmin ? 'Enter your admin email.' : 'Enter your email address.');
+      setFieldError(isAdmin ? 'Enter your admin email.' : isOrganizer ? 'Enter your organizer email.' : 'Enter your email address.');
       return;
     }
     const result = await signInWithEmail(email.trim());
@@ -380,17 +404,28 @@ export default function Login({ defaultAudience = 'patient' }) {
   const handleDemoSubmit = async (event) => {
     event.preventDefault();
     setFieldError('');
-    if (!identifier.trim()) {
-      setFieldError(isAdmin ? 'Enter your operator ID and passcode.' : 'Enter your client ID or email.');
+    // Password managers and browser autofill can update a DOM input without
+    // dispatching React's onChange event. Read the submitted form values as the
+    // source of truth so visibly populated credentials never validate as blank.
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const identifierInput = form.elements.namedItem('login-identifier') || form.querySelector('#login-identifier');
+    const passwordInput = form.elements.namedItem('login-password') || form.querySelector('#login-password');
+    const submittedIdentifier = String(formData.get('login-identifier') || identifierInput?.value || identifier).trim();
+    const submittedPassword = String(formData.get('login-password') || passwordInput?.value || password);
+    setIdentifier(submittedIdentifier);
+    setPassword(submittedPassword);
+    if (!submittedIdentifier) {
+      setFieldError(isAdmin ? 'Enter your operator ID and passcode.' : isOrganizer ? 'Enter your organizer ID or email.' : 'Enter your client ID or email.');
       return;
     }
-    if (!password) {
-      setFieldError(isAdmin ? 'Enter your operator ID and passcode.' : 'Enter your password.');
+    if (!submittedPassword) {
+      setFieldError(isAdmin ? 'Enter your operator ID and passcode.' : isOrganizer ? 'Enter your organizer password.' : 'Enter your password.');
       return;
     }
-    const result = await signIn({ email: identifier.trim(), password });
+    const result = await signIn({ email: submittedIdentifier, password: submittedPassword, portal: requestedPortal });
     if (!result.ok) {
-      if (result.emailUnconfirmed) setUnconfirmedEmail(identifier.trim());
+      if (result.emailUnconfirmed) setUnconfirmedEmail(submittedIdentifier);
       else clearUnconfirmed();
       setFieldError(result.error || (isAdmin ? 'Invalid operator ID or passcode.' : 'Those credentials did not match.'));
     }
@@ -402,10 +437,18 @@ export default function Login({ defaultAudience = 'patient' }) {
   const handlePasswordSubmit = async (event) => {
     event.preventDefault();
     setFieldError('');
-    if (!email.trim() || !password) { setFieldError('Enter your email and password.'); return; }
-    const result = await signIn({ email: email.trim(), password });
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const emailInput = form.elements.namedItem('login-pw-email') || form.querySelector('#login-pw-email');
+    const passwordInput = form.elements.namedItem('login-pw-password') || form.querySelector('#login-pw-password');
+    const submittedEmail = String(formData.get('login-pw-email') || emailInput?.value || email).trim();
+    const submittedPassword = String(formData.get('login-pw-password') || passwordInput?.value || password);
+    setEmail(submittedEmail);
+    setPassword(submittedPassword);
+    if (!submittedEmail || !submittedPassword) { setFieldError('Enter your email and password.'); return; }
+    const result = await signIn({ email: submittedEmail, password: submittedPassword, portal: requestedPortal });
     if (!result.ok) {
-      if (result.emailUnconfirmed) setUnconfirmedEmail(email.trim());
+      if (result.emailUnconfirmed) setUnconfirmedEmail(submittedEmail);
       else clearUnconfirmed();
       setFieldError(result.error || 'That email or password was not correct.');
     }
@@ -484,6 +527,8 @@ export default function Login({ defaultAudience = 'patient' }) {
     ? ['Admin', 'Sign In']
     : isNurse
       ? ['Nurse', 'Portal']
+      : isOrganizer
+        ? ['Event', 'Hub']
       : isNew
         ? ['New', 'Customer']
         : ['Welcome', 'Back'];
@@ -528,12 +573,12 @@ export default function Login({ defaultAudience = 'patient' }) {
     <form onSubmit={handleEmailLink} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-email"
-        label={isAdmin ? 'Admin email' : 'Email'}
+        label={isAdmin ? 'Admin email' : isOrganizer ? 'Organizer email' : 'Email'}
         type="email"
         value={email}
         onChange={(event) => { setEmail(event.target.value); setFieldError(''); }}
         autoComplete="email"
-        placeholder={isAdmin ? 'you@avalonvitality.co' : 'you@email.com'}
+        placeholder={isAdmin ? 'you@avalonvitality.co' : isOrganizer ? 'you@yourvenue.com' : 'you@email.com'}
       />
       <ErrorBanner message={displayError} />
       <SubmitButton loading={loading} idle="Email Me A Link" busy="Sending Link" />
@@ -609,13 +654,13 @@ export default function Login({ defaultAudience = 'patient' }) {
     <form onSubmit={handleDemoSubmit} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-identifier"
-        label={isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : 'Client ID or Email'}
+        label={isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : isOrganizer ? 'Organizer ID or Email' : 'Client ID or Email'}
         type="text"
         value={identifier}
         onChange={(event) => { setIdentifier(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="username"
-        autoCapitalize={isAdmin || isNurse ? 'characters' : 'none'}
-        placeholder={isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : 'CLIENT0001'}
+        autoCapitalize={isAdmin || isNurse || isOrganizer ? 'characters' : 'none'}
+        placeholder={isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : isOrganizer ? 'ORGANIZER001' : 'CLIENT0001'}
       />
       <Field
         id="login-password"
@@ -637,7 +682,7 @@ export default function Login({ defaultAudience = 'patient' }) {
       </Field>
       <ErrorBanner message={displayError} />
       {resendConfirmationRow}
-      <SubmitButton loading={loading} idle={isAdmin ? 'Enter Operations' : 'Sign In'} busy="Signing In" />
+      <SubmitButton loading={loading} idle={isAdmin ? 'Enter Operations' : isOrganizer ? 'Enter Event Hub' : 'Sign In'} busy="Signing In" />
     </form>
   );
 
@@ -645,12 +690,12 @@ export default function Login({ defaultAudience = 'patient' }) {
     <form onSubmit={handlePasswordSubmit} className="space-y-4 md:space-y-3" noValidate>
       <Field
         id="login-pw-email"
-        label="Email"
+        label={isOrganizer ? 'Organizer email' : 'Email'}
         type="email"
         value={email}
         onChange={(event) => { setEmail(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="email"
-        placeholder={isAdmin ? 'you@avalonvitality.co' : 'you@email.com'}
+        placeholder={isAdmin ? 'you@avalonvitality.co' : isOrganizer ? 'you@yourvenue.com' : 'you@email.com'}
       />
       <Field
         id="login-pw-password"
@@ -672,7 +717,7 @@ export default function Login({ defaultAudience = 'patient' }) {
       </Field>
       <ErrorBanner message={displayError} />
       {resendConfirmationRow}
-      <SubmitButton loading={loading} idle="Sign In" busy="Signing In" />
+      <SubmitButton loading={loading} idle={isOrganizer ? 'Enter Event Hub' : 'Sign In'} busy="Signing In" />
     </form>
   );
 
@@ -751,12 +796,10 @@ export default function Login({ defaultAudience = 'patient' }) {
         {resetForm}
       </div>
     );
-  } else if (isAdmin) {
-    // Admin sign-in is deliberately just email + password — no magic link,
-    // social, passkey, or operator-ID. Operations staff use their password
-    // (Supabase signInWithPassword); the forgot-password reset stays for
-    // lockout recovery.
-    body = passwordForm;
+  } else if (isPortalUser) {
+    // Staff entry is deliberately email + password only. The Nurse/Admin tabs
+    // select a destination; they never change or duplicate the credential.
+    body = supabaseMode ? passwordForm : demoForm;
   } else if (!supabaseMode) {
     // Offline beta keeps visible method choices while preserving the roster ID
     // sign-in as the working fallback.
@@ -766,15 +809,6 @@ export default function Login({ defaultAudience = 'patient' }) {
         <ErrorBanner message={displayError} />
         <Divider label={isNurse ? 'or nurse id' : 'or client id'} />
         {demoForm}
-        <Divider />
-        <button
-          type="button"
-          onClick={() => { setView('password'); setFieldError(''); }}
-          className="flex min-h-[40px] w-full items-center justify-between rounded-xl border border-foreground/[0.12] bg-background/35 px-4 font-body text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground"
-        >
-          <span className="inline-flex items-center gap-2.5"><Mail className="h-4 w-4" strokeWidth={2} /> Login With Email</span>
-          <ChevronRight className="h-4 w-4" strokeWidth={2} />
-        </button>
       </div>
     );
   } else {
@@ -787,27 +821,27 @@ export default function Login({ defaultAudience = 'patient' }) {
     body = passwordForm;
   }
 
-  const footer = isAdmin ? (
+  const footer = isPortalUser ? (
     <div className="mt-4 grid gap-1.5 border-t border-foreground/[0.08] pt-3 md:mt-3 md:pt-3">
       <button
         type="button"
         onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
         className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
       >
-        Reset staff password
+        Reset {isOrganizer ? 'organizer' : 'staff'} password
       </button>
       <button
         type="button"
         onClick={() => switchAudience('patient')}
         className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
       >
-        Customer sign-in instead
+        Customer login
       </button>
     </div>
   ) : (
-    <div className="mt-6 grid gap-3">
+    <div className="mt-4 grid gap-2 md:mt-6 md:gap-3">
       {/* OR divider */}
-      <div className="flex items-center gap-3">
+      <div className="hidden items-center gap-3 md:flex">
         <span className="h-px flex-1 bg-foreground/16" />
         <span className="font-body text-[10px] font-semibold uppercase tracking-[0.28em] text-foreground/45">or</span>
         <span className="h-px flex-1 bg-foreground/16" />
@@ -833,50 +867,57 @@ export default function Login({ defaultAudience = 'patient' }) {
       </div>
       <button
         type="button"
-        onClick={() => switchAudience('admin')}
-        className="mt-1 inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.22em] text-foreground/72 transition-colors hover:text-foreground"
+        onClick={() => switchAudience('organizer')}
+        className="mt-1 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/28 hover:bg-foreground/[0.08]"
       >
-        <span className="underline underline-offset-[6px] decoration-foreground/40 group-hover:decoration-foreground">Avalon staff? Sign in</span>
+        <Ticket className="h-4 w-4" strokeWidth={1.8} />
+        <span>Event organizer hub</span>
+        <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
+      </button>
+      <button
+        type="button"
+        onClick={() => switchAudience('staff', 'nurse')}
+        className="mt-1 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/28 hover:bg-foreground/[0.08]"
+      >
+        <Stethoscope className="h-4 w-4" strokeWidth={1.8} />
+        <span>Avalon staff hub</span>
         <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
       </button>
     </div>
   );
 
   return (
-    // Top padding clears the fixed marketing navbar; scrollable so a tall card
-    // is never clipped on short viewports.
+    // Mobile uses the small viewport unit so switching tabs cannot resize or
+    // jump the card. Short devices may scroll the card body without moving the
+    // background or page chrome.
     <div className="relative h-screen h-dvh overflow-y-auto px-3 py-2 text-foreground md:px-6 md:py-3">
-      <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center pt-20 md:pt-24">
+      <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center md:pt-24">
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="flex min-h-[520px] w-full max-w-[340px] flex-col rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:max-w-[360px] md:p-4">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <Link
-              to="/"
-              aria-label="Avalon Vitality home"
-              className="inline-flex min-h-[44px] items-center gap-3 transition-opacity hover:opacity-70"
-            >
-              <AvalonMark className="h-10 w-[26px] text-foreground" />
-              <span className="font-body text-lg font-medium uppercase tracking-[0.28em] text-foreground">
-                Avalon
-              </span>
-            </Link>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.22] text-foreground">
-              {isAdmin ? <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> : isNurse ? <Stethoscope className="h-4 w-4" strokeWidth={1.8} /> : isNew ? <UserPlus className="h-4 w-4" strokeWidth={1.8} /> : <LockKeyhole className="h-4 w-4" strokeWidth={1.8} />}
-            </span>
-          </div>
-
-          {!isAdmin && (
+        <section className="flex h-[calc(100svh-1rem)] min-h-[520px] max-h-[620px] w-full max-w-[340px] flex-col overflow-y-auto rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:h-auto md:max-w-[360px] md:overflow-visible md:p-4">
+          {!isPortalUser && (
             <div className="mb-3">
               <SegmentedToggle
                 options={[
                   { key: 'returning', label: 'Returning' },
                   { key: 'new', label: 'New' },
-                  { key: 'nurse', label: 'Nurse' },
                 ]}
                 value={mode}
                 onChange={switchMode}
+              />
+            </div>
+          )}
+
+          {isStaff && (
+            <div className="mb-3">
+              <SegmentedToggle
+                options={[
+                  { key: 'nurse', label: 'Nurse', Icon: Stethoscope },
+                  { key: 'admin', label: 'Admin', Icon: ShieldCheck },
+                ]}
+                value={staffMode}
+                onChange={switchStaffMode}
               />
             </div>
           )}
@@ -887,7 +928,7 @@ export default function Login({ defaultAudience = 'patient' }) {
               first mount — the card itself already fades in above. */}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={`${audience}-${mode}-${view}`}
+              key={`${audience}-${staffMode}-${mode}-${view}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -898,13 +939,17 @@ export default function Login({ defaultAudience = 'patient' }) {
                 <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[2.2rem]">
                   {heading[0]} {heading[1]}
                 </h1>
-                {supabaseMode && isAdmin ? (
+                {isOrganizer ? (
                   <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
+                    Approved organizers manage event details, experience tickets, sales, and brand assets here.
+                  </p>
+                ) : supabaseMode && isStaff ? (
+                  <p className="mt-3 hidden font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2 md:block">
                     Sign in with your staff email and password.
                   </p>
-                ) : !isAdmin && !isNew ? (
-                  <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    {isNurse ? 'Sign in with your Avalon nurse credentials.' : 'Your visits, your nurse, your records. Sign in to manage your account.'}
+                ) : !isStaff && !isNew ? (
+                  <p className="mt-3 hidden font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2 md:block">
+                    Your visits, your nurse, your records. Sign in to manage your account.
                   </p>
                 ) : null}
               </div>

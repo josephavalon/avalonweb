@@ -275,7 +275,7 @@ export default async function handler(req, res) {
       rules: SHIFT_MARKETPLACE_RULES,
       rows: [], offers: [], sendable: [], accepted: [], backup: [], hold: [],
       acceptedLocks: [], nurseInbox: [], escalations: [],
-      metrics: { visits: 0, nurses: shapedNurses.length, offers: 0, sendable: 0, accepted: 0, backup: 0, hold: 0, escalations: 0, avgShiftValue: 0, nurseFinalEta: 0 },
+      metrics: { visits: 0, nurses: shapedNurses.length, offers: 0, sendable: 0, accepted: 0, backup: 0, hold: 0, escalations: 0, avgShiftValue: 0, routeHandoffs: 0 },
     };
     warnings.push(`brain build failed: ${safeErrorCode(err)}`);
   }

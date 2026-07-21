@@ -109,8 +109,6 @@ function buildKernelLikeExceptions({ requests = [], nurses = [], booking = null 
     const nurseName = request.nurse || request.nurseName || request.assignedNurse || '';
     const hasKnownNurse = nurseName && nurseName !== 'Unassigned' && nurses.some((nurse) => compactText(nurse.name) === compactText(nurseName));
     const assigned = hasKnownNurse || (nurseName && nurseName !== 'Unassigned');
-    const eta = request.eta || request.routeEta || request.nurseEta || '';
-
     if (!valueReady(request.intake) || /intake pending/i.test(request.status || '')) {
       items.push({ id: `${id}-intake`, severity: 'High', label: 'Intake incomplete', owner: 'Client Ops', action: 'Collect minimum intake before dispatch.', client, visitId: id });
     }
@@ -125,9 +123,6 @@ function buildKernelLikeExceptions({ requests = [], nurses = [], booking = null 
     }
     if (!assigned) {
       items.push({ id: `${id}-nurse`, severity: 'High', label: 'No nurse accepted', owner: 'Dispatch', action: 'Open Y/N offer loop or assign manually.', client, visitId: id });
-    }
-    if (assigned && !eta && /ready|assigned|route|visit|confirmed/i.test(request.status || '')) {
-      items.push({ id: `${id}-eta`, severity: 'High', label: 'Nurse ETA missing', owner: 'Nurse', action: 'Nurse sets final ETA before client text.', client, visitId: id });
     }
     return items;
   });
@@ -216,7 +211,7 @@ function buildExceptionCommand({ kernelExceptions = [], arrival, postVisit, exec
       source: 'arrival',
       item,
       index,
-      owner: item.reason === 'Accepted shift missing nurse ETA' ? 'Nurse' : 'Dispatch',
+      owner: 'Dispatch',
       label: item.reason,
       action: item.action,
     })),
@@ -299,24 +294,14 @@ function buildCommsOrchestration({ kernel, arrival, exceptions, execution } = {}
       action: 'Send city, time, value, protocol class, accept/decline.',
     }),
     commsRoute({
-      id: 'nurse-eta',
-      label: 'Nurse ETA prompt',
-      owner: 'Nurse',
-      audience: 'Nurse',
-      status: arrival.metrics.etaNeeded > 0 ? 'Action' : 'Ready',
-      trigger: 'Nurse accepted visit',
-      apiWall: 'SMS or nurse app push',
-      action: 'Nurse has final say. Client ETA stays hidden until set.',
-    }),
-    commsRoute({
-      id: 'client-eta',
-      label: 'Client ETA publish',
+      id: 'client-route-update',
+      label: 'Client route update',
       owner: 'Dispatch',
       audience: 'Client',
       status: arrival.metrics.clientTexts > 0 ? 'Publish' : 'Hidden',
-      trigger: 'Nurse sets final ETA',
+      trigger: 'Nurse accepted visit',
       apiWall: 'SMS provider',
-      action: 'Send nurse ETA, contact option, and service boundary.',
+      action: 'Send a generic on-the-way update without a time estimate.',
     }),
     commsRoute({
       id: 'ops-announcement',
@@ -388,8 +373,8 @@ function buildLaunchSimulator({ kernel, arrival, postVisit, execution, exception
     {
       id: 'arrival',
       label: 'Arrival flow',
-      clear: arrival.metrics.etaNeeded === 0 && arrival.metrics.escalations <= 2,
-      detail: `${arrival.metrics.routeReady} route ready, ${arrival.metrics.etaNeeded} ETA needed.`,
+      clear: arrival.metrics.escalations <= 2,
+      detail: `${arrival.metrics.routeReady} route ready.`,
     },
     {
       id: 'closeout-qa',

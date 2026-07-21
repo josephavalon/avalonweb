@@ -9,7 +9,7 @@ import AvalonMark from '@/components/AvalonMark';
 
 const FIELD = 'min-h-[52px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.045] px-5 font-body text-[16px] font-semibold text-foreground outline-none transition-colors placeholder:text-foreground/25 focus:border-foreground/42';
 const LABEL = 'mb-2 block font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58';
-const ROLE_LABEL = { admin: 'Full Admin', staff: 'Staff' };
+const ROLE_LABEL = { admin: 'Full Admin', staff: 'Staff', promoter: 'Event Organizer' };
 
 async function postJson(path, body) {
   const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -67,9 +67,9 @@ export default function InviteAccept() {
     setBusy(true);
     try {
       const payload = token ? { token, password } : { email: email.trim() || invite?.email, code: code.trim(), password };
-      await postJson('/api/invite/accept', payload);
+      const result = await postJson('/api/invite/accept', payload);
       setPhase('done');
-      setTimeout(() => navigate('/admin/login'), 2200);
+      setTimeout(() => navigate(result.role === 'promoter' ? '/login?portal=organizer' : '/admin/login'), 2200);
     } catch (err) { setError(err.message); } finally { setBusy(false); }
   };
 
@@ -78,7 +78,7 @@ export default function InviteAccept() {
       <div className="w-full max-w-md rounded-[1.9rem] border border-foreground/[0.10] bg-background/68 p-7 shadow-[0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
         <div className="mb-6 flex items-center gap-2">
           <AvalonMark className="h-[22px] w-[14px] text-foreground" />
-          <span className="font-body text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/40">Admin Invite</span>
+          <span className="font-body text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/40">Avalon Invite</span>
         </div>
 
         {phase === 'validating' && (
@@ -90,7 +90,7 @@ export default function InviteAccept() {
             <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-emerald-400" strokeWidth={1.6} />
             <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Welcome to Avalon</h1>
             <p className="mt-2 font-body text-sm leading-relaxed text-foreground/62">Account ready. Routing you to sign in now.</p>
-            <Link to="/admin/login" className="mt-4 inline-block font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground">Go to sign in</Link>
+            <Link to={invite?.role === 'promoter' ? '/login?portal=organizer' : '/admin/login'} className="mt-4 inline-block font-body text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground">Go to sign in</Link>
           </div>
         )}
 
@@ -114,7 +114,7 @@ export default function InviteAccept() {
             <div>
               <h1 className="font-heading text-3xl uppercase tracking-[0.04em]">Set your password</h1>
               <p className="mt-1 font-body text-sm leading-relaxed text-foreground/62">
-                Signing in as <span className="font-bold text-foreground/80">{invite?.email}</span> · {ROLE_LABEL[invite?.role] || invite?.role}. Pick a password you'll use to access the {ROLE_LABEL[invite?.role] || 'admin'} console.
+                Signing in as <span className="font-bold text-foreground/80">{invite?.email}</span> · {ROLE_LABEL[invite?.role] || invite?.role}. Pick a password you'll use to access the {invite?.role === 'promoter' ? 'Event Hub' : 'admin console'}.
               </p>
             </div>
             <div>

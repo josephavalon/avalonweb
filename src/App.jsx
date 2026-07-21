@@ -18,6 +18,7 @@ import { captureAttribution, trackPageView } from '@/lib/analytics';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
 import MfaGate from '@/components/auth/MfaGate';
 import IdleWarning from '@/components/auth/IdleWarning';
+import { requiresPrivilegedMfa } from '@/lib/portalAccess';
 
 // Operator-tier MFA enforcement. Off by default; flip VITE_MFA_ENFORCED=true
 // (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
@@ -42,6 +43,9 @@ function RequireAuth({ children, allowedRoles }) {
     if (pathname.startsWith('/provider/')) {
       return <Navigate to={{ pathname: '/login', search: `?role=nurse&redirect=${encodeURIComponent(pathname)}` }} replace />;
     }
+    if (pathname.startsWith('/organizer')) {
+      return <Navigate to={{ pathname: '/login', search: `?portal=organizer&redirect=${encodeURIComponent(pathname)}` }} replace />;
+    }
     return <Navigate to="/login" replace />;
   }
   // Admin force-set a temporary password — make them rotate it before anything else.
@@ -61,7 +65,7 @@ function RequireAuth({ children, allowedRoles }) {
   }
   // Operator-tier step-up: force MFA enrollment/challenge before any admin/staff
   // route once enforcement is enabled. Lockout-safe — off until the flag flips.
-  if (MFA_ENFORCED && (role === 'admin' || role === 'staff') && !user.mfa?.verified) {
+  if (MFA_ENFORCED && requiresPrivilegedMfa(user) && !user.mfa?.verified) {
     return <MfaGate />;
   }
   return children;

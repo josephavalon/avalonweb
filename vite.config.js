@@ -205,11 +205,9 @@ export default defineConfig(({ mode }) => {
     host: true,
     port: 5173,
     strictPort: true,
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: 5173,
-    },
+    // Let Vite derive the HMR socket from the actual preview origin. Conductor
+    // commonly overrides the dev port (for example to 3010); pinning this to
+    // localhost:5173 made those previews reconnect to the wrong server.
     watch: {
       ignored: ['**/vite.config.js.timestamp-*.mjs'],
     },

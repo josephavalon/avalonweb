@@ -52,6 +52,8 @@ export const legalRoutes = [
 
 export const appRoutes = [
   '/login',
+  '/organizer/login',
+  '/organizer',
   '/members',
   '/members/dashboard',
   '/provider',

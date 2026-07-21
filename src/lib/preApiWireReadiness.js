@@ -194,7 +194,7 @@ export const UI_TRUTH_PROOF_RULES = [
   { route: '/book', requiredLabel: 'Local hold', forbidden: ['live payment captured', 'guaranteed treatment'] },
   { route: '/booking/confirmation', requiredLabel: 'placeholder', forbidden: ['dispatched automatically', 'GFE guaranteed'] },
   { route: '/admin', requiredLabel: 'API residual', forbidden: ['live sync complete', 'real payroll sent'] },
-  { route: '/provider/shift', requiredLabel: 'nurse sets final ETA', forbidden: ['automatic ETA final'] },
+  { route: '/provider/shift', requiredLabel: 'route', forbidden: ['automatic ETA final', 'set ETA'] },
   { route: '/members/dashboard', requiredLabel: 'Real Status', forbidden: ['guaranteed clearance'] },
 ];
 

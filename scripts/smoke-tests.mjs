@@ -66,7 +66,7 @@ const manageOrderSource = readFileSync(new URL('../app-modules/pages/ManageOrder
 const loginPageSource = readFileSync(new URL('../app-modules/pages/Login.jsx', import.meta.url), 'utf8');
 const signupPageSource = readFileSync(new URL('../app-modules/pages/Signup.jsx', import.meta.url), 'utf8');
 const forgotPasswordSource = readFileSync(new URL('../app-modules/pages/ForgotPassword.jsx', import.meta.url), 'utf8');
-const memberAccountSource = readFileSync(new URL('../src/pages/members/Account.jsx', import.meta.url), 'utf8');
+const memberAccountSource = readFileSync(new URL('../app-modules/pages/members/Account.jsx', import.meta.url), 'utf8');
 const memberDashboardSource = readFileSync(new URL('../app-modules/pages/members/Dashboard.jsx', import.meta.url), 'utf8');
 const adminSchedulingBookingsSource = readFileSync(new URL('../app-modules/pages/admin/Bookings.jsx', import.meta.url), 'utf8');
 const liveAdminBookingsSource = readFileSync(new URL('../app-modules/pages/admin/LiveBookings.jsx', import.meta.url), 'utf8');
@@ -351,7 +351,7 @@ assert(verifyPasswordResetSource.includes(".from('profiles').delete().eq('id', u
 assert(verifyPasswordResetSource.includes("redirect.pathname !== '/account/new-password'"), 'Password reset verifier must enforce /account/new-password as the only update target');
 assert(verifyPasswordResetSource.includes('Confirm delivery in the VERIFY_EMAIL_ROOT mailbox'), 'Password reset verifier must disclose the manual hosted email-delivery confirmation');
 assert(signupPageSource.includes("handleOAuth('google')") && signupPageSource.includes("handleOAuth('apple')"), 'Signup page must expose Google and Apple OAuth actions');
-assert(memberAccountSource.includes('registerPasskey') && memberAccountSource.includes('Add Passkey'), 'Member account page must expose passkey enrollment');
+assert(memberAccountSource.includes('registerPasskey') && memberAccountSource.includes('Add passkey'), 'Member account page must expose passkey enrollment');
 assert(forgotPasswordSource.includes('Could not send the reset link.'), 'Forgot password page must use reset-link copy, not sign-in-link copy');
 assert(verifyProdSource.includes('requiredEnv'), 'verify:prod must preflight required launch verification env');
 assert(verifyProdSource.includes("startsWith('sk_test_')"), 'verify:prod must refuse live Stripe keys');
@@ -386,7 +386,7 @@ assert(supabaseClientSource.includes('detectSessionInUrl: true'), 'Supabase brow
 assert(authStoreSource.includes('emailRedirectTo: `${window.location.origin}/auth/callback`'), 'Email sign-in/signup confirmations must route through /auth/callback');
 assert(authStoreSource.includes('refreshSupabaseSession'), 'Auth store must expose an explicit Supabase session refresh for auth callback routes');
 assert(authCallbackSource.includes('const appUser = await refreshSupabaseSession()'), 'OAuth callback must refresh the auth store before protected-route navigation');
-assert(newPasswordSource.includes('await refreshSupabaseSession()'), 'Password recovery page must refresh the auth store after exchanging the recovery code');
+assert(newPasswordSource.includes('.verifyOtp(') && newPasswordSource.includes('onAuthStateChange'), 'Password recovery page must establish the recovery session and refresh the auth store');
 for (const authUtilityRoute of ['/auth/callback', '/account/new-password']) {
   assert(appSource.includes(`path="${authUtilityRoute}"`), `App router must expose ${authUtilityRoute}`);
   assert(noindexStaticRoutes.some((route) => route.path === authUtilityRoute), `Static prerender must create a noindex shell for ${authUtilityRoute}`);

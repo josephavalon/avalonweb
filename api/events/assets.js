@@ -33,14 +33,15 @@ async function callerForEvent(req, res, db, container) {
     res.status(401).json({ ok: false, error: 'Sign in required.' });
     return null;
   }
-  const role = auth.profile?.role || 'client';
+  const role = auth.role || auth.profile?.role || 'client';
   const staffRoles = ['ops_manager', 'staff', 'admin', 'founder', 'nurse', 'rn', 'np', 'physician', 'medical_director'];
   if (staffRoles.includes(role)) return { ...auth, isStaff: true };
-  if (role === 'promoter') {
-    const { data } = await db.from('event_promoters')
-      .select('id').eq('container_id', container.id).eq('profile_id', auth.user.id).maybeSingle();
-    if (data) return { ...auth, isStaff: false };
-  }
+  // An event assignment is the source of truth for organizer access. This
+  // lets an existing Avalon account reuse its identity and password without
+  // replacing its canonical profile role.
+  const { data } = await db.from('event_promoters')
+    .select('id').eq('container_id', container.id).eq('profile_id', auth.user.id).maybeSingle();
+  if (data) return { ...auth, isStaff: false };
   res.status(403).json({ ok: false, error: 'Not allowed for this event.' });
   return null;
 }

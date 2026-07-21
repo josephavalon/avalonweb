@@ -5,7 +5,7 @@
  */
 import crypto from 'crypto';
 
-export const INVITE_TIERS = ['staff', 'admin'];
+export const INVITE_TIERS = ['staff', 'admin', 'promoter'];
 
 /** URL-safe random token for the email magic-link (carries no PII). */
 export function generateToken() {
