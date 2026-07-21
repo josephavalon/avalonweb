@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Timer, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, CalendarDays, Diamond, Droplet, MapPin, ShieldPlus, Sparkles, Timer, Zap } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import MagneticButton from '@/components/ui/MagneticButton';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
@@ -10,12 +10,14 @@ const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS_FULL = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
-  { to: '/protocols', label: 'IV Therapy Menu', icon: Droplet },
+  { to: '/protocols', label: 'Menu', icon: Droplet },
+  { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_ACTIONS_CARE = [
   { to: ACUITY_URL, external: true, label: 'Book', icon: Calendar },
-  { to: '/protocols', label: 'IV Therapy Menu', icon: Droplet },
+  { to: '/protocols', label: 'Menu', icon: Droplet },
+  { to: '/events', label: 'Events', icon: CalendarDays },
 ];
 // All 6 rows are non-clickable so structure is identical — no <Link> wrapper on
 // any row → uniform spacing (no baseline drift between the 3rd and 4th item).

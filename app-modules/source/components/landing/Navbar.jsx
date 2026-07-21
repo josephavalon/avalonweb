@@ -14,12 +14,12 @@ import AvalonMark from '@/components/AvalonMark';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 
 const MAIN_LINKS_FULL = [
-  { to: '/protocols', label: 'IV Therapy Menu' },
+  { to: '/protocols', label: 'Menu' },
   { to: '/subscription', label: 'Plans' },
   { to: '/events', label: 'Events' },
 ];
 const MAIN_LINKS_CARE = [
-  { to: '/protocols', label: 'IV Therapy Menu' },
+  { to: '/protocols', label: 'Menu' },
   { to: '/events', label: 'Events' },
 ];
 
