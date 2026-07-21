@@ -558,12 +558,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left ${isHomeRoute ? 'av-home-nav__brand' : ''}`}
           >
             <AvalonMark className={`h-[30px] w-[19px] text-foreground md:h-[42px] md:w-[28px] ${isHomeRoute ? 'av-home-nav__brand-mark' : ''}`} />
-            {isHomeRoute && (
-              <span className="av-home-nav__wordmark" aria-hidden="true">
-                <span>Avalon</span>
-                <span>Vitality</span>
-              </span>
-            )}
             <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
@@ -671,7 +665,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             className={`${logoClass} ${isHomeRoute ? 'av-home-nav__mobile-brand' : ''}`}
           >
             <AvalonMark className="h-[28px] w-[18px] text-foreground" />
-            {isHomeRoute && <span className="av-home-nav__mobile-wordmark" aria-hidden="true">Avalon</span>}
             <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
