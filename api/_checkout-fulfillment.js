@@ -89,15 +89,7 @@ export function appointmentNotes({ appointment = {}, items = [], membership = nu
     addonBlock ? `\nADD-ONS\n${addonBlock}` : null,
     membership ? `\nMEMBERSHIP\n  - ${membership.name} - ${membership.billing} ($${membership.price})` : null,
 
-    appointment.dob ? `\nMEDICAL\n  DOB: ${appointment.dob}` : null,
-    appointment.medicalConditions && appointment.medicalConditions !== 'None of the above'
-      ? `  Conditions: ${appointment.medicalConditions}`
-      : null,
-    appointment.covidPositive === 'Yes' ? '  COVID positive in last 14 days' : null,
-    appointment.infectiousDisease === 'Yes' ? '  Active infectious disease' : null,
-    appointment.ivBefore ? `  IV before: ${appointment.ivBefore}` : null,
-    appointment.allergies ? `  Allergies: ${appointment.allergies}` : null,
-    appointment.medications ? `  Medications: ${appointment.medications}` : null,
+    appointment.dob ? `\nCLIENT\n  DOB: ${appointment.dob}` : null,
     emergencyContact ? `  Emergency contact: ${emergencyContact}` : null,
 
     appointment.notes ? `\nCLIENT NOTES\n  ${appointment.notes}` : null,
@@ -113,18 +105,15 @@ function requiresSpecialConsent(items = [], appointmentTypeID, needle) {
 }
 
 export function requiredSchedulingFields(appointment = {}, items = [], appointmentTypeID = '') {
-  const medicalConditions = appointment.medicalConditions || 'None of the above';
+  // Clinical intake (conditions/covid/infectious/IV-history/allergies/meds) is
+  // now authored by the nurse on arrival — not posted from the customer flow.
+  // We deliberately do NOT send those field IDs so the nurse's answers in Acuity
+  // form 3007895 are not overwritten by client defaults.
   const emergencyContact = emergencyContactForAcuity(appointment);
   const fields = [
     { id: 16968986, value: appointment.dob || '' },
     { id: 16968987, value: appointment.address || '' },
     { id: 16978048, value: appointment.guests || '1' },
-    { id: 16968998, value: appointment.covidPositive || 'No' },
-    { id: 16978067, value: appointment.infectiousDisease || 'No' },
-    { id: 16968997, value: appointment.ivBefore || 'Yes' },
-    { id: 16969005, value: medicalConditions },
-    { id: 16969010, value: appointment.allergies || 'None reported' },
-    { id: 16969009, value: appointment.medications || 'None reported' },
     { id: 16968994, value: emergencyContact },
     { id: 16969698, value: appointment.additionalComments || appointment.notes || 'None' },
     { id: 16969017, value: yesNoDefaultYes(appointment.privacyAck) },

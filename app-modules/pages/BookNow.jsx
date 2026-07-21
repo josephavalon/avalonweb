@@ -88,6 +88,8 @@ import {
 } from '@/lib/peopleState';
 import PersonTabStrip from '@/components/store/PersonTabStrip';
 import SessionBuilder from '@/components/store/SessionBuilder';
+import PlacesAutocomplete from '@/components/store/PlacesAutocomplete';
+import useProfilePrefill from '@/lib/useProfilePrefill';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
@@ -2475,23 +2477,6 @@ function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'tex
   );
 }
 
-// Manual structured address entry (Street / City / State / ZIP). No geocoder
-// autocomplete: the free Nominatim search returned inaccurate matches and a
-// wrong ZIP, so the user types the fields directly. Accurate autocomplete can
-// come later via Google Places (requires an API key).
-function StructuredAddressFields({ street, city, addrState, zip, onChangePart }) {
-  return (
-    <div className="grid gap-2.5">
-      <TextInput label="Street" value={street} onChange={(v) => onChangePart('street', v)} placeholder="123 Main St" autoComplete="address-line1" required />
-      <TextInput label="City" value={city} onChange={(v) => onChangePart('city', v)} placeholder="City" autoComplete="address-level2" required />
-      <div className="grid grid-cols-2 gap-2.5">
-        <TextInput label="State" value={addrState} onChange={(v) => onChangePart('state', v)} placeholder="CA" autoComplete="address-level1" required />
-        <TextInput label="ZIP" value={String(zip || '').replace(/\D/g, '').slice(0, 5)} onChange={(v) => onChangePart('zip', v)} placeholder="94577" inputMode="numeric" autoComplete="postal-code" required />
-      </div>
-    </div>
-  );
-}
-
 function AddressPrediction({ suggestion, onUse, compact = false }) {
   if (!suggestion) return null;
   const Icon = LOCATION_TYPES.find((type) => type.key === suggestion.locationType)?.icon || MapPin;
@@ -3105,27 +3090,12 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
   );
 }
 
-// Full Acuity/HIPAA intake collected before payment. Field names match
-// api/_checkout-fulfillment.js requiredSchedulingFields() exactly so each value
-// lands in its Acuity custom field. Consents are unchecked by default and gated
-// in canSubmit — we never auto-affirm them.
-const MEDICAL_CONDITION_OPTIONS = [
-  'None of the above',
-  'Allergies',
-  'Active Viral or Bacterial infection',
-  'Diabetes (Type I or II)',
-  'Heart Disease',
-  'Kidney Problems',
-  'Liver Problems',
-  'Pregnancy/Breastfeeding',
-  'Other symptoms or medical conditions not listed above',
-];
-
-const INTAKE_CONSENTS = [
-  ['privacyAck', 'I agree to the Privacy Notice & HIPAA terms.'],
-  ['treatmentConsent', 'I consent to telehealth care and accept treatment risks.'],
-  ['generalConsent', "I'm 18+ and accept the Terms of Service."],
-];
+// Consent-only intake block. Clinical questions (conditions/covid/infectious/
+// IV-history/allergies/meds) are now authored by the nurse on arrival, so this
+// card shows a single combined consent checkbox — the three individual Acuity
+// consent flags (privacyAck / treatmentConsent / generalConsent) are derived
+// from `combinedConsent` in checkoutPayloadFor so the audit log is unchanged.
+// Never auto-affirmed — the box is unchecked by default and gated in canSubmit.
 
 function YesNoToggle({ label, value, onChange }) {
   return (
@@ -3154,74 +3124,35 @@ function YesNoToggle({ label, value, onChange }) {
 }
 
 function ClinicalIntakeCard({ state, onChange }) {
+  const linkClass = 'underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground';
   return (
     <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-      <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Medical &amp; consent</p>
+      <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Consent</p>
 
-      <div className="relative mt-3 space-y-3">
-        <div>
-          <label htmlFor="bk-medical-conditions" className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Health</label>
-          <select
-            id="bk-medical-conditions"
-            value={state.medicalConditions}
-            onChange={(e) => onChange('medicalConditions', e.target.value)}
-            className="min-h-[48px] w-full rounded-xl border border-foreground/14 bg-background/42 px-3 font-body text-sm font-semibold text-foreground outline-none focus:border-foreground/40"
-          >
-            {MEDICAL_CONDITION_OPTIONS.map((opt) => (
-              <option key={opt} value={opt} className="bg-background text-foreground">{opt}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <YesNoToggle label="Covid?" value={state.covidPositive} onChange={(v) => onChange('covidPositive', v)} />
-          <YesNoToggle label="Infection?" value={state.infectiousDisease} onChange={(v) => onChange('infectiousDisease', v)} />
-          <YesNoToggle label="IV before?" value={state.ivBefore} onChange={(v) => onChange('ivBefore', v)} />
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label htmlFor="bk-allergies" className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Allergies</label>
-            <textarea
-              id="bk-allergies"
-              value={state.allergies}
-              onChange={(e) => onChange('allergies', e.target.value)}
-              rows={2}
-              placeholder="None, or list details"
-              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/42 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
-            />
-          </div>
-          <div>
-            <label htmlFor="bk-medications" className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Meds</label>
-            <textarea
-              id="bk-medications"
-              value={state.medications}
-              onChange={(e) => onChange('medications', e.target.value)}
-              rows={2}
-              placeholder="None, or list details"
-              className="w-full resize-none rounded-xl border border-foreground/14 bg-background/42 px-3 py-2.5 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40"
-            />
-          </div>
-        </div>
-
+      <div className="relative mt-3">
         <div className="overflow-hidden rounded-xl border border-foreground/12 bg-background/40">
           <p className="px-3 pt-3 pb-2 font-body text-[13px] font-black uppercase tracking-[0.2em] text-foreground/45">Required</p>
-          {INTAKE_CONSENTS.map(([name, text], i) => (
-            <label
-              key={name}
-              className={`flex cursor-pointer items-start gap-3 px-3 py-3 font-body text-xs font-semibold leading-relaxed text-foreground/72 ${i > 0 ? 'border-t border-foreground/[0.08]' : ''}`}
-            >
-              <input
-                type="checkbox"
-                checked={Boolean(state[name])}
-                onChange={(e) => onChange(name, e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
-              />
-              <span>{text}</span>
-            </label>
-          ))}
+          <label className="flex cursor-pointer items-start gap-3 px-3 py-3 font-body text-xs font-semibold leading-relaxed text-foreground/72">
+            <input
+              type="checkbox"
+              checked={Boolean(state.combinedConsent)}
+              onChange={(e) => onChange('combinedConsent', e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+            />
+            <span>
+              I agree to the{' '}
+              <a href="/privacy-policy" target="_blank" rel="noreferrer" className={linkClass}>Privacy Notice &amp; HIPAA terms</a>
+              , the{' '}
+              <a href="/telehealth-disclaimer" target="_blank" rel="noreferrer" className={linkClass}>Telehealth Consent</a>
+              , and I confirm I&apos;m 18+ and accept the{' '}
+              <a href="/terms-of-service" target="_blank" rel="noreferrer" className={linkClass}>Terms of Service</a>.
+            </span>
+          </label>
         </div>
+        <p className="mt-2 px-1 font-body text-[11px] font-medium leading-snug text-foreground/45">
+          Clinical intake (allergies, medications, conditions) is completed with your nurse on arrival.
+        </p>
       </div>
     </div>
   );
@@ -3416,7 +3347,7 @@ function FastReviewSurface({
   onSubmit,
 }) {
   const Icon = product?.icon || Droplets;
-  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag && state.privacyAck && state.treatmentConsent && state.generalConsent);
+  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag && state.combinedConsent);
 
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
@@ -3985,19 +3916,13 @@ const defaultState = {
   emergencyContactName: '',
   emergencyContactPhone: '',
   safetyFlag: '',
-  // Acuity/HIPAA intake — these map 1:1 to Acuity custom-field IDs in
-  // api/_checkout-fulfillment.js (requiredSchedulingFields). They must be
-  // collected and forwarded so Acuity receives the client's real answers, not
-  // server defaults. Each stays its own field (never consolidated).
-  covidPositive: 'No',
-  infectiousDisease: 'No',
-  ivBefore: 'No',
-  medicalConditions: 'None of the above',
-  allergies: '',
-  medications: '',
-  privacyAck: false,
-  treatmentConsent: false,
-  generalConsent: false,
+  // Consent. The customer sees ONE combined checkbox (Privacy + Telehealth +
+  // 18+/ToS with each phrase linked). We derive the three individual Acuity
+  // consent flags from `combinedConsent` in checkoutPayloadFor so the server
+  // still writes Yes/Yes/Yes to the three audit fields.
+  // Clinical intake (conditions/covid/infectious/IV-history/allergies/meds)
+  // moved to nurse arrival capture — no longer collected here.
+  combinedConsent: false,
   notes: '',
   billingMode: 'card',
   addOns: [],
@@ -4061,18 +3986,30 @@ export default function BookNow() {
     const savedContact = lastBooking?.contact || {};
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
-    const emergencyContact = realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '';
-    const splitEmergency = splitEmergencyContact(emergencyContact);
+    // serverProfile.profile is the shape returned by /api/me/profile; it
+    // contains the authoritative name/phone/email/DOB and the emergency_contact
+    // jsonb blob. Prefer it over the localStorage-cached clientProfile for
+    // signed-in users so a returning client doesn't retype fields we already
+    // have on file.
+    const remote = (signedInClient ? serverProfile?.profile : null) || {};
+    const remoteEc = remote.emergencyContact || null;
+    const remoteFullName = realValue(remote.fullName);
+    const remoteDob = realValue(remote.dateOfBirth);
+    const remoteDobFormatted = remoteDob && /^\d{4}-\d{2}-\d{2}/.test(remoteDob)
+      ? `${remoteDob.slice(5, 7)}/${remoteDob.slice(8, 10)}/${remoteDob.slice(0, 4)}`
+      : remoteDob;
+    const emergencyContactStr = realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '';
+    const splitEmergency = splitEmergencyContact(emergencyContactStr);
     return {
-      name: realValue(savedContact.name) || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || '',
-      email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || '',
-      phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || '',
-      dob: realValue(savedContact.dob) || realValue(profileSource.dob) || '',
-      emergencyContact,
-      emergencyContactName: realValue(savedContact.emergencyContactName) || realValue(profileSource.emergencyContactName) || splitEmergency.name,
-      emergencyContactPhone: realValue(savedContact.emergencyContactPhone) || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone,
+      name: realValue(savedContact.name) || remoteFullName || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || '',
+      email: realValue(savedContact.email) || realValue(remote.email) || realValue(profileSource.email) || fallback.email || '',
+      phone: realValue(savedContact.phone) || realValue(remote.phone) || realValue(profileSource.phone) || fallback.phone || '',
+      dob: realValue(savedContact.dob) || remoteDobFormatted || realValue(profileSource.dob) || '',
+      emergencyContact: emergencyContactStr,
+      emergencyContactName: realValue(savedContact.emergencyContactName) || (remoteEc?.name || '') || realValue(profileSource.emergencyContactName) || splitEmergency.name,
+      emergencyContactPhone: realValue(savedContact.emergencyContactPhone) || (remoteEc?.phone || '') || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone,
     };
-  }, [clientProfile, lastBooking, signedInClient]);
+  }, [clientProfile, lastBooking, signedInClient, serverProfile]);
   const savedVisitAddress = useMemo(() => {
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
@@ -5430,9 +5367,11 @@ export default function BookNow() {
     };
   };
 
-  // All three consents must be actively checked before payment — we never
-  // auto-affirm HIPAA/treatment/age consent.
-  const hasRequiredConsents = Boolean(state.privacyAck && state.treatmentConsent && state.generalConsent);
+  // Combined consent must be actively checked before payment — we never
+  // auto-affirm HIPAA/treatment/age consent. The checkbox is one UI element
+  // but the payload derives three individual Acuity consent flags from it so
+  // the audit log stays granular.
+  const hasRequiredConsents = Boolean(state.combinedConsent);
   const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state) && state.address.trim() && hasValidServiceZip && hasRequiredConsents && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
@@ -5540,18 +5479,12 @@ export default function BookNow() {
         emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || emergencyContactValue,
         emergencyContactName: localBooking.emergencyContactName || localBooking.contact?.emergencyContactName || state.emergencyContactName.trim(),
         emergencyContactPhone: localBooking.emergencyContactPhone || localBooking.contact?.emergencyContactPhone || state.emergencyContactPhone.trim(),
-        // Acuity/HIPAA intake — forwarded with the client's real answers so the
-        // server (requiredSchedulingFields) writes them to Acuity instead of
-        // defaulting. Field names match the Acuity custom-field mapping exactly.
-        covidPositive: state.covidPositive || 'No',
-        infectiousDisease: state.infectiousDisease || 'No',
-        ivBefore: state.ivBefore || 'No',
-        medicalConditions: state.medicalConditions || 'None of the above',
-        allergies: state.allergies || '',
-        medications: state.medications || '',
-        privacyAck: Boolean(state.privacyAck),
-        treatmentConsent: Boolean(state.treatmentConsent),
-        generalConsent: Boolean(state.generalConsent),
+        // The customer sees ONE combined consent checkbox; we derive the three
+        // individual Acuity consent flags from it so the server-side audit log
+        // still records all three affirmations.
+        privacyAck: Boolean(state.combinedConsent),
+        treatmentConsent: Boolean(state.combinedConsent),
+        generalConsent: Boolean(state.combinedConsent),
         peopleCount: localBooking.peopleCount || 1,
         peopleManifest: Array.isArray(localBooking.peopleManifest) ? localBooking.peopleManifest : [],
       },
@@ -6206,19 +6139,40 @@ export default function BookNow() {
     );
   };
 
+  const applyPlacePick = (place) => {
+    if (!place) return;
+    if (place.street) setAddressPart('street', place.street);
+    if (place.city) setAddressPart('city', place.city);
+    if (place.state) setAddressPart('state', place.state);
+    if (place.zip) setAddressPart('zip', place.zip);
+  };
+
   const renderUniversalStep = () => {
     if (step === 3) {
+      const inputClass = 'min-h-[52px] w-full rounded-xl border border-foreground/14 bg-background/42 px-3 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40';
       return (
         // Natural height + scroll; don't force-fit (it crams the fields). Scroll is fine.
         <div className="grid content-start gap-3 pb-2">
           <div className={`${panelCardClass} p-3 md:p-4`}>
-            <StructuredAddressFields
-              street={state.street}
-              city={state.city}
-              addrState={state.addrState}
-              zip={state.zip}
-              onChangePart={setAddressPart}
-            />
+            <div className="grid gap-2.5">
+              <div>
+                <label className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Street</label>
+                <PlacesAutocomplete
+                  value={state.street}
+                  onChange={(value) => setAddressPart('street', value)}
+                  onSelect={applyPlacePick}
+                  className={inputClass}
+                  placeholder="123 Main St"
+                  autoComplete="address-line1"
+                  required
+                />
+              </div>
+              <TextInput label="City" value={state.city} onChange={(v) => setAddressPart('city', v)} placeholder="City" autoComplete="address-level2" required />
+              <div className="grid grid-cols-2 gap-2.5">
+                <TextInput label="State" value={state.addrState} onChange={(v) => setAddressPart('state', v)} placeholder="CA" autoComplete="address-level1" required />
+                <TextInput label="ZIP" value={String(state.zip || '').replace(/\D/g, '').slice(0, 5)} onChange={(v) => setAddressPart('zip', v)} placeholder="94577" inputMode="numeric" autoComplete="postal-code" required />
+              </div>
+            </div>
           </div>
           <div className={`${panelCardClass} p-3 md:p-4`}>
             <TextInput

@@ -192,6 +192,7 @@ export default function PlanCheckout() {
 
   const [contact, setContact] = useState({ firstName: '', lastName: '', email: '', phone: '', dob: '', emergencyContact: '' });
   const [address, setAddress] = useState({ line1: '', zip: '' });
+  const [combinedConsent, setCombinedConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [checkoutSecret, setCheckoutSecret] = useState(null);
@@ -220,6 +221,12 @@ export default function PlanCheckout() {
     const p = serverProfile?.profile;
     if (!p) return;
     const parts = (p.fullName || '').trim().split(/\s+/).filter(Boolean);
+    // Profile stores emergency_contact as jsonb { name, relationship, phone }.
+    // Compose into the "Name · Phone" string the input expects.
+    const ec = p.emergencyContact || null;
+    const emergencyLine = ec && typeof ec === 'object'
+      ? [ec.name, ec.phone].map((v) => String(v || '').trim()).filter(Boolean).join(' · ')
+      : (typeof ec === 'string' ? ec : '');
     setContact((c) => ({
       ...c,
       firstName: c.firstName || parts[0] || '',
@@ -227,7 +234,7 @@ export default function PlanCheckout() {
       email: c.email || p.email || '',
       phone: c.phone || p.phone || '',
       dob: c.dob || p.dateOfBirth || '',
-      emergencyContact: c.emergencyContact || p.emergencyContact || '',
+      emergencyContact: c.emergencyContact || emergencyLine || '',
     }));
     const saved = serverProfile.savedAddress || p.address || null;
     if (saved) {
@@ -292,6 +299,7 @@ export default function PlanCheckout() {
     && contact.emergencyContact.trim()
     && address.line1.trim()
     && normalizedZip.length === 5
+    && combinedConsent
     && !submitting;
 
   // Visits the plan grants each cycle = sum of every person's visits, else
@@ -302,6 +310,8 @@ export default function PlanCheckout() {
 
   // Logged in with every required detail already prefilled → collapse the form
   // into a one-line "details on file" summary; they can expand to edit.
+  // (Consent is intentionally NOT part of this check — the consent checkbox is
+  // always rendered so the customer must actively tick it every time.)
   const detailsOnFile = loggedIn
     && Boolean(contact.firstName.trim() && contact.email.trim() && contact.dob.trim()
       && contact.emergencyContact.trim() && address.line1.trim() && normalizedZip.length === 5);
@@ -351,6 +361,12 @@ export default function PlanCheckout() {
             zip: normalizedZip,
             dob: contact.dob.trim(),
             emergencyContact: contact.emergencyContact.trim(),
+            // The customer sees ONE combined consent checkbox; we derive the
+            // three individual Acuity consent flags from it so the server-side
+            // audit log records all three affirmations.
+            privacyAck: Boolean(combinedConsent),
+            treatmentConsent: Boolean(combinedConsent),
+            generalConsent: Boolean(combinedConsent),
             protocol,
             notes: planNote,
             recurring: true,
@@ -608,6 +624,29 @@ export default function PlanCheckout() {
                 </div>
               </>
             )}
+
+            <div className="mt-6 border-t border-foreground/10 pt-5">
+              <SectionHead icon={ShieldCheck} title="Consent" />
+              <label className="mt-2 flex cursor-pointer items-start gap-3 rounded-xl border border-foreground/12 bg-background/40 px-3 py-3 font-body text-xs font-semibold leading-relaxed text-foreground/72">
+                <input
+                  type="checkbox"
+                  checked={combinedConsent}
+                  onChange={(e) => setCombinedConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+                />
+                <span>
+                  I agree to the{' '}
+                  <a href="/privacy-policy" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Privacy Notice &amp; HIPAA terms</a>
+                  , the{' '}
+                  <a href="/telehealth-disclaimer" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Telehealth Consent</a>
+                  , and I confirm I&apos;m 18+ and accept the{' '}
+                  <a href="/terms-of-service" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Terms of Service</a>.
+                </span>
+              </label>
+              <p className="mt-2 px-1 font-body text-[11px] font-medium leading-snug text-foreground/45">
+                Clinical intake (allergies, medications, conditions) is completed with your nurse on arrival.
+              </p>
+            </div>
 
             {error && <p className="mt-4 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 font-body text-sm font-semibold text-red-200" role="alert">{error}</p>}
 

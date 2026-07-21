@@ -306,16 +306,14 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       notes: '',
       dob: '',
       guests: '1',
-      covidPositive: 'No',
-      infectiousDisease: 'No',
-      ivBefore: 'Yes',
-      medicalConditions: 'None of the above',
-      allergies: '',
-      medications: '',
-      emergencyContact: '',
-      privacyAck: false,
-      treatmentConsent: false,
-      generalConsent: false,
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      // The customer sees ONE combined consent checkbox. The three individual
+      // Acuity consent flags (privacyAck/treatmentConsent/generalConsent) are
+      // derived from `combinedConsent` in the checkout payload so the audit
+      // log stays granular. Clinical intake is captured by the nurse on
+      // arrival, not here.
+      combinedConsent: false,
     },
   });
 
@@ -589,118 +587,70 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <label htmlFor="co-medical-conditions" className={labelClass}>Health *</label>
-          <select id="co-medical-conditions" {...register('medicalConditions', { required: true })} className={fieldClass}>
-            {[
-              'None of the above',
-              'Allergies',
-              'Active Viral or Bacterial infection',
-              'Diabetes (Type I or II)',
-              'Heart Disease',
-              'Kidney Problems',
-              'Liver Problems',
-              'Pregnancy/Breastfeeding',
-              'Other symptoms or medical conditions not listed above',
-            ].map((value) => <option key={value} value={value}>{value}</option>)}
-          </select>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[
-            ['covidPositive', 'Covid?'],
-            ['infectiousDisease', 'Infection?'],
-            ['ivBefore', 'IV before?'],
-          ].map(([name, label]) => (
-            <div key={name}>
-              <label htmlFor={`co-${name}`} className={labelClass}>{label}</label>
-              <select id={`co-${name}`} {...register(name, { required: true })} className={fieldClass}>
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Notes */}
+      {/* Notes — special requests only. Clinical intake (allergies/meds/
+          conditions/covid/infectious/IV-history) is now captured by the nurse
+          on arrival, not here. */}
       <div>
         <label htmlFor="co-medical-notes" className={labelClass}>Notes for nurse</label>
         <textarea
           id="co-medical-notes"
           {...register('notes')}
           rows={3}
-          placeholder="Allergies, access, anything we should know…"
+          placeholder="Access, gate code, parking, anything else…"
           className={`${fieldClass} resize-none`}
         />
       </div>
 
-      <div>
-        <label htmlFor="co-allergies" className={labelClass}>Allergies</label>
-        <textarea
-          id="co-allergies"
-          {...register('allergies')}
-          rows={2}
-          placeholder="None, or list details"
-          className={`${fieldClass} resize-none`}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="co-medications" className={labelClass}>Meds</label>
-        <textarea
-          id="co-medications"
-          {...register('medications')}
-          rows={2}
-          placeholder="None, or list details"
-          className={`${fieldClass} resize-none`}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="co-emergency-contact" className={labelClass}>Emergency *</label>
-        <input
-          id="co-emergency-contact"
-          {...register('emergencyContact', { required: 'Emergency contact needed' })}
-          placeholder="Name + phone"
-          className={fieldClass}
-        />
-        {errors.emergencyContact && <p className={errClass}>{errors.emergencyContact.message}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="co-emergency-name" className={labelClass}>Emergency name *</label>
+          <input
+            id="co-emergency-name"
+            {...register('emergencyContactName', { required: 'Needed' })}
+            placeholder="Full name"
+            className={fieldClass}
+          />
+          {errors.emergencyContactName && <p className={errClass}>{errors.emergencyContactName.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="co-emergency-phone" className={labelClass}>Emergency phone *</label>
+          <input
+            id="co-emergency-phone"
+            type="tel"
+            inputMode="tel"
+            {...register('emergencyContactPhone', { required: 'Needed' })}
+            placeholder="Phone"
+            className={fieldClass}
+          />
+          {errors.emergencyContactPhone && <p className={errClass}>{errors.emergencyContactPhone.message}</p>}
+        </div>
       </div>
 
       <div className="space-y-0 rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
         <p className="font-body text-[12px] tracking-[0.25em] uppercase text-foreground/45 px-4 pt-4 pb-3">
           Required
         </p>
-        {[
-          {
-            name: 'privacyAck',
-            text: 'I agree to the Privacy Notice & HIPAA terms.',
-          },
-          {
-            name: 'treatmentConsent',
-            text: 'I consent to telehealth care and accept treatment risks.',
-          },
-          {
-            name: 'generalConsent',
-            text: "I'm 18+ and accept the Terms of Service.",
-          },
-        ].map(({ name, text }, i) => (
-          <label
-            key={name}
-            className={`flex gap-3 px-4 py-3.5 font-body text-xs leading-relaxed text-foreground/65 cursor-pointer hover:bg-white/[0.02] transition-colors ${i > 0 ? 'border-t border-white/[0.06]' : ''}`}
-          >
-            <input
-              type="checkbox"
-              {...register(name, { required: 'Required' })}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
-            />
-            <span>{text}</span>
-          </label>
-        ))}
-        {(errors.privacyAck || errors.treatmentConsent || errors.generalConsent) && (
-          <p className={`${errClass} px-4 pb-3`}>All required.</p>
+        <label className="flex gap-3 px-4 py-3.5 font-body text-xs leading-relaxed text-foreground/65 cursor-pointer hover:bg-white/[0.02] transition-colors">
+          <input
+            type="checkbox"
+            {...register('combinedConsent', { required: 'Required' })}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+          />
+          <span>
+            I agree to the{' '}
+            <a href="/privacy-policy" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Privacy Notice &amp; HIPAA terms</a>
+            , the{' '}
+            <a href="/telehealth-disclaimer" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Telehealth Consent</a>
+            , and I confirm I&apos;m 18+ and accept the{' '}
+            <a href="/terms-of-service" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Terms of Service</a>.
+          </span>
+        </label>
+        {errors.combinedConsent && (
+          <p className={`${errClass} px-4 pb-3`}>Required.</p>
         )}
+        <p className="px-4 pb-3 pt-1 font-body text-[11px] font-medium leading-snug text-foreground/45">
+          Clinical intake (allergies, medications, conditions) is completed with your nurse on arrival.
+        </p>
       </div>
 
       <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
@@ -911,17 +861,16 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 notes: appointment.notes,
                 dob: appointment.dob,
                 guests: appointment.guests,
-                covidPositive: appointment.covidPositive,
-                infectiousDisease: appointment.infectiousDisease,
-                ivBefore: appointment.ivBefore,
-                medicalConditions: appointment.medicalConditions,
-                allergies: appointment.allergies,
-                medications: appointment.medications,
                 emergencyContact: appointment.emergencyContact,
+                emergencyContactName: appointment.emergencyContactName,
+                emergencyContactPhone: appointment.emergencyContactPhone,
                 additionalComments: appointment.additionalComments,
-                privacyAck: appointment.privacyAck,
-                treatmentConsent: appointment.treatmentConsent,
-                generalConsent: appointment.generalConsent,
+                // The customer sees ONE combined consent checkbox; we derive
+                // all three individual Acuity consent flags from it so the
+                // server-side audit log still records all three.
+                privacyAck: Boolean(appointment.combinedConsent),
+                treatmentConsent: Boolean(appointment.combinedConsent),
+                generalConsent: Boolean(appointment.combinedConsent),
                 cbdConsent: appointment.cbdConsent,
                 nadConsent: appointment.nadConsent,
                 acuityTypeId: appointment.acuitySlot?.appointmentTypeID || '',
@@ -1233,17 +1182,12 @@ export default function Checkout() {
         acuitySlot: sourceAppointment.acuitySlot || null,
         dob: sourceAppointment.dob || '',
         guests: sourceAppointment.guests || '1',
-        covidPositive: sourceAppointment.covidPositive || 'No',
-        infectiousDisease: sourceAppointment.infectiousDisease || 'No',
-        ivBefore: sourceAppointment.ivBefore || 'Yes',
-        medicalConditions: sourceAppointment.medicalConditions || 'None of the above',
-        allergies: sourceAppointment.allergies || '',
-        medications: sourceAppointment.medications || '',
         emergencyContact: sourceAppointment.emergencyContact || '',
+        emergencyContactName: sourceAppointment.emergencyContactName || '',
+        emergencyContactPhone: sourceAppointment.emergencyContactPhone || '',
         additionalComments: sourceAppointment.additionalComments || '',
-        privacyAck: sourceAppointment.privacyAck || false,
-        treatmentConsent: sourceAppointment.treatmentConsent || false,
-        generalConsent: sourceAppointment.generalConsent || false,
+        combinedConsent: Boolean(sourceAppointment.combinedConsent
+          || (sourceAppointment.privacyAck && sourceAppointment.treatmentConsent && sourceAppointment.generalConsent)),
         cbdConsent: sourceAppointment.cbdConsent || false,
         nadConsent: sourceAppointment.nadConsent || false,
       } : null,
