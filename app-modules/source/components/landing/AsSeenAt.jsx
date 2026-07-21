@@ -24,6 +24,7 @@ const AS_SEEN_AT = [
   { name: 'FIRE', src: '/logos/fire-gpt.png' },
   { name: 'Discourse', src: '/logos/discourse.png', filter: 'grayscale(1) contrast(4) brightness(2)' },
   { name: 'Sanai', src: '/logos/sanai-gpt.png' },
+  { name: 'MobileCoin', src: '/logos/mobilecoin-gpt.png', scale: 1.08 },
 ];
 
 // Same iOS-safe scaffold as InstagramFeed's marquee: layer-promoted wrapper,
@@ -105,13 +106,13 @@ export default function AsSeenAt() {
 
   return (
     <div
-      className="relative z-10 w-full border-t border-white/[0.08] pb-6 pt-4 md:pb-5 md:pt-4"
+      className="relative z-10 w-full pb-6 pt-4 md:pb-5 md:pt-4"
       role="region"
       aria-label="As seen at"
     >
       {/* Eyebrow — left-aligned to the hero's content edge (px-5 md:px-12). */}
       <div className="px-5 md:px-12">
-        <p className="font-body text-[10px] uppercase tracking-[0.32em] text-foreground/50 md:text-[11px]">
+        <p className="font-body text-[10px] font-semibold uppercase tracking-[0.32em] text-foreground md:text-[11px]">
           As seen at
         </p>
       </div>
