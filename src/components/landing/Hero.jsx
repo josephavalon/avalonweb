@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, CalendarDays, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
 
 const MotionLink = motion.create(Link);
@@ -9,7 +9,6 @@ const BOOK_URL = '/book';
 const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'Menu', icon: Droplet },
-  { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_PROOF_POINTS = [
