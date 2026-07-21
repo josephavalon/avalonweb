@@ -1,15 +1,15 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeDollarSign, Calendar, CalendarDays, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
+import { ArrowRight, BadgeDollarSign, Calendar, Clock, Diamond, Droplet, MapPin, ShieldPlus, Zap } from 'lucide-react';
 import { premiumHover, premiumTap } from '@/lib/motion';
+import AsSeenAt from '@/components/landing/AsSeenAt';
 
 const MotionLink = motion.create(Link);
 const BOOK_URL = '/book';
 const HERO_ACTIONS = [
   { to: BOOK_URL, label: 'Book', icon: Calendar, preload: () => import('@/pages/BookNow') },
   { to: '/protocols', label: 'Menu', icon: Droplet },
-  { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/subscription', label: 'Plans', icon: Diamond },
 ];
 const HERO_PROOF_POINTS = [
@@ -107,24 +107,14 @@ export default function Hero() {
           {HERO_ACTIONS.map((action) => {
             const Icon = action.icon;
             const isBookAction = action.to === BOOK_URL;
-            // BOOK shares the exact card geometry + layout of the two below it
-            // (icon-left, label, arrow-right, same radius/padding); it differs
-            // only by being the white, filled primary. The white look is forced
-            // in CSS (.av-hero-action.av-hero-action-primary) because the night
-            // theme neutralizes raw `bg-white`/`text-*` utilities — so we keep
-            // those utilities OFF the primary and let the stylesheet own color.
-            const actionClassName = isBookAction
-              ? 'av-hero-action av-hero-action-primary group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6'
-              : 'av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
-            const iconWrapClassName = isBookAction
-              ? 'av-hero-book-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl'
-              : 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
-            const foregroundClassName = isBookAction ? '' : 'text-foreground';
+            const actionClassName = 'av-hero-action av-treatment-card group relative flex w-full items-center justify-between overflow-hidden rounded-[1.05rem] border px-4 py-3.5 text-foreground transition-colors duration-base ease-editorial md:rounded-[1.3rem] md:px-6 md:py-5 lg:py-6';
+            const iconWrapClassName = 'av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-12 md:w-12 md:rounded-2xl';
 
             return (
               <MotionLink
                 key={action.to}
                 to={action.to}
+                data-book-action={isBookAction ? '' : undefined}
                 onPointerEnter={action.preload}
                 onFocus={action.preload}
                 whileHover={premiumHover}
@@ -133,13 +123,13 @@ export default function Hero() {
               >
                 <span className="relative flex min-w-0 flex-1 items-center gap-3 md:gap-4">
                   <span className={iconWrapClassName}>
-                    <Icon className={`h-4.5 w-4.5 md:h-6 md:w-6 ${foregroundClassName}`} strokeWidth={1.8} />
+                    <Icon className="h-4.5 w-4.5 text-foreground md:h-6 md:w-6" strokeWidth={1.8} />
                   </span>
-                  <span className={`min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] md:text-2xl lg:text-[1.7rem] ${foregroundClassName}`}>
+                  <span className="min-w-0 whitespace-nowrap font-heading text-xl uppercase leading-none tracking-[0.08em] text-foreground md:text-2xl lg:text-[1.7rem]">
                     {action.label}
                   </span>
                 </span>
-                <span className={`relative shrink-0 transition-transform group-hover:translate-x-1 ${foregroundClassName}`}>
+                <span className="relative shrink-0 text-foreground transition-transform group-hover:translate-x-1">
                   <ArrowRight className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2} />
                 </span>
               </MotionLink>
@@ -154,6 +144,9 @@ export default function Hero() {
         <div className="pb-10 md:pb-0" />
 
       </div>
+
+      <AsSeenAt />
+
     </section>
   );
 }
