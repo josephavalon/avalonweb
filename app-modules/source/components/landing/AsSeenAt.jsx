@@ -17,7 +17,6 @@ const AS_SEEN_AT = [
   { name: "Dante's Inferno", src: '/logos/dantes-inferno-gpt.png', scale: 1.18 },
   { name: 'FIRE', src: '/logos/fire-gpt.png' },
   { name: 'Discourse', src: '/logos/discourse.png', filter: 'grayscale(1) contrast(4) brightness(2)' },
-  { name: 'Sanai', src: '/logos/sanai-gpt.png' },
   { name: 'MobileCoin', src: '/logos/mobilecoin-gpt.png', scale: 1.08 },
 ];
 const MOBILE_GROUP_WIDTH = AS_SEEN_AT.length * 152;

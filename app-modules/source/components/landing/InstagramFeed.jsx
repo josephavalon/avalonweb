@@ -177,8 +177,7 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             opacity at 0 on some IntersectionObserver races).
           - No CSS mask — WebKit software-renders masked subtrees.
           - Extra layer-promoting wrapper (translateZ(0) + will-change) so the
-            animation lives on its own compositor layer.
-          - Edge fades are gradient overlays outside the animated pipeline. */}
+            animation lives on its own compositor layer. */}
       <div
         className="av-ig-marquee relative hidden w-full overflow-hidden md:block"
         onMouseEnter={() => setHoverPaused(true)}
@@ -206,10 +205,6 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             ))}
           </div>
         </div>
-
-        {/* Edge fades — gradient overlays instead of CSS mask. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-24 bg-gradient-to-r from-black to-transparent" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-24 bg-gradient-to-l from-black to-transparent" />
 
         <style>{`
           @keyframes av-ig-marquee {
@@ -255,9 +250,6 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             ))}
           </div>
         </div>
-
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black to-transparent" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black to-transparent" />
 
         <style>{`
           .av-ig-mobile-scroller::-webkit-scrollbar { display: none; }
