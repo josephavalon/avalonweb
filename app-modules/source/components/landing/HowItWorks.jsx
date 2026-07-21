@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
+import { motion } from '@/components/ui/PageTransitionMotion';
 import { ChevronDown } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -43,10 +43,7 @@ function StepCard({ step, index, open, onToggle }) {
         className="flex w-full items-center justify-between px-4 py-3.5 transition-colors duration-base ease-editorial md:px-5"
         aria-expanded={open}
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="av-treatment-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
-            <span className="font-body text-[10px] tracking-[0.2em] text-foreground tabular-nums">{step.n}</span>
-          </div>
+        <div className="flex min-w-0 items-center">
           <div className="min-w-0 text-left">
             <p className="font-heading text-2xl tracking-normal text-foreground leading-none">{step.title}</p>
           </div>
@@ -85,7 +82,6 @@ function StepCard({ step, index, open, onToggle }) {
 
 export default function HowItWorks() {
   const [openStep, setOpenStep] = useState(null);
-  const reduceMotion = useReducedMotion();
 
   return (
     <section id="how-it-works" className="pt-12 pb-10 md:pt-20 md:pb-16 px-5 md:px-12 scroll-mt-20">
@@ -98,22 +94,6 @@ export default function HowItWorks() {
         </ScrollParallax>
 
         <div className="relative space-y-2">
-          {/* Connecting line: hairline that draws downward from the centerline of
-              step 1's badge to step 3's badge as the section enters viewport.
-              `left-9` (36px) aligns with the badge center (px-4 + half of w-10).
-              Stays behind the cards (z-0); the cards' `av-treatment-card` is on
-              top of it. Skipped under prefers-reduced-motion via the CSS rule on
-              `.av-howitworks-connector`. */}
-          <motion.div
-            className="av-howitworks-connector absolute left-9 top-[34px] bottom-[34px] w-px bg-foreground/15 pointer-events-none z-0"
-            style={{ transformOrigin: 'top' }}
-            initial={reduceMotion ? { scaleY: 1 } : { scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true, margin: '-15%' }}
-            transition={{ duration: 1.1, delay: 0.3, ease: EASE }}
-            aria-hidden="true"
-          />
-
           {STEPS.map((step, i) => (
             <StepCard
               key={step.n}

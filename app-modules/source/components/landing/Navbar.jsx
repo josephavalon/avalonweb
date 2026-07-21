@@ -525,15 +525,16 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
       }`}>
-      {/* Desktop — 3-column grid: 1fr | auto | 1fr guarantees true center at every width.
-          Gated at lg (not md): at the 768-1023 tablet band the centered links and the
+      {/* Desktop — compact left column + flexible nav + right actions keeps the
+          primary menu aligned beside the logo instead of centered on the page.
+          Gated at lg (not md): at the 768-1023 tablet band the desktop links and the
           right cluster (contact icons + Sign In + Book Now) collide, so tablet keeps the
           compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
         className={`av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
         compact ? 'h-12 px-4' : 'h-16'
         }`}
-        style={{ gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' }}
+        style={{ gridTemplateColumns: 'auto minmax(0, 1fr) auto' }}
       >
 
         {/* Col 1 — logo, left-aligned */}
@@ -560,9 +561,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           </Link>
         </div>
 
-        {/* Col 2 — nav links, auto width, inherently centered */}
+        {/* Col 2 — nav links, left-aligned beside the logo */}
         {!compact && !focusMode && (
-          <div className="flex items-center justify-center gap-7">
+          <div className="flex items-center justify-start gap-7">
             {centeredLinks.map((link) => {
               const active = !link.external && isActiveLink(link.to);
               // Audit finding D8: active-page nav link gets a 1px accent

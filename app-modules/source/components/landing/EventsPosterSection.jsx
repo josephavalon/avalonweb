@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, LayoutGroup } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Building2, Wine, Music, Crown, Check, ChevronDown } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import { EASE, premiumExpandTransition, premiumHover, premiumTap } from '@/lib/motion';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import ScrollParallax from '@/components/ui/ScrollParallax';
@@ -16,7 +16,6 @@ const EVENT_TIERS = [
     key: 'corporate',
     name: 'Corporate wellness',
     note: 'Employee Wellness • Meetings • Conferences',
-    icon: Building2,
     href: '/events?type=Corporate',
     details: [
       'On-site IV drips & recovery',
@@ -29,7 +28,6 @@ const EVENT_TIERS = [
     key: 'private',
     name: 'Private events',
     note: 'Birthdays • Weddings • Celebrations',
-    icon: Wine,
     href: '/events?type=Private%20Party',
     details: [
       'Weddings · birthdays · milestones',
@@ -42,7 +40,6 @@ const EVENT_TIERS = [
     key: 'festivals',
     name: 'Music festivals',
     note: 'Artists • Backstage • Crew Wellness',
-    icon: Music,
     href: '/events?type=Festival',
     details: [
       'Artist & crew recovery',
@@ -55,7 +52,6 @@ const EVENT_TIERS = [
     key: 'vip',
     name: 'VIP & hospitality',
     note: 'Green Rooms • Talent • Backstage • Premium Service',
-    icon: Crown,
     href: '/events?type=Concert',
     details: [
       'Green room & backstage coverage',
@@ -67,7 +63,6 @@ const EVENT_TIERS = [
 ];
 
 function EventTierRow({ tier, index, open, onToggle }) {
-  const Icon = tier.icon;
   return (
     <motion.div
       layout
@@ -84,10 +79,7 @@ function EventTierRow({ tier, index, open, onToggle }) {
         aria-expanded={open}
         className="relative flex min-h-[92px] w-full items-center justify-between gap-4 px-5 py-4 text-left"
       >
-        <div className="flex min-w-0 items-center gap-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.04] text-foreground/70">
-            <Icon className="h-5 w-5" strokeWidth={1.6} />
-          </span>
+        <div className="flex min-w-0 items-center">
           <div className="min-w-0">
             <p className="font-heading text-2xl uppercase leading-none tracking-[0.06em] text-foreground/82 md:text-3xl">{tier.name}</p>
             <p className="mt-1 font-body text-[11px] uppercase tracking-[0.14em] text-foreground/42">{tier.note}</p>
