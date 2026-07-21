@@ -49,12 +49,11 @@ check('organizer routes preserve the dedicated Event Hub login entry point', () 
   assert.match(loginPage, /next === 'organizer' && !supabaseMode && demoAuthAvailable/);
 });
 
-check('event discovery orders upcoming above past with the requested events', () => {
-  assert.ok(eventsPage.indexOf('Upcoming Events') < eventsPage.indexOf('Past Events'));
-  assert.match(eventsPage, /Cannabis CE Night/);
-  assert.match(eventsPage, /2026-08-28/);
-  assert.match(eventsPage, /Maxim Superbowl Party/);
-  assert.match(eventsPage, /2026-02-07/);
+check('public events page does not feature upcoming or past event listings', () => {
+  assert.doesNotMatch(eventsPage, /Upcoming Events/);
+  assert.doesNotMatch(eventsPage, /Past Events/);
+  assert.doesNotMatch(eventsPage, /Cannabis CE Night/);
+  assert.doesNotMatch(eventsPage, /Maxim Superbowl Party/);
 });
 
 check('local Event Hub preview does not pin HMR to another port', () => {
