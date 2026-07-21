@@ -67,7 +67,7 @@ export default function AsSeenAt() {
 
   return (
     <div
-      className="relative z-10 w-full pb-6 pt-4 md:pb-5 md:pt-4"
+      className="av-asa relative z-10 w-full pb-6 pt-4 md:pb-5 md:pt-4"
       role="region"
       aria-label="As seen at"
     >
@@ -116,7 +116,7 @@ export default function AsSeenAt() {
       {/* Mobile marquee — transform the strip instead of mutating scrollLeft.
           iOS can leave blend-mode paint trails when a native scroller is moved
           every animation frame, which makes adjacent logos appear to overlap. */}
-      <div className="relative mt-4 h-10 overflow-hidden md:hidden">
+      <div className="av-asa-mobile-viewport relative mt-4 h-10 overflow-hidden md:hidden">
         <div
           className="av-asa-mobile-strip flex h-10 items-center"
           style={{

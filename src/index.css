@@ -1422,7 +1422,7 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
   }
 
   .home-hero__content {
-    padding: 7.5rem 1.5rem 3rem;
+    padding: 7.5rem 1.5rem 2rem;
   }
 
   .home-hero__eyebrow {
@@ -1472,6 +1472,65 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
   .home-hero__text-link {
     min-height: 2.3rem;
     font-size: 0.76rem;
+  }
+
+  /* Keep the complete press row above mobile browser chrome and the safe-area
+     edge on first load. The desktop press-band spacing remains unchanged. */
+  .home-hero > .av-asa {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 767px) and (max-height: 780px) {
+  /* Safari's visible first-load viewport can be much shorter while its bars
+     are expanded. Compact the hero just enough to keep the press rail in-frame
+     without positioning it over the CTA or secondary links. */
+  .home-hero__content {
+    padding-top: 6rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .home-hero__eyebrow {
+    margin-bottom: 0.75rem;
+  }
+
+  .home-hero__title {
+    font-size: clamp(4rem, 20vw, 4.75rem);
+  }
+
+  .home-hero__proof {
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+  }
+
+  .home-hero__proof li {
+    min-height: 1.25rem;
+  }
+
+  .home-hero__actions {
+    margin-top: 1rem;
+  }
+
+  .home-hero__book {
+    min-height: 4rem;
+  }
+
+  .home-hero__secondary-actions {
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+  }
+
+  .home-hero__text-link {
+    min-height: 1.8rem;
+  }
+
+  .home-hero > .av-asa {
+    padding-top: 0.5rem;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .home-hero .av-asa-mobile-viewport {
+    margin-top: 0.5rem;
   }
 }
 
