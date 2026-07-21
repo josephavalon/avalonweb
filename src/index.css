@@ -905,6 +905,7 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
   position: relative;
   isolation: isolate;
   display: flex;
+  flex-direction: column;
   min-height: max(100svh, 50rem);
   min-height: max(100dvh, 50rem);
   overflow: hidden;
