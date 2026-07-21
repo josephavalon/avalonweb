@@ -36,7 +36,7 @@ export default function Home() {
         <Hero />
 
         {/* ── Below fold — per-card whileInView animations handle entrance ── */}
-        <div className="relative z-10">
+        <div className="home-after-hero relative z-10">
           <Suspense fallback={null}>
             <SectionInterstitial
               kicker="Same-day · SF Bay Area"
