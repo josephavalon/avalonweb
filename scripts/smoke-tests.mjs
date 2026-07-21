@@ -31,6 +31,7 @@ function assert(condition, message) {
 }
 
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const siteCssSource = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
 const previewServerSource = readFileSync(new URL('./preview-server.mjs', import.meta.url), 'utf8');
 const vercelConfig = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
 const authCallbackSource = readFileSync(new URL('../src/pages/AuthCallback.jsx', import.meta.url), 'utf8');
@@ -719,6 +720,15 @@ for (const [label, source] of Object.entries({ authStoreSource, interactionQaSou
   assert(!source.includes("mfa: 'placeholder'"), `Ambiguous MFA placeholder remains in ${label}`);
   assert(source.includes('not_required_demo_local'), `Demo MFA state must be explicit in ${label}`);
 }
+assert(
+  navbarSource.includes('className={`av-home-nav av-motion-rail fixed'),
+  'Public routes must share one unconditional canonical top-navigation style',
+);
+assert(!navbarSource.includes('data-home-highlighted'), 'Top navigation must not force-highlight Book on the homepage');
+assert(
+  !siteCssSource.includes(".av-home-nav .av-home-nav__desktop > div:nth-child(2) a[aria-current='page']::after"),
+  'Top navigation links must not gain a route-specific underline',
+);
 assert(authStoreSource.includes('function supabaseMfaState'), 'Supabase auth must record MFA enforcement state explicitly');
 assert(authStoreSource.includes("status: verified ? 'verified' : 'not_enforced'"), 'Supabase MFA state must not imply enforcement by default');
 assert(authStoreSource.includes("role: 'nurse'"), 'Demo roster must include the launch nurse role');

@@ -455,7 +455,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   // (navVisible is computed below from scroll direction on mobile.)
   const care = isCareHost();
-  const isHomeRoute = location.pathname === '/';
   const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
   const bookHref = care ? ACUITY_URL : BOOK_URL;
   const bookIsExternal = care;
@@ -521,7 +520,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       initial={false}
       animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -120 }}
       transition={{ duration: suppressNavTransitionRef.current ? 0 : 0.32, ease: EASE }}
-      className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${isHomeRoute ? 'av-home-nav' : ''} ${
+      className={`av-home-nav av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
@@ -535,7 +534,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         className={`av-home-nav__desktop av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
         compact ? 'h-12 px-4' : 'h-16'
         }`}
-        style={{ gridTemplateColumns: isHomeRoute ? 'var(--av-home-nav-columns)' : 'auto minmax(0, 1fr) auto' }}
+        style={{ gridTemplateColumns: 'var(--av-home-nav-columns)' }}
       >
 
         {/* Col 1 — logo, left-aligned */}
@@ -555,9 +554,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             to="/"
             onClick={handleMarkTap}
             aria-label="Avalon Vitality — home"
-            className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left ${isHomeRoute ? 'av-home-nav__brand' : ''}`}
+            className={`${logoClass} av-home-nav__brand md:min-w-[9.5rem] md:items-start md:text-left`}
           >
-            <AvalonMark className={`h-[30px] w-[19px] text-foreground md:h-[42px] md:w-[28px] ${isHomeRoute ? 'av-home-nav__brand-mark' : ''}`} />
+            <AvalonMark className="av-home-nav__brand-mark h-[30px] w-[19px] text-foreground md:h-[42px] md:w-[28px]" />
             <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
@@ -567,22 +566,15 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           <div className="flex items-center justify-start gap-7">
             {centeredLinks.map((link) => {
               const active = !link.external && isActiveLink(link.to);
-              const homeHighlighted = isHomeRoute && link.label === 'Book';
-              // Audit finding D8: active-page nav link gets a 1px accent
-              // underline so users can tell which section they're in.
               const baseClassName = 'relative inline-flex min-h-10 items-center justify-center px-1 pb-0.5 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] transition-colors';
-              const linkClassName = `${baseClassName} ${
-                active || homeHighlighted
-                  ? 'text-foreground border-b border-foreground/70'
-                  : 'text-foreground hover:text-foreground/82'
-              }`;
+              const linkClassName = `${baseClassName} text-foreground hover:text-foreground/82`;
               // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
               if (link.to === '/protocols') {
                 return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
               }
               if (link.external) {
                 return (
-                  <a key={link.to} href={link.to} className={linkClassName} data-home-highlighted={homeHighlighted ? '' : undefined}>
+                  <a key={link.to} href={link.to} className={linkClassName}>
                     <span className="relative z-10">{link.label}</span>
                   </a>
                 );
@@ -662,7 +654,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             to="/"
             onClick={handleMarkTap}
             aria-label="Avalon Vitality — home"
-            className={`${logoClass} ${isHomeRoute ? 'av-home-nav__mobile-brand' : ''}`}
+            className={`${logoClass} av-home-nav__mobile-brand`}
           >
             <AvalonMark className="h-[28px] w-[18px] text-foreground" />
             <span className="sr-only">Avalon Vitality home</span>
