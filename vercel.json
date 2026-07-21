@@ -29,6 +29,13 @@
   ],
   "headers": [
     {
+      "source": "/bags/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD, OPTIONS" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "has": [
         {
@@ -98,7 +105,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(self \"https://checkout.stripe.com\" \"https://js.stripe.com\")"
+          "value": "camera=(self), microphone=(), geolocation=(), interest-cohort=(), payment=(self \"https://checkout.stripe.com\" \"https://js.stripe.com\")"
         },
         {
           "key": "Content-Security-Policy",
