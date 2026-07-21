@@ -8,7 +8,6 @@ import { cycleTheme } from '@/lib/theme';
 import { useIsMobile } from '@/hooks/use-mobile';
 import useNavHiddenOnScrollDown from '@/hooks/useNavHiddenOnScrollDown';
 import { useAuthStore } from '@/lib/useAuthStore';
-import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
@@ -458,9 +457,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
   const bookHref = care ? ACUITY_URL : BOOK_URL;
   const bookIsExternal = care;
-  const centeredLinks = care
-    ? [{ to: bookHref, label: 'Book', external: true }, ...mainLinks]
-    : mainLinks;
+  const centeredLinks = [
+    { to: bookHref, label: 'Book', external: bookIsExternal },
+    ...mainLinks,
+  ];
   const mobileLinks = [
     { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
     ...mainLinks,
@@ -598,7 +598,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           </div>
         )}
 
-        {/* Col 3 — account link + booking CTA, right-aligned */}
+        {/* Col 3 — contact/account actions, right-aligned. Booking now lives in
+            the centered navigation so the right edge stays visually quiet. */}
         <div className="flex h-full items-center justify-end gap-3">
           {/* Quick-dial icons are for prospects; hiding them when signed in keeps
               the logged-in nav (Sign Out + Dashboard + Book) from overflowing into
@@ -627,16 +628,6 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {/* Audit finding K6/D7: hide Sign In on /login (redundant with the
               sign-in card); hide on /signup (users already in a signup flow). */}
           {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
-          {!compact && !focusMode && !care && (
-            <PremiumButton
-              as={Link}
-              to={bookHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
-            >
-              Book
-              <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
-            </PremiumButton>
-          )}
         </div>
       </div>
 

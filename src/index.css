@@ -599,18 +599,18 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   opacity: 1 !important;
 }
 
-/* Primary "Book" CTA: the white, filled twin of the two glass cards below it.
+/* Primary "Book" CTA: the gray, filled twin of the glass cards below it.
    Two-class selectors (.av-hero-action.av-hero-action-primary) intentionally
    out-specify the night-theme neutralizers (.dark :where(.bg-white...) and the
-   #fff text override) so the white fill + dark ink survive in the dark theme. */
+   #fff text override) so the gray fill + dark ink survive in the dark theme. */
 .av-hero-action.av-hero-action-primary {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
+  background: #b8b8b8 !important;
+  border-color: #b8b8b8 !important;
   color: #1b1815 !important;
 }
 
 .av-hero-action.av-hero-action-primary:hover {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: #c5c5c5 !important;
 }
 
 .av-hero-action.av-hero-action-primary :where(span) {
@@ -622,11 +622,11 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
   stroke: #1b1815 !important;
 }
 
-/* Book icon chip — white on the white button (no gray tint/border), so only the
+/* Book icon chip — gray on the gray button (no extra tint/border), so only the
    dark calendar mark reads. */
 .av-hero-action.av-hero-action-primary .av-hero-book-icon {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
+  background: #b8b8b8 !important;
+  border-color: #b8b8b8 !important;
 }
 .av-hero-action.av-hero-action-primary .av-hero-book-icon svg {
   color: #1b1815 !important;
