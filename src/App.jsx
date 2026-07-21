@@ -52,6 +52,7 @@ function RequireAuth({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(role)) {
     if (user.role === 'admin' || user.role === 'staff') return <Navigate to="/admin" replace />;
     if (user.role === 'nurse') return <Navigate to="/provider/shift" replace />;
+    if (user.role === 'promoter') return <Navigate to="/organizer" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
     return <Navigate to="/login" replace />;
   }
@@ -121,6 +122,7 @@ const NurseDashboard = lazyRoute(() => import('./pages/provider/NurseDashboard')
 const RoleOS = lazyRoute(() => import('./pages/provider/RoleOS'));
 const ProviderReports = lazyRoute(() => import('./pages/provider/Reports'));
 const ProviderSettings = lazyRoute(() => import('./pages/provider/Settings'));
+const OrganizerEventHub = lazyRoute(() => import('./pages/organizer/EventHub'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
 const TripPage = lazyRoute(() => import('./pages/TripPage'));
@@ -145,6 +147,7 @@ const PrivacyPolicy = lazyRoute(() => import('./pages/PrivacyPolicy'));
 const TermsAndConditions = lazyRoute(() => import('./pages/TermsAndConditions'));
 const TelehealthDisclaimer = lazyRoute(() => import('./pages/TelehealthDisclaimer'));
 const ProductDisclaimer = lazyRoute(() => import('./pages/ProductDisclaimer'));
+const Waiver = lazyRoute(() => import('./pages/Waiver'));
 const NoticeOfPrivacyPractices = lazyRoute(() => import('./pages/NoticeOfPrivacyPractices'));
 const Partners = lazyRoute(() => import('./pages/Partners'));
 const Platform = lazyRoute(() => import('./pages/Platform'));
@@ -350,6 +353,8 @@ function AppRoutes() {
             <Route path="/terms-of-service" element={<TermsAndConditions />} />
             <Route path="/telehealth-disclaimer" element={<TelehealthDisclaimer />} />
             <Route path="/product-disclaimer" element={<ProductDisclaimer />} />
+            <Route path="/waiver" element={<Waiver />} />
+            <Route path="/liability-waiver" element={<Navigate to="/waiver" replace />} />
             <Route path="/notice-of-privacy-practices" element={<NoticeOfPrivacyPractices />} />
             <Route path="/hipaa-notice" element={<Navigate to="/notice-of-privacy-practices" replace />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
@@ -402,6 +407,8 @@ function AppRoutes() {
             <Route path="/invite/accept" element={<InviteAccept />} />
             <Route path="/account/new-password" element={<NewPassword />} />
             <Route path="/members" element={<Navigate to="/login" replace />} />
+            <Route path="/organizer/login" element={<Navigate to="/login?portal=organizer" replace />} />
+            <Route path="/organizer" element={<RequireAuth allowedRoles={['promoter', 'admin']}><OrganizerEventHub /></RequireAuth>} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/book" element={<RequireAuth allowedRoles={['client', 'admin', 'staff']}><MemberBook /></RequireAuth>} />
             <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />

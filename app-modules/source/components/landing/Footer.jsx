@@ -22,6 +22,7 @@ const COMPANY = [
 const LEGAL = [
   { label: 'Terms',   to: '/terms-of-service' },
   { label: 'Privacy', to: '/privacy-policy' },
+  { label: 'Waiver',  to: '/waiver' },
 ];
 
 const GROUPS = [
