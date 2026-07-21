@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useReducedMotion } from '@/components/ui/PageTransitionMotion';
 
 const DARK_SOURCE_FILTER = 'grayscale(1) contrast(4) brightness(1.55)';
@@ -26,55 +26,16 @@ const AS_SEEN_AT = [
   { name: 'Sanai', src: '/logos/sanai-gpt.png' },
   { name: 'MobileCoin', src: '/logos/mobilecoin-gpt.png', scale: 1.08 },
 ];
+const MOBILE_GROUP_WIDTH = AS_SEEN_AT.length * 152;
 
-// Same iOS-safe scaffold as InstagramFeed's marquee: layer-promoted wrapper,
-// inline CSS keyframes on the strip, pointer-drag pause on mobile, hover pause
-// on desktop, useReducedMotion honored on both surfaces. Standard press-band
-// proportions — small, uniform, trust-building.
+// Same iOS-safe scaffold as InstagramFeed's marquee: layer-promoted wrappers,
+// inline CSS keyframes on both strips, desktop hover pause, and reduced motion
+// honored on both surfaces. Standard press-band proportions — small, uniform,
+// trust-building.
 export default function AsSeenAt() {
   const reduce = useReducedMotion();
   const [hoverPaused, setHoverPaused] = useState(false);
-  const [dragPaused, setDragPaused] = useState(false);
-  const isRunning = !hoverPaused && !dragPaused && !reduce;
-
-  // Mobile auto-drift — RAF+sub-pixel accumulator so mobile engines that round
-  // scrollLeft to whole pixels still get a smooth idle drift.
-  const mobileRef = useRef(null);
-  const resumeTimerRef = useRef(0);
-  useEffect(() => {
-    if (reduce) return;
-    const el = mobileRef.current;
-    if (!el) return;
-    let raf = 0;
-    let last = performance.now();
-    let virtual = el.scrollLeft;
-    const SPEED = 18; // px/s — passive drift; not "reading pace"
-    const tick = (now) => {
-      const dt = Math.min(64, now - last);
-      last = now;
-      if (!dragPaused) {
-        virtual += (SPEED * dt) / 1000;
-        const half = el.scrollWidth / 2;
-        if (half > 0 && virtual >= half) virtual -= half;
-        el.scrollLeft = Math.round(virtual);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [reduce, dragPaused]);
-
-  useEffect(() => () => window.clearTimeout(resumeTimerRef.current), []);
-
-  const pauseForDrag = () => {
-    window.clearTimeout(resumeTimerRef.current);
-    setDragPaused(true);
-  };
-  const resumeAfterDrag = () => {
-    // Native momentum needs a beat to settle before RAF steals scrollLeft back.
-    window.clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = window.setTimeout(() => setDragPaused(false), 1000);
-  };
+  const isRunning = !hoverPaused && !reduce;
 
   const cell = (item, i) => {
     const imageStyle = {
@@ -152,31 +113,37 @@ export default function AsSeenAt() {
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black to-transparent md:w-20" />
       </div>
 
-      {/* Mobile scroller — native overflow-x-auto, RAF auto-drift. */}
-      <div
-        ref={mobileRef}
-        className="av-asa-mobile-scroller mt-4 flex overflow-x-auto md:hidden"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorX: 'contain',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
-        onPointerDown={pauseForDrag}
-        onPointerUp={resumeAfterDrag}
-        onPointerCancel={resumeAfterDrag}
-      >
-        <div className="flex w-max select-none">
+      {/* Mobile marquee — transform the strip instead of mutating scrollLeft.
+          iOS can leave blend-mode paint trails when a native scroller is moved
+          every animation frame, which makes adjacent logos appear to overlap. */}
+      <div className="relative mt-4 h-10 overflow-hidden md:hidden">
+        <div
+          className="av-asa-mobile-strip flex h-10 items-center"
+          style={{
+            width: `${MOBILE_GROUP_WIDTH * 2}px`,
+            maxWidth: 'none',
+            animation: 'av-asa-marquee 90s linear infinite',
+            WebkitAnimation: 'av-asa-marquee 90s linear infinite',
+            animationPlayState: isRunning ? 'running' : 'paused',
+            WebkitAnimationPlayState: isRunning ? 'running' : 'paused',
+            transform: 'translate3d(0, 0, 0)',
+            willChange: 'transform',
+          }}
+        >
           {[0, 1].map((group) => (
             <div
               key={group}
-              className="flex"
+              className="flex shrink-0 select-none"
+              style={{ width: `${MOBILE_GROUP_WIDTH}px`, maxWidth: 'none' }}
               aria-hidden={group === 1 ? 'true' : undefined}
             >
               {AS_SEEN_AT.map(cell)}
             </div>
           ))}
         </div>
+
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[72px] bg-gradient-to-r from-black via-black/70 to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[72px] bg-gradient-to-l from-black via-black/70 to-transparent" />
       </div>
 
       <style>{`
@@ -188,7 +155,6 @@ export default function AsSeenAt() {
           0%   { -webkit-transform: translate3d(0, 0, 0); }
           100% { -webkit-transform: translate3d(-50%, 0, 0); }
         }
-        .av-asa-mobile-scroller::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );
