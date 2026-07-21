@@ -9,7 +9,8 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
 
 const mainLinks = [
-  { to: '/protocols', label: 'IV Therapy' },
+  { to: '/protocols', label: 'Menu' },
+  { to: '/events', label: 'Events' },
   { to: '/subscription', label: 'Plans' },
   { to: '/launches', label: 'Launches' },
 ];
