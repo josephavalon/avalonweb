@@ -885,11 +885,10 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
   min-height: 100dvh;
 }
 
-/* Homepage redesign — screenshot-matched, care-first hero. The homepage owns
-   an opaque black canvas so the site-wide ambient backdrop remains available
-   on interior routes without showing through this composition. */
+/* Homepage redesign — transparent canvas so the single site-wide static
+   Avalon backdrop remains visible behind the full homepage. */
 .av-home-redesign {
-  background: #020202;
+  background: transparent;
   color: #f7f7f7;
 }
 
@@ -909,19 +908,8 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
   min-height: max(100svh, 50rem);
   min-height: max(100dvh, 50rem);
   overflow: hidden;
-  background: #020202;
+  background: transparent;
   color: #f7f7f7;
-}
-
-.home-hero__watermark {
-  position: absolute;
-  z-index: 0;
-  top: 4.8%;
-  right: 10.9%;
-  width: min(38.5vw, 49rem);
-  height: 87%;
-  color: #17191a;
-  pointer-events: none;
 }
 
 .home-hero__content {
@@ -1281,13 +1269,6 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
     padding-top: 8.5rem;
   }
 
-  .home-hero__watermark {
-    top: 10%;
-    right: -8%;
-    width: 54vw;
-    height: 75%;
-    color: #141617;
-  }
 }
 
 /* Keep the full desktop composition on tall canvases, while tightening it on

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CircleDollarSign, MapPin, ShieldPlus, Zap } from 'lucide-react';
-import AvalonMark from '@/components/AvalonMark';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import AsSeenAt from '@/components/landing/AsSeenAt';
 
@@ -34,8 +33,6 @@ export default function Hero() {
 
   return (
     <section className="home-hero" aria-labelledby="home-hero-title">
-      <AvalonMark className="home-hero__watermark" />
-
       <div className="home-hero__content">
         <p className="home-hero__eyebrow">Avalon Vitality</p>
 
