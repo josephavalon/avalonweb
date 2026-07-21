@@ -8,7 +8,10 @@
 
 - Desktop screenshot: `.context/homepage-qa/desktop-final.png`
 - Mobile screenshot: `.context/homepage-qa/mobile-final.png`
+- Short-window correction screenshot: `.context/homepage-qa/compact-safari-size.png`
+- User-reported Safari reference: `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/kFsATZ/Screenshot 2026-07-21 at 10.08.23 AM.png`
 - Desktop viewport: 1985 × 1324 CSS pixels, DPR 1
+- Short-window viewport: 1996 × 1168 CSS pixels, DPR 1
 - Mobile viewport: 390 × 844 CSS pixels, DPR 1
 - State: homepage with `care=1`, dark canvas, care navigation, Acuity booking destination
 
@@ -25,9 +28,9 @@
 
 **Findings**
 
-- No actionable P0, P1, or P2 differences remain.
+- No actionable P0, P1, or P2 differences remain after the user's short-window sizing correction.
 - Fonts and typography: existing Bebas Neue and Inter assets match the reference's condensed display face and tracked utility copy. Final desktop line positions are within 0–5 pixels of the normalized reference across the eyebrow, both headline lines, proof rows, button, and supporting links.
-- Spacing and layout rhythm: desktop left edge, vertical cadence, CTA dimensions, navigation columns, and oversized watermark match the reference. Mobile preserves the hierarchy, keeps the full conversion block above the fold, and has no horizontal overflow.
+- Spacing and layout rhythm: tall desktop preserves the supplied redesign reference. At 1200px viewport height and below, the headline, proof rail, CTA stack, and vertical gaps compact together; the hero ends at the CTA stack and the following section begins with zero empty background gap. Mobile preserves its established hierarchy and has no horizontal overflow.
 - Colors and visual tokens: the page uses the reference's near-black canvas, off-white type/button, subtle gray rules, and low-contrast charcoal watermark without gradients or invented decoration.
 - Image quality and asset fidelity: the supplied `/avalon-logo.svg` is reused for both the logo and watermark. Visible UI icons come from the project's icon library; the circular dollar icon was selected to match the reference rather than approximated with custom artwork.
 - Copy and content: `AVALON VITALITY`, `MOBILE RECOVERY`, all four proof points, `BOOK NOW`, `VIEW MENU`, and `PRIVATE EVENTS` match the reference. Care navigation contains exactly `BOOK`, `MENU`, and `EVENTS`; `PLANS` is absent.
@@ -55,12 +58,15 @@
 - Pass 2 findings: headline leading, proof-row cadence, and lower CTA rhythm remained 12–40 pixels tighter than the source.
 - Pass 2 fixes: matched headline leading, redistributed margin between the headline and proof rail, expanded proof row spacing, and compensated the action spacing to preserve CTA position.
 - Final visual evidence: desktop full-view and focused comparisons show no actionable P0/P1/P2 drift; responsive mobile evidence shows no overflow, clipping, overlap, or off-screen primary action.
+- User correction: a 1996 × 1168 Safari-sized viewport previously produced a 1251px hero and an additional 64px section lead-in. The corrected layout produces an 894px hero, a 448 × 76px primary CTA, and zero pixels between the CTA stack, hero edge, and first below-fold card.
 
 **Implementation Checklist**
 
 - [x] Desktop source/implementation comparison
 - [x] Focused navigation and hero comparison
 - [x] 390 × 844 mobile verification
+- [x] 1996 × 1168 short-window spacing correction
+- [x] Empty black transition gap removed
 - [x] Primary navigation and CTA interactions
 - [x] Console/runtime error check
 - [x] Acuity availability check
