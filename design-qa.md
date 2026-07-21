@@ -1,78 +1,49 @@
-**Source visual truth**
+**Correction target**
 
-- Original: `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/s9Nr4k/Screenshot 2026-07-21 at 9.40.36 AM.png`
-- Normalized page canvas: `.context/homepage-qa/source-normalized.png`
-- The source viewer's outer rounded frame and bottom-right viewer control are presentation chrome, not homepage UI, and are excluded from implementation requirements.
+- User-reported oversized desktop state: `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/6lTGVX/Screenshot 2026-07-21 at 10.42.43 AM.png`
+- Explicit requirements: restore the pre-redesign standard sizing and keep the next card completely below the desktop fold.
+- Existing product scale used as the source of truth: the prior homepage `text-display-xl` token (`clamp(3.5rem, 9vw, 8rem)`), the 64px desktop navigation, 14px proof copy, and 448px action rail.
 
 **Implementation evidence**
 
-- Desktop screenshot: `.context/homepage-qa/desktop-final.png`
-- Mobile screenshot: `.context/homepage-qa/mobile-final.png`
-- Short-window correction screenshot: `.context/homepage-qa/compact-safari-size.png`
-- User-reported Safari reference: `/Users/josephmbp/conductor/workspaces/avalonweb/vilnius/.context/attachments/kFsATZ/Screenshot 2026-07-21 at 10.08.23 AM.png`
-- Desktop viewport: 1985 × 1324 CSS pixels, DPR 1
-- Short-window viewport: 1996 × 1168 CSS pixels, DPR 1
-- Mobile viewport: 390 × 844 CSS pixels, DPR 1
-- State: homepage with `care=1`, dark canvas, care navigation, Acuity booking destination
-
-**Full-view comparison evidence**
-
-- Combined source/implementation image: `.context/homepage-qa/desktop-comparison-final.png`
-- Composition, hierarchy, copy, hero proportions, CTA geometry, navigation, and watermark placement were compared at the same viewport and state.
-
-**Focused region comparison evidence**
-
-- Navigation: `.context/homepage-qa/nav-comparison-final.png`
-- Hero typography, proof rail, and CTAs: `.context/homepage-qa/hero-copy-comparison-final.png`
-- Focused comparisons were required because the navigation type, proof icons, underline lengths, and display-font rhythm are too small to judge reliably in the full-view comparison alone.
+- Corrected desktop screenshot: `.context/homepage-qa/prior-scale-1996x1168.png`
+- Before/after comparison: `.context/homepage-qa/prior-scale-comparison.png`
+- Primary desktop viewport: 1996 × 1168 CSS pixels, matching the visible page area in the supplied Safari capture after browser chrome is removed.
+- Additional viewports: 1985 × 1324 desktop and 390 × 844 mobile.
+- State: homepage with care-host behavior, Book linked to Acuity, dark canvas, and below-fold content loaded.
 
 **Findings**
 
-- No actionable P0, P1, or P2 differences remain after the user's short-window sizing correction.
-- Fonts and typography: existing Bebas Neue and Inter assets match the reference's condensed display face and tracked utility copy. Final desktop line positions are within 0–5 pixels of the normalized reference across the eyebrow, both headline lines, proof rows, button, and supporting links.
-- Spacing and layout rhythm: tall desktop preserves the supplied redesign reference. At 1200px viewport height and below, the headline, proof rail, CTA stack, and vertical gaps compact together; the hero ends at the CTA stack and the following section begins with zero empty background gap. Mobile preserves its established hierarchy and has no horizontal overflow.
-- Colors and visual tokens: the page uses the reference's near-black canvas, off-white type/button, subtle gray rules, and low-contrast charcoal watermark without gradients or invented decoration.
-- Image quality and asset fidelity: the supplied `/avalon-logo.svg` is reused for both the logo and watermark. Visible UI icons come from the project's icon library; the circular dollar icon was selected to match the reference rather than approximated with custom artwork.
-- Copy and content: `AVALON VITALITY`, `MOBILE RECOVERY`, all four proof points, `BOOK NOW`, `VIEW MENU`, and `PRIVATE EVENTS` match the reference. Care navigation contains exactly `BOOK`, `MENU`, and `EVENTS`; `PLANS` is absent.
-- Accessibility and behavior: semantic headings, lists, links, labels, visible focus states, 44-pixel-plus tap targets, Escape-to-close, and focus restoration are present.
+- No actionable P0, P1, or P2 issues remain.
+- Desktop typography now uses the established prior scale rather than the screenshot-redesign scale. At 1996 × 1168, the headline renders at 409 × 225px with a maximum 128px font size.
+- Desktop navigation is restored to the standard 64px height with the smaller brand lockup, 18px links, and 48px contact controls.
+- The proof rail uses the prior 14px copy and 16px icons. The primary action rail is 448px wide and the Book control is 72px high.
+- The hero is exactly one dynamic viewport high. At 1996 × 1168, the first card begins at y=1232; at 1985 × 1324, it begins at y=1388. It is not visible in either desktop first frame.
+- Mobile retains its established 390 × 844 composition. The first card begins at y=884, Book remains above the fold, and document width equals viewport width.
+- The supplied Avalon mark is reused for the reduced desktop watermark; all visible UI icons continue to come from the project icon library.
 
-**Primary interactions tested**
+**Primary behavior checked**
 
-- Desktop and mobile Book links resolve to `https://app.acuityscheduling.com/schedule/a9d85b1e`; the destination returned HTTP 200.
-- Menu loads `/protocols` and renders the IV catalog.
-- Events loads `/events` and renders the event builder and event lists.
-- Mobile menu opens, exposes Book/Menu/Events, closes with Escape, and restores focus to the menu trigger.
-- Phone and text links expose the correct `tel:` and `sms:` destinations.
+- Book resolves to `https://app.acuityscheduling.com/schedule/a9d85b1e`.
+- Menu and Events remain in the desktop navigation and hero action rail.
+- `PLANS` remains absent from the care-host hero.
+- Desktop and mobile document widths match their viewports with no horizontal overflow.
+- Browser console reports zero errors and zero warnings.
 
-**Console and runtime checks**
+**Iteration history**
 
-- Browser console: 0 errors, 0 warnings on the final homepage capture.
-- Desktop document width: 1985px viewport / 1985px scroll width.
-- Mobile document width: 390px viewport / 390px scroll width.
+- Previous pass reduced the composition but allowed the next card to enter the desktop viewport and retained larger redesign typography.
+- Current pass restored the prior typography and control scale, reduced the navigation and watermark, reinstated full-viewport hero height, and restored the section's normal below-fold spacing.
+- The combined before/after image confirms the scale reduction; browser geometry confirms that the next card is fully below the fold.
 
-**Comparison history**
+**Implementation checklist**
 
-- Initial gate: blocked because the embedded browser was unavailable and direct Playwright use required user approval.
-- Pass 1 findings: headline and proof typography were too compact; the watermark was too far right; desktop navigation content started too far right; the fee icon did not match the circular source icon.
-- Pass 1 fixes: increased headline optical scale while preserving line-box height, expanded proof scale and spacing, shifted/resized the watermark, aligned the navigation grid, and changed to the matching circular dollar icon.
-- Pass 2 findings: headline leading, proof-row cadence, and lower CTA rhythm remained 12–40 pixels tighter than the source.
-- Pass 2 fixes: matched headline leading, redistributed margin between the headline and proof rail, expanded proof row spacing, and compensated the action spacing to preserve CTA position.
-- Final visual evidence: desktop full-view and focused comparisons show no actionable P0/P1/P2 drift; responsive mobile evidence shows no overflow, clipping, overlap, or off-screen primary action.
-- User correction: a 1996 × 1168 Safari-sized viewport previously produced a 1251px hero and an additional 64px section lead-in. The corrected layout produces an 894px hero, a 448 × 76px primary CTA, and zero pixels between the CTA stack, hero edge, and first below-fold card.
-
-**Implementation Checklist**
-
-- [x] Desktop source/implementation comparison
-- [x] Focused navigation and hero comparison
-- [x] 390 × 844 mobile verification
-- [x] 1996 × 1168 short-window spacing correction
-- [x] Empty black transition gap removed
-- [x] Primary navigation and CTA interactions
+- [x] User-supplied desktop symptom capture opened
+- [x] Before/after comparison opened as one image
+- [x] 1996 × 1168 desktop verification
+- [x] 1985 × 1324 tall-desktop verification
+- [x] 390 × 844 mobile regression verification
+- [x] CTA destination and horizontal-overflow checks
 - [x] Console/runtime error check
-- [x] Acuity availability check
-
-**Follow-up Polish**
-
-- P3: source raster antialiasing is slightly softer than the live browser's locally rendered vector type and logo; this is expected and not actionable.
 
 final result: passed
