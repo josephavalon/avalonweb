@@ -458,6 +458,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
   const bookHref = care ? ACUITY_URL : BOOK_URL;
   const bookIsExternal = care;
+  const centeredLinks = care
+    ? [{ to: bookHref, label: 'Book', external: true }, ...mainLinks]
+    : mainLinks;
   const mobileLinks = [
     { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
     ...mainLinks,
@@ -560,8 +563,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         {/* Col 2 — nav links, auto width, inherently centered */}
         {!compact && !focusMode && (
           <div className="flex items-center justify-center gap-7">
-            {mainLinks.map((link) => {
-              const active = isActiveLink(link.to);
+            {centeredLinks.map((link) => {
+              const active = !link.external && isActiveLink(link.to);
               // Audit finding D8: active-page nav link gets a 1px accent
               // underline so users can tell which section they're in.
               const baseClassName = 'relative inline-flex min-h-10 items-center justify-center px-1 pb-0.5 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] transition-colors';
@@ -573,6 +576,13 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
               if (link.to === '/protocols') {
                 return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
+              }
+              if (link.external) {
+                return (
+                  <a key={link.to} href={link.to} className={linkClassName}>
+                    <span className="relative z-10">{link.label}</span>
+                  </a>
+                );
               }
               return (
                 <Link
@@ -617,16 +627,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {/* Audit finding K6/D7: hide Sign In on /login (redundant with the
               sign-in card); hide on /signup (users already in a signup flow). */}
           {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
-          {!compact && !focusMode && (bookIsExternal ? (
-            <PremiumButton
-              as="a"
-              href={bookHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
-            >
-              Book
-              <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
-            </PremiumButton>
-          ) : (
+          {!compact && !focusMode && !care && (
             <PremiumButton
               as={Link}
               to={bookHref}
@@ -635,7 +636,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               Book
               <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
             </PremiumButton>
-          ))}
+          )}
         </div>
       </div>
 

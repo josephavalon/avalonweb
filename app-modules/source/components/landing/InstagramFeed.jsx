@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Instagram, Pause, Play } from 'lucide-react';
+import { ArrowRight, Instagram } from 'lucide-react';
 import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import ScrollParallax from '@/components/ui/ScrollParallax';
 import { PLACEHOLDER_POSTS, IG_HANDLE_URL } from './InstagramFeed.data.js';
@@ -88,7 +88,6 @@ function RibbonTile({ post }) {
 }
 
 export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS, handleUrl = IG_HANDLE_URL }) {
-  const [paused, setPaused] = useState(false);
   const [hoverPaused, setHoverPaused] = useState(false);
   const [mobileDragging, setMobileDragging] = useState(false);
   const [mobileHovered, setMobileHovered] = useState(false);
@@ -104,7 +103,7 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
   const source = Array.from({ length: IG_LIMIT }, (_, i) => seed[i % seed.length]).slice(0, IG_LIMIT);
   const loop = [...source, ...source];
 
-  const isRunning = !paused && !hoverPaused && !reduce;
+  const isRunning = !hoverPaused && !reduce;
   const mobileInteractionPaused = mobileDragging || mobileHovered;
 
   useEffect(() => {
@@ -158,7 +157,7 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
     <section id="instagram" className="pt-10 pb-10 md:pt-16 md:pb-16 scroll-mt-20 overflow-hidden">
       {/* Header — content-column width */}
       <div className="max-w-6xl mx-auto px-4">
-        <ScrollParallax className="mb-6 md:mb-8 flex items-end justify-between gap-4">
+        <ScrollParallax className="mb-6 md:mb-8">
           <div className="min-w-0">
             <p
               className="mb-2 font-body text-[11px] uppercase leading-relaxed tracking-[0.22em] text-foreground/55 md:text-xs"
@@ -169,20 +168,6 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl text-foreground uppercase tracking-tight leading-[0.92]">
               Live from the field
             </h2>
-          </div>
-
-          <div className="hidden md:flex shrink-0 items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setPaused((p) => !p)}
-              className="flex items-center gap-1.5 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/55 transition-colors duration-base ease-editorial hover:text-foreground"
-              aria-label={paused ? 'Play marquee' : 'Pause marquee'}
-            >
-              {paused ? <Play className="h-3 w-3" strokeWidth={2} /> : <Pause className="h-3 w-3" strokeWidth={2} />}
-              <span>{paused ? 'Play' : 'Pause'}</span>
-            </button>
-            <span aria-hidden="true" className="text-foreground/30">/</span>
-            <ArrowRight className="h-4 w-4 text-foreground/55" strokeWidth={2} />
           </div>
         </ScrollParallax>
       </div>
