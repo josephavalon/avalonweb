@@ -137,11 +137,11 @@ function VisitCard({ visit, onText, onStatus, onComplete }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => onText(visit, 'eta')}
+          onClick={() => onText(visit, 'route')}
           className="inline-flex min-h-[36px] items-center justify-center gap-2 rounded-full border border-foreground/18 bg-foreground px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background transition-transform active:scale-[0.98]"
         >
           <Send className="h-3.5 w-3.5" strokeWidth={2} />
-          ETA
+          On My Way
         </button>
         {canArrive && (
           <button
@@ -343,7 +343,7 @@ export default function FieldControl() {
   return (
     <AdminShell title="Field">
       <PageShell embedded
-        eyebrow="ETA · route · closeout"
+        eyebrow="route · arrival · closeout"
         title="Field Control"
         subtitle="Visit execution without becoming the EMR."
         action={(
@@ -378,7 +378,7 @@ export default function FieldControl() {
           )}
 
           <div className="grid gap-3 md:grid-cols-2">
-            <Metric label="Assigned" value={tower.metrics.assigned} detail="ready for ETA" icon={Send} tone={tower.metrics.assigned ? 'action' : 'default'} />
+            <Metric label="Assigned" value={tower.metrics.assigned} detail="route ready" icon={Send} tone={tower.metrics.assigned ? 'action' : 'default'} />
             <Metric label="En Route" value={tower.metrics.enRoute} detail="moving" icon={Navigation} tone={tower.metrics.enRoute ? 'action' : 'default'} />
             <Metric label="Arrived" value={tower.metrics.arrived} detail="at site" icon={MapPin} tone={tower.metrics.arrived ? 'action' : 'default'} />
             <Metric label="In Progress" value={tower.metrics.inProgress} detail="active visit" icon={Play} tone={tower.metrics.inProgress ? 'action' : 'default'} />

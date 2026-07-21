@@ -19,7 +19,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
       plan: tier.name,
       date: 'First visit pending',
       time: 'Intake',
-      address: form.zip ? `ZIP ${form.zip}` : 'Service area pending',
+      address: form.zip ? `ZIP ${form.zip}` : 'ZIP pending',
       contact: { name: form.name, email: form.email, phone: form.phone },
       nurse: 'Unassigned',
       status: 'Subscription intake',
@@ -87,7 +87,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
                 ['name', 'Full Name', 'text', 'Jane Smith', 'name'],
                 ['email', 'Email', 'email', 'jane@example.com', 'email'],
                 ['phone', 'Phone', 'tel', '(415) 000-0000', 'tel'],
-                ['zip', 'Service ZIP Code', 'text', '94102', 'numeric'],
+                ['zip', 'ZIP Code', 'text', '94102', 'numeric'],
               ].map(([key, label, type, placeholder, inputMode]) => (
                 <div key={key}>
                   <label className="font-body text-[9px] tracking-[0.2em] uppercase text-foreground/40 block mb-1">{label}</label>
@@ -96,7 +96,7 @@ export default function SubscriptionCheckoutDrawer({ tier, onClose }) {
                     type={type}
                     inputMode={inputMode === 'numeric' ? 'numeric' : undefined}
                     value={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                    onChange={e => setForm(f => ({ ...f, [key]: key === 'zip' ? e.target.value.replace(/\D/g, '').slice(0, 5) : e.target.value }))}
                     placeholder={placeholder}
                     className="w-full min-h-[52px] bg-foreground/[0.04] border border-foreground/[0.1] rounded-xl px-4 py-3 font-body text-base md:text-sm text-foreground placeholder-foreground/25 focus:outline-none focus:border-foreground/30 transition-colors"
                   />

@@ -57,7 +57,7 @@ export function CartProvider({ children }) {
   }, [membership]);
 
   const addItem = useCallback((item) => {
-    // item shape: { cartKey, label, price, type: 'iv'|'im', personId?, personLabel? }
+    // item shape: { cartKey, label, price, quantity?, type: 'iv'|'im'|'addon', personId?, personLabel? }
     setItems((prev) =>
       prev.find((i) => i.cartKey === item.cartKey) ? prev : [...prev, item]
     );
@@ -88,8 +88,8 @@ export function CartProvider({ children }) {
 
   const clearAppointment = useCallback(() => setAppointmentState(null), []);
 
-  const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
-  const totalCount = items.length + (membership ? 1 : 0);
+  const itemsTotal = items.reduce((sum, i) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
+  const totalCount = items.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0) + (membership ? 1 : 0);
 
   return (
     <CartContext.Provider value={{

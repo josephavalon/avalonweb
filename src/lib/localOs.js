@@ -33,6 +33,29 @@ export function clearLocal(key) {
   }
 }
 
+// Wipe every Avalon-prefixed localStorage entry. Called on sign-out so a
+// shared device doesn't carry one user's redacted booking draft / activity
+// log into the next user's session. Cookie consent + attribution are kept;
+// they're device-level preferences, not user data.
+const SIGNOUT_PRESERVE = new Set(['cookieConsent', 'av.analytics.attribution']);
+export function clearAllAvLocal() {
+  if (typeof window === 'undefined') return;
+  try {
+    const toRemove = [];
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (!key) continue;
+      if (SIGNOUT_PRESERVE.has(key)) continue;
+      if (key.startsWith(PREFIX) || key.startsWith('av_') || key.startsWith('av.')) {
+        toRemove.push(key);
+      }
+    }
+    toRemove.forEach((key) => window.localStorage.removeItem(key));
+  } catch (err) {
+    if (import.meta.env?.DEV) console.warn('[local-os-clear-all]', err);
+  }
+}
+
 export function appendActivity(text, meta = {}) {
   const item = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,

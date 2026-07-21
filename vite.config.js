@@ -12,9 +12,10 @@ const API_ROUTES = {
   '/api/create-checkout-session': './api/create-checkout-session.js',
   '/api/integrations/acuity/test': './api/integrations/acuity/test.js',
   '/api/integrations/acuity/webhook': './api/integrations/acuity/webhook.js',
-  '/api/integrations/attio/test': './api/integrations/attio/test.js',
-  '/api/integrations/attio/upsert-person': './api/integrations/attio/upsert-person.js',
+  '/api/integrations/hubspot/test': './api/integrations/hubspot/test.js',
+  '/api/integrations/hubspot/upsert-contact': './api/integrations/hubspot/upsert-contact.js',
   '/api/integrations/stripe/test': './api/integrations/stripe/test.js',
+  '/api/admin/guest-profile': './api/admin/guest-profile.js',
 };
 
 async function readJsonBody(req) {
@@ -53,29 +54,36 @@ function createVercelResponse(res) {
 }
 
 function localApiPlugin() {
+  const mountLocalApi = (middlewares, logger) => {
+    middlewares.use((req, res, next) => {
+      const url = new URL(req.url || '/', 'http://localhost');
+      const routeFile = API_ROUTES[url.pathname];
+      if (!routeFile) return next();
+
+      (async () => {
+        try {
+          const moduleUrl = pathToFileURL(path.resolve(process.cwd(), routeFile)).href;
+          const { default: handler } = await import(`${moduleUrl}?t=${Date.now()}`);
+          req.query = Object.fromEntries(url.searchParams.entries());
+          req.body = ['POST', 'PUT', 'PATCH'].includes(req.method || '') ? await readJsonBody(req) : {};
+          await handler(req, createVercelResponse(res));
+        } catch (err) {
+          logger.error(err);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: err.message || 'Local API failed' }));
+        }
+      })();
+    });
+  };
+
   return {
     name: 'avalon-local-api',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        const url = new URL(req.url || '/', 'http://localhost');
-        const routeFile = API_ROUTES[url.pathname];
-        if (!routeFile) return next();
-
-        (async () => {
-          try {
-            const moduleUrl = pathToFileURL(path.resolve(process.cwd(), routeFile)).href;
-            const { default: handler } = await import(`${moduleUrl}?t=${Date.now()}`);
-            req.query = Object.fromEntries(url.searchParams.entries());
-            req.body = ['POST', 'PUT', 'PATCH'].includes(req.method || '') ? await readJsonBody(req) : {};
-            await handler(req, createVercelResponse(res));
-          } catch (err) {
-            server.config.logger.error(err);
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ error: err.message || 'Local API failed' }));
-          }
-        })();
-      });
+      mountLocalApi(server.middlewares, server.config.logger);
+    },
+    configurePreviewServer(server) {
+      mountLocalApi(server.middlewares, server.config.logger);
     },
   };
 }
@@ -144,6 +152,22 @@ function redactDemoPasswordPlugin(isLiveApiEnabled) {
 export default defineConfig(({ mode }) => {
   applyEnv(mode);
   const liveApiEnabled = process.env.VITE_AVALON_ENABLE_LIVE_API === 'true';
+  // Staging and prod share the same `vite build` invocation; the only signal
+  // that this is a prod-host build is VITE_AVALON_ENABLE_LIVE_API=true. A prod
+  // deploy with the flag missing would ship a demo-bearing bundle, which is a
+  // HIPAA finding. Fail loud at build time so the deployer can't ship it
+  // accidentally. Set AVALON_ALLOW_STAGING_BUILD=true to bypass for staging.
+  if (
+    mode === 'production'
+    && !liveApiEnabled
+    && process.env.VITE_AVALON_DEMO_PASSWORD
+    && process.env.AVALON_ALLOW_STAGING_BUILD !== 'true'
+  ) {
+    throw new Error(
+      'Refusing to build: production mode with VITE_AVALON_DEMO_PASSWORD set but VITE_AVALON_ENABLE_LIVE_API!=true. '
+      + 'Set VITE_AVALON_ENABLE_LIVE_API=true for prod hosts, or AVALON_ALLOW_STAGING_BUILD=true for staging.'
+    );
+  }
   const fixtureAliases = mode === 'development'
     ? [
         { find: /^@\/fixtures\/adminMockData$/, replacement: path.resolve(import.meta.dirname, './src/data/adminMockData.js') },
@@ -181,11 +205,9 @@ export default defineConfig(({ mode }) => {
     host: true,
     port: 5173,
     strictPort: true,
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: 5173,
-    },
+    // Let Vite derive the HMR socket from the actual preview origin. Conductor
+    // commonly overrides the dev port (for example to 3010); pinning this to
+    // localhost:5173 made those previews reconnect to the wrong server.
     watch: {
       ignored: ['**/vite.config.js.timestamp-*.mjs'],
     },
@@ -200,6 +222,11 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/')
+          ) return 'react-vendor';
           // `motion` (formerly framer-motion) + its motion-dom/motion-utils deps
           if (id.includes('node_modules/motion')) return 'motion-vendor';
           if (id.includes('node_modules/lucide-react')) return 'icons-vendor';

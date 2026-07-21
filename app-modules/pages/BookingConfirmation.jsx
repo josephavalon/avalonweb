@@ -9,6 +9,8 @@ import Navbar from '@/components/landing/Navbar';
 import { useSeo } from '@/lib/seo';
 import { readLastBooking, saveLastBooking, appendActivity } from '@/lib/localOs';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
+import ReceiptCard from '@/components/booking/ReceiptCard';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
@@ -459,7 +461,7 @@ export default function BookingConfirmation() {
     <div className="av-page-surface min-h-screen">
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-24 space-y-5">
+      <main id="main-content" className="max-w-lg mx-auto px-5 md:px-8 pt-24 pb-24 space-y-5">
 
         {/* ── 1. Hero ─────────────────────────────────────────── */}
         <motion.div
@@ -492,34 +494,36 @@ export default function BookingConfirmation() {
               </div>
             )}
 
-            {/* Real booking details */}
+            {/* Real booking details — full receipt with balance after visit
+                and next clinical step. Replaces the prior DetailPill grid,
+                which omitted the balance and made the math read as incoherent
+                ("$50 paid" with no follow-up amount). */}
             {(referenceNum || apptDate) && (
-              <div className="mx-auto grid grid-cols-2 gap-2 rounded-[1.5rem] border border-foreground/[0.08] bg-foreground/[0.03] p-2 backdrop-blur-xl">
-                {serviceLabel && (
-                  <DetailPill icon={Droplets} label="Service" value={serviceLabel} />
-                )}
-                {apptDate && apptTime && (
-                  <DetailPill icon={Clock} label="When" value={`${apptDate} · ${apptTime}`} />
-                )}
-                {apptAddress && (
-                  <DetailPill icon={MapPin} label="Where" value={apptAddress} />
-                )}
-                {localBooking?.depositAmount != null && (
-                  <DetailPill icon={CreditCard} label="Today" value={`$${Number(localBooking.depositAmount).toLocaleString()} ${paymentSuccess ? 'paid' : 'due'}`} />
-                )}
-                {referenceNum && (
-                  <DetailPill icon={Hash} label="ID" value={referenceNum} />
-                )}
-              </div>
+              <ReceiptCard
+                service={serviceLabel}
+                when={apptDate && apptTime ? `${apptDate} · ${apptTime}` : apptDate || null}
+                location={apptAddress}
+                depositPaid={
+                  localBooking?.depositAmount != null
+                    ? `$${Number(localBooking.depositAmount).toLocaleString()} ${paymentSuccess ? 'paid' : 'due'}`
+                    : null
+                }
+                balanceDue={
+                  localBooking?.balanceDue != null && Number(localBooking.balanceDue) > 0
+                    ? `$${Number(localBooking.balanceDue).toLocaleString()} after visit`
+                    : null
+                }
+                nextStep={
+                  paymentSuccess
+                    ? (localBooking?.nextStep || 'Clinical review, registered nurse assignment, arrival text.')
+                    : null
+                }
+                referenceNum={referenceNum}
+              />
             )}
 
-            {paymentSuccess && (
-              <div className="mt-3 rounded-[1.25rem] border border-foreground/[0.08] bg-foreground/[0.03] px-4 py-3 text-left backdrop-blur-xl">
-                <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-foreground/38">Next</p>
-                <p className="mt-1 font-body text-sm font-semibold leading-snug text-foreground/72">
-                  Clinical review, registered nurse assignment, arrival text.
-                </p>
-              </div>
+            {(referenceNum || apptDate) && (
+              <ClinicalTrustStrip variant="compact" className="mx-auto mt-3 max-w-xl" />
             )}
 
             {apptError && (
@@ -601,7 +605,7 @@ export default function BookingConfirmation() {
           </Link>
         </motion.div>
 
-      </div>
+      </main>
     </div>
   );
 }

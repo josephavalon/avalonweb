@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -83,8 +84,8 @@ function scanDist() {
       label: 'Resend secret env name',
     },
     {
-      value: 'ATTIO_ACCESS_TOKEN',
-      label: 'Attio secret env name',
+      value: 'HUBSPOT_ACCESS_TOKEN',
+      label: 'HubSpot secret env name',
     },
   ];
 
@@ -103,6 +104,17 @@ function scanDist() {
     const source = fs.readFileSync(filePath, 'utf8');
     for (const { value, label } of forbiddenLiterals) {
       if (value && source.includes(value)) {
+        fail(`${relative(filePath)} contains ${label}`);
+      }
+    }
+
+    const secretValuePatterns = [
+      { pattern: /\bsk_(?:live|test)_[A-Za-z0-9_]+/g, label: 'Stripe secret key value' },
+      { pattern: /\bsb_secret_[A-Za-z0-9_]+/g, label: 'Supabase secret key value' },
+      { pattern: /\bre_[A-Za-z0-9_]{20,}/g, label: 'Resend API key value' },
+    ];
+    for (const { pattern, label } of secretValuePatterns) {
+      if (pattern.test(source)) {
         fail(`${relative(filePath)} contains ${label}`);
       }
     }
@@ -294,6 +306,84 @@ function checkAppointmentSummaryAuth() {
   }
 }
 
+// Any source file outside the appointment-summary endpoint itself that builds
+// a summary_token query parameter would leak the token into Vercel access logs
+// and browser history. The endpoint already rejects this transport — this
+// check makes sure nobody silently builds such a URL.
+// Every endpoint under api/admin/ must gate on requireAdmin/requireStaff/
+// requireRole — those helpers carry the MFA_ENFORCED check. Adding an admin
+// route that does its own auth would silently bypass the MFA gate.
+// The production CSP drops 'unsafe-inline' from script-src by hashing the only
+// inline script (the JSON-LD MedicalBusiness block in index.html). If anyone
+// edits that block, the hash falls out of date and the JSON-LD silently fails
+// to apply in browsers — search engines lose the structured-data hint and the
+// CSP report shows violations. Re-hash and update vercel.json when this fires.
+function checkCspJsonLdHash() {
+  const html = readRepoFile('index.html');
+  const match = html.match(/<script type="application\/ld\+json">\n([\s\S]*?)\n {4}<\/script>/);
+  if (!match) {
+    fail('index.html: JSON-LD <script type="application/ld+json"> block not found in expected format');
+    return;
+  }
+  const hash = crypto.createHash('sha256').update(match[1]).digest('base64');
+  const expectedDirective = `'sha256-${hash}'`;
+  const vercel = readRepoFile('vercel.json');
+  if (!vercel.includes(`sha256-${hash}`)) {
+    fail(`vercel.json: CSP script-src is missing the current JSON-LD hash. Update it to ${expectedDirective}`);
+  }
+  if (/script-src\s+[^;]*'unsafe-inline'/.test(vercel)) {
+    fail("vercel.json: CSP script-src still contains 'unsafe-inline' — remove it and rely on the JSON-LD hash");
+  }
+}
+
+function checkAdminEndpointsGated() {
+  const adminDir = path.join(repoRoot, 'api/admin');
+  if (!fs.existsSync(adminDir)) return;
+  const gates = ['requireAdmin', 'requireStaff', 'requireRole'];
+  for (const filePath of walkFiles(adminDir)) {
+    if (!/\.(?:js|mjs|ts)$/i.test(filePath)) continue;
+    const source = fs.readFileSync(filePath, 'utf8');
+    if (!gates.some((gate) => source.includes(gate))) {
+      fail(`${relative(filePath)} is under api/admin/ but does not call requireAdmin/requireStaff/requireRole — would bypass the MFA gate`);
+    }
+  }
+  const helperSource = readRepoFile('api/_lib/supabase-auth.js');
+  for (const required of ['mfaEnforced', "'aal2'", 'MFA_ENFORCED']) {
+    if (!helperSource.includes(required)) {
+      fail(`api/_lib/supabase-auth.js missing MFA enforcement plumbing: ${required}`);
+    }
+  }
+}
+
+function checkSummaryTokenNotInQueryString() {
+  const sourceDirs = ['src', 'app-modules', 'api'];
+  const allowFiles = new Set([
+    path.join(repoRoot, 'api/appointment-summary.js'),
+    path.join(repoRoot, 'scripts/launch-blocker-qa.mjs'),
+  ]);
+  const queryUsagePatterns = [
+    /[?&]summary_token=/,
+    /summary_token['"]\s*,\s*['"]/,
+    /set\(['"]summary_token['"]/,
+    /append\(['"]summary_token['"]/,
+  ];
+  for (const dir of sourceDirs) {
+    const root = path.join(repoRoot, dir);
+    if (!fs.existsSync(root)) continue;
+    for (const filePath of walkFiles(root)) {
+      if (allowFiles.has(filePath)) continue;
+      if (!/\.(?:js|jsx|ts|tsx|mjs|cjs)$/i.test(filePath)) continue;
+      const source = fs.readFileSync(filePath, 'utf8');
+      for (const pattern of queryUsagePatterns) {
+        if (pattern.test(source)) {
+          fail(`${relative(filePath)} builds summary_token into a URL/query — tokens must travel via the x-appointment-summary-token header only`);
+          break;
+        }
+      }
+    }
+  }
+}
+
 function checkDemoAuthHardening() {
   const authStoreSource = readRepoFile('src/lib/useAuthStore.js');
   const preApiSecuritySource = readRepoFile('src/lib/preApiSecurity.js');
@@ -441,7 +531,7 @@ function checkLaunchEnvDocs() {
     'AVALON_INTERNAL_API_SECRET',
     'ACUITY_API_KEY',
     'RESEND_API_KEY',
-    'ATTIO_ACCESS_TOKEN',
+    'HUBSPOT_ACCESS_TOKEN',
     'KV_REST_API_URL',
     'KV_REST_API_TOKEN',
   ]) {
@@ -496,16 +586,113 @@ function checkGoLiveStatusLedger() {
   }
 }
 
+function checkServiceWorkerKillSwitch() {
+  const source = readRepoFile('public/sw.js');
+  for (const required of [
+    'self.skipWaiting()',
+    'caches.delete',
+    'self.registration.unregister()',
+    'client.navigate(client.url)',
+    'No fetch handler',
+  ]) {
+    if (!source.includes(required)) {
+      fail(`public/sw.js must remain a cache-clearing kill switch: ${required}`);
+    }
+  }
+  if (/addEventListener\(['"]fetch['"]/.test(source)) {
+    fail('public/sw.js must not register a fetch handler or reintroduce service-worker caching');
+  }
+}
+
+function checkNoProdDeployAutomation() {
+  const automationFiles = [
+    'package.json',
+    '.github/workflows/ci.yml',
+    '.github/workflows/go-live-verify.yml',
+    'scripts/snooches-safe-deploy.mjs',
+  ];
+  for (const file of automationFiles) {
+    if (!fs.existsSync(path.join(repoRoot, file))) continue;
+    const source = readRepoFile(file);
+    if (/\bvercel\s+deploy\b[^\n]*\s--prod\b/.test(source)) {
+      fail(`${file} must not run vercel deploy --prod`);
+    }
+    if (/\bvercel\s+promote\b/.test(source)) {
+      fail(`${file} must not promote a deployment to the protected main production aliases`);
+    }
+    if (/\bvercel\s+alias\s+set\b[^\n]\s+(?:avalonvitality\.co|www\.avalonvitality\.co)\b/.test(source)) {
+      fail(`${file} must not alias the protected main production domains`);
+    }
+  }
+}
+
+function checkAdminApiFunctionsAreDeployable() {
+  const financeUi = readRepoFile('app-modules/pages/admin/FinanceControl.jsx');
+  const bookingsUi = readRepoFile('app-modules/pages/admin/LiveBookings.jsx');
+  const requiredEndpoints = [
+    {
+      endpoint: '/api/admin/finance/summary',
+      uiLabel: 'app-modules/pages/admin/FinanceControl.jsx',
+      uiSource: financeUi,
+      functionFile: 'api/admin/finance/summary.js',
+      requiredNeedles: [
+        'requireStaff(req, res)',
+        'stripe_secret_missing',
+        "action: 'admin_finance_summary_read'",
+      ],
+    },
+    {
+      endpoint: '/api/admin/bookings/retry-acuity',
+      uiLabel: 'app-modules/pages/admin/LiveBookings.jsx',
+      uiSource: bookingsUi,
+      functionFile: 'api/admin/bookings/retry-acuity.js',
+      requiredNeedles: [
+        'requireStaff(req, res)',
+        'claimSchedulingCreation',
+        'createSchedulingAppointmentWithFallback',
+        "action: 'admin_retry_acuity'",
+      ],
+    },
+  ];
+
+  for (const { endpoint, uiLabel, uiSource, functionFile, requiredNeedles } of requiredEndpoints) {
+    if (!uiSource.includes(endpoint)) {
+      fail(`${uiLabel} must call launch admin endpoint: ${endpoint}`);
+      continue;
+    }
+    const absoluteFunctionFile = path.join(repoRoot, functionFile);
+    if (!fs.existsSync(absoluteFunctionFile)) {
+      fail(`${endpoint} is referenced by the UI but ${functionFile} is missing, which deploys as a live 404`);
+      continue;
+    }
+    const source = readRepoFile(functionFile);
+    if (!source.includes('Method not allowed')) {
+      fail(`${functionFile} must reject unsupported methods`);
+    }
+    for (const needle of requiredNeedles) {
+      if (!source.includes(needle)) {
+        fail(`${functionFile} missing launch admin endpoint guard: ${needle}`);
+      }
+    }
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
 checkSchedulingRaceLoserDefers();
 checkAppointmentSummaryAuth();
+checkSummaryTokenNotInQueryString();
+checkAdminEndpointsGated();
+checkCspJsonLdHash();
 checkDemoAuthHardening();
 checkBalanceChargeIntegrity();
 checkGoLiveRunbook();
 checkLaunchEnvDocs();
 checkGoLiveStatusLedger();
+checkServiceWorkerKillSwitch();
+checkNoProdDeployAutomation();
+checkAdminApiFunctionsAreDeployable();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');

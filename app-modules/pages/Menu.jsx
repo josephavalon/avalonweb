@@ -1,16 +1,17 @@
-import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from '@/components/ui/PageTransitionMotion';
 import {
   ArrowRight,
-  BatteryCharging,
   ChevronDown,
   Droplets,
   FlaskConical,
+  ShieldCheck,
 } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumHover, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import { IV_SESSIONS } from '@/config/verticals';
@@ -68,6 +69,15 @@ function detailPathForSession(session) {
   return `/products/iv-vitamins/${DETAIL_SLUG_BY_KEY[session.key] || slugify(`${session.label} IV`)}`;
 }
 
+function detailPathForDose(session, dose) {
+  const key = String(dose?.key || '');
+  const m = key.match(/(\d+)$/);
+  if ((session.key === 'nad' || session.key === 'cbd') && m) {
+    return `/products/${session.key}/${session.key}-${m[1]}mg`;
+  }
+  return detailPathForSession(session);
+}
+
 function doseIntroFor(session) {
   if (session.key === 'nad') return 'Dose menu';
   if (session.key === 'cbd') return 'Approval-gated';
@@ -107,7 +117,9 @@ function DoseLadder({ session }) {
         {session.doses.map((dose, doseIndex) => (
           <Link
             key={dose.key || dose.label}
-            to={`${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`}
+            to={isCareHost()
+              ? detailPathForDose(session, dose)
+              : `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`}
             className={`group/dose min-h-[54px] rounded-xl border px-2.5 py-2 text-left transition-colors ${
               doseIndex === 0
                 ? 'border-foreground/24 bg-foreground/[0.10]'
@@ -136,6 +148,7 @@ function sortSessions(sessions) {
 
 // Normalize a session (or a single dose of a dose-protocol) into one chip's data.
 function protocolItems(sessions, expandDoses = false) {
+  const care = isCareHost();
   return sessions.flatMap((session) => {
     if (expandDoses && session.doses?.length) {
       return session.doses.map((dose) => ({
@@ -144,7 +157,7 @@ function protocolItems(sessions, expandDoses = false) {
         price: dose.price,
         image: dose.image || session.image,
         icon: session.icon,
-        to: `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`,
+        to: care ? detailPathForDose(session, dose) : `${bookingPathForSession(session)}&dose=${encodeURIComponent(dose.key || dose.label)}`,
       }));
     }
     return [{
@@ -187,34 +200,7 @@ function ProtocolCard({ item, index = 0 }) {
   );
 }
 
-function CustomProtocolRow() {
-  return (
-    <MotionLink
-      to="/custom?mode=subscription"
-      whileTap={premiumTap}
-      className="av-treatment-card group relative min-w-0 overflow-hidden rounded-[1.35rem] p-3 transition-colors md:col-span-2 md:rounded-[1.6rem] md:p-4"
-    >
-      <span className="relative flex min-h-[88px] w-full min-w-0 items-center gap-3 text-left md:min-h-[104px] md:gap-4">
-        <span className="av-treatment-icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border text-foreground md:h-16 md:w-16">
-          <FlaskConical className="h-6 w-6 text-foreground/66 md:h-7 md:w-7" strokeWidth={1.8} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-heading text-[2.05rem] uppercase leading-none tracking-normal text-foreground md:text-[2.95rem]">
-            Custom
-          </span>
-          <span className="mt-1 block font-body text-base font-bold text-foreground/64 md:text-lg">
-            Build your own protocol
-          </span>
-        </span>
-        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/14 bg-background/30 text-foreground/72 transition-colors group-hover:border-foreground/28 group-hover:text-foreground">
-          <ArrowRight className="h-5 w-5" strokeWidth={2.35} />
-        </span>
-      </span>
-    </MotionLink>
-  );
-}
-
-function ProtocolList({ id, sessions, includeCustom = false, expandDoses = false }) {
+function ProtocolList({ id, sessions, expandDoses = false }) {
   const items = protocolItems(sessions, expandDoses);
   return (
     <LayoutGroup id={id}>
@@ -230,14 +216,13 @@ function ProtocolList({ id, sessions, includeCustom = false, expandDoses = false
           {items.map((item, index) => (
             <ProtocolCard key={item.key} item={item} index={index} />
           ))}
-          {includeCustom && <CustomProtocolRow />}
         </AnimatePresence>
       </motion.div>
     </LayoutGroup>
   );
 }
 
-function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }) {
+function Foldout({ title, icon: Icon, children, meta, open: controlledOpen, onToggle }) {
   const [localOpen, setLocalOpen] = useState(false);
   const open = controlledOpen ?? localOpen;
   const toggle = onToggle || (() => setLocalOpen((value) => !value));
@@ -254,6 +239,14 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
           <Icon className="h-5 w-5 text-foreground/66" strokeWidth={1.8} />
         </span>
         <span className="min-w-0 flex-1 font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground md:text-[2.55rem]">{title}</span>
+        {/* Desktop rows are full-bleed; a closed foldout would otherwise read as
+            title-left + chevron-right over a wide gap. Surface the protocol count
+            inline on md+ so the row stays informative while collapsed. */}
+        {meta && (
+          <span className="mr-3 hidden shrink-0 font-body text-xs font-semibold uppercase tracking-[0.16em] text-foreground/40 md:block">
+            {meta}
+          </span>
+        )}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={CONTROL_TRANSITION} className="shrink-0 text-foreground/72" aria-hidden="true">
           <ChevronDown className="h-5 w-5" strokeWidth={2.2} />
         </motion.span>
@@ -272,6 +265,21 @@ function Foldout({ title, icon: Icon, children, open: controlledOpen, onToggle }
 export default function Menu() {
   const [openSections, setOpenSections] = useState({});
   const exitConfirm = useBackExitConfirm();
+  const { hash } = useLocation();
+
+  // Hash-driven section auto-open: /protocols#iv-nad opens the NAD row and
+  // scrolls to it. Same for #iv-vitamins / #iv-cbd / #protocol-directory.
+  useEffect(() => {
+    const map = {
+      '#iv-vitamins': 'vitamins',
+      '#iv-nad': 'nad',
+      '#iv-cbd': 'cbd',
+      '#protocol-directory': 'all',
+    };
+    const key = map[hash];
+    if (!key) return;
+    setOpenSections((prev) => ({ ...prev, [key]: true }));
+  }, [hash]);
 
   useSeo({
     title: 'Mobile IV Therapy Bay Area — Avalon Vitality',
@@ -300,43 +308,52 @@ export default function Menu() {
   const vitaminSessions = useMemo(() => filtered.filter((session) => !DOSE_PROTOCOL_KEYS.has(session.key)), [filtered]);
   const nadSessions = useMemo(() => filtered.filter((session) => session.key === 'nad'), [filtered]);
   const cbdSessions = useMemo(() => filtered.filter((session) => session.key === 'cbd'), [filtered]);
+  // Protocol counts surfaced inline on each foldout header (desktop) so a closed
+  // section still tells the user how much is inside. Matches the actual rendered
+  // card count (dose-expanded for NAD/CBD).
+  const vitaminCount = useMemo(() => protocolItems(vitaminSessions).length, [vitaminSessions]);
+  const nadCount = useMemo(() => protocolItems(nadSessions, true).length, [nadSessions]);
+  const cbdCount = useMemo(() => protocolItems(cbdSessions, true).length, [cbdSessions]);
+  const allCount = useMemo(() => protocolItems(filtered, true).length, [filtered]);
+  const drips = (n) => `${n} IV therap${n === 1 ? 'y' : 'ies'}`;
   const toggleSection = (key) => setOpenSections((current) => ({ ...current, [key]: !current[key] }));
 
   return (
     <div className="app-shell relative isolate min-h-screen w-full overflow-x-hidden bg-transparent pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-0 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
+      <main className="mx-auto w-full max-w-[calc(100vw-2rem)] overflow-x-hidden px-4 pb-20 pt-24 md:max-w-6xl md:px-8 md:pt-32">
         <section className="relative">
           <div className="relative md:max-w-3xl">
             <p className="relative mb-3 font-body text-[10px] font-black uppercase tracking-[0.22em] text-foreground/58">Choose a therapy base</p>
-            <h1 className="relative font-heading text-[4.6rem] uppercase leading-[0.82] tracking-normal text-foreground md:text-display-xl">
+            <h1 className="relative font-heading text-display-xl uppercase leading-[0.82] tracking-normal text-foreground">
               IV Therapy
             </h1>
           </div>
+
         </section>
 
         <section className="mt-8 grid gap-2 scroll-mt-44 md:mt-14 md:gap-3">
           <div id="iv-vitamins" className="scroll-mt-44">
-            <Foldout title="IV Therapy" icon={Droplets} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
+            <Foldout title="IV Vitamins" icon={Droplets} meta={drips(vitaminCount)} open={Boolean(openSections.vitamins)} onToggle={() => toggleSection('vitamins')}>
               <ProtocolList id="iv-vitamins-protocols" sessions={vitaminSessions} />
             </Foldout>
           </div>
           <div id="iv-nad" className="scroll-mt-44">
-            <Foldout title="IV NAD+" icon={BatteryCharging} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
+            <Foldout title="IV NAD+" icon={FlaskConical} meta={drips(nadCount)} open={Boolean(openSections.nad)} onToggle={() => toggleSection('nad')}>
               <ProtocolList id="iv-nad-protocols" sessions={nadSessions} expandDoses />
             </Foldout>
           </div>
           <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="IV CBD Therapy" icon={CannabisLeaf} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+            <Foldout title="IV CBD" icon={CannabisLeaf} meta={drips(cbdCount)} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
               <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} expandDoses />
             </Foldout>
           </div>
         </section>
 
         <section id="protocol-directory" className="mt-4 scroll-mt-44 md:mt-6">
-          <Foldout title="All Protocols" icon={FlaskConical} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
-            <ProtocolList id="all-protocols" sessions={filtered} includeCustom />
+          <Foldout title="View All" icon={FlaskConical} meta={drips(allCount)} open={Boolean(openSections.all)} onToggle={() => toggleSection('all')}>
+            <ProtocolList id="all-protocols" sessions={filtered} />
           </Foldout>
         </section>
 

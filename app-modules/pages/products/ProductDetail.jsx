@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import Navbar from '@/components/landing/Navbar';
+import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import Footer from '@/components/landing/Footer';
 import { useCart } from '@/context/CartContext';
 import { getProduct, productsByCategory, slugify } from '@/data/products';
@@ -26,7 +27,6 @@ import { appendActivity } from '@/lib/localOs';
 import { buildProductJsonLd } from '@/lib/platformOps';
 
 const EASE = [0.16, 1, 0.3, 1];
-const HERO_PHOTO = '/images/avalon-static-back.jpg';
 
 const DESIGN_TIMELINE = [
   { label: '5 MIN', value: 'Arrival & check-in — we get you settled' },
@@ -120,7 +120,7 @@ export default function ProductDetail() {
   const numericPrice = useMemo(() => priceNumber(price), [price]);
 
   useSeo({
-    title: match ? `${match.treatment.name} — Mobile IV Therapy | Avalon Vitality` : 'Product Not Found — Avalon Vitality',
+    title: match ? `${match.treatment.name} — Mobile IV Therapy — Avalon Vitality` : 'Product Not Found — Avalon Vitality',
     description: match?.treatment.seoDescription || match?.treatment.desc || 'Avalon Vitality mobile IV therapy in the San Francisco Bay Area.',
     path: match ? `/products/${category}/${slug}` : undefined,
     jsonLd: match ? buildProductJsonLd({ category: match.category, categorySlug: category, product: match.treatment, slug, price: numericPrice }) : undefined,
@@ -150,7 +150,12 @@ export default function ProductDetail() {
   const timeline = DESIGN_TIMELINE;
   const duration = (treatment.duration || '60 min').replace(/\s*min$/i, ' MIN').toUpperCase();
 
+  const care = isCareHost();
   const buyNow = () => {
+    if (care) {
+      window.location.href = ACUITY_URL;
+      return;
+    }
     clearItems();
     addItem({
       cartKey: treatment.doseKey || treatment.protocolKey || currentSlug,
@@ -180,10 +185,8 @@ export default function ProductDetail() {
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.1} /> {cat.backLabel || 'Back to IV Therapy'}
         </Link>
 
-        {/* HERO — photo + dark overlay */}
-        <section className="relative overflow-hidden rounded-[18px] border border-white/10">
-          <img src={HERO_PHOTO} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover [object-position:74%_50%]" />
-          <div aria-hidden className="absolute inset-0 bg-background/62 md:bg-background/58" />
+        {/* HERO — solid black */}
+        <section className="relative overflow-hidden rounded-[18px] border border-white/10 bg-black">
           <motion.div
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -222,14 +225,16 @@ export default function ProductDetail() {
                   style={{ backgroundColor: '#ffffff', color: '#000000' }}
                   className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-xl px-8 font-body text-xs font-semibold uppercase tracking-[0.08em] transition-opacity hover:opacity-90 md:min-h-[3.4rem] md:text-sm"
                 >
-                  Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                  Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </button>
-                <Link
-                  to={bookingPath(treatment, true)}
-                  className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-background/42 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-background/58 md:min-h-[3.4rem] md:text-sm"
-                >
-                  Subscribe &amp; Save 15%
-                </Link>
+                {!care && (
+                  <Link
+                    to={bookingPath(treatment, true)}
+                    className="inline-flex min-h-[3rem] items-center justify-center rounded-xl border border-white/40 bg-background/42 px-6 font-body text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition-colors hover:bg-background/58 md:min-h-[3.4rem] md:text-sm"
+                  >
+                    Subscribe &amp; Save 15%
+                  </Link>
+                )}
               </div>
 
               <p className="mt-3 flex items-center gap-1.5 font-body text-[11px] text-white/72">
@@ -327,7 +332,7 @@ export default function ProductDetail() {
           onClick={buyNow}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-body text-xs font-semibold uppercase tracking-[0.08em] text-black"
         >
-          Book Now <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          Book <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </button>
       </div>
 

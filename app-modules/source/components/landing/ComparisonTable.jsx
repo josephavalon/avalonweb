@@ -35,7 +35,7 @@ export default function ComparisonTable() {
           className="mb-8 md:mb-10"
         >
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">Why Avalon</p>
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
+          <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">
             What Others Miss
           </h2>
           <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-xl">

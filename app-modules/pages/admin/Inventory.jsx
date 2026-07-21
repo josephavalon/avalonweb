@@ -4,8 +4,76 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useInventoryData } from '@/hooks/useInventoryData';
 import { useDropzone } from 'react-dropzone';
 import AdminShell from '@/components/admin/AdminShell';
+import { apiGet } from '@/lib/apiClient';
 
 const INVENTORY_CLINICAL_NOTE = 'Inventory records support operations only. Clinical use follows approved protocols.';
+
+// ─── Low-stock banner (server-truth from /api/admin/inventory-low) ───────────
+function LowStockBanner() {
+  const [rows, setRows] = useState(null); // null = not loaded
+  const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiGet('/api/admin/inventory-low')
+      .then((data) => { if (!cancelled) setRows(Array.isArray(data?.rows) ? data.rows : []); })
+      .catch((err) => { if (!cancelled) { setRows([]); setError(err?.message || 'Could not load low-stock items.'); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (rows === null) return null;          // loading — keep page quiet
+  if (error) return null;                  // 401/etc — silent, the page still works
+  if (rows.length === 0) return null;      // nothing low → no banner
+
+  const outCount = rows.filter((r) => r.out).length;
+  const lowCount = rows.length - outCount;
+
+  return (
+    <div className="mx-4 mt-3 mb-2 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
+      <div className="flex items-center gap-3">
+        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
+        <div className="flex-1 min-w-0">
+          <p className="font-body text-sm font-semibold text-foreground">
+            {rows.length} item{rows.length === 1 ? '' : 's'} at-or-below reorder threshold
+          </p>
+          <p className="font-body text-[11px] text-foreground/60">
+            {outCount > 0 && (<><span className="text-red-300">{outCount} out of stock</span>{lowCount > 0 ? ' · ' : ''}</>)}
+            {lowCount > 0 && (<>{lowCount} low</>)}
+          </p>
+        </div>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="rounded-lg border border-foreground/[0.12] px-3 py-1.5 font-body text-[11px] uppercase tracking-wider text-foreground/70 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+        >
+          {expanded ? 'Hide' : 'View'}
+        </button>
+      </div>
+      {expanded && (
+        <ul className="mt-3 max-h-56 overflow-y-auto border-t border-foreground/[0.08] pt-2">
+          {rows.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-foreground/[0.04] last:border-0">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-body text-xs text-foreground">{r.name}</p>
+                {r.sku && <p className="truncate font-body text-[10px] text-foreground/40">SKU: {r.sku}</p>}
+              </div>
+              <div className="shrink-0 text-right">
+                <p className={`font-body text-xs font-semibold ${r.out ? 'text-red-300' : 'text-amber-300'}`}>
+                  {r.qty} / {r.minLevel} {r.unit}
+                </p>
+                {r.deficit > 0 && (
+                  <p className="font-body text-[10px] text-foreground/40">
+                    Short {r.deficit}
+                  </p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 import {
   Breadcrumb,
   CAT_COLOR,
@@ -2485,6 +2553,7 @@ export default function AdminInventory() {
         {/* ── Items section ─────────────────────────────────────── */}
         {section === 'items' && (
           <>
+            <LowStockBanner />
             <InventoryToolbar
               layout={layout} onLayout={setLayout}
               sortBy={sortBy} sortDir={sortDir}

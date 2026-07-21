@@ -208,7 +208,6 @@ assert.equal(buildItemLines.length, 60, 'Avalon Kernel must expose the first 60 
   'buildProtocolRegistry',
   'buildKernelKitReadiness',
   'scoreNurseEligibility',
-  'setKernelNurseEta',
   'saveThinChart',
   'lockThinChart',
   'addChartAddendum',
@@ -894,7 +893,7 @@ const readyShiftOffer = buildShiftOffer({
 });
 assert.equal(readyShiftOffer.stage, 'Send', 'Shift marketplace must produce sendable Y/N nurse offers.');
 assert.equal(readyShiftOffer.replyCommand, 'Y/N', 'Shift marketplace must preserve nurse Y/N reply flow.');
-assert.equal(readyShiftOffer.nurseFinalEta, true, 'Shift marketplace must preserve nurse final ETA authority.');
+assert.equal(readyShiftOffer.routeHandoffReady, false, 'Unaccepted shift offers must keep route handoff locked.');
 assert.ok(readyShiftOffer.shiftValue >= 65, 'Shift marketplace must show a local shift value estimate.');
 const blockedShiftOffer = buildShiftOffer({
   request: {
@@ -963,11 +962,11 @@ const marketplaceSnapshot = buildShiftMarketplaceSnapshot({
 assert.equal(marketplaceSnapshot.metrics.visits, 2, 'Shift marketplace snapshot must count active visits.');
 assert.ok(marketplaceSnapshot.metrics.sendable >= 1, 'Shift marketplace snapshot must expose sendable offers.');
 assert.ok(marketplaceSnapshot.metrics.accepted >= 1, 'Shift marketplace snapshot must expose accepted locks.');
-assert.ok(marketplaceSnapshot.acceptedLocks.some((lock) => lock.etaOwner === 'nurse'), 'Accepted locks must preserve nurse ETA ownership.');
+assert.ok(marketplaceSnapshot.acceptedLocks.some((lock) => lock.routeStatus === 'Route ready'), 'Accepted locks must open the route handoff.');
 assert.ok(marketplaceSnapshot.nurseInbox.some((row) => row.open >= 1 || row.accepted >= 1), 'Shift marketplace must populate nurse inbox rows.');
 assert.equal(ARRIVAL_MISSION_VERSION, '2026.05.no-api-arrival-mission-v1', 'Arrival mission version must be stable.');
 assert.equal(ARRIVAL_MISSION_RULES.length, 6, 'Arrival mission must expose 6 operating rules.');
-const etaNeededMission = buildArrivalMission({
+const routeReadyMission = buildArrivalMission({
   request: {
     id: 'arrival-eta',
     client: 'Arrival Client',
@@ -984,10 +983,10 @@ const etaNeededMission = buildArrivalMission({
   },
   nurse: { id: 'arrival-nurse', name: 'Arrival Nurse', status: 'Assigned', kit: 'Ready' },
 });
-assert.equal(etaNeededMission.stage, 'ETA Needed', 'Arrival mission must require nurse ETA before route text.');
-assert.equal(etaNeededMission.clientTextReady, false, 'Arrival mission must suppress client text without nurse ETA.');
-assert.ok(etaNeededMission.maps.apple.includes('maps.apple.com'), 'Arrival mission must generate Apple Maps handoff.');
-assert.ok(etaNeededMission.maps.google.includes('google.com/maps'), 'Arrival mission must generate Google Maps handoff.');
+assert.equal(routeReadyMission.stage, 'Client Text Ready', 'Arrival mission must unlock route contact after nurse acceptance.');
+assert.equal(routeReadyMission.clientTextReady, true, 'Arrival mission must allow a generic route update after acceptance.');
+assert.ok(routeReadyMission.maps.apple.includes('maps.apple.com'), 'Arrival mission must generate Apple Maps handoff.');
+assert.ok(routeReadyMission.maps.google.includes('google.com/maps'), 'Arrival mission must generate Google Maps handoff.');
 const readyArrivalMission = buildArrivalMission({
   request: {
     id: 'arrival-ready',
@@ -1006,8 +1005,8 @@ const readyArrivalMission = buildArrivalMission({
   },
   nurse: { id: 'arrival-nurse', name: 'Arrival Nurse', status: 'Assigned', kit: 'Ready' },
 });
-assert.equal(readyArrivalMission.stage, 'Client Text Ready', 'Arrival mission must publish only after nurse ETA exists.');
-assert.match(readyArrivalMission.clientText, /ETA 22 min/, 'Arrival mission must include nurse ETA in client copy.');
+assert.equal(readyArrivalMission.stage, 'Client Text Ready', 'Arrival mission must publish after nurse acceptance.');
+assert.doesNotMatch(readyArrivalMission.clientText, /ETA|\bmin\b/i, 'Arrival mission client copy must not publish a nurse-set ETA.');
 const arrivalSnapshot = buildArrivalMissionSnapshot({
   requests: [
     {
@@ -1046,9 +1045,8 @@ const arrivalSnapshot = buildArrivalMissionSnapshot({
   inventory: marketplaceInventory,
 });
 assert.equal(arrivalSnapshot.metrics.visits, 2, 'Arrival mission snapshot must count active visits.');
-assert.equal(arrivalSnapshot.metrics.etaNeeded, 1, 'Arrival mission snapshot must count missing nurse ETAs.');
-assert.equal(arrivalSnapshot.metrics.clientTexts, 1, 'Arrival mission snapshot must count client ETA texts ready to publish.');
-assert.ok(arrivalSnapshot.escalations.some((item) => /ETA/.test(item.reason)), 'Arrival mission snapshot must escalate missing nurse ETA.');
+assert.equal(arrivalSnapshot.metrics.clientTexts, 2, 'Arrival mission snapshot must count accepted client route updates.');
+assert.ok(!arrivalSnapshot.escalations.some((item) => /ETA/.test(item.reason)), 'Arrival mission must not create nurse ETA escalations.');
 assert.ok(arrivalSnapshot.handoffChannels.some((channel) => channel.label === 'Acuity closeout' && channel.status === 'Placeholder'), 'Arrival mission must preserve Acuity as closeout handoff.');
 assert.equal(VISIT_CLOSEOUT_VERSION, '2026.05.no-api-visit-closeout-v1', 'Visit closeout version must be stable.');
 assert.equal(VISIT_CLOSEOUT_RULES.length, 6, 'Visit closeout must expose 6 operating rules.');
@@ -1339,7 +1337,7 @@ assert.equal(spineSnapshot.clinicalMode, 'placeholder-only', 'Enterprise spine s
 assert.ok(spineSnapshot.actionQueue.length >= 4, 'Enterprise spine must produce blockers from incomplete local state.');
 assert.ok(spineSnapshot.dispatchMatrix[0]?.best?.score >= 1, 'Enterprise spine must score dispatch matches.');
 assert.ok(spineSnapshot.inventoryLedger.transactions.length >= 1, 'Enterprise spine must produce inventory transactions.');
-assert.match(spineSnapshot.missionPacket.route.etaRule, /sets final ETA/, 'Mission packet must preserve nurse final ETA authority.');
+assert.match(spineSnapshot.missionPacket.route.routeRule, /navigation/i, 'Mission packet must preserve the route handoff.');
 assert.match(clinicalPolicy, /placeholder-only/, 'Clinical data mode must be placeholder-only.');
 assert.match(clinicalPolicy, /Do not store real clinical notes/, 'Clinical placeholder policy must block real clinical notes.');
 assert.match(clinicalPolicy, /Acuity remains the chart/, 'Clinical placeholder policy must preserve Acuity as chart source.');
@@ -1349,7 +1347,7 @@ assert.equal(CLINICAL_DATA_MODE, 'placeholder-only', 'Clinical data mode must re
 assert.equal(clinicalSnapshot.blocked.includes('Do not store real clinical notes'), true, 'Clinical policy must block real clinical notes.');
 assert.match(member, /Visit Status/, 'Client portal must surface a client-safe visit status layer.');
 assert.doesNotMatch(member, /Real Status|Launch OS|Record Spine|Friction/, 'Client portal must not expose internal operating-system scaffolding.');
-assert.match(nurse, /setKernelNurseEta/, 'Nurse portal must let nurse set final ETA.');
+assert.doesNotMatch(nurse, /Set ETA|setKernelNurseEta/i, 'Nurse portal must not expose manual ETA setting.');
 
 const annualGfe = {
   status: 'Valid',

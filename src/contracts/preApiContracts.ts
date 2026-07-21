@@ -4,7 +4,7 @@ export type IntegrationKey =
   | 'acuity'
   | 'stripe'
   | 'supabase'
-  | 'attio'
+  | 'hubspot'
   | 'nursys'
   | 'qualiphy'
   | 'mercury'

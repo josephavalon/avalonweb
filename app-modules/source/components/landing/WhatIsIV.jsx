@@ -189,7 +189,7 @@ export default function WhatIsIV() {
           className="mb-6 md:mb-10"
         >
           <p className="font-body text-[11px] tracking-[0.3em] uppercase text-accent mb-2">FAQ</p>
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Questions</h2>
+          <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">Questions</h2>
           <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">
             Quick answers on IV therapy, IM shots, booking, safety, and subscription care.
           </p>

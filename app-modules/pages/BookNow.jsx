@@ -10,7 +10,9 @@ import {
   ArrowLeft,
   ArrowRight,
   BatteryCharging,
+  FlaskConical,
   Building2,
+  AlertCircle,
   Calendar,
   Check,
   ChevronDown,
@@ -52,6 +54,7 @@ import { useSeo } from '@/lib/seo';
 import {
   appendActivity,
   clearBookingDraft,
+  readLocal,
   readBookingDraft,
   readLastBooking,
   saveBookingDraft,
@@ -62,8 +65,12 @@ import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout 
 import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
+import { SUBSCRIPTION_COMMITMENT_COPY } from '@/lib/subscription';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { useAuthStore } from '@/lib/useAuthStore';
+import { apiGet } from '@/lib/apiClient';
+import { supabase, hasSupabase } from '@/lib/supabase';
 import {
   ONE_TIME_APPOINTMENT_DEPOSIT_DOLLARS,
   calculateLaunchPayment,
@@ -80,6 +87,9 @@ import {
   billablePeopleCount,
 } from '@/lib/peopleState';
 import PersonTabStrip from '@/components/store/PersonTabStrip';
+import SessionBuilder from '@/components/store/SessionBuilder';
+import PlacesAutocomplete from '@/components/store/PlacesAutocomplete';
+import useProfilePrefill from '@/lib/useProfilePrefill';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CHECKOUT_MOTION = { duration: 0.28, ease: EASE };
@@ -123,12 +133,12 @@ const CARD_REVEAL = {
 };
 const TZ = 'America/Los_Angeles';
 const DEFAULT_TIME = 'ASAP';
-const STEPS = ['Therapy', 'Add-ons', 'Date & Time', 'Location', 'Review'];
+const STEPS = ['Therapy', 'Add-ons', 'When', 'Where', 'Review'];
 const STEP_ICONS = [Droplets, Plus, Calendar, MapPin, Check];
 const LAST_STEP = STEPS.length - 1;
 const BOOKING_DRAFT_VERSION = 2;
 const BOOKING_SESSION_KEY = 'avalon.webstore.sessionDraft';
-const CLINICAL_REVIEW_NOTICE = 'Clinical review required before service.';
+const CLINICAL_REVIEW_NOTICE = 'Clinical approval required.';
 const PRIMARY_OUTCOME_KEYS = ['recover', 'perform', 'performance', 'longevity'];
 const SAFETY_FLAGS = [
   'Pregnant',
@@ -192,7 +202,7 @@ const OUTCOMES = [
 		    key: 'nad',
 		    label: 'NAD+',
 		    sub: 'Advanced.',
-		    icon: BatteryCharging,
+		    icon: FlaskConical,
 		    productKeys: ['nad', 'myers', 'energy'],
 		  },
 		  {
@@ -240,16 +250,16 @@ const THERAPY_GROUPS = [
     key: 'vitamin',
     label: 'IV Therapy',
     sub: '9 therapies',
-    desc: 'Hydration, recovery, energy, and immunity drips.',
+    desc: 'Hydration · energy · immunity',
     duration: '60 min',
     icon: Droplets,
     keys: ['hydration', 'myers', 'postnight', 'immunity', 'energy', 'recovery', 'performance', 'jetlag', 'food-poisoning'],
   },
   {
     key: 'cbd',
-    label: 'IV CBD Therapy',
+    label: 'IV CBD',
     sub: '5 therapies',
-    desc: 'Calm infusion with zero THC.',
+    desc: 'Calm · zero THC',
     duration: '60 min',
     icon: CannabisLeaf,
     keys: ['cbd-33mg', 'cbd-66mg', 'cbd-vitality', 'cbd-99mg', 'cbd-132mg'],
@@ -258,10 +268,10 @@ const THERAPY_GROUPS = [
     key: 'nad',
     label: 'IV NAD+ Therapy',
     sub: '7 therapies',
-    desc: 'Cellular energy and longevity protocols.',
+    desc: 'Energy · longevity',
     duration: '1–4 hr',
     badge: 'Most booked',
-    icon: BatteryCharging,
+    icon: FlaskConical,
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-vitality', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
 ];
@@ -285,7 +295,7 @@ const CUSTOM_BASE_OPTIONS = [
   { key: 'beauty', label: 'Glow IV', productKey: 'beauty', icon: Sparkles },
   { key: 'postnight', label: 'Post-Night-Out IV', productKey: 'postnight', icon: Moon },
   { key: 'travel', label: 'Travel IV', productKey: 'jetlag', icon: Plane },
-  { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: BatteryCharging },
+  { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: FlaskConical },
   { key: 'cbd', label: 'IV CBD', productKey: 'cbd', icon: CannabisLeaf, badge: 'Review' },
 ];
 
@@ -437,7 +447,7 @@ function buildTypedAddressSuggestion(address, zip, locationType = 'home') {
   };
 }
 
-const BOOKING_DAYS = 180;
+const BOOKING_DAYS = 14;
 const OPEN_HOUR = 8;
 const CLOSE_HOUR = 20;
 const DEFAULT_EXACT_TIME = '10:00';
@@ -485,7 +495,7 @@ function splitName(name = '') {
 function realValue(value) {
   const text = String(value || '').trim();
   if (!text) return '';
-  if (/pending|unknown|missing|preview|avalon\.local/i.test(text)) return '';
+  if (/pending|unknown|missing|preview|avalon\.local|redacted/i.test(text)) return '';
   return text;
 }
 
@@ -663,7 +673,10 @@ function clampStep(value) {
 function readStepHash() {
   if (typeof window === 'undefined') return null;
   const match = String(window.location.hash || '').match(/^#step-(\d+)$/);
-  return match ? clampStep(match[1]) : null;
+  if (!match) return null;
+  // Hash is 1-indexed so #step-1 matches the "1 OF 5" displayed in the UI.
+  // Internal `step` state is 0-indexed; subtract 1 here.
+  return clampStep(Number(match[1]) - 1);
 }
 
 function readBookingSessionDraft() {
@@ -695,9 +708,19 @@ function clearBookingSessionDraft() {
 }
 
 async function createCheckoutSession(payload) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (payload?.creditRedemption && hasSupabase) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+      if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {
+      // The API will return 401 if the token cannot be attached.
+    }
+  }
   const response = await fetch('/api/create-checkout-session', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   });
   const contentType = response.headers.get('content-type') || '';
@@ -843,23 +866,75 @@ function useMobileBookingViewportLayout(deps = []) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
 
     const root = document.documentElement;
+    const body = document.body;
+
+    // iOS scroll-into-view on focused inputs scrolls the document by default.
+    // The booking shell is position: fixed on mobile, so any document scroll
+    // moves nothing visually — but iOS still tries, and the scrollTop drift
+    // can mis-position the focused input. Lock the document scroll while the
+    // booking page is mounted so scroll-into-view targets the inner scroll
+    // region (overflow-y-auto on the step content) instead.
+    //
+    // BUT: at tablet+ (md: ≥ 768) the booking shell is `md:!relative
+    // md:min-h-screen md:h-auto` — the layout expects the DOCUMENT to scroll,
+    // not an inner region. Locking html/body overflow at tablet leaves users
+    // with no way to reach content past the fold (the "can't scroll after
+    // switching NAD → CBD" tablet bug). Only apply the mobile-fixed shell
+    // overflow lock on narrow viewports.
+    const priorHtmlOverflow = root.style.overflow;
+    const priorBodyOverflow = body.style.overflow;
+    const priorHtmlPos = root.style.position;
+    const applyMobileLock = () => window.matchMedia('(max-width: 767px)').matches;
+    if (applyMobileLock()) {
+      root.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
+      root.style.position = 'relative';
+    } else {
+      root.style.overflow = priorHtmlOverflow;
+      body.style.overflow = priorBodyOverflow;
+      root.style.position = priorHtmlPos;
+    }
+
     let frame = 0;
 
     const update = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
+        // Reapply the mobile-only overflow lock on every viewport update so
+        // resize-across-breakpoint (device rotation, window resize into
+        // tablet range) doesn't leave the document scroll disabled at md+.
+        if (applyMobileLock()) {
+          root.style.overflow = 'hidden';
+          body.style.overflow = 'hidden';
+          root.style.position = 'relative';
+        } else {
+          root.style.overflow = priorHtmlOverflow;
+          body.style.overflow = priorBodyOverflow;
+          root.style.position = priorHtmlPos;
+        }
         const viewport = window.visualViewport;
         const visualHeight = Math.max(0, Math.round(viewport?.height || window.innerHeight || 0));
         const visualOffsetTop = Math.max(0, Math.round(viewport?.offsetTop || 0));
         const layoutHeight = Math.max(visualHeight, Math.round(window.innerHeight || visualHeight));
         const zoomed = Number(viewport?.scale || 1) > 1.01;
-        const effectiveHeight = zoomed ? layoutHeight : visualHeight;
+        // When the on-screen keyboard is open, the visual viewport collapses. If we
+        // resized the shell to that, the page condenses and the focused field hides.
+        // Instead keep the shell at full layout height so the keyboard simply overlays
+        // the bottom (footer); the focused input is scrolled into view via focusin.
+        const active = document.activeElement;
+        const keyboardOpen = !zoomed
+          && active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)
+          && (layoutHeight - visualHeight > 120);
+        const effectiveHeight = (zoomed || keyboardOpen) ? layoutHeight : visualHeight;
         const effectiveOffsetTop = zoomed ? 0 : visualOffsetTop;
         const visualBottomGap = zoomed ? 0 : Math.max(0, Math.round(layoutHeight - visualHeight - visualOffsetTop));
         const visualHeightBreathing = Math.max(0, Math.min(44, Math.round((effectiveHeight - 660) * 0.25)));
 
         root.classList.toggle('av-booking-user-zoomed', zoomed);
         root.style.setProperty('--av-booking-visual-height', `${effectiveHeight}px`);
+        // Height the keyboard is covering — used as extra scroll padding so the
+        // focused field can scroll above the keyboard instead of hiding behind it.
+        root.style.setProperty('--av-booking-keyboard-pad', `${keyboardOpen ? Math.max(0, layoutHeight - visualHeight) : 0}px`);
         root.style.setProperty('--av-booking-visual-offset-top', `${effectiveOffsetTop}px`);
         root.style.setProperty('--av-booking-visual-bottom-gap', `${visualBottomGap}px`);
         root.style.setProperty('--av-booking-visual-breathing', `${visualHeightBreathing}px`);
@@ -878,12 +953,64 @@ function useMobileBookingViewportLayout(deps = []) {
         });
         const headerRect = header?.getBoundingClientRect();
         if (headerRect?.height) {
-          root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(64, headerRect.bottom + 8))}px`);
+          root.style.setProperty('--av-booking-header-height', `${Math.ceil(Math.max(56, headerRect.bottom + 2))}px`);
+        }
+
+        // Size mobile therapy cards so exactly 3 units fit in the visible
+        // scroll region. Each unit = body + "WHAT'S INSIDE" foldout button.
+        // body height = (visible list area - 2 gaps - 3 foldout buttons) / 3.
+        // Scroll reveals the next 3. Expanding a foldout grows that card
+        // beyond its slot, which is intentional.
+        root.style.removeProperty('--av-therapy-list-max');
+        const therapyList = document.querySelector('[data-av-therapy-list="true"]');
+        if (therapyList) {
+          const sampleFoldoutBtn = therapyList.firstElementChild?.querySelector('button[aria-expanded]');
+          const foldoutBtnH = Math.ceil(sampleFoldoutBtn?.getBoundingClientRect().height || 44);
+          const gap = 8; // tailwind gap-2
+          // clientHeight includes the list's own vertical padding (pb-2), but the
+          // cards lay out inside the content box. Subtract that padding (plus a
+          // 1px rounding guard) so 3 units fit WITHIN the padded area instead of
+          // overflowing it — otherwise the 3rd card's bottom clips on first load.
+          const listStyle = window.getComputedStyle(therapyList);
+          const padY = (parseFloat(listStyle.paddingTop) || 0) + (parseFloat(listStyle.paddingBottom) || 0);
+          const available = therapyList.clientHeight - padY - 1;
+          if (available > 0) {
+            const cardHeight = Math.max(88, Math.floor((available - 2 * gap - 3 * foldoutBtnH) / 3));
+            root.style.setProperty('--av-therapy-card-h', `${cardHeight}px`);
+          }
+        } else {
+          root.style.removeProperty('--av-therapy-card-h');
         }
       });
     };
 
+    // When a field is focused, the keyboard animates in (~300ms). Recompute, then
+    // scroll the field to the middle of the still-visible area so the user can see
+    // what they're typing instead of it hiding behind the keyboard.
+    let focusTimer = 0;
+    const onFocusIn = (event) => {
+      const el = event.target;
+      if (!el || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      window.clearTimeout(focusTimer);
+      focusTimer = window.setTimeout(() => {
+        update();
+        try {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch {
+          el.scrollIntoView();
+        }
+      }, 320);
+    };
+    document.addEventListener('focusin', onFocusIn);
+
     update();
+    // First paint can measure the list before the mobile browser chrome / footer
+    // settle, sizing the cards a touch too tall (3rd card clips). Re-measure once
+    // things settle so the initial render fits 3 full cards.
+    const settleTimers = [
+      window.setTimeout(update, 120),
+      window.setTimeout(update, 400),
+    ];
     const viewport = window.visualViewport;
     viewport?.addEventListener('resize', update);
     viewport?.addEventListener('scroll', update);
@@ -893,7 +1020,13 @@ function useMobileBookingViewportLayout(deps = []) {
 
     return () => {
       window.cancelAnimationFrame(frame);
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('focusin', onFocusIn);
+      settleTimers.forEach((id) => window.clearTimeout(id));
       root.classList.remove('av-booking-user-zoomed');
+      root.style.overflow = priorHtmlOverflow;
+      body.style.overflow = priorBodyOverflow;
+      root.style.position = priorHtmlPos;
       viewport?.removeEventListener('resize', update);
       viewport?.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
@@ -910,12 +1043,14 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
   return (
     <div className="relative mb-1 shrink-0 px-1 pt-0 md:mb-3 md:pt-1">
       <div className="relative md:hidden">
-        <p className="font-body text-[8px] font-black uppercase tracking-[0.28em] text-foreground/62">
-          Step {displayStepIndex + 1} of {STEPS.length}
-        </p>
-        <p className="mt-0.5 font-heading text-[1.34rem] leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.48rem]">
-          {displayTitle}
-        </p>
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-foreground/35 bg-background/30 text-foreground">
+            <CurrentIcon className="h-3.5 w-3.5" strokeWidth={2.7} />
+          </span>
+          <p className="font-body text-[1.15rem] font-black uppercase leading-[0.98] tracking-[0.02em] text-foreground min-[390px]:text-[1.25rem]">
+            {displayTitle}
+          </p>
+        </div>
         <div className="relative mt-2 h-2.5">
           <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2 bg-foreground/[0.28]" />
           {STEPS.map((item, index) => (
@@ -944,8 +1079,8 @@ function StepProgress({ step, onStepSelect, displayStepIndex = step, displayTitl
               <CurrentIcon className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.7} />
             </motion.span>
             <div className="min-w-0">
-              <p className="font-heading text-[1.3rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.42rem] md:text-[1.55rem]">
-                {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+              <p className="font-body text-[1.1rem] font-black uppercase leading-[0.98] tracking-[0.02em] text-foreground min-[390px]:text-[1.2rem] md:text-[1.3rem]">
+                {displayTitle}
               </p>
             </div>
           </div>
@@ -1014,11 +1149,19 @@ function UniversalBookingFrame({
   selectedAddons = [],
   onRemoveAddon,
   onClearOrder,
+  sessionPeople = [],
+  activePersonId,
+  onAddPerson,
+  onSelectPerson,
+  onRemovePerson,
   children,
 }) {
   const [orderOpen, setOrderOpen] = useState(false);
   const hasOrder = Boolean(product);
   const orderCount = (product ? 1 : 0) + selectedAddons.length;
+  const lastPerson = sessionPeople[sessionPeople.length - 1];
+  const canAddPerson = Boolean(onAddPerson) && sessionPeople.length < PEOPLE_MAX && Boolean(lastPerson?.filled);
+  const multiPerson = sessionPeople.length > 1;
   return (
     <section data-av-booking-frame="true" className="relative mx-auto flex h-full max-h-full min-h-0 w-full max-w-lg flex-col overflow-hidden px-0 pb-[var(--av-booking-footer-reserve)] pt-0 md:h-auto md:max-h-none md:max-w-4xl md:pb-4">
       <StepProgress
@@ -1029,11 +1172,9 @@ function UniversalBookingFrame({
         progressIndex={progressIndex}
       />
       {error && (
-        <div role="alert" className="mb-2 flex min-h-[42px] items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
+        <div role="alert" className="mb-2 flex min-h-[42px] items-center gap-2.5 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-3 py-2 text-amber-100">
+          <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
           <p className="truncate font-body text-sm font-black">{error}</p>
-          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-2.5 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em]">
-            Text
-          </a>
         </div>
       )}
       <motion.div
@@ -1048,6 +1189,10 @@ function UniversalBookingFrame({
         <div className="relative h-full min-h-full">
           {children}
         </div>
+        {/* Extra scroll room when the keyboard is open so the focused field can
+            scroll up above it — sibling of the content so it adds scroll height
+            without changing the height-constrained step layouts. */}
+        <div aria-hidden="true" style={{ height: 'var(--av-booking-keyboard-pad, 0px)' }} />
       </motion.div>
       <div
         data-av-booking-mobile-footer="true"
@@ -1055,7 +1200,7 @@ function UniversalBookingFrame({
         style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.4rem)' }}
       >
         <div className="mx-auto max-w-lg overflow-hidden rounded-[1.05rem] border border-foreground/14 bg-background/84 p-1.5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_-14px_56px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl md:max-w-4xl md:p-2">
-          {hasOrder && (onRemoveAddon || onClearOrder) && (
+          {hasOrder && (onRemoveAddon || onClearOrder || canAddPerson || multiPerson) && (
             <div className="mb-1.5 overflow-hidden rounded-xl border border-foreground/12 bg-background/30 md:hidden">
               <div className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5">
                 <button
@@ -1064,31 +1209,55 @@ function UniversalBookingFrame({
                   aria-expanded={orderOpen}
                   className="flex min-w-0 items-center gap-2"
                 >
-                  <span className="flex items-center gap-2 font-body text-[10px] font-black uppercase tracking-[0.12em] text-foreground/70">
-                    Your order
-                    <span className="rounded-full border border-foreground/16 px-1.5 py-[1px] text-[8px] font-black text-foreground/60">{orderCount}</span>
+                  <span className="flex items-center gap-2 font-body text-[13px] font-black uppercase tracking-[0.12em] text-foreground">
+                    Order
+                    <span className="rounded-full border border-foreground/30 px-1.5 py-[1px] text-[11px] font-black text-foreground">{orderCount}</span>
                   </span>
-                  <ChevronDown className={`h-3.5 w-3.5 text-foreground/55 transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+                  <ChevronDown className={`h-3.5 w-3.5 text-foreground transition-transform ${orderOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
                 </button>
-                {onClearOrder && (
-                  <button
-                    type="button"
-                    onClick={onClearOrder}
-                    className="shrink-0 rounded-full border border-foreground/16 px-2.5 py-1 font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/90"
-                  >
-                    Clear
-                  </button>
-                )}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {canAddPerson && (
+                    <button
+                      type="button"
+                      onClick={() => onAddPerson?.()}
+                      className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[12px] font-black uppercase tracking-[0.1em] text-foreground transition-colors hover:border-foreground/55"
+                    >
+                      <Plus className="h-3 w-3" strokeWidth={3} />
+                      Person
+                    </button>
+                  )}
+                  {onClearOrder && (
+                    <button
+                      type="button"
+                      onClick={onClearOrder}
+                      className="shrink-0 rounded-full border border-foreground/28 px-2.5 py-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:border-foreground/55"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               {orderOpen && (
                 <div className="border-t border-foreground/10 px-2.5 py-2">
-                  <p className="min-w-0 truncate font-body text-[11px] font-bold text-foreground/82">{product.label}</p>
+                  {multiPerson && (
+                    <div className="mb-2">
+                      <SessionBuilder
+                        people={sessionPeople}
+                        activePersonId={activePersonId}
+                        onSelect={onSelectPerson}
+                        onAdd={onAddPerson}
+                        onRemove={onRemovePerson}
+                        hideAdd
+                      />
+                    </div>
+                  )}
+                  <p className="min-w-0 truncate font-body text-[14px] font-bold text-foreground">{product.label}</p>
                   {selectedAddons.length > 0 && (
                     <div className="mt-1.5 space-y-1">
                       {selectedAddons.map((item) => (
                         <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
-                          <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground/74">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
-                          <span className="shrink-0 font-body text-[9px] font-black text-foreground/52">{currency(item.price)}</span>
+                          <p className="min-w-0 flex-1 truncate font-body text-[13px] font-bold text-foreground">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                          <span className="shrink-0 font-body text-[12px] font-black text-foreground">{currency(item.price)}</span>
                           {onRemoveAddon && (
                             <button
                               type="button"
@@ -1113,27 +1282,30 @@ function UniversalBookingFrame({
             onClick={onBack}
             disabled={!canGoBack}
             aria-label="Go back"
-            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[11px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
+            className="flex min-h-[52px] shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-background/30 px-2 font-body text-[13px] font-black uppercase tracking-[0.06em] text-foreground/80 disabled:opacity-25 min-[390px]:text-[14px] md:min-h-[64px] md:w-[92px] md:px-3 md:text-xs"
           >
             Back
           </button>
           <div className="min-w-0 shrink-0 border-r border-foreground/12 px-1 md:min-w-[142px] md:px-2">
-            <p className="font-body text-[7px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[8px] md:text-[10px] md:tracking-[0.12em]">Pay today</p>
+            <p className="font-body text-[10px] font-black uppercase tracking-[0.08em] text-foreground/62 min-[390px]:text-[11px] md:text-[13px] md:tracking-[0.12em]">Today</p>
             <p className="mt-0.5 font-body text-[1.2rem] font-black leading-none text-foreground min-[390px]:text-[1.28rem] md:mt-1 md:text-[1.45rem]">{dueNow}</p>
             {showDueAfter && (
-              <p className="mt-0.5 truncate font-body text-[9px] font-semibold text-foreground/62 min-[390px]:text-[10px]">Balance after visit {dueAfter}</p>
+              <p className="mt-0.5 truncate font-body text-[12px] font-semibold text-foreground/62 min-[390px]:text-[13px]">Then {dueAfter}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onNext}
             aria-label={actionLabel}
-            className={`relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
+            className={`av-book-next-cta relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.06em] shadow-[0_-8px_38px_hsl(var(--foreground)/0.18),inset_0_1px_0_hsl(var(--foreground)/0.12)] transition-transform active:scale-[0.985] min-[390px]:text-sm md:min-h-[56px] md:gap-3 md:px-4 ${
               canGoNext ? 'border-foreground/82 bg-foreground text-background' : 'border-foreground/70 bg-foreground text-background/70 md:border-foreground/18 md:bg-background/42 md:text-foreground/58'
             }`}
+            // Force white pill + dark text so it reads consistently across themes.
+            // On dark theme, --foreground is already white so bg matches; on daytime,
+            // this override flips the dark grey CTA to a clean white pill.
             style={{
-              background: 'hsl(var(--foreground))',
-              borderColor: 'hsl(var(--foreground) / 0.82)',
+              background: '#ffffff',
+              borderColor: 'rgba(0,0,0,0.12)',
               color: '#050505',
             }}
           >
@@ -1149,13 +1321,8 @@ function UniversalBookingFrame({
             <ArrowRight className="h-4.5 w-4.5 md:h-5 md:w-5" style={{ color: '#050505' }} strokeWidth={2.7} />
           </button>
           </div>
-          {actionLabel === 'CONFIRM & PAY' && (
-            <p className="mt-1.5 px-1 text-center font-body text-[8px] font-black uppercase leading-tight tracking-[0.04em] text-foreground/62 min-[390px]:text-[9px] md:text-[10px]">
-              {dueNow} deposit today · {showDueAfter ? `${dueAfter} balance after visit · ` : ''}Total {total}
-            </p>
-          )}
-          <p className="mt-1 px-1 text-center font-body text-[9px] font-black leading-tight text-foreground/58 md:text-[10px]">
-            {receiptLine ? `${receiptLine} · ` : ''}
+          <p className="mt-1 px-1 text-center font-body text-[12px] font-black leading-tight text-foreground/58 md:text-[13px]">
+            {step !== LAST_STEP && receiptLine ? `${receiptLine} · ` : ''}
             {CLINICAL_REVIEW_NOTICE}
           </p>
         </div>
@@ -1217,19 +1384,29 @@ function DesktopOrderRail({
   onNext,
   onRemoveAddon,
   onClearOrder,
+  sessionPeople = [],
+  onSelectPerson,
+  onAddPerson,
+  onRemovePerson,
 }) {
   const hasTherapySelection = Boolean(product);
   const displaySubtotal = hasTherapySelection ? subtotal : 0;
   const displayDueNow = hasTherapySelection ? dueNow : BOOKING_DEPOSIT_AMOUNT;
-  const displayBalanceDue = hasTherapySelection ? balanceDue : 200;
+  // Don't fabricate a $200 balance when nothing is selected — it confuses the
+  // summary card ("Total $0 · Deposit $50 · Balance $200" doesn't add up). The
+  // placeholder block below shows only Deposit + the selection prompt instead.
+  const displayBalanceDue = hasTherapySelection ? balanceDue : 0;
   const selectedIvAddons = selectedAddons.filter((item) => item.type !== 'im');
   const selectedImAddons = selectedAddons.filter((item) => item.type === 'im');
   const dateLabel = bookingDateLabel(state);
   const timeLabel = bookingTimeLabel(state);
-  const receiptLine = priceReceipt({ product, subtotal: displaySubtotal, groupContactRequired: false });
+  // One-time visits show the total on the line below already, so the "Total $X"
+  // receipt line is redundant — only subscriptions carry a billing note here.
+  const receiptLine = state.visitType === 'subscription'
+    ? `Billed monthly · ${SUBSCRIPTION_COMMITMENT_COPY}`
+    : '';
 
   const rows = [
-    ['Therapy', hasTherapySelection ? product.label : 'Not selected'],
     ['Date', dateLabel],
     ['Time', timeLabel],
   ];
@@ -1239,22 +1416,46 @@ function DesktopOrderRail({
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,hsl(var(--foreground)/0.07),transparent_36%),linear-gradient(145deg,hsl(var(--foreground)/0.035),transparent_64%)]" />
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Order</p>
+          <p className="font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/72 2xl:text-xs">Your Session</p>
           {hasTherapySelection && (
             <button
               type="button"
               onClick={onClearOrder}
-              className="font-body text-[9px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85 2xl:text-[10px]"
+              className="font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 transition-colors hover:text-foreground/85 2xl:text-[13px]"
             >
               Clear
             </button>
           )}
         </div>
+        {sessionPeople.some((person) => person.filled) && (
+          <div className="mt-1.5 space-y-1">
+            {sessionPeople
+              .filter((person) => person.filled)
+              .map((person) => (
+                <div key={person.id} className="flex items-baseline justify-between gap-2">
+                  <p className="min-w-0 truncate font-body text-[14px] font-black uppercase tracking-[0.02em] text-foreground/88 2xl:text-xs">
+                    {sessionPeople.length > 1 ? `${person.index + 1} · ${person.productLabel}` : person.productLabel}
+                  </p>
+                  {person.priceLabel && (
+                    <span className="shrink-0 font-body text-[14px] font-black text-foreground/70 2xl:text-xs">{person.priceLabel}</span>
+                  )}
+                </div>
+              ))}
+          </div>
+        )}
+        <SessionBuilder
+          people={sessionPeople}
+          activePersonId={state.activePersonId}
+          onSelect={onSelectPerson}
+          onAdd={onAddPerson}
+          onRemove={onRemovePerson}
+          addLabel="Add another person"
+        />
         <div className="mt-2 divide-y divide-foreground/8 border-t border-foreground/8">
           {rows.map(([label, value]) => (
             <div key={label} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2 py-1.5 2xl:grid-cols-[76px_minmax(0,1fr)] 2xl:py-2">
-              <p className="font-body text-[10px] font-black text-foreground/58 2xl:text-[11px]">{label}</p>
-              <p className="min-w-0 break-words text-right font-body text-[10px] font-bold leading-snug text-foreground/82 2xl:text-[11px]">{value}</p>
+              <p className="font-body text-[13px] font-black text-foreground/58 2xl:text-[14px]">{label}</p>
+              <p className="min-w-0 break-words text-right font-body text-[13px] font-bold leading-snug text-foreground/82 2xl:text-[14px]">{value}</p>
             </div>
           ))}
         </div>
@@ -1262,8 +1463,8 @@ function DesktopOrderRail({
           <div className="mt-1.5 space-y-1">
             {selectedAddons.map((item) => (
               <div key={item.label} className="flex items-center gap-2 rounded-lg border border-foreground/8 bg-background/24 px-2 py-1">
-                <p className="min-w-0 flex-1 truncate font-body text-[10px] font-bold text-foreground/74 2xl:text-[11px]">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
-                <span className="shrink-0 font-body text-[9px] font-black text-foreground/52 2xl:text-[10px]">{currency(item.price)}</span>
+                <p className="min-w-0 flex-1 truncate font-body text-[13px] font-bold text-foreground/74 2xl:text-[14px]">{item.type === 'im' ? `IM · ${item.label}` : item.label}</p>
+                <span className="shrink-0 font-body text-[12px] font-black text-foreground/52 2xl:text-[13px]">{currency(item.price)}</span>
                 <button
                   type="button"
                   onClick={() => onRemoveAddon(item.label)}
@@ -1277,26 +1478,57 @@ function DesktopOrderRail({
           </div>
         )}
         <div className="mt-2 border-t border-foreground/8 pt-2.5 2xl:pt-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Subtotal</p>
-            <p className="font-body text-sm font-black text-foreground 2xl:text-base">{hasTherapySelection ? totalLabel || currency(displaySubtotal) : currency(0)}</p>
-          </div>
-          <p className="mt-1 max-w-full break-words font-body text-[10px] font-bold leading-snug text-foreground/54 2xl:text-[11px]">{receiptLine}</p>
-          <div className="mt-2.5 2xl:mt-3">
-            <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Deposit</p>
-            <p className="mt-1 font-body text-[1.85rem] font-black leading-none text-foreground 2xl:text-[2.15rem]">{currency(displayDueNow)}</p>
-            {displayBalanceDue > 0 && <p className="mt-1 font-body text-[11px] font-bold text-foreground/52 2xl:text-xs">Balance {currency(displayBalanceDue)}</p>}
+          {hasTherapySelection ? (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/58 2xl:text-xs">Total</p>
+                <p className="font-body text-sm font-black text-foreground 2xl:text-base">{totalLabel || currency(displaySubtotal)}</p>
+              </div>
+              {receiptLine && <p className="mt-1 max-w-full break-words font-body text-[13px] font-bold leading-snug text-foreground/54 2xl:text-[14px]">{receiptLine}</p>}
+              <div className="mt-2.5 2xl:mt-3">
+                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
+                  Deposit today {currency(displayDueNow)}
+                </p>
+                {displayBalanceDue > 0 && (
+                  <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/52 2xl:text-[13px]">
+                    Balance after visit {currency(displayBalanceDue)}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div>
+              <p className="font-body text-[13px] font-bold leading-snug text-foreground/58 2xl:text-[14px]">
+                Select a therapy to see your total.
+              </p>
+              <div className="mt-2.5">
+                <p className="font-heading text-[1.5rem] uppercase leading-none tracking-[0.02em] text-foreground 2xl:text-[1.65rem]">
+                  Deposit today {currency(BOOKING_DEPOSIT_AMOUNT)}
+                </p>
+                <p className="mt-1 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/45 2xl:text-[13px]">
+                  Balance depends on therapy
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="mt-2 flex items-start gap-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-2">
+          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/64 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
+          <div className="min-w-0">
+            <p className="font-body text-[12px] font-black leading-snug text-foreground/76 2xl:text-[13px]">
+              {CLINICAL_REVIEW_NOTICE}
+            </p>
+            <p className="mt-0.5 font-body text-[12px] font-semibold leading-snug text-foreground/54 2xl:text-[13px]">
+              A licensed provider will review your request.
+            </p>
           </div>
         </div>
-        <p className="mt-2 rounded-xl border border-foreground/8 bg-background/28 px-2.5 py-1.5 font-body text-[9px] font-black leading-snug text-foreground/64 2xl:text-[10px]">
-          {CLINICAL_REVIEW_NOTICE}
-        </p>
         <div className={`mt-auto grid gap-2 pt-3 ${canGoBack ? 'grid-cols-[70px_1fr] 2xl:grid-cols-[76px_1fr]' : 'grid-cols-1'}`}>
           {canGoBack && (
             <button
               type="button"
               onClick={onBack}
-              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/30 px-2.5 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-foreground/12 bg-background/30 px-2.5 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/72 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] transition-colors hover:border-foreground/28 hover:text-foreground 2xl:min-h-[50px] 2xl:text-xs"
             >
               Back
             </button>
@@ -1305,6 +1537,7 @@ function DesktopOrderRail({
             type="button"
             onClick={onNext}
             disabled={!canGoNext || checkoutLoading}
+            aria-describedby={!canGoNext && !checkoutLoading ? 'book-next-hint' : undefined}
             className={`relative flex min-h-[44px] w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl border px-3 font-body text-xs font-black uppercase tracking-[0.08em] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10)] transition-transform active:scale-[0.985] 2xl:min-h-[50px] 2xl:text-sm ${
               canGoNext ? 'border-foreground bg-foreground text-background' : 'border-foreground/18 bg-background/36 text-foreground/46'
             }`}
@@ -1321,7 +1554,17 @@ function DesktopOrderRail({
             <ArrowRight className="h-5 w-5 2xl:h-6 2xl:w-6" strokeWidth={2.6} />
           </button>
         </div>
-        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[10px] font-semibold text-foreground/50 2xl:text-[11px]">
+        {/* Hint appears when the primary CTA is disabled so users don't have to
+            infer why they can't advance. Generic across steps to stay accurate. */}
+        {!canGoNext && !checkoutLoading && (
+          <p
+            id="book-next-hint"
+            className="mt-1.5 text-center font-body text-[11px] font-semibold text-foreground/55"
+          >
+            Complete this step to continue.
+          </p>
+        )}
+        <div className="mt-2 flex items-center justify-center gap-2 font-body text-[13px] font-semibold text-foreground/50 2xl:text-[14px]">
           <ShieldCheck className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" strokeWidth={2.2} />
           Secure booking
         </div>
@@ -1351,6 +1594,10 @@ function DesktopBookingFrame({
   onStepSelect,
   onRemoveAddon,
   onClearOrder,
+  sessionPeople,
+  onSelectPerson,
+  onAddPerson,
+  onRemovePerson,
   children,
 }) {
   return (
@@ -1358,16 +1605,14 @@ function DesktopBookingFrame({
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(248px,300px)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,310px)] lg:gap-5 lg:p-5 2xl:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] 2xl:gap-6 2xl:p-6">
         <div className="grid min-h-0 min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)]">
           <h1 className="font-body text-xl font-black uppercase tracking-[0.08em] text-foreground">
-            {displayStepIndex + 1} OF {STEPS.length} • {displayTitle}
+            {displayTitle}
           </h1>
           <DesktopStepRail displayStepIndex={displayStepIndex} />
           <div className="my-3 h-px bg-foreground/10 2xl:my-5" />
           {error && (
-            <div role="alert" className="mb-4 flex min-h-[42px] items-center justify-between gap-3 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
+            <div role="alert" className="mb-4 flex min-h-[42px] items-center gap-2.5 rounded-xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-2 text-amber-100">
+              <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
               <p className="font-body text-sm font-black">{error}</p>
-              <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1 font-body text-[10px] font-black uppercase tracking-[0.08em]">
-                Text
-              </a>
             </div>
           )}
           <motion.div
@@ -1397,6 +1642,10 @@ function DesktopBookingFrame({
           onNext={onNext}
           onRemoveAddon={onRemoveAddon}
           onClearOrder={onClearOrder}
+          sessionPeople={sessionPeople}
+          onSelectPerson={onSelectPerson}
+          onAddPerson={onAddPerson}
+          onRemovePerson={onRemovePerson}
         />
       </div>
     </section>
@@ -1619,7 +1868,7 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
           </div>
           <div className="flex min-w-[68px] shrink-0 flex-col items-end justify-center text-right md:min-w-[72px]">
             {recommendation && (
-              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-1.5 py-0.5 font-body text-[9px] font-black uppercase leading-none tracking-[0.08em] text-foreground/66 backdrop-blur-2xl md:text-[9px]">
+              <span className="mb-1 rounded-full border border-foreground/12 bg-background/38 px-1.5 py-0.5 font-body text-[12px] font-black uppercase leading-none tracking-[0.08em] text-foreground/66 backdrop-blur-2xl md:text-[12px]">
                 {recommendation}
               </span>
             )}
@@ -1642,19 +1891,40 @@ function ProductCard({ product, active, onSelect, onPrimary, recommendation = ''
   );
 }
 
-function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) {
+function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary, isSuggestion = false }) {
   const [openOther, setOpenOther] = useState(false);
   const activeOption = productOptions.find((item) => item.key === activeKey) || productOptions[0];
   const otherOptions = productOptions.filter((item) => item.key !== activeOption?.key);
+  const panelRef = useRef(null);
 
   useEffect(() => {
     setOpenOther(false);
   }, [activeKey]);
 
+  // Quiz-driven landings scroll the suggested therapy into view so the
+  // recommendation is immediately obvious instead of forcing a hunt.
+  useEffect(() => {
+    if (!isSuggestion || !panelRef.current) return;
+    const el = panelRef.current;
+    const timer = window.setTimeout(() => {
+      try {
+        el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      } catch {
+        el.scrollIntoView();
+      }
+    }, 240);
+    return () => window.clearTimeout(timer);
+  }, [isSuggestion, activeKey]);
+
   if (!activeOption) return null;
 
   return (
-    <div className="grid gap-2 md:gap-2">
+    <div ref={panelRef} className="grid gap-2 md:gap-2">
+      {isSuggestion && (
+        <p className="mb-1 px-1 font-body text-[10.5px] uppercase leading-relaxed tracking-[0.16em] text-foreground/50">
+          Wellness suggestion based on your quiz · Not medical advice
+        </p>
+      )}
       <ProductCard
         key={activeOption.key}
         product={activeOption}
@@ -1662,7 +1932,7 @@ function TherapyChoicePanel({ productOptions, activeKey, onSelect, onPrimary }) 
         active
         onSelect={() => onSelect(activeOption.key)}
         onPrimary={() => onPrimary(activeOption.key)}
-        recommendation="Selected"
+        recommendation={isSuggestion ? 'Suggested' : 'Selected'}
       />
       {otherOptions.length > 0 && (
         <div className="overflow-hidden rounded-[1.25rem] border border-foreground/12 bg-background/30 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl md:rounded-[1.1rem]">
@@ -1828,7 +2098,7 @@ function buildAddonCatalog(product) {
     const label = String(item?.label || '').toLowerCase();
     if (item?.type === 'im') return item.icon || Syringe;
     if (label.includes('fluid')) return Droplets;
-    if (label.includes('nad')) return BatteryCharging;
+    if (label.includes('nad')) return FlaskConical;
     if (label.includes('glutathione')) return Sparkles;
     if (label.includes('vitamin c')) return ShieldCheck;
     if (label.includes('magnesium')) return Zap;
@@ -1886,7 +2156,7 @@ function AddOnGroup({ group, defaultOpen = false, selectedCount, selectedLabels,
           <p className="font-body text-xs font-bold uppercase tracking-[0.18em] text-foreground/80">{group.label}</p>
           <p className="mt-1 font-body text-sm font-medium text-foreground/62">{group.sub}</p>
         </div>
-        <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[11px] font-semibold uppercase tracking-[0.1em] text-foreground/68">
+        <span className="shrink-0 rounded-full border border-foreground/10 px-3 py-1.5 font-body text-[14px] font-semibold uppercase tracking-[0.1em] text-foreground/68">
           {selectedCount ? `${selectedCount} picked` : open ? 'Hide' : 'Show'}
         </span>
       </button>
@@ -1940,7 +2210,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
       <button
         type="button"
         onClick={onNone}
-        className={`group relative flex min-h-[78px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
+        className={`group relative flex min-h-[96px] items-center justify-between gap-4 overflow-hidden rounded-[1.35rem] border px-4 py-3 text-left shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_20px_80px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl transition-colors ${
           noAddonsSelected
             ? 'border-foreground/42 bg-foreground/[0.16] text-foreground shadow-[0_22px_80px_hsl(var(--foreground)/0.14)]'
             : 'border-foreground/12 bg-background/50 text-foreground hover:border-foreground/24'
@@ -1964,24 +2234,28 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
         {groups.map((group) => {
           const selectedCount = group.items.filter((item) => state.addOns.includes(item.label)).length;
           const open = Boolean(openGroups[group.key] || selectedCount > 0);
+          const GroupIcon = group.icon || Plus;
           return (
             <section
               key={group.key}
-              className="relative overflow-hidden rounded-[1.15rem] border border-foreground/12 bg-background/40 p-2.5 pt-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_16px_60px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl"
+              className="relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_16px_60px_hsl(var(--foreground)/0.055)] backdrop-blur-2xl"
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
               <button
                 type="button"
                 onClick={() => toggleGroup(group.key)}
-                className="relative flex min-h-[62px] w-full items-center justify-between gap-3 px-1 text-left"
+                className="relative flex min-h-[96px] w-full items-center justify-between gap-3 px-4 text-left"
                 aria-expanded={open}
               >
-                <span className="truncate font-body text-sm font-black uppercase tracking-[0.14em] text-foreground/70">
-                  {group.label}
+                <span className="relative flex min-w-0 items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-background/30">
+                    <GroupIcon className="h-4 w-4" strokeWidth={2.4} />
+                  </span>
+                  <span className="block truncate font-heading text-[2rem] uppercase leading-none tracking-normal">{group.label}</span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
                   {selectedCount > 0 && (
-                    <span className="rounded-full border border-foreground/12 px-2.5 py-1 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70">
+                    <span className="rounded-full border border-foreground/12 px-2.5 py-1 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/70">
                       {selectedCount}
                     </span>
                   )}
@@ -1991,7 +2265,7 @@ function AddOnDecisionPanel({ groups, state, selectedAddons, subtotal, onNone, o
                 </span>
               </button>
               <SmoothDisclosure open={open}>
-                <div className="relative grid grid-cols-1 gap-1.5 border-t border-foreground/8 pt-2.5">
+                <div className="relative grid grid-cols-1 gap-1.5 border-t border-foreground/8 px-2.5 pb-2.5 pt-2.5">
                   {group.items.map((item) => {
                     const active = state.addOns.includes(item.label);
                     const Icon = item.icon || Plus;
@@ -2115,51 +2389,90 @@ function hasValidContactFields(state = {}) {
   );
 }
 
-function hasEmergencyContact(value) {
-  return String(value || '').trim().length >= 4;
+function splitEmergencyContact(value = '') {
+  const text = String(value || '').trim();
+  if (!text) return { name: '', phone: '' };
+  const phoneMatch = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/);
+  if (!phoneMatch) return { name: text, phone: '' };
+  const phone = phoneMatch[0].trim();
+  const name = text
+    .replace(phoneMatch[0], '')
+    .replace(/^[\s,;:|·-]+|[\s,;:|·-]+$/g, '')
+    .trim();
+  return { name, phone };
+}
+
+function formatEmergencyContact(state = {}) {
+  const name = String(state.emergencyContactName || '').trim();
+  const phone = String(state.emergencyContactPhone || '').trim();
+  if (name || phone) return [name, phone].filter(Boolean).join(' · ');
+  return String(state.emergencyContact || '').trim();
+}
+
+function hasEmergencyContact(state = {}) {
+  if (typeof state === 'string') return String(state || '').trim().length >= 4;
+  return Boolean(
+    String(state.emergencyContactName || '').trim().length >= 2 &&
+    isValidCheckoutPhone(state.emergencyContactPhone)
+  );
 }
 
 function inputIdForLabel(label) {
   return `booking-${String(label || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'field'}`;
 }
 
-function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy }) {
+function TextInput({ label, value, onChange, onKeyDown, placeholder, type = 'text', required = false, autoComplete, inputMode, autoFocus = false, actionLabel, onAction, compact = false, invalid = false, describedBy, icon: Icon }) {
   const inputId = inputIdForLabel(label);
+  // When an icon is supplied we drop the visible text label (the icon +
+  // placeholder carry it) to stay lean; aria-label keeps it accessible.
+  const showLabelRow = !Icon || (actionLabel && onAction && !value);
   return (
     <div className="block">
-      <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
-        <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[11px] md:text-xs' : 'text-sm'}`}>{label}</label>
-        {actionLabel && onAction && !value && (
-          <button
-            type="button"
-            onClick={(event) => {
-              onAction();
-            }}
-            className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/72"
-          >
-            {actionLabel}
-          </button>
+      {showLabelRow && (
+        <div className="flex min-h-[18px] items-center justify-between gap-2 md:min-h-[22px]">
+          {!Icon && <label htmlFor={inputId} className={`font-body font-extrabold tracking-[0.02em] text-foreground/76 ${compact ? 'text-[14px] md:text-xs' : 'text-sm'}`}>{label}</label>}
+          {actionLabel && onAction && !value && (
+            <button
+              type="button"
+              onClick={(event) => {
+                onAction();
+              }}
+              className="ml-auto rounded-full border border-foreground/12 px-3 py-1 font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/72"
+            >
+              {actionLabel}
+            </button>
+          )}
+        </div>
+      )}
+      <div className="relative">
+        {Icon && (
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/55 md:left-4">
+            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+          </span>
         )}
+        <input
+          id={inputId}
+          name={inputId}
+          aria-label={label}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          type={type}
+          required={required}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          autoFocus={autoFocus}
+          style={{ scrollMarginTop: '6rem', scrollMarginBottom: 'var(--av-booking-footer-reserve, 6rem)' }}
+          className={`mt-0.5 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:text-lg ${
+            Icon ? 'pl-11 pr-3.5 md:pl-12 md:pr-4' : 'px-3.5 md:px-4'
+          } ${
+            compact ? 'min-h-[40px] text-sm md:min-h-[44px] md:text-base' : 'min-h-[52px] text-lg'
+          }`}
+        />
       </div>
-      <input
-        id={inputId}
-        name={inputId}
-        aria-label={label}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        type={type}
-        required={required}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        autoFocus={autoFocus}
-        className={`mt-0.5 w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-3.5 font-body font-semibold text-foreground placeholder:text-foreground/52 outline-none transition-colors focus:border-foreground/40 md:mt-1 md:min-h-[50px] md:px-4 md:text-lg ${
-          compact ? 'min-h-[40px] text-sm md:min-h-[44px] md:text-base' : 'min-h-[52px] text-lg'
-        }`}
-      />
     </div>
   );
 }
@@ -2181,7 +2494,7 @@ function AddressPrediction({ suggestion, onUse, compact = false }) {
           <Icon className="h-4 w-4 md:h-4 md:w-4" strokeWidth={2.35} />
         </span>
         <span className="min-w-0">
-          <span className="block font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/64">
+          <span className="block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/64">
             Use this address
           </span>
           <span className="mt-1 block truncate font-body text-base font-black leading-tight md:text-base">{suggestion.address}</span>
@@ -2321,7 +2634,7 @@ function ClientFastLane({ state, profileGfe, hasSavedVisit, signedIn, onChoose }
               <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
               {item.label}
             </span>
-            <span className={`mt-0.5 block font-body text-[11px] font-semibold uppercase tracking-[0.08em] ${active ? 'text-foreground/66' : 'text-foreground/58'}`}>
+            <span className={`mt-0.5 block font-body text-[14px] font-semibold uppercase tracking-[0.08em] ${active ? 'text-foreground/66' : 'text-foreground/58'}`}>
               {returning ? (signedIn ? (hasSavedVisit ? 'Saved' : profileGfe.required ? 'Review' : 'Ready') : 'Sign in') : 'First'}
             </span>
           </button>
@@ -2346,7 +2659,7 @@ function VisitForSelector({ value, onChoose }) {
           <p className="font-body text-xs font-bold uppercase tracking-[0.16em] text-foreground/62">Who</p>
           <p className="mt-1 truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal text-foreground">{copy[value] || activeOption.label}</p>
         </div>
-        <span className="rounded-full border border-foreground/12 px-3 py-1.5 font-body text-[11px] font-bold uppercase tracking-[0.1em] text-foreground/68">
+        <span className="rounded-full border border-foreground/12 px-3 py-1.5 font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/68">
           {activeOption.label}
         </span>
       </div>
@@ -2366,7 +2679,7 @@ function VisitForSelector({ value, onChoose }) {
             >
               <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
               <Icon className="relative h-4 w-4 md:h-4 md:w-4" strokeWidth={2.55} />
-              <span className="relative font-body text-[11px] font-extrabold uppercase tracking-[0.1em]">{item.label}</span>
+              <span className="relative font-body text-[14px] font-extrabold uppercase tracking-[0.1em]">{item.label}</span>
               {active && <Check className="hidden" strokeWidth={2.8} />}
             </button>
           );
@@ -2388,7 +2701,7 @@ function LocationTypeDropdown({ value, onChange }) {
           <Icon className="h-4 w-4 md:h-4 md:w-4" strokeWidth={2.45} />
         </span>
         <span className="min-w-0">
-          <span className="block font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/58">Place</span>
+          <span className="block font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/58">Place</span>
           <span className="mt-0.5 block truncate font-heading text-[1.45rem] uppercase leading-none tracking-normal md:mt-1 md:text-[1.55rem]">{selected.label}</span>
         </span>
       </span>
@@ -2576,7 +2889,7 @@ function FastHoldPanel({ product, serviceLabel, subtotal, balanceDue, onContinue
 }
 
 function ContactConfirmCard({ state, onChange, savedContact }) {
-  const hasContact = hasValidContactFields(state);
+  const hasContact = hasValidContactFields(state) && hasEmergencyContact(state);
   const [editing, setEditing] = useState(!hasContact);
   const hasSavedContact = Boolean(savedContact?.name || savedContact?.email || savedContact?.phone);
 
@@ -2614,8 +2927,8 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
               <span className="flex min-w-0 items-center gap-2"><Calendar className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.dob}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Phone className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.phone}</span></span>
               <span className="flex min-w-0 items-center gap-2"><Mail className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.email}</span></span>
-              {state.emergencyContact && (
-                <span className="flex min-w-0 items-center gap-2"><UserPlus className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{state.emergencyContact}</span></span>
+              {formatEmergencyContact(state) && (
+                <span className="flex min-w-0 items-center gap-2"><UserPlus className="h-4.5 w-4.5 shrink-0" /> <span className="truncate">{formatEmergencyContact(state)}</span></span>
               )}
             </div>
           </div>
@@ -2686,17 +2999,28 @@ function ContactConfirmCard({ state, onChange, savedContact }) {
             required
           />
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 md:col-span-1">
           <TextInput
-            label="Emergency contact"
-            value={state.emergencyContact}
-            onChange={(value) => onChange('emergencyContact', value)}
-            placeholder="Name and phone"
-            autoComplete="section-emergency tel"
+            label="Emergency name"
+            value={state.emergencyContactName}
+            onChange={(value) => onChange('emergencyContactName', value)}
+            placeholder="Full name"
+            autoComplete="section-emergency name"
             compact
             required
           />
         </div>
+        <TextInput
+          label="Emergency phone"
+          value={state.emergencyContactPhone}
+          onChange={(value) => onChange('emergencyContactPhone', value)}
+          placeholder="Phone number"
+          autoComplete="section-emergency tel"
+          inputMode="tel"
+          type="tel"
+          compact
+          required
+        />
       </div>
       {hasContact && (
         <button
@@ -2720,7 +3044,7 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
   return (
     <div className="mb-3 space-y-3">
       <div className="flex items-center gap-2">
-        <span className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-foreground/58">
+        <span className="font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/58">
           Patients on this visit
         </span>
         <span className="h-px flex-1 bg-foreground/12" />
@@ -2730,12 +3054,12 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
           key={row.person.id}
           className="rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-2xl"
         >
-          <p className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/62">
+          <p className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/62">
             {row.label} · {row.product?.label || 'IV pending'}
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <label className="block">
-              <span className="block font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/58">
+              <span className="block font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/58">
                 Patient name
               </span>
               <input
@@ -2748,7 +3072,7 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
               />
             </label>
             <label className="block">
-              <span className="block font-body text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/58">
+              <span className="block font-body text-[14px] font-bold uppercase tracking-[0.08em] text-foreground/58">
                 Date of birth
               </span>
               <input
@@ -2766,6 +3090,74 @@ function AdditionalPeopleForm({ peopleBreakdown, activePersonId, onPersonChange 
   );
 }
 
+// Consent-only intake block. Clinical questions (conditions/covid/infectious/
+// IV-history/allergies/meds) are now authored by the nurse on arrival, so this
+// card shows a single combined consent checkbox — the three individual Acuity
+// consent flags (privacyAck / treatmentConsent / generalConsent) are derived
+// from `combinedConsent` in checkoutPayloadFor so the audit log is unchanged.
+// Never auto-affirmed — the box is unchecked by default and gated in canSubmit.
+
+function YesNoToggle({ label, value, onChange }) {
+  return (
+    <div>
+      <span className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">{label}</span>
+      <div className="grid grid-cols-2 gap-1.5">
+        {['No', 'Yes'].map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              aria-pressed={active}
+              className={`min-h-[44px] rounded-xl border px-3 font-body text-sm font-black transition-colors ${
+                active ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/70'
+              }`}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ClinicalIntakeCard({ state, onChange }) {
+  const linkClass = 'underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground';
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/50 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.07)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
+      <p className="relative font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Consent</p>
+
+      <div className="relative mt-3">
+        <div className="overflow-hidden rounded-xl border border-foreground/12 bg-background/40">
+          <p className="px-3 pt-3 pb-2 font-body text-[13px] font-black uppercase tracking-[0.2em] text-foreground/45">Required</p>
+          <label className="flex cursor-pointer items-start gap-3 px-3 py-3 font-body text-xs font-semibold leading-relaxed text-foreground/72">
+            <input
+              type="checkbox"
+              checked={Boolean(state.combinedConsent)}
+              onChange={(e) => onChange('combinedConsent', e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+            />
+            <span>
+              I agree to the{' '}
+              <a href="/privacy-policy" target="_blank" rel="noreferrer" className={linkClass}>Privacy Notice &amp; HIPAA terms</a>
+              , the{' '}
+              <a href="/telehealth-disclaimer" target="_blank" rel="noreferrer" className={linkClass}>Telehealth Consent</a>
+              , and I confirm I&apos;m 18+ and accept the{' '}
+              <a href="/terms-of-service" target="_blank" rel="noreferrer" className={linkClass}>Terms of Service</a>.
+            </span>
+          </label>
+        </div>
+        <p className="mt-2 px-1 font-body text-[11px] font-medium leading-snug text-foreground/45">
+          Clinical intake (allergies, medications, conditions) is completed with your nurse on arrival.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function SafetyFlagChoice({ value, onChange }) {
   const [open, setOpen] = useState(false);
   return (
@@ -2776,7 +3168,7 @@ function SafetyFlagChoice({ value, onChange }) {
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="min-h-[38px] rounded-full border border-foreground/12 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62"
+          className="min-h-[38px] rounded-full border border-foreground/12 px-3 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/62"
         >
           {open ? 'Hide' : 'View'}
         </button>
@@ -2895,7 +3287,7 @@ function FastContactSafetyCard({ state, onChange, savedContact }) {
             <button
               type="button"
               onClick={() => setOpen((current) => !current)}
-              className="min-h-[34px] rounded-full border border-foreground/12 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/62"
+              className="min-h-[34px] rounded-full border border-foreground/12 px-3 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/62"
             >
               {open ? 'Hide' : 'View'}
             </button>
@@ -2955,16 +3347,14 @@ function FastReviewSurface({
   onSubmit,
 }) {
   const Icon = product?.icon || Droplets;
-  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag);
+  const canPay = Boolean(hasValidContactFields(state) && state.address.trim() && resolvedZip.length === 5 && state.safetyFlag && state.combinedConsent);
 
   return (
     <section className="mx-auto max-w-3xl scroll-mt-28 pb-[calc(var(--av-booking-footer-height,5rem)+max(env(safe-area-inset-bottom,0px),var(--av-booking-visual-bottom-gap,0px))+0.75rem)] md:pb-6">
       {error && (
-        <div role="alert" id="booking-visit-error" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+        <div role="alert" id="booking-visit-error" className="mb-3 flex items-center gap-2.5 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+          <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
           <p className="font-body text-sm font-black">{error}</p>
-          <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.08em]">
-            Text us
-          </a>
         </div>
       )}
 
@@ -2984,7 +3374,7 @@ function FastReviewSurface({
             <button
               type="button"
               onClick={onChangeTherapy}
-              className="min-h-[42px] shrink-0 rounded-full border border-foreground/14 px-3 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/68"
+              className="min-h-[42px] shrink-0 rounded-full border border-foreground/14 px-3 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/68"
             >
               Change
             </button>
@@ -2995,7 +3385,7 @@ function FastReviewSurface({
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
           <div className="relative mb-3 flex items-center justify-between gap-3">
             <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Address</p>
-            {resolvedZip && <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[11px] font-black uppercase tracking-[0.1em] text-foreground/58">{resolvedZip}</span>}
+            {resolvedZip && <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/58">{resolvedZip}</span>}
           </div>
           <div className="relative grid gap-2">
             <button
@@ -3047,6 +3437,18 @@ function FastReviewSurface({
         <p className="rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3 font-body text-xs font-semibold leading-snug text-foreground/58">
           By paying, you consent to intake and privacy terms. Treatment requires clinical approval.
         </p>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-foreground/10 bg-background/38 px-4 py-3">
+          <input
+            type="checkbox"
+            checked={!!state.smsReminderConsent}
+            onChange={(e) => onValue('smsReminderConsent', e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-current"
+          />
+          <span className="font-body text-xs leading-snug text-foreground/58">
+            Text me appointment reminders. I understand standard SMS isn’t encrypted and consent to receive reminders by text. (Optional — reply STOP anytime.)
+          </span>
+        </label>
 
       </div>
 
@@ -3205,60 +3607,59 @@ function BillingChoice({ value, onChange }) {
   );
 }
 
+function MemberCreditChoice({ balance, selected, valueLabel, onChange }) {
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl border border-foreground/12 bg-background/42 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_70px_hsl(var(--foreground)/0.06)] backdrop-blur-2xl">
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent" />
+      <div className="relative flex items-center justify-between gap-3">
+        <p className="font-body text-sm font-black uppercase tracking-[0.12em] text-foreground/68">Member Credit</p>
+        <span className="rounded-full border border-foreground/12 px-3 py-1 font-body text-[14px] font-black uppercase tracking-[0.1em] text-foreground/62">
+          {balance} available
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!selected)}
+        aria-pressed={selected}
+        className={`relative mt-3 flex min-h-[68px] w-full items-center justify-between gap-3 rounded-2xl border px-3 text-left font-body shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)] backdrop-blur-xl transition-colors ${
+          selected ? 'border-foreground/42 bg-foreground/[0.14] text-foreground' : 'border-foreground/12 bg-background/42 text-foreground/72'
+        }`}
+      >
+        <span className="flex min-w-0 items-center gap-2.5">
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${selected ? 'border-foreground/24 bg-foreground/[0.08]' : 'border-foreground/12 bg-foreground/[0.05]'}`}>
+            <Sparkles className="h-5 w-5" strokeWidth={2.35} />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-black uppercase tracking-[0.06em]">Apply 1 IV credit</span>
+            <span className="mt-1 block text-xs font-bold leading-snug text-foreground/58">Covers {valueLabel} of this IV visit.</span>
+          </span>
+        </span>
+        {selected && <Check className="h-4.5 w-4.5 shrink-0" strokeWidth={2.8} />}
+      </button>
+    </div>
+  );
+}
+
 function ConfirmSummary({ state, product, bookingGfeRequirement, subtotal = 0, dueNow = 0, balanceDue = 0 }) {
   const isCustom = state.outcome === 'longevity';
   const customBase = CUSTOM_BASE_OPTIONS.find((item) => item.key === state.customBase) || CUSTOM_BASE_OPTIONS[1];
   const serviceLabel = isCustom ? `Custom ${customBase.label}` : product?.label || 'Therapy';
-  const manualBilling = state.billingMode === 'vip-manual';
-  const items = [
-    { label: state.visitType === 'subscription' ? 'Monthly' : 'Visit', value: bookingTimeSummary(state), icon: Calendar },
-    { label: 'Clinical review', value: state.clinicalReviewOnFile ? 'On file' : bookingGfeRequirement.required ? 'Needed' : 'Ready', icon: ShieldCheck },
-    { label: 'Billing', value: manualBilling ? 'VIP invoice' : 'Card deposit', icon: CreditCard },
-    { label: 'Due now', value: manualBilling ? '$0' : currency(dueNow), icon: Check },
-    { label: 'Upon completion', value: manualBilling ? 'Bill manager' : currency(balanceDue), icon: CreditCard },
-  ];
+  // Receipt-style summary: product + price only. Payment terms (deposit today /
+  // balance after) live in the footer CTA, so we don't repeat them here.
 
   return (
-    <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
+    <div className="relative mb-3 overflow-hidden rounded-[1.6rem] border border-foreground/12 bg-background/40 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl">
       <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.10),transparent_38%),linear-gradient(145deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.026))]" />
-      <div className="relative flex items-center justify-between gap-3 border-b border-foreground/10 pb-3">
+
+      {/* Product + price */}
+      <div className="relative flex items-start justify-between gap-3 px-5 pb-5 pt-5">
         <div className="min-w-0">
-          <p className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/60">Ready</p>
-          <p className="mt-1 truncate font-heading text-[2rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</p>
+          <p className="truncate font-heading text-[2.1rem] uppercase leading-none tracking-normal text-foreground">{serviceLabel}</p>
+          <p className="mt-1.5 font-body text-[14px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
         </div>
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-foreground/16 bg-foreground/[0.07] text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08)]">
-          <Check className="h-5 w-5" strokeWidth={2.8} />
-        </span>
-      </div>
-      <div className="relative mt-1 divide-y divide-foreground/8">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div key={`${item.label}-${item.value}`} className="flex min-h-[58px] items-center justify-between gap-3 py-3">
-              <span className="flex min-w-0 items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.055] text-foreground">
-                  <Icon className="h-4.5 w-4.5" strokeWidth={2.35} />
-                </span>
-                <span className="truncate font-body text-base font-extrabold text-foreground">{item.label}</span>
-              </span>
-              <span className="shrink-0 font-body text-base font-black text-foreground/72">{item.value}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="relative mt-2 rounded-2xl border border-foreground/10 bg-foreground/[0.035] p-3">
-        <div className="flex items-center justify-between gap-3">
-          <span className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Subtotal</span>
-          <span className="font-body text-sm font-black text-foreground">{currency(subtotal)}</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Taxes</span>
-          <span className="font-body text-sm font-black text-foreground">Calculated in checkout if required</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="font-body text-xs font-black uppercase tracking-[0.14em] text-foreground/58">Discounts</span>
-          <span className="font-body text-sm font-black text-foreground">Promo code accepted at payment</span>
-        </div>
+        <p className="shrink-0 font-heading text-[2.6rem] leading-none tracking-normal text-foreground" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {currency(subtotal)}
+        </p>
       </div>
     </div>
   );
@@ -3386,7 +3787,7 @@ function SummaryRail({
                     <button
                       type="button"
                       onClick={() => onSelectPerson?.(row.person.id)}
-                      className="font-body text-[11px] font-black uppercase tracking-[0.12em] text-foreground/74 hover:text-foreground"
+                      className="font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/74 hover:text-foreground"
                     >
                       {row.label}
                     </button>
@@ -3430,7 +3831,7 @@ function SummaryRail({
               ['Time', bookingTimeSummary(state)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-foreground/8 bg-foreground/[0.035] p-3">
-                <p className="font-body text-[11px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
+                <p className="font-body text-[14px] font-bold uppercase tracking-[0.1em] text-foreground/58">{label}</p>
                 <p className="mt-1 font-body text-sm font-bold text-foreground/82">{value}</p>
               </div>
             ))}
@@ -3468,7 +3869,7 @@ function SummaryRail({
             </p>
           )}
           {actionDetail && (
-            <p className="text-center font-body text-[11px] font-semibold text-foreground/52">{actionDetail}</p>
+            <p className="text-center font-body text-[14px] font-semibold text-foreground/52">{actionDetail}</p>
           )}
         </div>
         </SmoothDisclosure>
@@ -3497,6 +3898,9 @@ const defaultState = {
   eventType: 'Private',
   locationType: 'home',
   address: '',
+  street: '',
+  city: '',
+  addrState: '',
   zip: '',
   who: 'me',
   guests: 1,
@@ -3509,7 +3913,16 @@ const defaultState = {
   phone: '',
   dob: '',
   emergencyContact: '',
+  emergencyContactName: '',
+  emergencyContactPhone: '',
   safetyFlag: '',
+  // Consent. The customer sees ONE combined checkbox (Privacy + Telehealth +
+  // 18+/ToS with each phrase linked). We derive the three individual Acuity
+  // consent flags from `combinedConsent` in checkoutPayloadFor so the server
+  // still writes Yes/Yes/Yes to the three audit fields.
+  // Clinical intake (conditions/covid/infectious/IV-history/allergies/meds)
+  // moved to nurse arrival capture — no longer collected here.
+  combinedConsent: false,
   notes: '',
   billingMode: 'card',
   addOns: [],
@@ -3517,6 +3930,7 @@ const defaultState = {
   clinicalReviewOnFile: false,
   customBase: 'advanced',
   customPlanSessions: 2,
+  smsReminderConsent: false,
 };
 
 const EMPTY_CLIENT_PROFILE = {
@@ -3533,6 +3947,19 @@ export default function BookNow() {
     title: 'Book — Avalon Vitality',
     description: 'Book mobile IV therapy with licensed clinicians and clinical review.',
     path: '/book',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: 'Mobile IV Therapy',
+      serviceType: 'Mobile IV therapy',
+      description: 'Book mobile IV therapy with licensed registered nurses after clinical clearance and eligibility review.',
+      areaServed: 'San Francisco Bay Area',
+      provider: {
+        '@type': 'MedicalBusiness',
+        name: 'Avalon Vitality',
+        areaServed: 'San Francisco Bay Area',
+      },
+    },
   });
 
   const [searchParams] = useSearchParams();
@@ -3541,38 +3968,67 @@ export default function BookNow() {
   const { clearItems, addItem, setMembershipTier, clearMembership } = useCart();
   const { user } = useAuthStore();
   const signedInClient = user?.role === 'client';
+  const [creditState, setCreditState] = useState({ loading: false, balance: 0, error: '' });
+  const [useMemberCredit, setUseMemberCredit] = useState(false);
   const clientProfile = useMemo(() => readClientProfile(), []);
   const lastBooking = useMemo(() => readLastBooking(), []);
+  // Fast checkout: the server-synced GFE + saved address (populated from Acuity
+  // by the GFE sync). Used to prefill the address and treat a cleared GFE as on
+  // file. No-ops gracefully when there's nothing on file yet.
+  const [serverProfile, setServerProfile] = useState(null);
+  useEffect(() => {
+    if (!signedInClient) return undefined;
+    let active = true;
+    apiGet('/api/me/profile').then((d) => { if (active) setServerProfile(d || null); }).catch(() => {});
+    return () => { active = false; };
+  }, [signedInClient]);
   const savedContactProfile = useMemo(() => {
     const savedContact = lastBooking?.contact || {};
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
+    // serverProfile.profile is the shape returned by /api/me/profile; it
+    // contains the authoritative name/phone/email/DOB and the emergency_contact
+    // jsonb blob. Prefer it over the localStorage-cached clientProfile for
+    // signed-in users so a returning client doesn't retype fields we already
+    // have on file.
+    const remote = (signedInClient ? serverProfile?.profile : null) || {};
+    const remoteEc = remote.emergencyContact || null;
+    const remoteFullName = realValue(remote.fullName);
+    const remoteDob = realValue(remote.dateOfBirth);
+    const remoteDobFormatted = remoteDob && /^\d{4}-\d{2}-\d{2}/.test(remoteDob)
+      ? `${remoteDob.slice(5, 7)}/${remoteDob.slice(8, 10)}/${remoteDob.slice(0, 4)}`
+      : remoteDob;
+    const emergencyContactStr = realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '';
+    const splitEmergency = splitEmergencyContact(emergencyContactStr);
     return {
-      name: realValue(savedContact.name) || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || '',
-      email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || '',
-      phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || '',
-      dob: realValue(savedContact.dob) || realValue(profileSource.dob) || '',
-      emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || '',
+      name: realValue(savedContact.name) || remoteFullName || realValue([profileSource.firstName, profileSource.lastName].filter(Boolean).join(' ')) || fallback.name || '',
+      email: realValue(savedContact.email) || realValue(remote.email) || realValue(profileSource.email) || fallback.email || '',
+      phone: realValue(savedContact.phone) || realValue(remote.phone) || realValue(profileSource.phone) || fallback.phone || '',
+      dob: realValue(savedContact.dob) || remoteDobFormatted || realValue(profileSource.dob) || '',
+      emergencyContact: emergencyContactStr,
+      emergencyContactName: realValue(savedContact.emergencyContactName) || (remoteEc?.name || '') || realValue(profileSource.emergencyContactName) || splitEmergency.name,
+      emergencyContactPhone: realValue(savedContact.emergencyContactPhone) || (remoteEc?.phone || '') || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone,
     };
-  }, [clientProfile, lastBooking, signedInClient]);
+  }, [clientProfile, lastBooking, signedInClient, serverProfile]);
   const savedVisitAddress = useMemo(() => {
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
-    const address = realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
+    const serverAddr = serverProfile?.savedAddress || {};
+    const address = realAddress(lastBooking?.address) || realAddress(serverAddr.raw) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
     if (!address) return null;
     return {
       label: 'Saved address',
       address,
-      zip: realValue(lastBooking?.zip) || realValue(profileSource.zip) || fallback.zip || '',
+      zip: realValue(lastBooking?.zip) || realValue(serverAddr.zip) || realValue(profileSource.zip) || fallback.zip || '',
       locationType: lastBooking?.locationType || profileSource.locationType || fallback.locationType || 'home',
     };
-  }, [clientProfile, lastBooking, signedInClient]);
+  }, [clientProfile, lastBooking, signedInClient, serverProfile]);
   const profileGfe = useMemo(() => resolveGfeRequirement({
     isNewClient: false,
     visitCount: Math.max(1, Number(clientProfile.visitCount || 1)),
-    gfe: clientProfile.gfe,
-    gfeExpiresAt: clientProfile.gfe?.validUntil,
-  }), [clientProfile]);
+    gfe: serverProfile?.gfe || clientProfile.gfe,
+    gfeExpiresAt: serverProfile?.gfe?.expiresAt || clientProfile.gfe?.validUntil,
+  }), [clientProfile, serverProfile]);
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
   const reduceMotion = useReducedMotion();
   const shouldResetDraft = searchParams.get('reset') === '1';
@@ -3610,6 +4066,8 @@ export default function BookNow() {
     const savedContact = shouldResetDraft ? {} : lastBooking?.contact || {};
     const profileSource = signedInClient ? clientProfile : {};
     const fallback = signedInClient ? EMPTY_CLIENT_PROFILE : {};
+    const savedEmergencyContact = realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || defaultState.emergencyContact;
+    const splitEmergency = splitEmergencyContact(savedEmergencyContact);
     const savedAddress = shouldResetDraft
       ? realAddress(fallback.address)
       : savedWebstoreAddress || realAddress(lastBooking?.address) || realAddress(profileSource.defaultAddress) || realAddress(fallback.address);
@@ -3653,8 +4111,14 @@ export default function BookNow() {
       email: realValue(savedContact.email) || realValue(profileSource.email) || fallback.email || defaultState.email,
       phone: realValue(savedContact.phone) || realValue(profileSource.phone) || fallback.phone || defaultState.phone,
       dob: realValue(savedContact.dob) || realValue(profileSource.dob) || defaultState.dob,
-      emergencyContact: realValue(savedContact.emergencyContact) || realValue(profileSource.emergencyContact) || defaultState.emergencyContact,
       ...savedWebstore,
+      emergencyContact: formatEmergencyContact({
+        emergencyContact: savedWebstore.emergencyContact || savedEmergencyContact,
+        emergencyContactName: savedWebstore.emergencyContactName || realValue(savedContact.emergencyContactName) || realValue(profileSource.emergencyContactName) || splitEmergency.name,
+        emergencyContactPhone: savedWebstore.emergencyContactPhone || realValue(savedContact.emergencyContactPhone) || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone,
+      }),
+      emergencyContactName: savedWebstore.emergencyContactName || realValue(savedContact.emergencyContactName) || realValue(profileSource.emergencyContactName) || splitEmergency.name || defaultState.emergencyContactName,
+      emergencyContactPhone: savedWebstore.emergencyContactPhone || realValue(savedContact.emergencyContactPhone) || realValue(profileSource.emergencyContactPhone) || splitEmergency.phone || defaultState.emergencyContactPhone,
       outcome: initialOutcome?.key || savedWebstore.outcome || defaultState.outcome,
       productKey: resolvedProductKey,
       visitType: initialSubscriptionPlan ? 'subscription' : savedWebstore.visitType || defaultState.visitType,
@@ -3735,8 +4199,8 @@ export default function BookNow() {
       hasMountedStepRef.current = true;
       return;
     }
-    if (typeof window !== 'undefined' && window.location.hash !== `#step-${step}`) {
-      window.history.pushState({ avalonBookingStep: step }, '', `${window.location.pathname}${window.location.search}#step-${step}`);
+    if (typeof window !== 'undefined' && window.location.hash !== `#step-${step + 1}`) {
+      window.history.pushState({ avalonBookingStep: step }, '', `${window.location.pathname}${window.location.search}#step-${step + 1}`);
     }
     const draftPayload = {
       webstore: { ...state, customPlanEstimate },
@@ -3842,8 +4306,8 @@ export default function BookNow() {
     setStep(0);
     setTherapyCategoryScreen(false);
     setActiveAddonGroup('');
-    if (typeof window !== 'undefined' && window.location.hash !== '#step-0') {
-      window.history.replaceState({ avalonBookingStep: 0 }, '', `${window.location.pathname}${window.location.search}#step-0`);
+    if (typeof window !== 'undefined' && window.location.hash !== '#step-1') {
+      window.history.replaceState({ avalonBookingStep: 0 }, '', `${window.location.pathname}${window.location.search}#step-1`);
     }
   }, [product, step]);
 
@@ -3873,6 +4337,12 @@ export default function BookNow() {
   // catalog they would see for THEIR therapy. We then derive each person's
   // subtotal and the roster total. When there's only one person these collapse
   // to the same numbers as the single-person path, so existing UI is unchanged.
+  const peopleSnapshot = useMemo(
+    () => (state.people || []).map((p) => p.id === state.activePersonId
+      ? { ...p, productKey: state.productKey, addOns: state.addOns, addOnDecision: state.addOnDecision }
+      : p),
+    [state.people, state.activePersonId, state.productKey, state.addOns, state.addOnDecision]
+  );
   const peopleBreakdown = useMemo(() => {
     return (peopleSnapshot || []).map((person, index) => {
       const personProduct = person.productKey ? safeProtocol(getProductByKey(person.productKey)) : null;
@@ -3896,6 +4366,27 @@ export default function BookNow() {
   }, [peopleSnapshot]);
   const multiPersonSubtotal = peopleBreakdown.reduce((sum, row) => sum + row.subtotal, 0);
   const effectivePeopleCount = billablePeopleCount(peopleSnapshot);
+  // Roster rows for the "YOUR SESSION" builder (rail on desktop, inline on
+  // mobile). Price label is per-person and matches the order math: a one-time
+  // visit shows the per-visit subtotal, a subscription shows the monthly.
+  const sessionPeople = useMemo(
+    () => peopleBreakdown.map((row) => {
+      const isSub = state.visitType === 'subscription';
+      // One-time shows the per-person visit price. Subscriptions bill a combined
+      // monthly (shown as the rail total), so we don't print a misleading
+      // per-visit number against each person here.
+      const priceLabel = row.product && !isSub ? currency(row.subtotal) : '';
+      return {
+        id: row.person.id,
+        index: row.index,
+        label: row.label,
+        productLabel: row.product?.label || '',
+        priceLabel,
+        filled: Boolean(row.product),
+      };
+    }),
+    [peopleBreakdown, state.visitType]
+  );
   const isMultiPerson = effectivePeopleCount > 1;
   const baseSubtotal = isMultiPerson
     ? multiPersonSubtotal
@@ -3910,7 +4401,12 @@ export default function BookNow() {
     ? (builderMonthly > 0 ? builderMonthly : customPlanEstimate)
     : Number(plan.price || 0);
   const activeSubscriptionTerm = subscriptionTermForKey('monthly');
-  const activePlanPrice = activePlanMonthlyPrice;
+  // Tier plans bill per seat, so the monthly scales with people on the plan
+  // (deposit also scales $50/person in paymentRules). The custom-builder handoff
+  // arrives with a price that already sums every person, so it is left as-is.
+  const activePlanPrice = plan.custom
+    ? activePlanMonthlyPrice
+    : activePlanMonthlyPrice * effectivePeopleCount;
   const activePlanSessions = plan.custom ? customPlanSessions : Number(plan.sessions || 0);
   const isGroupVisit = state.who === 'group' || state.visitType === 'event';
   const guestCount = isGroupVisit ? Math.max(2, Number(state.guests || 2)) : 1;
@@ -3918,7 +4414,51 @@ export default function BookNow() {
   const groupContactRequired = isGroupVisit && guestCount >= 5;
   const subtotal = isGroupVisit ? baseSubtotal * pricedGuestCount : baseSubtotal;
   const manualBilling = state.billingMode === 'vip-manual' && state.visitType === 'one-time' && !groupContactRequired;
-  const totalLabel = !product ? 'Select' : groupContactRequired ? 'Contact' : currency(subtotal);
+  const totalLabel = !product
+    ? 'Select'
+    : groupContactRequired
+      ? 'Contact'
+      : state.visitType === 'subscription'
+        ? `${currency(activePlanPrice)}/mo`
+      : currency(subtotal);
+  const ivCreditValue = isMultiPerson
+    ? Math.max(0, peopleBreakdown.find((row) => row.product)?.ivPrice || 0)
+    : Math.max(0, product ? protocolPrice(product) : 0);
+  const canRedeemMemberCredit = signedInClient
+    && creditState.balance > 0
+    && state.visitType === 'one-time'
+    && !manualBilling
+    && !groupContactRequired
+    && ivCreditValue > 0;
+
+  useEffect(() => {
+    let active = true;
+    if (!signedInClient || !hasSupabase) {
+      setCreditState({ loading: false, balance: 0, error: '' });
+      setUseMemberCredit(false);
+      return () => { active = false; };
+    }
+    setCreditState((current) => ({ ...current, loading: true, error: '' }));
+    apiGet('/api/me/credits')
+      .then((data) => {
+        if (!active) return;
+        setCreditState({
+          loading: false,
+          balance: Math.max(0, Number(data?.balance || 0)),
+          error: '',
+        });
+      })
+      .catch(() => {
+        if (!active) return;
+        setCreditState({ loading: false, balance: 0, error: 'Credits unavailable' });
+      });
+    return () => { active = false; };
+  }, [signedInClient]);
+
+  useEffect(() => {
+    if (!canRedeemMemberCredit && useMemberCredit) setUseMemberCredit(false);
+  }, [canRedeemMemberCredit, useMemberCredit]);
+
   const launchPayment = calculateLaunchPayment({
     subtotal,
     visitType: state.visitType,
@@ -3948,7 +4488,10 @@ export default function BookNow() {
     () => String(state.zip || extractZip(state.address) || '').replace(/\D/g, '').slice(0, 5),
     [state.address, state.zip]
   );
-  const hasValidServiceZip = resolvedZip.length === 5 && COVERED_ZIPS.has(resolvedZip);
+  // Service-area coverage is no longer a hard checkout blocker — any valid
+  // 5-digit ZIP can book (out-of-area orders are flagged for ops in the booking
+  // record, not refused). Re-add `&& COVERED_ZIPS.has(resolvedZip)` to re-gate.
+  const hasValidServiceZip = resolvedZip.length === 5;
   const typedAddressSuggestion = useMemo(
     () => buildTypedAddressSuggestion(state.address, resolvedZip, state.locationType),
     [state.address, resolvedZip, state.locationType]
@@ -4028,7 +4571,13 @@ export default function BookNow() {
 
   const setValue = (key, value) => {
     setError('');
-    setState((current) => ({ ...current, [key]: value }));
+    setState((current) => {
+      const next = { ...current, [key]: value };
+      if (key === 'emergencyContactName' || key === 'emergencyContactPhone') {
+        next.emergencyContact = formatEmergencyContact(next);
+      }
+      return next;
+    });
   };
 
   const setSubscriptionTerm = (key) => {
@@ -4046,6 +4595,71 @@ export default function BookNow() {
       zip: nextZip || current.zip,
     }));
   };
+
+  // Structured address (Street / City / State / ZIP). `address` stays the
+  // canonical composed string that flows to Acuity (notes) + the booking
+  // lifecycle; the separate fields are the editable UI on top of it.
+  const composeFullAddress = (street, city, st, zip) =>
+    [String(street || '').trim(), String(city || '').trim(), [String(st || '').trim(), String(zip || '').trim()].filter(Boolean).join(' ')]
+      .filter(Boolean)
+      .join(', ');
+
+  const setAddressPart = (part, value) => {
+    setError('');
+    setState((current) => {
+      const next = { ...current };
+      if (part === 'street') next.street = value;
+      else if (part === 'city') next.city = value;
+      else if (part === 'state') next.addrState = String(value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+      else if (part === 'zip') next.zip = String(value || '').replace(/\D/g, '').slice(0, 5);
+      next.address = composeFullAddress(next.street, next.city, next.addrState, next.zip);
+      return next;
+    });
+    // Auto-advance when the address is finished — ZIP is the last field people
+    // fill, so completing a valid 5-digit ZIP (with the rest present) advances
+    // the Where step without a Next tap. Guarding on `part === 'zip'` means
+    // editing an earlier field later never re-jumps the user.
+    if (part === 'zip' && step === 3 && !groupContactRequired) {
+      const zip = String(value || '').replace(/\D/g, '').slice(0, 5);
+      const street = String(state.street || '').trim();
+      const city = String(state.city || '').trim();
+      const addrState = String(state.addrState || '').trim();
+      if (zip.length === 5 && street && city && addrState) {
+        const nextStep = Math.min(step + 1, LAST_STEP);
+        const nextAddress = composeFullAddress(state.street, state.city, state.addrState, zip);
+        persistBookingProgress(nextStep, therapyCategoryScreen, { ...state, zip, address: nextAddress });
+        setStep(nextStep);
+      }
+    }
+  };
+
+  const applyAddressSuggestion = (s) => {
+    setError('');
+    const zip = String(s?.zip || '').replace(/\D/g, '').slice(0, 5);
+    setState((current) => ({
+      ...current,
+      street: s?.street || '',
+      city: s?.city || '',
+      addrState: String(s?.state || '').toUpperCase().slice(0, 2),
+      zip,
+      address: composeFullAddress(s?.street, s?.city, s?.state, zip),
+    }));
+  };
+
+  // On mount: sanitize any stale ZIP from a saved draft (older builds could
+  // persist a malformed value), and seed the Street box from a restored full
+  // address so the structured fields aren't blank for returning customers.
+  useEffect(() => {
+    setState((current) => {
+      const cleanZip = String(current.zip || '').replace(/\D/g, '').slice(0, 5);
+      const street = (current.address && !current.street && !current.city && !current.addrState)
+        ? current.address
+        : current.street;
+      if (cleanZip === current.zip && street === current.street) return current;
+      return { ...current, zip: cleanZip, street };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!canUseClinicalReviewOnFile && state.clinicalReviewOnFile) {
@@ -4216,7 +4830,10 @@ export default function BookNow() {
       ...current,
       productKey: key,
       addOns: [],
-      addOnDecision: false,
+      // Default to "no add-ons" so step 2's NEXT is enabled the moment the user
+      // lands there. Tapping any add-on overrides this. Matches chooseOutcome
+      // and repeatLastVisit, which already default to true.
+      addOnDecision: true,
       ...overrides,
     }));
   };
@@ -4344,17 +4961,22 @@ export default function BookNow() {
 
   const chooseTimeIntent = (key) => {
     setError('');
-    setState((current) => {
-      const nextDate = key === 'choose' ? current.customDate || todayDate() : todayDate();
-      const nextTime = key === 'choose' ? current.customTime || DEFAULT_EXACT_TIME : '';
-      return {
-        ...current,
-        timeIntent: key,
-        customDate: nextDate,
-        customTime: nextTime,
-        availabilityWindow: key === 'choose' ? `${nextDate}-${nextTime}` : key,
-      };
-    });
+    const nextDate = key === 'choose' ? state.customDate || todayDate() : todayDate();
+    const nextTime = key === 'choose' ? state.customTime || DEFAULT_EXACT_TIME : '';
+    const patch = {
+      timeIntent: key,
+      customDate: nextDate,
+      customTime: nextTime,
+      availabilityWindow: key === 'choose' ? `${nextDate}-${nextTime}` : key,
+    };
+    setState((current) => ({ ...current, ...patch }));
+    // Tapping an instant time (ASAP/soonest) completes the When step — advance
+    // without a Next tap. "Choose" needs a date+time, so it never auto-advances.
+    if (step === 2 && key !== 'choose') {
+      const nextStep = Math.min(step + 1, LAST_STEP);
+      persistBookingProgress(nextStep, therapyCategoryScreen, { ...state, ...patch });
+      setStep(nextStep);
+    }
   };
 
   const toggleAddon = (label) => {
@@ -4409,9 +5031,11 @@ export default function BookNow() {
       };
     });
     setActiveAddonGroup('');
-    // A new person lands on Therapy (step 1) — Outcome (step 0) only sets a
-    // recommended default for person 1; additional people pick therapy directly.
-    setStep(1);
+    // A new person lands directly on the Therapy step (step 0) to pick their
+    // protocol. (Was setStep(1) = Add-ons, a stale off-by-one from when step 0
+    // was a separate "Outcome" screen; that left the new, product-less person on
+    // Add-ons and could blank the screen.)
+    setStep(0);
   };
 
   const deletePerson = (idToRemove) => {
@@ -4439,13 +5063,6 @@ export default function BookNow() {
   // Live snapshot of all people with the active person's live selections
   // overlaid. Use this anywhere you need the FULL roster (sidebar, checkout
   // serialization, billing). `state.people` alone is stale for the active.
-  const peopleSnapshot = useMemo(
-    () => (state.people || []).map((p) => p.id === state.activePersonId
-      ? { ...p, productKey: state.productKey, addOns: state.addOns, addOnDecision: state.addOnDecision }
-      : p),
-    [state.people, state.activePersonId, state.productKey, state.addOns, state.addOnDecision]
-  );
-
   // Cart edit/clear for the Your Order panel. removeAddon drops one add-on line;
   // clearOrder wipes therapy + add-ons (the cost) and returns to step 1. Neither
   // touches checkout/payment logic or date/time/location.
@@ -4463,6 +5080,7 @@ export default function BookNow() {
   const chooseNoAddons = () => {
     setError('');
     setActiveAddonGroup('');
+    const nextState = { ...state, addOns: [], addOnDecision: true };
     setState((current) => ({
       ...current,
       addOns: [],
@@ -4477,6 +5095,12 @@ export default function BookNow() {
       addon_revenue: 0,
       addon_decision: 'none',
     });
+    // Tapping "No add-ons" completes the Add-ons step — advance without a Next tap.
+    if (step === 1) {
+      const nextStep = Math.min(step + 1, LAST_STEP);
+      persistBookingProgress(nextStep, therapyCategoryScreen, nextState);
+      setStep(nextStep);
+    }
   };
 
   const canAdvance = () => {
@@ -4497,11 +5121,9 @@ export default function BookNow() {
           ? 'Choose add-ons or tap No add-ons.'
           : step === 2
             ? 'Choose date and time.'
-            : step === 3 && resolvedZip.length === 5 && !COVERED_ZIPS.has(resolvedZip)
-              ? 'Enter a ZIP in our current service area.'
-              : step === 3
-                ? 'Add address and ZIP.'
-                : 'Finish this step.';
+            : step === 3
+              ? 'Add address and a valid 5-digit ZIP.'
+              : 'Finish this step.';
       setError(reason);
       scrollStepIntoView();
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
@@ -4567,6 +5189,8 @@ export default function BookNow() {
 	    return step < LAST_STEP ? 'NEXT' : 'CONFIRM & PAY';
 	  };
 
+  const emergencyContactValue = formatEmergencyContact(state);
+
 	  const buildBooking = () => {
 	    if (!product) return null;
 	    const { firstName, lastName } = splitName(state.name);
@@ -4622,12 +5246,19 @@ export default function BookNow() {
         email: state.email.trim(),
         phone: state.phone.trim(),
         dob: state.dob,
-        emergencyContact: state.emergencyContact.trim(),
+        emergencyContact: emergencyContactValue,
+        emergencyContactName: state.emergencyContactName.trim(),
+        emergencyContactPhone: state.emergencyContactPhone.trim(),
         clientType: state.clientType,
         visitCount: returningClient || clinicalReviewClaimedOnFile ? Math.max(1, Number(clientProfile.visitCount || 1)) : 0,
+        // Opt-in to text reminders (45 CFR §164.522). Flows through to
+        // external_payload.contact and gates PHI-bearing reminder SMS.
+        smsReminderConsent: state.smsReminderConsent === true,
       },
       dob: state.dob,
-      emergencyContact: state.emergencyContact.trim(),
+      emergencyContact: emergencyContactValue,
+      emergencyContactName: state.emergencyContactName.trim(),
+      emergencyContactPhone: state.emergencyContactPhone.trim(),
       // Single-person path keeps legacy `items` shape (no personId). Multi-
       // person path emits one IV line + per-person add-on lines, each tagged
       // with personId/personLabel so the cart sidebar and the post-checkout
@@ -4736,9 +5367,25 @@ export default function BookNow() {
     };
   };
 
-  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state.emergencyContact) && state.address.trim() && hasValidServiceZip && (!fastMode || state.safetyFlag));
+  // Combined consent must be actively checked before payment — we never
+  // auto-affirm HIPAA/treatment/age consent. The checkbox is one UI element
+  // but the payload derives three individual Acuity consent flags from it so
+  // the audit log stays granular.
+  const hasRequiredConsents = Boolean(state.combinedConsent);
+  const canSubmit = Boolean(hasValidContactFields(state) && hasEmergencyContact(state) && state.address.trim() && hasValidServiceZip && hasRequiredConsents && (!fastMode || state.safetyFlag));
 
   const persistLocalBooking = (localBooking, scopeLabel) => {
+    const writeCheckoutHandoffMarker = () => {
+      writeLocal('webstore.latestHandoff', {
+        bookingId: localBooking.id,
+        stack: localBooking.manualBilling
+          ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
+          : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
+        noThirdPartyCalls: Boolean(localBooking.manualBilling),
+        updatedAt: new Date().toISOString(),
+      });
+    };
+
     clearItems();
     localBooking.items.forEach(addItem);
     saveLastBooking(localBooking);
@@ -4748,25 +5395,35 @@ export default function BookNow() {
       scope: scopeLabel,
       depositAmount: localBooking.depositAmount,
     });
-    writeLocal('webstore.latestHandoff', {
-      bookingId: localBooking.id,
-      stack: localBooking.manualBilling
-        ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
-        : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
-      noThirdPartyCalls: Boolean(localBooking.manualBilling),
-      updatedAt: new Date().toISOString(),
-    });
+    writeCheckoutHandoffMarker();
     if (localBooking.subscription) writeLocal('webstore.subscriptionPlan', localBooking.subscription);
     if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
     appendActivity(localBooking.manualBilling ? `VIP manual booking requested: ${localBooking.service}` : `Webstore payment started: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
+  };
+
+  const ensureCheckoutLocalMarkers = (localBooking) => {
+    if (!localBooking?.id) return;
+    const saved = readLastBooking();
+    if (saved?.id !== localBooking.id) saveLastBooking(localBooking);
+    const handoff = readLocal('webstore.latestHandoff', null);
+    if (handoff?.bookingId !== localBooking.id) {
+      writeLocal('webstore.latestHandoff', {
+        bookingId: localBooking.id,
+        stack: localBooking.manualBilling
+          ? ['Scheduling', 'Manager invoice', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction']
+          : ['Scheduling', 'Stripe checkout', 'Clinical review', 'registered nurse dispatch', 'Inventory deduction'],
+        noThirdPartyCalls: Boolean(localBooking.manualBilling),
+        updatedAt: new Date().toISOString(),
+      });
+    }
   };
 
   const checkoutPayloadFor = (localBooking, membershipOverride = null) => {
     const [firstName, ...rest] = String(localBooking.contact?.name || state.name || '').trim().split(/\s+/).filter(Boolean);
     const appointmentTypeId = safeAcuityTypeId(localBooking.appointmentTypeId || localBooking.acuitySlot?.appointmentTypeID);
     return {
-      mode: localBooking.subscription || membershipOverride ? 'subscription' : 'payment',
-      checkoutUiMode: 'hosted',
+      mode: 'payment',
+      checkoutUiMode: 'embedded',
       items: (localBooking.items || []).map((item) => ({
         key: item.cartKey,
         cartKey: item.cartKey,
@@ -4791,7 +5448,9 @@ export default function BookNow() {
         email: localBooking.contact?.email || state.email.trim(),
         phone: localBooking.contact?.phone || state.phone.trim(),
         dob: localBooking.contact?.dob || localBooking.dob || state.dob,
-        emergencyContact: localBooking.contact?.emergencyContact || localBooking.emergencyContact || state.emergencyContact.trim(),
+        emergencyContact: localBooking.contact?.emergencyContact || localBooking.emergencyContact || emergencyContactValue,
+        emergencyContactName: localBooking.contact?.emergencyContactName || localBooking.emergencyContactName || state.emergencyContactName.trim(),
+        emergencyContactPhone: localBooking.contact?.emergencyContactPhone || localBooking.emergencyContactPhone || state.emergencyContactPhone.trim(),
       },
       appointment: {
         localBookingId: localBooking.id,
@@ -4817,10 +5476,22 @@ export default function BookNow() {
         visitType: state.visitType,
         clientType: localBooking.clientType,
         dob: localBooking.dob || localBooking.contact?.dob || state.dob,
-        emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || state.emergencyContact.trim(),
+        emergencyContact: localBooking.emergencyContact || localBooking.contact?.emergencyContact || emergencyContactValue,
+        emergencyContactName: localBooking.emergencyContactName || localBooking.contact?.emergencyContactName || state.emergencyContactName.trim(),
+        emergencyContactPhone: localBooking.emergencyContactPhone || localBooking.contact?.emergencyContactPhone || state.emergencyContactPhone.trim(),
+        // The customer sees ONE combined consent checkbox; we derive the three
+        // individual Acuity consent flags from it so the server-side audit log
+        // still records all three affirmations.
+        privacyAck: Boolean(state.combinedConsent),
+        treatmentConsent: Boolean(state.combinedConsent),
+        generalConsent: Boolean(state.combinedConsent),
         peopleCount: localBooking.peopleCount || 1,
         peopleManifest: Array.isArray(localBooking.peopleManifest) ? localBooking.peopleManifest : [],
       },
+      creditRedemption: useMemberCredit && canRedeemMemberCredit ? {
+        useCredits: true,
+        units: 1,
+      } : null,
     };
   };
 
@@ -4838,6 +5509,7 @@ export default function BookNow() {
       });
 
       if (session.previewOnly) {
+        ensureCheckoutLocalMarkers(localBooking);
         clearBookingDraft();
         clearBookingSessionDraft();
         navigate(session.url || `/booking/confirmation?appointment=${encodeURIComponent(localBooking.id)}&preapi=1`);
@@ -4845,6 +5517,7 @@ export default function BookNow() {
       }
 
       if (session.checkoutUiMode === 'hosted' && session.url) {
+        ensureCheckoutLocalMarkers(localBooking);
         clearBookingDraft();
         clearBookingSessionDraft();
         window.location.assign(session.url);
@@ -4897,7 +5570,7 @@ export default function BookNow() {
       return;
     }
 	    if (!canSubmit) {
-      setError(fastMode ? 'Add contact, date of birth, emergency contact, address, and safety response.' : 'Add contact, date of birth, emergency contact, and service address with ZIP.');
+      setError(fastMode ? 'Add contact, date of birth, emergency contact name and phone, address, and safety response.' : 'Add contact, date of birth, emergency contact name and phone, and service address with ZIP.');
       setStep(LAST_STEP);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'webstore',
@@ -4930,12 +5603,12 @@ export default function BookNow() {
           status: 'Manual billing appointment created',
           paymentStatus: 'manual_invoice_pending',
           acuityAppointmentId: manualResult.acuityAppointmentId,
-          attioPersonId: manualResult.attioPersonId,
+          hubspotContactId: manualResult.hubspotContactId,
           externalProvider: 'acuity',
           externalPayload: {
             provider: manualResult.provider,
             appointment: manualResult.appointment,
-            attio: manualResult.attio,
+            hubspot: manualResult.hubspot,
           },
         };
         persistLocalBooking(confirmedBooking, 'VIP manual billing');
@@ -4945,7 +5618,7 @@ export default function BookNow() {
           funnel: 'webstore',
           booking_id: confirmedBooking.id,
           acuity_appointment_id: manualResult.acuityAppointmentId,
-          attio_person_id: manualResult.attioPersonId,
+          hubspot_contact_id: manualResult.hubspotContactId,
           order_type: confirmedBooking.orderType,
           product_family: confirmedBooking.productFamily,
           protocol_key: confirmedBooking.protocolKey,
@@ -5000,7 +5673,9 @@ export default function BookNow() {
           email: state.email.trim(),
           phone: state.phone.trim(),
           dob: state.dob,
-          emergencyContact: state.emergencyContact.trim(),
+          emergencyContact: emergencyContactValue,
+          emergencyContactName: state.emergencyContactName.trim(),
+          emergencyContactPhone: state.emergencyContactPhone.trim(),
           address: state.address.trim(),
           zip: String(state.zip || '').trim(),
           locationType: state.locationType,
@@ -5104,7 +5779,7 @@ export default function BookNow() {
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
     ? 'IV THERAPY'
     : activeTherapyGroupData?.key === 'cbd'
-      ? 'IV CBD THERAPY'
+      ? 'IV CBD'
       : 'IV NAD+ THERAPY';
   const isIvTherapyMenuStep = step === 0 && !therapyCategoryScreen && activeTherapyGroupData?.key === 'vitamin';
   const progressDisplay = {
@@ -5117,11 +5792,7 @@ export default function BookNow() {
           : step === 3
             ? 3
             : 4,
-    title: step === 0
-      ? (therapyCategoryScreen ? 'Therapy Base' : 'Therapy')
-      : step === 1
-        ? 'ADD-ONS'
-      : STEPS[step].toUpperCase(),
+    title: STEPS[step].toUpperCase(),
   };
   const canGoBack = step > 0;
 
@@ -5168,7 +5839,7 @@ export default function BookNow() {
 
   const panelCardClass = 'relative overflow-hidden rounded-[1.15rem] border border-foreground/14 bg-background/58 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_18px_70px_hsl(var(--foreground)/0.08)] backdrop-blur-2xl';
   const expandedPanelCardClass = panelCardClass.replace('overflow-hidden', 'overflow-visible');
-  const microLabelClass = 'font-body text-[10px] font-black uppercase tracking-[0.10em] text-foreground/70 md:text-[11px]';
+  const microLabelClass = 'font-body text-[13px] font-black uppercase tracking-[0.10em] text-foreground/70 md:text-[14px]';
   const renderStoreMenuRow = ({
     key,
     icon: Icon = Droplets,
@@ -5197,8 +5868,8 @@ export default function BookNow() {
       ? 'block truncate font-heading text-[0.95rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.02rem] md:text-[2.15rem]'
       : 'block truncate font-heading text-[1.68rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.9rem] md:text-[2.15rem]';
     const metaBaseClass = compactMobile
-      ? 'mt-1 block truncate font-body text-[7px] font-black uppercase tracking-[0.06em] text-foreground/70 min-[390px]:text-[7.5px] md:text-sm'
-      : 'mt-1 block truncate font-body text-[11px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm';
+      ? 'mt-1 block truncate font-body text-[10px] font-black uppercase tracking-[0.06em] text-foreground/70 min-[390px]:text-[10.5px] md:text-sm'
+      : 'mt-1 block truncate font-body text-[14px] font-black uppercase tracking-[0.08em] text-foreground/70 min-[390px]:text-xs md:text-sm';
     return (
       <button
         key={key}
@@ -5245,7 +5916,7 @@ export default function BookNow() {
           onClick={() => setExpandedTherapy(expanded ? null : item.key)}
           aria-expanded={expanded}
           aria-label={`${expanded ? 'Hide' : "Show what's inside"} ${item.label || item.tabLabel || 'this therapy'}`}
-          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-2 font-body text-[10px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[11px]"
+          className="flex w-full items-center justify-center gap-1.5 border-t border-foreground/10 py-1.5 font-body text-[13px] font-black uppercase tracking-[0.14em] text-foreground/52 transition-colors hover:text-foreground/82 md:text-[14px]"
         >
           {expanded ? 'Hide details' : "What's inside"}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} strokeWidth={2.4} />
@@ -5255,16 +5926,16 @@ export default function BookNow() {
             <div className="space-y-2.5 border-t border-foreground/10 px-3.5 py-3 text-left">
               {whatItDoes && (
                 <div>
-                  <p className="mb-1 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
-                  <p className="font-body text-[12px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
+                  <p className="mb-1 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">What it does</p>
+                  <p className="font-body text-[15px] font-semibold leading-snug text-foreground/74">{whatItDoes}</p>
                 </div>
               )}
               {ingredients.length > 0 && (
                 <div>
-                  <p className="mb-1.5 font-body text-[9px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
+                  <p className="mb-1.5 font-body text-[12px] font-black uppercase tracking-[0.16em] text-foreground/42">Ingredients</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ingredients.map((ingredient) => (
-                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{ingredient}</span>
+                      <span key={ingredient} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[13px] font-bold text-foreground/74">{ingredient}</span>
                     ))}
                   </div>
                 </div>
@@ -5272,7 +5943,7 @@ export default function BookNow() {
               {ingredients.length === 0 && item.features && item.features.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {item.features.map((f) => (
-                    <span key={f} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[10px] font-bold text-foreground/74">{f}</span>
+                    <span key={f} className="rounded-full border border-foreground/14 bg-foreground/[0.05] px-2.5 py-1 font-body text-[13px] font-bold text-foreground/74">{f}</span>
                   ))}
                 </div>
               )}
@@ -5299,12 +5970,12 @@ export default function BookNow() {
           type="button"
           onClick={() => chooseTherapyMenuProduct(item.key)}
           aria-pressed={active}
-          className={`relative grid min-h-[104px] w-full grid-cols-[72px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-2 text-left transition-colors md:min-h-[120px] md:grid-cols-[88px_minmax(0,1fr)_72px_26px] md:px-4 md:py-3 xl:grid-cols-[88px_minmax(0,1fr)_80px_26px] ${
+          className={`relative grid min-h-[88px] w-full grid-cols-[64px_minmax(0,1fr)_auto_22px] items-center gap-3 px-2.5 py-1.5 text-left transition-colors md:min-h-[100px] md:grid-cols-[76px_minmax(0,1fr)_72px_26px] md:px-4 md:py-2 xl:grid-cols-[76px_minmax(0,1fr)_80px_26px] ${
             active ? 'bg-foreground/[0.14]' : 'hover:bg-foreground/[0.03]'
           }`}
         >
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          <span className="relative flex h-[5.5rem] w-[4.5rem] shrink-0 items-center justify-center md:h-[6rem] md:w-20">
+          <span className="relative flex h-[4.5rem] w-16 shrink-0 items-center justify-center md:h-[4.75rem] md:w-[4.25rem]">
             {item.image ? (
               <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.55)]" />
             ) : (
@@ -5316,7 +5987,7 @@ export default function BookNow() {
               {menuLabel}
             </span>
             {item.tagline && (
-              <span className="mt-1 hidden font-body text-[11px] font-semibold leading-snug text-foreground/55 line-clamp-1 md:block">
+              <span className="mt-1 hidden font-body text-[14px] font-semibold leading-snug text-foreground/55 line-clamp-1 md:block">
                 {item.tagline}
               </span>
             )}
@@ -5352,7 +6023,7 @@ export default function BookNow() {
     return (
       <div
         key={item.key}
-        className={`relative shrink-0 overflow-hidden rounded-[1.15rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_16px_48px_hsl(var(--background)/0.28)] backdrop-blur-2xl transition-colors ${
+        className={`relative shrink-0 overflow-hidden rounded-[1.35rem] border bg-background/78 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_18px_56px_hsl(var(--background)/0.32)] backdrop-blur-2xl transition-colors ${
           active ? 'border-foreground/58 ring-1 ring-inset ring-foreground/34' : 'border-foreground/14'
         }`}
       >
@@ -5360,26 +6031,27 @@ export default function BookNow() {
           type="button"
           onClick={selectTherapy}
           aria-pressed={active}
-          className={`relative grid min-h-[100px] w-full grid-cols-[4.25rem_minmax(0,1fr)_auto_1.5rem] items-center gap-3 px-3 py-2 text-left transition-colors min-[390px]:min-h-[108px] min-[390px]:grid-cols-[4.75rem_minmax(0,1fr)_auto_1.65rem] min-[390px]:gap-3.5 min-[390px]:px-3.5 ${
+          style={{ height: 'var(--av-therapy-card-h, 6.25rem)' }}
+          className={`relative grid w-full grid-cols-[4.5rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 px-3.5 text-left transition-colors min-[390px]:grid-cols-[5rem_minmax(0,1fr)_auto_1.85rem] min-[390px]:gap-3.5 min-[390px]:px-4 ${
             active ? 'bg-background/70' : 'hover:bg-foreground/[0.03]'
           }`}
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.04] via-transparent to-black/24" />
-          <span className="relative flex h-[5.5rem] w-[4.25rem] items-center justify-center min-[390px]:h-[6rem] min-[390px]:w-[4.75rem]">
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-foreground/[0.05] via-transparent to-black/24" />
+          <span className="relative flex h-full w-full items-center justify-center py-2">
             {item.image ? (
-              <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.6)]" />
+              <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(0,0,0,0.6)]" />
             ) : (
-              <Icon className="h-7 w-7 text-foreground min-[390px]:h-8 min-[390px]:w-8" strokeWidth={1.9} />
+              <Icon className="h-9 w-9 text-foreground" strokeWidth={1.9} />
             )}
           </span>
-          <span className="relative min-w-0 font-heading text-[1.22rem] uppercase leading-[0.92] tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+          <span className="relative min-w-0 font-heading text-[1.4rem] uppercase leading-[0.95] tracking-normal text-foreground min-[390px]:text-[1.55rem]">
             <span className="line-clamp-2 break-words [overflow-wrap:anywhere]">{copy.label}</span>
           </span>
-          <span className="relative whitespace-nowrap font-heading text-[1.22rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.36rem]">
+          <span className="relative whitespace-nowrap font-heading text-[1.4rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.55rem]">
             {currency(price)}
           </span>
           <span className="relative flex justify-end">
-            <ArrowRight className="h-6 w-6 shrink-0 min-[390px]:h-[1.625rem] min-[390px]:w-[1.625rem]" strokeWidth={2.1} />
+            <ArrowRight className="h-7 w-7 shrink-0" strokeWidth={2.1} />
           </span>
         </button>
         {renderTherapyDetails(item)}
@@ -5451,7 +6123,7 @@ export default function BookNow() {
               <span className="block truncate font-heading text-[1.35rem] uppercase leading-none tracking-normal text-foreground min-[390px]:text-[1.48rem] md:text-[1.85rem]">
                 {group.label}
               </span>
-              <span className="mt-0.5 block truncate font-body text-[9px] font-black uppercase tracking-[0.07em] text-foreground/70 md:text-[10px]">
+              <span className="mt-0.5 block truncate font-body text-[12px] font-black uppercase tracking-[0.07em] text-foreground/70 md:text-[13px]">
                 {selectedCount ? `${selectedCount} selected` : group.sub}
               </span>
             </span>
@@ -5467,65 +6139,50 @@ export default function BookNow() {
     );
   };
 
+  const applyPlacePick = (place) => {
+    if (!place) return;
+    if (place.street) setAddressPart('street', place.street);
+    if (place.city) setAddressPart('city', place.city);
+    if (place.state) setAddressPart('state', place.state);
+    if (place.zip) setAddressPart('zip', place.zip);
+  };
+
   const renderUniversalStep = () => {
     if (step === 3) {
+      const inputClass = 'min-h-[52px] w-full rounded-xl border border-foreground/14 bg-background/42 px-3 font-body text-sm font-semibold text-foreground placeholder:text-foreground/40 outline-none focus:border-foreground/40';
       return (
-        <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-1.5 md:gap-2">
-          <div className={`${panelCardClass} p-2`}>
-            <LocationTypeDropdown value={state.locationType} onChange={(value) => setValue('locationType', value)} />
-            <button
-              type="button"
-              onClick={useCurrentLocation}
-              disabled={locationLoading}
-              className="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-foreground/12 bg-background/72 px-3 font-body text-xs font-black text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.07)]"
-            >
-              <span className="flex items-center gap-2">
-                <Navigation className="h-4 w-4" strokeWidth={2.4} />
-                {locationLoading ? 'Finding address' : 'Use current location'}
-              </span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-          <div className={`${panelCardClass} p-2.5 md:p-3`}>
-            <div className="grid gap-2">
-              <TextInput
-                label={LOCATION_TYPES.find((item) => item.key === state.locationType)?.placeholder || 'Address'}
-                value={state.address}
-                onChange={setAddressValue}
-                onKeyDown={handleAddressKeyDown}
-                placeholder="Street address"
-                autoComplete="street-address"
-                actionLabel={savedVisitAddress?.address ? 'Saved' : ''}
-                onAction={() => chooseAddressSuggestion(savedVisitAddress)}
-                required
-              />
-              {state.address.trim() && !resolvedZip && (
-                <TextInput
-                  label="ZIP"
-                  value={state.zip}
-                  onChange={(value) => setValue('zip', value.replace(/\D/g, '').slice(0, 5))}
-                  onKeyDown={handleAddressKeyDown}
-                  placeholder="94107"
-                  autoComplete="postal-code"
-                  inputMode="numeric"
+        // Natural height + scroll; don't force-fit (it crams the fields). Scroll is fine.
+        <div className="grid content-start gap-3 pb-2">
+          <div className={`${panelCardClass} p-3 md:p-4`}>
+            <div className="grid gap-2.5">
+              <div>
+                <label className="mb-1.5 block font-body text-[14px] font-black uppercase tracking-[0.12em] text-foreground/55">Street</label>
+                <PlacesAutocomplete
+                  value={state.street}
+                  onChange={(value) => setAddressPart('street', value)}
+                  onSelect={applyPlacePick}
+                  className={inputClass}
+                  placeholder="123 Main St"
+                  autoComplete="address-line1"
                   required
                 />
-              )}
+              </div>
+              <TextInput label="City" value={state.city} onChange={(v) => setAddressPart('city', v)} placeholder="City" autoComplete="address-level2" required />
+              <div className="grid grid-cols-2 gap-2.5">
+                <TextInput label="State" value={state.addrState} onChange={(v) => setAddressPart('state', v)} placeholder="CA" autoComplete="address-level1" required />
+                <TextInput label="ZIP" value={String(state.zip || '').replace(/\D/g, '').slice(0, 5)} onChange={(v) => setAddressPart('zip', v)} placeholder="94577" inputMode="numeric" autoComplete="postal-code" required />
+              </div>
             </div>
           </div>
-          <div className="min-h-0">
-            <AddressPrediction suggestion={topAddressSuggestion} onUse={chooseAddressSuggestion} compact />
-            {!topAddressSuggestion && (
-              <div className={`${panelCardClass} mt-0 flex min-h-[66px] items-center gap-2.5 p-2.5 md:min-h-[76px] md:gap-3 md:p-3`}>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/14 bg-foreground/[0.055] text-foreground/80">
-                  <MapPin className="h-5 w-5" strokeWidth={2.4} />
-                </span>
-                <div className="min-w-0">
-                  <p className={microLabelClass}>Coverage</p>
-                  <p className="mt-1 font-body text-sm font-bold leading-snug text-foreground/72">Enter your street address. Avalon checks the ZIP before payment.</p>
-                </div>
-              </div>
-            )}
+          <div className={`${panelCardClass} p-3 md:p-4`}>
+            <TextInput
+              label="Note"
+              icon={Pencil}
+              value={state.notes}
+              onChange={(value) => setValue('notes', value)}
+              placeholder="Apt, gate code, parking"
+              autoComplete="off"
+            />
           </div>
         </div>
       );
@@ -5561,13 +6218,13 @@ export default function BookNow() {
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                  <span className="font-body text-[11px] font-black uppercase tracking-[0.03em] md:text-[12px]">{categoryShortLabels[group.key] || group.label}</span>
+                  <span className="font-body text-[14px] font-black uppercase tracking-[0.03em] md:text-[15px]">{categoryShortLabels[group.key] || group.label}</span>
                 </button>
               );
             })}
           </div>
           <div className="grid min-h-0 grid-rows-[1fr]">
-            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
+            <div data-av-therapy-list="true" className="flex min-h-0 flex-col gap-2 overflow-y-auto pb-2 md:hidden">
               {orderedMobileIvTherapies.map((item) => renderMobileIvTherapyRow(item))}
             </div>
             <div className="hidden h-full min-h-0 flex-col gap-1.5 overflow-y-auto pb-2 pr-1 md:flex md:gap-2">
@@ -5594,7 +6251,7 @@ export default function BookNow() {
               compactMobile: true,
               className: '!min-h-[86px] min-[390px]:!min-h-[92px] md:!min-h-[96px]',
               titleClassName: 'text-[1.18rem] min-[390px]:text-[1.3rem] md:text-[1.55rem]',
-              metaClassName: 'text-[8px] min-[390px]:text-[9px] md:text-[11px]',
+              metaClassName: 'text-[11px] min-[390px]:text-[12px] md:text-[14px]',
             })}
             {addonCatalog.groups.map((group) => renderAddonAccordion(group))}
           </div>
@@ -5674,41 +6331,33 @@ export default function BookNow() {
     }
 
     return (
-      <div className="grid h-full min-h-0 content-start gap-1.5 md:gap-2">
-        <div className={`${panelCardClass} p-2 md:p-2.5`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className={microLabelClass}>Ready</p>
-              <p className="mt-0.5 truncate font-heading text-[1.35rem] uppercase leading-none tracking-normal md:mt-1 md:text-[1.7rem]">{serviceLabel}</p>
-            </div>
-            <p className="shrink-0 font-body text-[1.32rem] font-black md:text-[1.55rem]">{currency(subtotal)}</p>
-          </div>
-          <div className="mt-1.5 grid grid-cols-3 gap-1 md:mt-2 md:grid-cols-2 md:gap-1.5">
-            {[
-              ['Where', resolvedZip || 'ZIP'],
-              ['When', bookingTimeSummary(state)],
-              ['Review', state.clinicalReviewOnFile ? 'On file' : 'Needed'],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-foreground/10 bg-foreground/[0.035] p-1.5">
-                <p className="font-body text-[8px] font-black uppercase tracking-[0.1em] text-foreground/52 md:text-[9px]">{label}</p>
-                <p className="mt-0.5 truncate font-body text-[10px] font-black text-foreground/78 md:mt-1 md:text-xs">{value}</p>
+      // Natural height + comfortable spacing; the scroll region handles overflow.
+      // Do NOT use h-full here — that crams everything into one screen and clips
+      // the lower fields. Scrolling is fine.
+      <div className="grid content-start gap-3 pb-2">
+        {/* Receipt summary: product + price. On desktop the persistent rail already
+            shows this, so it only renders on mobile to avoid the duplicate. */}
+        {!desktopBookingFrame && (
+          <div className={`${panelCardClass} px-4 py-4 md:px-5 md:py-5`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-heading text-[1.7rem] uppercase leading-none tracking-normal md:text-[2.1rem]">{serviceLabel}</p>
+                <p className="mt-1.5 font-body text-[13px] font-black uppercase tracking-[0.18em] text-foreground/55">IV Therapy</p>
               </div>
-            ))}
+              <p className="shrink-0 font-heading text-[2rem] leading-none tracking-normal md:text-[2.5rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>{currency(subtotal)}</p>
+            </div>
           </div>
-        </div>
-        {state.visitType === 'one-time' && !groupContactRequired && (
-          <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
         )}
-        <div className={`${panelCardClass} grid min-h-0 content-start gap-1.5 p-2 md:gap-2 md:p-2.5`}>
-          <div className="grid grid-cols-2 gap-1.5 md:gap-2">
+        <div className={`${panelCardClass} grid content-start gap-3 p-3.5 md:p-4`}>
+          <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <TextInput
                 label="Name"
+                icon={User}
                 value={state.name}
                 onChange={(value) => updateInlineContactField('name', value)}
                 placeholder="Full name"
                 autoComplete="name"
-                compact
                 actionLabel={hasSavedContactProfile ? 'Saved' : ''}
                 onAction={useSavedContactProfile}
                 required
@@ -5716,54 +6365,61 @@ export default function BookNow() {
             </div>
             <TextInput
               label="Phone"
+              icon={Phone}
               value={state.phone}
               onChange={(value) => updateInlineContactField('phone', value)}
-              placeholder="Phone number"
+              placeholder="Phone"
               autoComplete="tel"
               inputMode="tel"
               type="tel"
-              compact
               required
             />
             <TextInput
               label="DOB"
+              icon={Calendar}
               value={state.dob}
               onChange={(value) => setValue('dob', formatDobInput(value))}
               placeholder="MM/DD/YYYY"
               autoComplete="bday"
               inputMode="numeric"
-              compact
               required
             />
             <div className="col-span-2">
               <TextInput
                 label="Email"
+                icon={Mail}
                 value={state.email}
                 onChange={(value) => updateInlineContactField('email', value)}
                 placeholder="Email"
                 autoComplete="email"
                 inputMode="email"
                 type="email"
-                compact
                 required
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2 md:col-span-1">
               <TextInput
-                label="Emergency contact"
-                value={state.emergencyContact}
-                onChange={(value) => setValue('emergencyContact', value)}
-                placeholder="Name and phone"
-                autoComplete="section-emergency tel"
-                compact
+                label="Emergency name"
+                value={state.emergencyContactName}
+                onChange={(value) => setValue('emergencyContactName', value)}
+                placeholder="Full name"
+                autoComplete="section-emergency name"
                 required
               />
             </div>
+            <TextInput
+              label="Emergency phone"
+              value={state.emergencyContactPhone}
+              onChange={(value) => setValue('emergencyContactPhone', value)}
+              placeholder="Phone number"
+              autoComplete="section-emergency tel"
+              inputMode="tel"
+              type="tel"
+              required
+            />
           </div>
-          <p className="rounded-xl border border-foreground/10 bg-background/30 px-2.5 py-1.5 font-body text-[9px] font-semibold leading-snug text-foreground/52 md:px-3 md:py-2 md:text-[10px]">
-            By paying, I consent to intake, privacy terms, and clinical review. Treatment is subject to approval.
-          </p>
         </div>
+        <ClinicalIntakeCard state={state} onChange={setValue} />
       </div>
     );
   };
@@ -5785,7 +6441,7 @@ export default function BookNow() {
   ]);
 
   return (
-    <div data-av-booking-shell="true" className="app-shell relative isolate min-h-[var(--av-booking-visual-height,100dvh)] w-full overflow-x-hidden bg-transparent text-foreground md:min-h-screen">
+    <div data-av-booking-shell="true" className="app-shell !fixed inset-x-0 top-0 isolate h-[100dvh] w-full overflow-x-hidden bg-background text-foreground md:!relative md:inset-auto md:h-auto md:min-h-screen md:bg-transparent">
       <BookingMobileHeader />
       {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
           a z-10 stacking context, and the booking <main> below (also z-10, later
@@ -5796,78 +6452,60 @@ export default function BookNow() {
       </div>
       <main
         data-av-booking-main="true"
-        className="relative z-10 mx-auto h-[var(--av-booking-visual-height,100dvh)] max-h-[var(--av-booking-visual-height,100dvh)] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
+        className="relative z-10 mx-auto h-[100dvh] max-h-[100dvh] min-h-0 w-full max-w-[calc(100vw-2rem)] overflow-hidden px-0 pb-0 pt-[var(--av-booking-mobile-header)] md:flex md:h-auto md:max-h-none md:min-h-screen md:max-w-none md:items-center md:px-4 md:pb-4 md:pt-24"
         style={{
-          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px) + var(--av-booking-visual-breathing, 0px))',
+          '--av-booking-mobile-header': 'calc(var(--av-booking-header-height, 4.45rem) + var(--av-booking-visual-offset-top, 0px))',
           '--av-booking-footer-reserve': 'calc(var(--av-booking-footer-height, 5.25rem) + max(env(safe-area-inset-bottom, 0px), 0.4rem) + 0.5rem)',
         }}
       >
         {embeddedCheckoutSession && embeddedCheckoutOptions && (
           <motion.section
-            className="mx-auto max-w-3xl"
+            className="mx-auto w-full max-w-xl"
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: EASE }}
           >
-            <div className="av-glass-card relative overflow-hidden rounded-[1.75rem] border border-foreground/10 bg-background/38 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12),0_30px_120px_hsl(var(--foreground)/0.12)] backdrop-blur-2xl md:p-4">
-              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,hsl(var(--foreground)/0.095),transparent_30%),radial-gradient(circle_at_95%_100%,hsl(var(--foreground)/0.045),transparent_34%),linear-gradient(145deg,hsl(var(--foreground)/0.04),transparent_55%,hsl(var(--foreground)/0.025))]" />
-              <div className="relative">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <SectionTitle icon={ShieldCheck} title="SECURE PAYMENT" sub={`${embeddedCheckoutSession.service} · ${dueNowLabel}`} />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmbeddedCheckoutSession(null);
-                      setCheckoutLoading(false);
-                      setStep(LAST_STEP);
-                    }}
-                    className="min-h-[44px] shrink-0 rounded-full border border-foreground/14 px-4 font-body text-xs font-bold uppercase tracking-[0.1em] text-foreground/76 transition-colors hover:border-foreground/28 hover:text-foreground"
-                  >
-                    Edit Booking
-                  </button>
-                </div>
-                <div data-av-embedded-checkout className="overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-background shadow-[0_24px_90px_hsl(var(--foreground)/0.12)]">
-                  <div className="border-b border-foreground/8 px-4 py-3">
-                    <p className="font-body text-[11px] font-black uppercase tracking-[0.16em] text-foreground/60">Secure checkout ready</p>
-                    <div className="mt-2 h-px overflow-hidden bg-foreground/10">
-                      <motion.div
-                        className="h-full bg-foreground"
-                        initial={reduceMotion ? { scaleX: 1 } : { scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: reduceMotion ? 0 : 0.5, ease: EASE }}
-                        style={{ originX: 0 }}
-                      />
-                    </div>
+            <div className="mb-3 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmbeddedCheckoutSession(null);
+                  setCheckoutLoading(false);
+                  setStep(LAST_STEP);
+                }}
+                className="font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55 transition-colors hover:text-foreground"
+              >
+                ← Edit booking
+              </button>
+            </div>
+            <div data-av-embedded-checkout className="overflow-hidden rounded-[1.25rem] bg-background">
+              {checkoutMountError && (
+                <div role="alert" className="mx-0 mb-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
+                  <div className="flex items-center gap-2.5">
+                    <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+                    <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
                   </div>
-                  {checkoutMountError && (
-                    <div role="alert" className="m-3 rounded-2xl border border-amber-300/24 bg-amber-300/[0.08] p-4 text-amber-100">
-                      <p className="font-body text-sm font-black leading-snug">{checkoutMountError}</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                          type="button"
-                          onClick={() => {
-                            setCheckoutMountError('');
-                            setCheckoutRetryKey((current) => current + 1);
-                          }}
-                          className="min-h-[40px] rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]"
-                        >
-                          Retry payment
-                        </button>
-                        <a href="sms:+14159807708" className="inline-flex min-h-[40px] items-center rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]">
-                          Text Avalon
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  <EmbeddedCheckoutProvider
-                    key={`${embeddedCheckoutSession.clientSecret}-${checkoutRetryKey}`}
-                    stripe={stripeClientPromise}
-                    options={embeddedCheckoutOptions}
-                  >
-                    <EmbeddedCheckout className="min-h-[calc(100dvh-250px)]" />
-                  </EmbeddedCheckoutProvider>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCheckoutMountError('');
+                        setCheckoutRetryKey((current) => current + 1);
+                      }}
+                      className="min-h-[40px] rounded-full border border-amber-200/24 px-4 font-body text-xs font-black uppercase tracking-[0.08em]"
+                    >
+                      Retry payment
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
+              <EmbeddedCheckoutProvider
+                key={`${embeddedCheckoutSession.clientSecret}-${checkoutRetryKey}`}
+                stripe={stripeClientPromise}
+                options={embeddedCheckoutOptions}
+              >
+                <EmbeddedCheckout className="min-h-[calc(100dvh-200px)]" />
+              </EmbeddedCheckoutProvider>
             </div>
           </motion.section>
         )}
@@ -5885,7 +6523,7 @@ export default function BookNow() {
                 displayTitle={progressDisplay.title}
                 progressIndex={progressDisplay.index}
                 canGoNext={step < LAST_STEP ? canAdvance() : canSubmit}
-                actionLabel={primaryActionLabel()}
+                actionLabel={step === LAST_STEP ? (manualBilling ? 'CONFIRM VIP' : `PAY ${currency(dueNowAmount)}`) : primaryActionLabel()}
                 checkoutLoading={checkoutLoading}
                 error={error}
                 canGoBack={canGoBack}
@@ -5896,6 +6534,11 @@ export default function BookNow() {
                 selectedAddons={selectedAddons}
                 onRemoveAddon={removeAddon}
                 onClearOrder={clearOrder}
+                sessionPeople={sessionPeople}
+                activePersonId={state.activePersonId}
+                onAddPerson={addNewPerson}
+                onSelectPerson={switchActivePerson}
+                onRemovePerson={deletePerson}
               >
                 {renderUniversalStep()}
               </UniversalBookingFrame>
@@ -5921,6 +6564,10 @@ export default function BookNow() {
               onStepSelect={goToStep}
               onRemoveAddon={removeAddon}
               onClearOrder={clearOrder}
+              sessionPeople={sessionPeople}
+              onSelectPerson={switchActivePerson}
+              onAddPerson={addNewPerson}
+              onRemovePerson={deletePerson}
             >
               {renderUniversalStep()}
             </DesktopBookingFrame>}
@@ -5993,11 +6640,9 @@ export default function BookNow() {
               </>
             ) : null}
             {error && (
-              <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+              <div role="alert" className="mb-3 flex items-center gap-2.5 rounded-2xl border border-amber-300/22 bg-amber-300/[0.07] px-4 py-3 text-amber-100">
+                <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
                 <p className="font-body text-sm font-black">{error}</p>
-                <a href="sms:+14159807708" className="shrink-0 rounded-full border border-amber-200/24 px-3 py-1.5 font-body text-xs font-black uppercase tracking-[0.08em]">
-                  Text us
-                </a>
               </div>
             )}
             <motion.div
@@ -6021,7 +6666,7 @@ export default function BookNow() {
                 )}
                 {step === 0 && (
                   <>
-                    <SectionTitle icon={Sparkles} title="CHOOSE YOUR GOAL" />
+                    <SectionTitle icon={Sparkles} title="PICK A GOAL" />
                     <LayoutGroup id="outcomes">
                       <div className="grid gap-2 md:grid-cols-2 md:gap-3">
                         {OUTCOMES.filter((item) => PRIMARY_OUTCOME_KEYS.includes(item.key)).map((item, index) => (
@@ -6071,6 +6716,7 @@ export default function BookNow() {
 	                        activeKey={state.productKey}
 	                        onSelect={chooseProductAndContinue}
 	                        onPrimary={chooseProductAndContinue}
+	                        isSuggestion={Boolean(searchParams.get('protocol'))}
 	                      />
 	                    )}
                       </>
@@ -6194,7 +6840,7 @@ export default function BookNow() {
                         <button
                           type="button"
                           onClick={() => chooseTimeIntent(state.timeIntent === 'choose' ? 'asap' : 'choose')}
-                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[10px] font-black uppercase tracking-[0.1em] text-foreground/72"
+                          className="relative min-h-[44px] shrink-0 rounded-full border border-foreground/14 bg-background/40 px-3 font-body text-[13px] font-black uppercase tracking-[0.1em] text-foreground/72"
                         >
                           {state.timeIntent === 'choose' ? 'ASAP' : 'Pick time'}
                         </button>
@@ -6351,6 +6997,10 @@ export default function BookNow() {
                 {step === 4 && (
                   <>
                     <SectionTitle icon={Check} title={fastMode ? 'Patient' : 'Confirm'} sub={fastMode ? 'Required before payment.' : ''} />
+                    {/* Mobile: drop the product+price receipt to the bottom (just above the
+                        sticky CTA). Desktop keeps the original order — receipt on top. */}
+                    <div className="flex flex-col">
+                    <div className="order-last md:order-first">
                     <ConfirmSummary
                       state={state}
                       product={product}
@@ -6359,6 +7009,8 @@ export default function BookNow() {
                       dueNow={dueNowAmount}
                       balanceDue={balanceDue}
                     />
+                    </div>
+                    <div className="order-first md:order-last">
                     {canUseClinicalReviewOnFile && (
 	                    <ClinicalReviewChoice
 	                      value={state.clinicalReviewOnFile}
@@ -6366,8 +7018,13 @@ export default function BookNow() {
 	                      allowOnFile={canUseClinicalReviewOnFile}
 	                    />
                     )}
-                    {state.visitType === 'one-time' && !groupContactRequired && (
-                      <BillingChoice value={state.billingMode} onChange={(value) => setValue('billingMode', value)} />
+                    {canRedeemMemberCredit && (
+                      <MemberCreditChoice
+                        balance={creditState.balance}
+                        selected={useMemberCredit}
+                        valueLabel={currency(ivCreditValue)}
+                        onChange={setUseMemberCredit}
+                      />
                     )}
                     <ContactConfirmCard state={state} onChange={setValue} savedContact={savedContactProfile} />
                     {isMultiPerson && peopleBreakdown.length > 1 && (
@@ -6400,6 +7057,8 @@ export default function BookNow() {
                         By paying, I consent to telehealth review, medical intake, and privacy terms. Treatment is subject to clinical approval.
                       </p>
                     )}
+                    </div>
+                    </div>
                   </>
                 )}
               </div>

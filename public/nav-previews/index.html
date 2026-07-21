@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Avalon Nav previews</title>
+<link rel="stylesheet" href="./_shared.css" />
+<style>
+  body { min-height: 100vh; overflow-x: hidden; }
+  .grid { max-width: 1080px; margin: 0 auto; padding: 80px 32px; display: grid; grid-template-columns: 1fr; gap: 18px; }
+  .row {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    align-items: center; gap: 24px;
+    padding: 22px 26px;
+    border: 1px solid var(--av-glass-border); border-radius: 22px;
+    background: rgba(255,255,255,0.02);
+    text-decoration: none; color: inherit;
+    transition: background 0.3s var(--av-ease-out), transform 0.4s var(--av-ease), border-color 0.3s var(--av-ease-out);
+  }
+  .row:hover { background: rgba(255,255,255,0.05); transform: translateY(-2px); border-color: var(--av-glass-border-hover); }
+  .tag { font-family: 'Bebas Neue'; font-size: 36px; letter-spacing: 0.1em; color: var(--av-fg-soft); }
+  .title { font-family: 'Bebas Neue'; font-size: 22px; letter-spacing: 0.18em; }
+  .desc { font-family: 'Inter'; color: var(--av-fg-muted); font-size: 13px; margin-top: 4px; line-height: 1.6; }
+  .open { font-family: 'Bebas Neue'; letter-spacing: 0.24em; font-size: 11px; color: var(--av-fg-soft); }
+  h1 { font-family: 'Bebas Neue'; font-size: 56px; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .sub { font-family: 'Inter'; color: var(--av-fg-soft); font-size: 13px; max-width: 640px; line-height: 1.6; margin-bottom: 48px; }
+  .featured { border-color: var(--av-glass-border-hover); background: rgba(255,255,255,0.04); }
+</style>
+</head>
+<body>
+<div class="grid">
+  <h1>AVALON × APPLE NAV</h1>
+  <p class="sub">Avalon's actual tokens: dark glass (rgba(13,13,13,0.72→0.94)), white-12% border, Bebas Neue for nav + headings, Inter for body. Three options:</p>
+
+  <a class="row featured" href="./bc-combined.html">
+    <span class="tag">B+C</span>
+    <div>
+      <div class="title">COMBINED — SCROLL-SHRINK + SPOTLIGHT</div>
+      <div class="desc">Full-width bar at top → collapses into floating pill on scroll. Hover IV THERAPY / PLANS / LAUNCHES → magnetic spotlight pill glides between them, full-width spotlight panel reveals beneath. Panel auto-tucks while the bar is shrunk. The recommended port.</div>
+    </div>
+    <span class="open">OPEN →</span>
+  </a>
+
+  <a class="row" href="./b-scroll-shrink.html">
+    <span class="tag">B</span>
+    <div>
+      <div class="title">SCROLL-SHRINK FLOATING PILL</div>
+      <div class="desc">Bar starts full-width translucent → on scroll past 40px, collapses into a centered floating pill with stronger blur + drop shadow. AVALON wordmark retracts; BOOK NOW stays.</div>
+    </div>
+    <span class="open">OPEN →</span>
+  </a>
+
+  <a class="row" href="./c-magnetic-spotlight.html">
+    <span class="tag">C</span>
+    <div>
+      <div class="title">MAGNETIC SPOTLIGHT</div>
+      <div class="desc">Spring-driven spotlight pill glides between nav links (width morphs to fit each label). Full-width spotlight panel reveals with sublinks. No shrink — bar stays at full width the whole way.</div>
+    </div>
+    <span class="open">OPEN →</span>
+  </a>
+</div>
+</body>
+</html>

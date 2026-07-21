@@ -25,12 +25,13 @@ function dollarsFromCents(cents) {
 function shapeAppointment(row) {
   const payload = row.external_payload || {};
   const items = Array.isArray(payload.items) ? payload.items : [];
+  const acuityAppointment = payload.fulfillment?.acuityAppointment || {};
   return {
     id: row.id,
     status: row.status,
     startsAt: row.starts_at,
     service: payload.primaryService || row.protocol_key || 'Avalon Visit',
-    items: items.map((it) => it?.name || it?.title).filter(Boolean).slice(0, 12),
+    items: items.map((it) => it?.label || it?.name || it?.title || it?.key).filter(Boolean).slice(0, 12),
     isMembership: !!payload.membership,
     paymentStatus: row.payment_status,
     visitSubtotal: dollarsFromCents(row.visit_subtotal_cents),
@@ -39,6 +40,8 @@ function shapeAppointment(row) {
     depositPaidAt: row.deposit_paid_at,
     balancePaidAt: row.balance_paid_at,
     acuityAppointmentId: row.acuity_appointment_id,
+    rescheduleUrl: acuityAppointment.rescheduleUrl || acuityAppointment.rescheduleURL || acuityAppointment.confirmationPage || '',
+    confirmationPage: acuityAppointment.confirmationPage || '',
     createdAt: row.created_at,
   };
 }
@@ -52,12 +55,15 @@ export default async function handler(req, res) {
   if (!authed) return res.status(401).json({ error: 'Sign in required' });
   if (!authed.email) return res.status(200).json({ appointments: [] });
 
-  const { db, email } = authed;
-  const { data, error } = await db.from('appointments')
+  const { db, email, tenantId } = authed;
+  let query = db.from('appointments')
     .select('id, tenant_id, status, starts_at, protocol_key, payment_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, external_payload, created_at')
     .ilike('external_payload->contact->>email', likeLiteral(email))
     .order('starts_at', { ascending: false, nullsFirst: false })
     .limit(100);
+  if (tenantId) query = query.eq('tenant_id', tenantId);
+
+  const { data, error } = await query;
 
   if (error) {
     console.warn('[me/appointments] appointment query failed', safeLogContext(error, 'client_appointments_query_failed'));
@@ -75,6 +81,7 @@ export default async function handler(req, res) {
     payload: {
       route: 'api/me/appointments',
       match: 'session_email',
+      tenantScoped: Boolean(tenantId),
       resultCount: (data || []).length,
     },
   });

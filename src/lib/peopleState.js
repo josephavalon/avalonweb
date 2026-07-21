@@ -18,7 +18,46 @@ export function createPerson(index = 0) {
     therapyKey: '',
     ivQty: {},
     imQty: {},
+    // Per-visit plan model: each monthly visit can have its OWN IV + add-ons.
+    // Length tracks sessions/month; defaults to a single (uniform) visit.
+    // The legacy categoryKey/therapyKey/ivQty/imQty above mirror visits[0] for
+    // backward-compat with code that hasn't moved to the visits array yet.
+    visits: [makeVisit()],
   };
+}
+
+// A single monthly visit: one IV therapy + its own IV/IM add-ons.
+export function makeVisit(partial = {}) {
+  return {
+    categoryKey: partial.categoryKey || '',
+    therapyKey: partial.therapyKey || '',
+    ivQty: { ...(partial.ivQty || {}) },
+    imQty: { ...(partial.imQty || {}) },
+  };
+}
+
+/**
+ * Resize a person's visits array to `count`. Growing appends COPIES of the
+ * first visit (uniform-by-default); shrinking truncates. Always returns a
+ * fresh array (and at least one visit). Backfills from legacy flat fields when
+ * a person has no visits yet.
+ */
+export function resizeVisits(person, count) {
+  const n = Math.max(1, Number(count) || 1);
+  let current = Array.isArray(person?.visits) && person.visits.length > 0
+    ? person.visits
+    : [makeVisit({
+        categoryKey: person?.categoryKey,
+        therapyKey: person?.therapyKey,
+        ivQty: person?.ivQty,
+        imQty: person?.imQty,
+      })];
+  const seed = current[0];
+  const next = [];
+  for (let i = 0; i < n; i += 1) {
+    next.push(i < current.length ? makeVisit(current[i]) : makeVisit(seed));
+  }
+  return next;
 }
 
 export function ensureAtLeastOne(people) {

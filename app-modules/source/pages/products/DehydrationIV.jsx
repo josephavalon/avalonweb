@@ -24,7 +24,7 @@ export default function DehydrationIV() {
     'Physician supervised',
     'Priority scheduling',
     'Plan client pricing',
-    '20% off additional treatments',
+    'Up to 17% off IV credits · 10% off add-ons',
   ];
 
   return (
@@ -192,7 +192,7 @@ export default function DehydrationIV() {
                     <span className="font-body text-sm text-muted-foreground">/month</span>
                   </div>
                   <p className="font-body text-xs text-muted-foreground mt-2">
-                    Lock in <span className="text-accent font-semibold">20% founding member discount</span> for life
+                    Lock in <span className="text-accent font-semibold">up to 17% off + 10% off add-ons</span> for life
                   </p>
                 </div>
 

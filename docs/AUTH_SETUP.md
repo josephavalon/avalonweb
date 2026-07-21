@@ -1,134 +1,117 @@
-# Auth setup — running on local
+# Avalon Auth Setup
 
-Avalon ships with **Client Login**, **Admin Login**, and a launch **Nurse**
-demo role that reaches the `/provider/*` surface. This page covers what to do
-once on a fresh machine.
+This repo wires email recovery, optional Google/Apple OAuth, optional phone OTP, and optional passkeys through Supabase Auth. The human operator owns provider secrets and pastes them directly into Supabase Studio; do not commit secrets.
 
-## 1. Environment
+Provider exposure is controlled by build-time flags. Keep a flag `false` until the matching Supabase provider is configured and verified; disabled providers stay hidden in the UI so snooches does not expose broken launch paths.
 
-`.env*` is gitignored. Create `.env.local` at the repo root and paste the
-keys for the Supabase project you want to point at:
+- `VITE_AUTH_GOOGLE_ENABLED`
+- `VITE_AUTH_APPLE_ENABLED`
+- `VITE_AUTH_PHONE_ENABLED`
+- `VITE_AUTH_PASSKEY_ENABLED`
 
-```
-VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...
-# Local default. Set both to true together only in staging/production.
-VITE_AVALON_ENABLE_LIVE_API=false
-AVALON_ENABLE_LIVE_API=false
-# Server-only — required for live checkout confirmation summary tokens:
-APPOINTMENT_SUMMARY_TOKEN_SECRET=random-high-entropy-value
-# Optional — only needed for the demo (no-Supabase) fallback:
-# VITE_AVALON_DEMO_PASSWORD=demo-pass
-```
+## Supabase URL Configuration
 
-Without these keys, the auth store falls back to the local demo roster
-(see `src/lib/useAuthStore.js`).
+In Supabase Studio -> Auth -> URL Configuration, set:
 
-`APPOINTMENT_SUMMARY_TOKEN_SECRET` is not a `VITE_` value and must not be
-available to the browser bundle. In live mode, checkout confirmation can only
-issue signed appointment-summary tokens when this dedicated server secret is
-set.
+- Site URL: `https://snooches.avalonvitality.co`
+- Redirect URLs:
+  - `https://snooches.avalonvitality.co`
+  - `https://snooches.avalonvitality.co/login`
+  - `https://snooches.avalonvitality.co/auth/callback`
+  - `https://snooches.avalonvitality.co/account/new-password`
+  - `http://localhost:4173`
+  - `http://localhost:4173/login`
+  - `http://localhost:4173/auth/callback`
+  - `http://localhost:4173/account/new-password`
+  - `http://localhost:5173`
+  - `http://localhost:5173/login`
+  - `http://localhost:5173/auth/callback`
+  - `http://localhost:5173/account/new-password`
 
-For staging and production, keep the browser and server live switches aligned:
+Use the callback URL shown in the current Supabase project under Auth ->
+Providers. It has the shape `https://<project-ref>.supabase.co/auth/v1/callback`.
 
-- `VITE_AVALON_ENABLE_LIVE_API=true` disables demo auth in the browser bundle.
-- `AVALON_ENABLE_LIVE_API=true` is the server-side live-vendor switch.
-- Server functions also accept `VITE_AVALON_ENABLE_LIVE_API=true` as a
-  compatibility signal, but setting both flags avoids ambiguous deploy state.
+## Google
 
-Live checkout also needs the server-only environment from `.env.example`:
-`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,
-`STRIPE_WEBHOOK_SECRET`, `AVALON_INTERNAL_API_SECRET`, `ACUITY_USER_ID`,
-`ACUITY_API_KEY`, `ACUITY_WEBHOOK_SECRET`, `RESEND_API_KEY`,
-`AVALON_OPERATIONS_EMAIL`, `ATTIO_ACCESS_TOKEN`, `ATTIO_WORKSPACE_ID`, and
-`ATTIO_PEOPLE_OBJECT` where those integrations are enabled.
+Human steps:
 
-Public lookup and auth endpoints use a shared rate limiter. Set
-`KV_REST_API_URL` and `KV_REST_API_TOKEN` in staging/production so those limits
-persist across serverless instances; without them, functions fall back to
-per-instance memory buckets.
+1. Create a Google Cloud OAuth web client.
+2. Add the Supabase provider callback URL as an authorized redirect URI.
+3. Paste the client id and secret into Supabase Studio -> Auth -> Providers -> Google.
+4. Enable Google.
+5. Set `VITE_AUTH_GOOGLE_ENABLED=true` in the target Vercel environment.
+6. Run `npm run test:oauth-config`.
 
-## 2. Apply Supabase migrations
+## Apple
 
-Run the Supabase migrations in order through
-`supabase/migrations/011_launch_messaging_roles.sql` against the project
-(SQL editor in the Supabase dashboard, or `supabase db push`).
+Human steps:
 
-The auth-critical pieces are:
+1. Create an Apple Developer Services ID and private key for Sign in with Apple.
+2. Use the same Supabase provider callback URL.
+3. Paste the Services ID/team/key details into Supabase Studio -> Auth -> Providers -> Apple.
+4. Enable Apple.
+5. Set `VITE_AUTH_APPLE_ENABLED=true` in the target Vercel environment.
+6. Run `npm run test:oauth-config`.
 
-- `007_auth_profile_trigger.sql` creates the signup profile trigger so every
-  signup gets a `public.profiles` row with `role='client'`, `status='active'`,
-  and the `avalon-vitality` tenant.
-- `009_private_auth_profile_trigger.sql` moves that trigger function into the
-  private schema.
-- `010_tighten_clinical_rls_and_reconciliation_cases.sql` tightens clinical
-  RLS and aligns reconciliation case constraints.
-- `011_launch_messaging_roles.sql` aligns messaging RLS with the ADMIN /
-  CLIENT / NURSE launch model.
+## Phone OTP
 
-## 3. Promote your first admin
+Human steps:
 
-After you sign up at `/signup` (or get a magic link at `/login`), open the
-SQL editor and promote yourself:
+1. Configure the phone provider in Supabase Studio -> Auth -> Providers -> Phone.
+2. Add the Twilio account SID, auth token, and Verify service.
+3. Confirm Avalon SMS hook settings separately if using `api/auth/send-sms.js`.
+4. Set `VITE_AUTH_PHONE_ENABLED=true` in the target Vercel environment.
+5. Run `npm run test:oauth-config`.
 
-```sql
-update public.profiles
-   set role = 'admin'
- where email = 'you@example.com';
-```
+## Passkeys
 
-Then sign in at `/admin/login` — the `AdminLogin` page rejects any
-non-admin role with a clean error.
+Human steps:
 
-## 4. Allowed redirect URLs
+1. Confirm Supabase passkey/WebAuthn support is available for the project and target browsers.
+2. Set `VITE_AUTH_PASSKEY_ENABLED=true` in the target Vercel environment.
+3. Run a manual sign-in/enrollment drill from `/members/account`.
 
-In **Supabase → Authentication → URL Configuration**, add the local dev URL
-to the redirect allow list:
+## Verification
 
-- `http://localhost:5173/login`
-- `http://localhost:5173/admin/login`
+After optional providers are configured:
 
-Magic links and signup confirmation emails redirect back to `/login` by
-default (see `signInWithEmail` and `signUpWithEmail` in
-`src/lib/useAuthStore.js`).
-
-For staging/production, add the matching deployed origins before inviting real
-users:
-
-- `https://<staging-host>/login`
-- `https://<staging-host>/admin/login`
-- `https://avalonvitality.co/login`
-- `https://avalonvitality.co/admin/login`
-
-## 5. Run
-
-```
-npm install
-npm run dev
+```bash
+npm run test:oauth-config
+npm run verify:signup
+npm run verify:password-reset
 ```
 
-Then verify:
+`npm run test:oauth-config` only requires providers whose `VITE_AUTH_*_ENABLED`
+flag is true. Use `OAUTH_VERIFY_STRICT=1 npm run test:oauth-config` for a
+hard check that Google, Apple, and Phone are all enabled in Supabase.
 
-| Route          | Expected                                            |
-| -------------- | --------------------------------------------------- |
-| `/login`       | Email magic-link, phone OTP, passkey                |
-| `/signup`      | Create account, confirmation email                  |
-| `/forgot`      | Same as `/login` — passwordless recovery            |
-| `/admin/login` | Admin-only email magic-link                         |
-| `/members/*`   | Bookings, Memberships, Billing, Profile, Documents  |
-| `/admin`       | 7 sections (Avalon OS, Dispatch, Inventory, Scheduling, CRM, Analytics, Operations) |
-| `/provider/*`  | Nurse operations surfaces for the launch nurse role |
+Manual check:
 
-Phone OTP needs the Supabase auth hook (`/api/auth/send-sms.js`) wired in;
-on local without that, stick to email magic-link.
+1. Open `/signup`.
+2. Continue with Google or Apple.
+3. Return through `/auth/callback`.
+4. Confirm the user lands on `/members/dashboard`.
+5. Confirm `public.profiles` has `role='client'`, `status='active'`, and the `avalon-vitality` tenant.
 
-## 6. Nurse launch role
+## Launch-Critical Environment Keys
 
-`/provider/*` routes already exist and are role-gated to `nurse | admin`.
-The local demo roster includes `NURSE001`; production nurse users should have
-`public.profiles.role = 'nurse'`.
+Production auth, checkout, scheduling, messaging, and rate-limit readiness depend on these Vercel/Supabase keys being present in the correct environment:
 
-Prescriber-specific `np` / `physician` roles remain in the database policy
-helpers for future clinical workflows, but they are not launch login roles.
+- `VITE_AVALON_ENABLE_LIVE_API`
+- `AVALON_ENABLE_LIVE_API`
+- `VITE_AUTH_GOOGLE_ENABLED`
+- `VITE_AUTH_APPLE_ENABLED`
+- `VITE_AUTH_PHONE_ENABLED`
+- `VITE_AUTH_PASSKEY_ENABLED`
+- `APPOINTMENT_SUMMARY_TOKEN_SECRET`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `AVALON_INTERNAL_API_SECRET`
+- `ACUITY_API_KEY`
+- `RESEND_API_KEY`
+- `HUBSPOT_ACCESS_TOKEN`
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
 
-No structural change needed.
+Keep secret values in Vercel/Supabase/Stripe provider dashboards only. Pull local values into ignored `.env.local` files when needed.

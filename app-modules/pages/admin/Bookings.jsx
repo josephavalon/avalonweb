@@ -1,8 +1,8 @@
 /**
  * Admin Booking Intake — /admin/bookings
  *
- * Pulls recent scheduling appointments and displays them in a live table.
- * No database required — reads directly from the scheduling API.
+ * Supabase mode renders the live payments-backed bookings surface. Demo mode
+ * keeps the local/Acuity preview table for non-production development.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';

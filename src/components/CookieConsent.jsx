@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
-  const path = typeof window !== 'undefined' ? window.location.pathname : '';
-  const revenuePath = path === '/' ||
-    path.startsWith('/book') ||
-    path.startsWith('/booking') ||
-    path.startsWith('/checkout') ||
-    path.startsWith('/products') ||
-    path.startsWith('/protocols') ||
-    path.startsWith('/subscription');
-  const suppressed = typeof window !== 'undefined' && (path.startsWith('/b2b') || revenuePath);
+  const { pathname: path } = useLocation();
+  // Consent banner appears ONLY on the landing page. Every other page
+  // (booking, checkout, /plan, /subscription, products, b2b) stays clean.
+  const suppressed = path !== '/';
 
   useEffect(() => {
     if (suppressed) return;
@@ -25,11 +21,13 @@ export default function CookieConsent() {
   const handleAllow = () => {
     localStorage.setItem('cookieConsent', 'allowed');
     setShowConsent(false);
+    window.dispatchEvent(new CustomEvent('avalon:consentChanged', { detail: { value: 'allowed' } }));
   };
 
   const handleDecline = () => {
     localStorage.setItem('cookieConsent', 'declined');
     setShowConsent(false);
+    window.dispatchEvent(new CustomEvent('avalon:consentChanged', { detail: { value: 'declined' } }));
   };
 
   if (suppressed) return null;
@@ -44,26 +42,37 @@ export default function CookieConsent() {
               : 'bottom-16 sm:bottom-3'
           }`}
         >
-          <div className="ml-auto border border-foreground/10 bg-background/82 backdrop-blur-2xl rounded-[0.9rem] p-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] pointer-events-auto">
+          <div className="ml-auto border border-foreground/10 bg-background/82 backdrop-blur-2xl rounded-[0.9rem] p-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] pointer-events-auto relative">
+            {/* Dismiss without picking YES/NO — audit finding E1. Records
+                'dismissed' so the banner comes back next session but doesn't
+                block content in the meantime. */}
+            <button
+              type="button"
+              onClick={() => setShowConsent(false)}
+              aria-label="Dismiss privacy banner"
+              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-background border border-foreground/16 text-foreground/62 hover:text-foreground hover:border-foreground/30 flex items-center justify-center text-[10px] leading-none transition-colors"
+            >
+              ×
+            </button>
             <div className="flex items-center gap-2">
               <div className="min-w-0">
-                <h2 className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
+                <p className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
                   Privacy
-                </h2>
-                <p className="font-body text-[9px] text-foreground/58 leading-snug mt-0.5 max-w-[13rem]">
+                </p>
+                <p className="font-body text-[11px] text-foreground/78 leading-snug mt-0.5 max-w-[13rem]">
                   Essential only unless allowed.
                 </p>
               </div>
               <div className="ml-auto grid grid-cols-2 gap-1.5 shrink-0">
                 <button
                   onClick={handleDecline}
-                  className="min-h-[34px] px-2.5 py-1 border border-foreground/16 text-foreground/62 font-body text-[8px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/5 hover:border-foreground/30 active:scale-[0.99] transition-all duration-base ease-editorial"
+                  className="min-h-[34px] px-3 py-1 border border-foreground/16 text-foreground/62 font-heading text-[11px] uppercase tracking-[0.14em] rounded-full hover:bg-foreground/5 hover:border-foreground/30 active:scale-[0.99] transition-all duration-base ease-editorial"
                 >
                   No
                 </button>
                 <button
                   onClick={handleAllow}
-                  className="min-h-[34px] px-2.5 py-1 bg-foreground text-background font-body text-[8px] font-semibold uppercase tracking-[0.14em] rounded-full hover:bg-foreground/90 active:scale-[0.99] transition-all duration-base ease-editorial"
+                  className="min-h-[34px] px-3 py-1 bg-foreground text-background font-heading text-[11px] uppercase tracking-[0.14em] rounded-full hover:bg-foreground/90 active:scale-[0.99] transition-all duration-base ease-editorial"
                 >
                   OK
                 </button>

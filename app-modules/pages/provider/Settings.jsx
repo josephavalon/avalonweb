@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useToast } from '@/components/ui/use-toast';
-import { ATTIO_PLACEHOLDER, isAttioConfigured } from '@/lib/attioPlaceholder';
+import { HUBSPOT_PLACEHOLDER as ATTIO_PLACEHOLDER, isHubspotConfigured as isAttioConfigured } from '@/lib/hubspotPlaceholder';
 import {
   GUSTO_PAYROLL_PLACEHOLDER,
   MERCURY_BANKING_PLACEHOLDER,
@@ -120,7 +120,7 @@ const INTEGRATIONS = [
     id: 'int5',
     service: 'Dispatch',
     badgeStatus: 'Manual',
-    description: 'Avalon owns nurse assignment, broadcasts, Y/N replies, route handoff, and client ETA messaging.',
+    description: 'Avalon owns nurse assignment, broadcasts, Y/N replies, route handoff, and client messaging.',
   },
   {
     id: 'int6',

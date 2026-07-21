@@ -38,7 +38,7 @@ function RouteLink({ to, children }) {
 
 export function LocationsHub() {
   useSeo({
-    title: 'Bay Area Mobile IV Therapy City Pages | Avalon Vitality',
+    title: 'Bay Area Mobile IV Therapy City Pages — Avalon Vitality',
     description: 'Explore Avalon Vitality city SEO pages for mobile recovery, IV therapy, NAD+, hotel service, launch service, neighborhoods, and things to do across the Bay Area.',
     path: '/locations',
     jsonLd: {
@@ -56,46 +56,84 @@ export function LocationsHub() {
       <main className="px-5 pb-16 pt-32 md:px-12 lg:px-20">
         <div className="mx-auto max-w-6xl">
           <h1 className="mt-5 max-w-4xl font-heading text-6xl uppercase leading-[0.88] tracking-tight text-foreground md:text-8xl">
-            Mobile Recovery City Index
+            Where Avalon comes to you
           </h1>
           <p className="mt-6 max-w-2xl font-body text-base leading-relaxed text-foreground/62 md:text-lg">
-            City-specific recovery pages for homes, hotels, offices, launches, private events, neighborhoods, and local things to do across the Bay Area.
+            Same-day mobile IV therapy across the Bay Area — homes, hotels, offices, and event venues. Pick your city to see how we serve it.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {[...new Set(locationPages.map((item) => item.region))].map((item) => (
-              <span key={item} className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/45">
-                {item}
-              </span>
-            ))}
-            <span className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/45">
-              {locationPages.length} city pages
-            </span>
-          </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 md:grid-cols-2">
-            {locationPages.map((item) => (
-              <Link
-                key={item.slug}
-                to={item.path}
-                className="group rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 transition-colors hover:border-foreground/24 hover:bg-foreground/[0.055]"
-              >
-                <h2 className="mt-3 font-heading text-3xl uppercase leading-none text-foreground">{item.city}</h2>
-                <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.communityRecovery}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {item.neighborhoods.slice(0, 3).map((neighborhood) => (
-                    <span key={neighborhood} className="rounded-full border border-foreground/10 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">
-                      {neighborhood}
-                    </span>
+          {(() => {
+            // Group cities by region so users scan the geography that matters
+            // (where they live) instead of a flat alphabetical grid. Region
+            // chips at the top anchor-jump to each section. Region order
+            // follows the first appearance in locationPages.
+            const regionOrder = [...new Set(locationPages.map((item) => item.region))];
+            const cityCountByRegion = regionOrder.reduce((acc, region) => {
+              acc[region] = locationPages.filter((p) => p.region === region).length;
+              return acc;
+            }, {});
+            const slugifyRegion = (r) =>
+              `region-${String(r).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+            return (
+              <>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {regionOrder.map((region) => (
+                    <a
+                      key={region}
+                      href={`#${slugifyRegion(region)}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-foreground/12 bg-foreground/[0.04] px-3 py-2 font-body text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/72 transition-colors hover:border-foreground/30 hover:text-foreground"
+                    >
+                      {region}
+                      <span className="text-foreground/45">{cityCountByRegion[region]}</span>
+                    </a>
                   ))}
+                  <span className="rounded-full border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] uppercase tracking-[0.14em] text-foreground/45">
+                    {locationPages.length} city pages
+                  </span>
                 </div>
-                <p className="mt-4 line-clamp-2 font-body text-xs leading-relaxed text-foreground/42">
-                  {item.thingsToDo?.slice(0, 2).join(' · ')}
-                </p>
-                <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
-                  Explore neighborhoods <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-                </span>
-              </Link>
-            ))}
-          </div>
+                <div className="mt-10 space-y-12">
+                  {regionOrder.map((region) => {
+                    const cities = locationPages.filter((p) => p.region === region);
+                    if (!cities.length) return null;
+                    return (
+                      <section key={region} id={slugifyRegion(region)} className="scroll-mt-32">
+                        <h2 className="font-heading text-2xl uppercase leading-none tracking-[0.04em] text-foreground md:text-3xl">
+                          {region}
+                        </h2>
+                        <p className="mt-1 font-body text-[11px] font-black uppercase tracking-[0.18em] text-foreground/45">
+                          {cities.length} cit{cities.length === 1 ? 'y' : 'ies'}
+                        </p>
+                        <div className="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
+                          {cities.map((item) => (
+                            <Link
+                              key={item.slug}
+                              to={item.path}
+                              className="group rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 transition-colors hover:border-foreground/24 hover:bg-foreground/[0.055]"
+                            >
+                              <h3 className="mt-3 font-heading text-2xl uppercase leading-none text-foreground md:text-3xl">{item.city}</h3>
+                              <p className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-foreground/55">{item.communityRecovery}</p>
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                {item.neighborhoods.slice(0, 3).map((neighborhood) => (
+                                  <span key={neighborhood} className="rounded-full border border-foreground/10 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-foreground/38">
+                                    {neighborhood}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="mt-4 line-clamp-2 font-body text-xs leading-relaxed text-foreground/42">
+                                {item.thingsToDo?.slice(0, 2).join(' · ')}
+                              </p>
+                              <span className="mt-5 inline-flex items-center gap-2 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/55 group-hover:text-foreground">
+                                Explore neighborhoods <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </main>
       <Footer />
@@ -108,9 +146,11 @@ export default function LocationPage() {
   const page = getLocationBySlug(slug);
 
   useSeo({
-    title: page?.title || 'Location Not Found | Avalon Vitality',
+    title: page?.title || 'Location Not Found — Avalon Vitality',
     description: page?.description || 'Avalon Vitality location page not found.',
     path: page?.path || `/locations/${slug || ''}`,
+    // Unknown slug → tell crawlers not to index; NotFound body renders below.
+    robots: page ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
     jsonLd: page ? {
       '@context': 'https://schema.org',
       '@graph': [

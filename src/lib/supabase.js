@@ -8,7 +8,11 @@ const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // experimental.passkey enables signInWithPasskey()/registerPasskey() (WebAuthn).
 export const supabase   = (SUPABASE_URL && SUPABASE_ANON)
   ? createClient(SUPABASE_URL, SUPABASE_ANON, {
-      auth: { experimental: { passkey: true } },
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+        experimental: { passkey: true },
+      },
     })
   : null;
 

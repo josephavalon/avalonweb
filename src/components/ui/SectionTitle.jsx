@@ -15,7 +15,7 @@ export default function SectionTitle({
       {...REVEAL}
       className={`${alignClass} mb-6 md:mb-10 ${className}`}
     >
-      <Heading className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide leading-[0.95] uppercase">
+      <Heading className="font-heading text-display text-foreground tracking-wide leading-[0.95] uppercase">
         {title}
       </Heading>
       {tagline && (

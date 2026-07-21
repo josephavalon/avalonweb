@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
+  AlertCircle,
   Droplets, Syringe, ArrowRight, ArrowLeft,
   Check, X, CreditCard,
   Sparkles, Loader2, RefreshCw, Calendar,
-  ShieldCheck,
+  ShieldCheck, UserPlus,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/landing/Navbar';
-import { COVERED_ZIPS } from '@/lib/serviceArea';
 import { useSeo } from '@/lib/seo';
 import { acuityTypeForCart } from '@/lib/acuityAppointmentTypes';
 import { avalonErrorClass, avalonLabelClass, avalonLightFieldClass } from '@/components/ui/formStyles';
@@ -19,6 +19,10 @@ import { readBookingDraft, readLastBooking, readLocal } from '@/lib/localOs';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { CHECKOUT_EASE as EASE, CHECKOUT_STEP_ICONS as STEP_ICONS, CHECKOUT_STEPS as STEPS, CHECKOUT_TIMEZONE as TZ, formatCheckoutTimeLabel as formatTimeLabel, todayCheckoutString as todayString } from '@/data/checkoutFlow.jsx';
 import { hasValidCheckoutContact } from '@/lib/checkoutValidation';
+import { extractZip } from '@/lib/serviceArea';
+import { useAuthStore } from '@/lib/useAuthStore';
+import AddressAutocomplete from '@/components/store/AddressAutocomplete';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 
 function hasCompleteContact(contact = {}) {
   return hasValidCheckoutContact(contact);
@@ -37,6 +41,19 @@ function formatCheckoutPhone(value) {
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+function cartItemQuantity(item = {}) {
+  const quantity = Number(item.quantity);
+  return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+}
+
+function cartItemTotal(item = {}) {
+  return (Number(item.price) || 0) * cartItemQuantity(item);
+}
+
+function cartItemsTotal(items = []) {
+  return items.reduce((sum, item) => sum + cartItemTotal(item), 0);
 }
 
 function hasAppointmentDetails(appointment = {}, { requireSlot = false } = {}) {
@@ -77,7 +94,7 @@ function StepBar({ current }) {
           <React.Fragment key={label}>
             <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-400 ${
-                done ? 'bg-accent border-accent' :
+                done ? 'bg-foreground border-foreground' :
                 active ? 'border-foreground bg-foreground/10' :
                 'border-foreground/20 bg-transparent'
               }`}>
@@ -86,13 +103,13 @@ function StepBar({ current }) {
                   : <Icon className={`w-3.5 h-3.5 ${active ? 'text-foreground' : 'text-foreground/45'}`} strokeWidth={1.8} />
                 }
               </div>
-              <span className={`font-body text-[9px] tracking-[0.2em] uppercase hidden sm:block ${
-                active ? 'text-foreground' : done ? 'text-accent' : 'text-foreground/45'
+              <span className={`font-body text-[12px] tracking-[0.2em] uppercase hidden sm:block ${
+                active ? 'text-foreground' : done ? 'text-foreground' : 'text-foreground/45'
               }`}>{label}</span>
             </div>
             {i < STEPS.length - 1 && (
               <div className={`flex-1 h-px mx-2 transition-colors duration-400 ${
-                i < current ? 'bg-accent' : 'bg-foreground/15'
+                i < current ? 'bg-foreground' : 'bg-foreground/15'
               }`} />
             )}
           </React.Fragment>
@@ -104,7 +121,7 @@ function StepBar({ current }) {
 
 function CheckoutTrustConsole({ current, items, membership, appointment }) {
   const hasVisit = items.length > 0;
-  const visitTotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const visitTotal = cartItemsTotal(items);
   const rail = [
     {
       icon: CreditCard,
@@ -137,24 +154,29 @@ function CheckoutTrustConsole({ current, items, membership, appointment }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
-      className="mb-7 grid grid-cols-1 md:grid-cols-2 gap-2 rounded-[1.35rem] border border-accent/20 bg-accent/[0.055] p-2 shadow-[0_18px_70px_hsl(var(--accent)/0.08)] backdrop-blur-xl"
+      className="mb-6 grid grid-cols-2 gap-2"
     >
       {rail.map(({ icon: Icon, label, value, active }) => (
         <div key={label} className={`rounded-xl border px-2 py-2.5 text-center transition-colors ${
-          active ? 'border-accent/24 bg-background/55' : 'border-foreground/[0.08] bg-background/30'
+          active ? 'border-foreground/20 bg-foreground/[0.05]' : 'border-foreground/[0.08] bg-background/30'
         }`}>
-          <Icon className={`mx-auto h-3.5 w-3.5 ${active ? 'text-accent' : 'text-foreground/45'}`} strokeWidth={1.6} />
-          <p className="mt-1 font-body text-[8px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
-          <p className="mt-0.5 truncate font-body text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
+          <Icon className={`mx-auto h-3.5 w-3.5 ${active ? 'text-foreground' : 'text-foreground/40'}`} strokeWidth={1.6} />
+          <p className="mt-1 font-body text-[11px] uppercase tracking-[0.16em] text-foreground/45">{label}</p>
+          <p className="mt-0.5 truncate font-body text-[13px] font-semibold uppercase tracking-[0.08em] text-foreground/72">{value}</p>
         </div>
       ))}
+      <div className="col-span-2 mt-1">
+        <ClinicalTrustStrip variant="inline" linkToTeam={false} />
+      </div>
     </motion.div>
   );
 }
 
 /* ─── Step 0: Review ─────────────────────────────────────────── */
 function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext }) {
-  const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
+  const { user: reviewUser } = useAuthStore();
+  const isSignedIn = Boolean(reviewUser);
+  const itemsTotal = cartItemsTotal(items);
   const hasItems = items.length > 0 || membership;
   const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
     ? membership.name
@@ -176,7 +198,7 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
         >
           Start <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
         </Link>
-        <p className="mt-4 font-body text-[10px] font-black uppercase tracking-[0.18em] text-foreground/38">
+        <p className="mt-4 font-body text-[13px] font-black uppercase tracking-[0.18em] text-foreground/38">
           Bay Area · Licensed Registered Nurse
         </p>
       </div>
@@ -187,29 +209,53 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
     <div className="space-y-4">
       <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Review</h1>
 
+      {/* Logged-out nudge — autofill via sign-in, or we create an account on
+          purchase (the opt-in on the pay step sends signupIntent by default). */}
+      {!isSignedIn && (
+        <div className="flex items-start gap-3 rounded-2xl border border-foreground/12 bg-foreground/[0.05] px-4 py-3.5">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-foreground/[0.08]">
+            <UserPlus className="h-4 w-4 text-foreground" strokeWidth={1.8} />
+          </span>
+          <div className="min-w-0">
+            <p className="font-body text-sm font-semibold text-foreground/85">
+              Have an account?{' '}
+              <Link to="/login?next=/checkout" className="text-foreground underline underline-offset-4 hover:no-underline">
+                Sign in to autofill
+              </Link>
+            </p>
+            <p className="mt-0.5 font-body text-[13px] leading-snug text-foreground/55">
+              We'll create your account so you can manage bookings &amp; plans.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* One-time items */}
       {items.length > 0 && (
         <div className="space-y-2">
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Visit</p>
+          <p className="font-body text-[13px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Visit</p>
           {items.map((item) => (
             <div key={item.cartKey} className="flex items-center gap-3 p-3.5 rounded-2xl border border-white/10 bg-white/[0.03]">
-              <div className="p-2 rounded-xl bg-accent/10 shrink-0">
+              <div className="p-2 rounded-xl bg-foreground/[0.08] shrink-0">
                 {item.type === 'im'
-                  ? <Syringe className="w-4 h-4 text-accent" strokeWidth={1.5} />
-                  : <Droplets className="w-4 h-4 text-accent" strokeWidth={1.5} />
+                  ? <Syringe className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+                  : <Droplets className="w-4 h-4 text-foreground" strokeWidth={1.5} />
                 }
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-body text-xs tracking-widest uppercase text-foreground truncate">{item.label}</p>
+                {cartItemQuantity(item) > 1 && (
+                  <p className="mt-0.5 font-body text-[13px] text-foreground/40">${item.price.toLocaleString()} x {cartItemQuantity(item)}</p>
+                )}
               </div>
-              <span className="font-heading text-xl text-foreground tracking-wide">${item.price.toLocaleString()}</span>
-              <button type="button" onClick={() => onRemoveItem(item.cartKey)} aria-label={`Remove ${item.label}`} className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
+              <span className="font-heading text-xl text-foreground tracking-wide">${cartItemTotal(item).toLocaleString()}</span>
+              <button type="button" onClick={() => onRemoveItem(item.cartKey)} aria-label={`Remove ${item.label}`} className="rounded-full text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40">
                 <X className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </div>
           ))}
           <div className="flex justify-between items-center pt-2 px-1">
-            <span className="font-body text-[10px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
+            <span className="font-body text-[13px] tracking-[0.25em] uppercase text-foreground/40">Total</span>
             <span className="font-heading text-2xl text-foreground tracking-wide">${itemsTotal.toLocaleString()}</span>
           </div>
         </div>
@@ -218,20 +264,20 @@ function ReviewStep({ items, membership, onRemoveItem, onClearMembership, onNext
       {/* Subscription */}
       {membership && (
         <div className="space-y-2 mt-4">
-          <p className="font-body text-[10px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Plan</p>
-          <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-accent/20 bg-accent/[0.05]">
-            <div className="p-2 rounded-xl bg-accent/10 shrink-0">
-              <Sparkles className="w-4 h-4 text-accent" strokeWidth={1.5} />
+          <p className="font-body text-[13px] tracking-[0.3em] uppercase text-foreground/40 mb-3">Plan</p>
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-foreground/12 bg-foreground/[0.04]">
+            <div className="p-2 rounded-xl bg-foreground/[0.08] shrink-0">
+              <Sparkles className="w-4 h-4 text-foreground" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-body text-xs tracking-widest uppercase text-foreground">{membershipTitle}</p>
-              <p className="font-body text-[10px] text-foreground/40 capitalize">{membership.ivCount} / mo</p>
+              <p className="font-body text-[13px] text-foreground/40 capitalize">{membership.ivCount} / mo</p>
             </div>
             <div className="text-right">
               <span className="font-heading text-xl text-foreground tracking-wide">${membership.price.toLocaleString()}</span>
-              <p className="font-body text-[10px] text-foreground/40">/{membership.billing === 'annual' ? 'yr' : 'mo'}</p>
+              <p className="font-body text-[13px] text-foreground/40">/{membership.billing === 'annual' ? 'yr' : 'mo'}</p>
             </div>
-            <button type="button" onClick={onClearMembership} aria-label="Remove subscription from cart" className="text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none">
+            <button type="button" onClick={onClearMembership} aria-label="Remove subscription from cart" className="rounded-full text-foreground/45 hover:text-foreground transition-colors p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40">
               <X className="w-4 h-4" strokeWidth={1.8} />
             </button>
           </div>
@@ -260,20 +306,35 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       notes: '',
       dob: '',
       guests: '1',
-      covidPositive: 'No',
-      infectiousDisease: 'No',
-      ivBefore: 'Yes',
-      medicalConditions: 'None of the above',
-      allergies: '',
-      medications: '',
-      emergencyContact: '',
-      privacyAck: false,
-      treatmentConsent: false,
-      generalConsent: false,
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      // The customer sees ONE combined consent checkbox. The three individual
+      // Acuity consent flags (privacyAck/treatmentConsent/generalConsent) are
+      // derived from `combinedConsent` in the checkout payload so the audit
+      // log stays granular. Clinical intake is captured by the nurse on
+      // arrival, not here.
+      combinedConsent: false,
     },
   });
 
   const selectedDate = watch('date');
+
+  // Register the address field for required-validation. The visible control is a
+  // controlled AddressAutocomplete (no DOM ref), so we drive its value through
+  // watch/setValue below rather than RHF's input ref.
+  register('address', { required: 'Address needed' });
+
+  // Derive ZIP from the address so the user never types it twice. We take the
+  // last 5-digit run in the address (ZIP sits at the end of US addresses) and
+  // only fall back to a manual ZIP field when none can be parsed.
+  const addressValue = watch('address') || '';
+  const zipValue = watch('zip') || '';
+  const derivedZip = extractZip(addressValue);
+  useEffect(() => {
+    if (derivedZip && derivedZip !== zipValue) {
+      setValue('zip', derivedZip, { shouldValidate: true });
+    }
+  }, [derivedZip, zipValue, setValue]);
 
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -358,30 +419,36 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <h1 className="font-heading text-h1 text-foreground uppercase mb-6">Visit</h1>
 
-      {/* Address */}
+      {/* Address — autocomplete via the keyless /api/address-search endpoint. */}
       <div>
         <label htmlFor="co-service-address" className={labelClass}>Address *</label>
-        <input
+        <AddressAutocomplete
           id="co-service-address"
-          {...register('address', { required: 'Address needed' })}
-          placeholder="Street, unit, city"
+          name="address"
+          autoComplete="street-address"
+          value={addressValue}
+          onChange={(text) => setValue('address', text, { shouldValidate: true })}
+          onSelect={(sel) => {
+            // Compose the full single-line address so the ZIP auto-derives.
+            const composed = [sel.street, sel.city, [sel.state, sel.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+            setValue('address', composed || sel.street || '', { shouldValidate: true });
+            if (sel.zip) setValue('zip', sel.zip.replace(/\D/g, '').slice(0, 5), { shouldValidate: true });
+          }}
+          placeholder="Street, unit, city, ZIP"
           className={fieldClass}
         />
         {errors.address && <p className={errClass}>{errors.address.message}</p>}
       </div>
 
-      {/* ZIP code — service area enforcement */}
-      <div>
+      {/* ZIP — auto-derived from the address above; only shown if we can't parse one. */}
+      <div className={derivedZip ? 'hidden' : ''}>
         <label htmlFor="co-zip-code" className={labelClass}>ZIP *</label>
         <input
           id="co-zip-code"
+          autoComplete="postal-code"
           {...register('zip', {
             required: 'ZIP needed',
             pattern: { value: /^\d{5}$/, message: '5 digits' },
-            validate: (v) =>
-              COVERED_ZIPS.has(v.trim())
-                ? true
-                : 'Outside service area.',
           })}
           inputMode="numeric"
           maxLength={5}
@@ -435,7 +502,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                 <button
                   type="button"
                   onClick={() => fetchSlots(selectedDate)}
-                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-foreground/50 hover:text-foreground transition-colors shrink-0"
+                  className="flex items-center gap-1.5 font-body text-[13px] tracking-widest uppercase text-foreground/50 hover:text-foreground transition-colors shrink-0"
                 >
                   <RefreshCw className="w-3 h-3" strokeWidth={2} /> Retry
                 </button>
@@ -458,7 +525,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                     setNextAvailLoading(false);
                   }}
                   disabled={nextAvailLoading}
-                  className="flex items-center gap-1.5 font-body text-[10px] tracking-widest uppercase text-accent hover:text-accent/70 transition-colors shrink-0 disabled:opacity-50"
+                  className="flex items-center gap-1.5 font-body text-[13px] tracking-widest uppercase text-foreground hover:text-foreground/70 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {nextAvailLoading
                     ? <><Loader2 className="w-3 h-3 animate-spin" strokeWidth={2} /> Searching…</>
@@ -484,10 +551,10 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
                         timeLabel: label,
                         timezone: TZ,
                       })}
-                      className={`py-3.5 rounded-xl font-body text-[11px] tracking-wide transition-all duration-200 ${
+                      className={`py-3.5 rounded-xl font-body text-[14px] tracking-wide transition-all duration-200 ${
                         active
-                          ? 'bg-accent text-background shadow-[0_0_10px_-2px_hsl(var(--accent)/0.5)]'
-                          : 'border border-white/15 text-foreground/70 hover:border-accent/50 hover:text-foreground'
+                          ? 'bg-foreground text-background'
+                          : 'border border-foreground/15 text-foreground/70 hover:border-foreground/50 hover:text-foreground'
                       }`}
                     >
                       {label}
@@ -506,6 +573,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
           <input
             id="co-dob"
             type="date"
+            autoComplete="bday"
             {...register('dob', { required: 'Birthdate needed' })}
             className={fieldClass}
           />
@@ -519,121 +587,73 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <label htmlFor="co-medical-conditions" className={labelClass}>Health *</label>
-          <select id="co-medical-conditions" {...register('medicalConditions', { required: true })} className={fieldClass}>
-            {[
-              'None of the above',
-              'Allergies',
-              'Active Viral or Bacterial infection',
-              'Diabetes (Type I or II)',
-              'Heart Disease',
-              'Kidney Problems',
-              'Liver Problems',
-              'Pregnancy/Breastfeeding',
-              'Other symptoms or medical conditions not listed above',
-            ].map((value) => <option key={value} value={value}>{value}</option>)}
-          </select>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[
-            ['covidPositive', 'Covid?'],
-            ['infectiousDisease', 'Infection?'],
-            ['ivBefore', 'IV before?'],
-          ].map(([name, label]) => (
-            <div key={name}>
-              <label htmlFor={`co-${name}`} className={labelClass}>{label}</label>
-              <select id={`co-${name}`} {...register(name, { required: true })} className={fieldClass}>
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Notes */}
+      {/* Notes — special requests only. Clinical intake (allergies/meds/
+          conditions/covid/infectious/IV-history) is now captured by the nurse
+          on arrival, not here. */}
       <div>
-        <label htmlFor="co-medical-notes" className={labelClass}>Registered nurse note</label>
+        <label htmlFor="co-medical-notes" className={labelClass}>Notes for nurse</label>
         <textarea
           id="co-medical-notes"
           {...register('notes')}
           rows={3}
-          placeholder="Allergies, access notes, health conditions, preferences…"
+          placeholder="Access, gate code, parking, anything else…"
           className={`${fieldClass} resize-none`}
         />
       </div>
 
-      <div>
-        <label htmlFor="co-allergies" className={labelClass}>Allergies</label>
-        <textarea
-          id="co-allergies"
-          {...register('allergies')}
-          rows={2}
-          placeholder="None, or list details"
-          className={`${fieldClass} resize-none`}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="co-medications" className={labelClass}>Meds</label>
-        <textarea
-          id="co-medications"
-          {...register('medications')}
-          rows={2}
-          placeholder="None, or list details"
-          className={`${fieldClass} resize-none`}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="co-emergency-contact" className={labelClass}>Emergency *</label>
-        <input
-          id="co-emergency-contact"
-          {...register('emergencyContact', { required: 'Emergency contact needed' })}
-          placeholder="Name + phone"
-          className={fieldClass}
-        />
-        {errors.emergencyContact && <p className={errClass}>{errors.emergencyContact.message}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="co-emergency-name" className={labelClass}>Emergency name *</label>
+          <input
+            id="co-emergency-name"
+            {...register('emergencyContactName', { required: 'Needed' })}
+            placeholder="Full name"
+            className={fieldClass}
+          />
+          {errors.emergencyContactName && <p className={errClass}>{errors.emergencyContactName.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="co-emergency-phone" className={labelClass}>Emergency phone *</label>
+          <input
+            id="co-emergency-phone"
+            type="tel"
+            inputMode="tel"
+            {...register('emergencyContactPhone', { required: 'Needed' })}
+            placeholder="Phone"
+            className={fieldClass}
+          />
+          {errors.emergencyContactPhone && <p className={errClass}>{errors.emergencyContactPhone.message}</p>}
+        </div>
       </div>
 
       <div className="space-y-0 rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-        <p className="font-body text-[9px] tracking-[0.25em] uppercase text-foreground/45 px-4 pt-4 pb-3">
+        <p className="font-body text-[12px] tracking-[0.25em] uppercase text-foreground/45 px-4 pt-4 pb-3">
           Required
         </p>
-        {[
-          {
-            name: 'privacyAck',
-            text: 'Privacy use ok.',
-          },
-          {
-            name: 'treatmentConsent',
-            text: 'Risks reviewed.',
-          },
-          {
-            name: 'generalConsent',
-            text: 'Terms accepted. 18+.',
-          },
-        ].map(({ name, text }, i) => (
-          <label
-            key={name}
-            className={`flex gap-3 px-4 py-3.5 font-body text-xs leading-relaxed text-foreground/65 cursor-pointer hover:bg-white/[0.02] transition-colors ${i > 0 ? 'border-t border-white/[0.06]' : ''}`}
-          >
-            <input
-              type="checkbox"
-              {...register(name, { required: 'Required' })}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
-            />
-            <span>{text}</span>
-          </label>
-        ))}
-        {(errors.privacyAck || errors.treatmentConsent || errors.generalConsent) && (
-          <p className={`${errClass} px-4 pb-3`}>All required.</p>
+        <label className="flex gap-3 px-4 py-3.5 font-body text-xs leading-relaxed text-foreground/65 cursor-pointer hover:bg-white/[0.02] transition-colors">
+          <input
+            type="checkbox"
+            {...register('combinedConsent', { required: 'Required' })}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+          />
+          <span>
+            I agree to the{' '}
+            <a href="/privacy-policy" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Privacy Notice &amp; HIPAA terms</a>
+            , the{' '}
+            <a href="/telehealth-disclaimer" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Telehealth Consent</a>
+            , and I confirm I&apos;m 18+ and accept the{' '}
+            <a href="/terms-of-service" target="_blank" rel="noreferrer" className="underline decoration-foreground/40 underline-offset-2 hover:decoration-foreground">Terms of Service</a>.
+          </span>
+        </label>
+        {errors.combinedConsent && (
+          <p className={`${errClass} px-4 pb-3`}>Required.</p>
         )}
+        <p className="px-4 pb-3 pt-1 font-body text-[11px] font-medium leading-snug text-foreground/45">
+          Clinical intake (allergies, medications, conditions) is completed with your nurse on arrival.
+        </p>
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
         <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
@@ -647,7 +667,7 @@ function AppointmentStep({ onNext, onBack, defaultValues, appointmentTypeId }) {
       </div>
 
       {!selectedSlot && selectedDate && slots.length > 0 && (
-        <p className="font-body text-[10px] text-foreground/45 text-center -mt-1">Pick time.</p>
+        <p className="font-body text-[13px] text-foreground/45 text-center -mt-1">Pick time.</p>
       )}
     </form>
   );
@@ -668,12 +688,12 @@ function ContactStep({ onNext, onBack, defaultValues }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="co-first-name" className={labelClass}>First Name *</label>
-          <input id="co-first-name" {...register('firstName', { required: 'Needed' })} placeholder="First" className={fieldClass} />
+          <input id="co-first-name" autoComplete="given-name" {...register('firstName', { required: 'Needed' })} placeholder="First" className={fieldClass} />
           {errors.firstName && <p className={errClass}>{errors.firstName.message}</p>}
         </div>
         <div>
           <label htmlFor="co-last-name" className={labelClass}>Last Name *</label>
-          <input id="co-last-name" {...register('lastName', { required: 'Needed' })} placeholder="Last" className={fieldClass} />
+          <input id="co-last-name" autoComplete="family-name" {...register('lastName', { required: 'Needed' })} placeholder="Last" className={fieldClass} />
           {errors.lastName && <p className={errClass}>{errors.lastName.message}</p>}
         </div>
       </div>
@@ -684,6 +704,7 @@ function ContactStep({ onNext, onBack, defaultValues }) {
           id="co-email"
           type="email"
           inputMode="email"
+          autoComplete="email"
           {...register('email', {
             required: 'Email needed',
             pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Valid email' }
@@ -700,14 +721,15 @@ function ContactStep({ onNext, onBack, defaultValues }) {
           id="co-phone"
           type="tel"
           inputMode="tel"
+          autoComplete="tel"
           {...register('phone', { required: 'Phone needed' })}
-          placeholder="+1 (415) 000-0000"
+          placeholder="Phone number"
           className={fieldClass}
         />
         {errors.phone && <p className={errClass}>{errors.phone.message}</p>}
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
         <button type="button" onClick={onBack} aria-label="Back to previous checkout step" className="flex items-center gap-2 px-6 py-3.5 font-body text-sm tracking-widest uppercase rounded-2xl border border-foreground/20 text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
@@ -740,7 +762,33 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
   };
   const contactReady = hasCompleteContact(checkoutContact);
 
-  const itemsTotal = items.reduce((sum, i) => sum + i.price, 0);
+  // Wave-3: account intent on checkout.
+  // - Plans REQUIRE an account: if not signed in, we collect name+email up
+  //   front and bundle it as `signupIntent`; the API provisions an auth user
+  //   so the welcome email is a real magic link.
+  // - One-time checkouts get a tiny opt-in checkbox — if checked, we also
+  //   send `signupIntent` so the recipient can sign in immediately. If not,
+  //   the welcome email still goes out post-fulfillment (CTA → /signup with
+  //   the email pre-filled).
+  const { user: authedUser } = useAuthStore();
+  const isSignedIn = Boolean(authedUser);
+  const planAccountRequired = Boolean(membership) && !isSignedIn;
+  // Default ON for logged-out one-time buyers so the top-of-form nudge's promise
+  // ("we'll create your account") holds — signupIntent is sent using the email
+  // they entered. They can still opt out via the checkbox below.
+  const [createAccountOptIn, setCreateAccountOptIn] = useState(!membership && !isSignedIn);
+  // For the plan-gate we ALWAYS need an account on submit, so signupIntent is
+  // implicit when membership is set and the user is not signed in.
+  const signupIntent = (planAccountRequired || (!membership && createAccountOptIn))
+    ? {
+        email: checkoutContact.email,
+        name: checkoutContact.name,
+        firstName: checkoutContact.firstName,
+        lastName: checkoutContact.lastName,
+      }
+    : null;
+
+  const itemsTotal = cartItemsTotal(items);
   const hasMembership = !!membership;
   const hasItems = items.length > 0;
   const membershipTitle = membership?.name?.toLowerCase().includes('subscription')
@@ -783,21 +831,17 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     setError(null);
     track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
       funnel: 'legacy_checkout',
-      mode: hasMembership ? 'subscription' : 'payment',
+      mode: 'payment',
       has_membership: hasMembership,
       item_count: items.length,
       amount_due: dueToday,
     });
     try {
-      // Determine mode — if there's a subscription, that goes first
-      // (one-time items can be a separate session or combined)
-      const mode = hasMembership ? 'subscription' : 'payment';
-
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode,
+          mode: 'payment',
           items: hasItems ? items : [],
           membership: hasMembership ? membership : null,
           contact: {
@@ -808,6 +852,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             phone: checkoutContact.phone,
           },
           paymentMethod,
+          ...(signupIntent ? { signupIntent } : {}),
           appointment: appointment
             ? {
                 address: appointment.address,
@@ -816,17 +861,16 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 notes: appointment.notes,
                 dob: appointment.dob,
                 guests: appointment.guests,
-                covidPositive: appointment.covidPositive,
-                infectiousDisease: appointment.infectiousDisease,
-                ivBefore: appointment.ivBefore,
-                medicalConditions: appointment.medicalConditions,
-                allergies: appointment.allergies,
-                medications: appointment.medications,
                 emergencyContact: appointment.emergencyContact,
+                emergencyContactName: appointment.emergencyContactName,
+                emergencyContactPhone: appointment.emergencyContactPhone,
                 additionalComments: appointment.additionalComments,
-                privacyAck: appointment.privacyAck,
-                treatmentConsent: appointment.treatmentConsent,
-                generalConsent: appointment.generalConsent,
+                // The customer sees ONE combined consent checkbox; we derive
+                // all three individual Acuity consent flags from it so the
+                // server-side audit log still records all three.
+                privacyAck: Boolean(appointment.combinedConsent),
+                treatmentConsent: Boolean(appointment.combinedConsent),
+                generalConsent: Boolean(appointment.combinedConsent),
                 cbdConsent: appointment.cbdConsent,
                 nadConsent: appointment.nadConsent,
                 acuityTypeId: appointment.acuitySlot?.appointmentTypeID || '',
@@ -839,14 +883,18 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Something went wrong');
+      if (!res.ok) {
+        const err = new Error(data.error || 'Something went wrong');
+        err.code = data.code;
+        throw err;
+      }
       orchestrateOrderHandoff({
         id: `CHK-${Date.now().toString().slice(-6)}`,
         service: membership ? membershipTitle : (items[0]?.label || 'Avalon visit'),
         plan: membership?.name,
         date: appointment?.date || 'First visit pending',
         time: appointment?.acuitySlot?.timeLabel || 'Intake',
-        address: appointment?.address || 'Service area pending',
+        address: appointment?.address || 'Location pending',
         items,
         subtotal: itemsTotal,
         contact: {
@@ -883,7 +931,13 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       setLoading(false);
     } catch (err) {
       checkoutInFlightRef.current = false;
-      setError('Checkout could not be started. Please try again or contact Avalon.');
+      if (err?.code === 'plan_requires_account') {
+        setError('Plan purchases require an account. Add your name and email above, or sign in first.');
+      } else if (err?.code === 'signup_intent_failed') {
+        setError('We could not finish setting up your account. Please try again or contact Avalon.');
+      } else {
+        setError(err?.message || 'Checkout could not be started. Please try again or contact Avalon.');
+      }
       setLoading(false);
       track(ANALYTICS_EVENTS.CHECKOUT_FAILED, {
         funnel: 'legacy_checkout',
@@ -894,7 +948,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
     }
   };
 
-  const labelClass = "font-body text-[10px] tracking-[0.24em] uppercase text-foreground/48";
+  const labelClass = "font-body text-[13px] tracking-[0.24em] uppercase text-foreground/48";
 
   return (
     <div className="space-y-4">
@@ -911,8 +965,8 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
             className="fixed inset-0 z-[120] flex min-h-[100svh] items-center justify-center bg-background/92 px-6 text-center backdrop-blur-xl"
           >
             <div className="max-w-sm">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-accent" strokeWidth={2.2} />
-              <p className="mt-6 font-body text-[11px] font-black uppercase tracking-[0.22em] text-accent">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-foreground" strokeWidth={2.2} />
+              <p className="mt-6 font-body text-[14px] font-black uppercase tracking-[0.22em] text-foreground">
                 Redirecting to secure checkout...
               </p>
               <p className="mt-3 font-body text-sm font-semibold leading-relaxed text-foreground/62">
@@ -927,13 +981,17 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       {/* Order summary */}
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl space-y-3">
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
+      <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl space-y-3">
         <p className={`${labelClass} relative`}>Total</p>
         {items.map((item) => (
           <div key={item.cartKey} className="relative flex justify-between items-center">
-            <span className="font-body text-sm font-semibold text-foreground tracking-wide">{item.label}</span>
-            <span className="font-body text-sm font-semibold text-foreground">${item.price.toLocaleString()}</span>
+            <span className="min-w-0 font-body text-sm font-semibold text-foreground tracking-wide">
+              <span className="block truncate">{item.label}</span>
+              {cartItemQuantity(item) > 1 && (
+                <span className="mt-0.5 block text-[13px] font-medium text-foreground/42">${item.price.toLocaleString()} x {cartItemQuantity(item)}</span>
+              )}
+            </span>
+            <span className="shrink-0 font-body text-sm font-semibold text-foreground">${cartItemTotal(item).toLocaleString()}</span>
           </div>
         ))}
         {membership && (
@@ -949,11 +1007,11 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </span>
         </div>
         {hasItems && (
-          <div className="relative rounded-2xl border border-amber-300/28 bg-amber-300/[0.09] px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
+          <div className="relative rounded-2xl border border-foreground/12 bg-foreground/[0.04] px-4 py-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
             <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-100" strokeWidth={2} />
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground/70" strokeWidth={2} />
               <div>
-                <p className="font-body text-[11px] font-black uppercase tracking-[0.14em] text-amber-100">
+                <p className="font-body text-[14px] font-black uppercase tracking-[0.14em] text-foreground/70">
                   Paid in full
                 </p>
               </div>
@@ -969,9 +1027,8 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
       </div>
 
       {!contactReady && (
-        <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
-          <p className={`${labelClass} relative`}>You</p>
+        <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl">
+            <p className={`${labelClass} relative`}>You</p>
           <div className="relative mt-3 grid gap-3">
             <input
               aria-label="Full name"
@@ -980,7 +1037,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
               disabled={loading}
               placeholder="Full name"
               autoComplete="name"
-              className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
+              className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36 focus-visible:ring-2 focus-visible:ring-foreground/40"
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <input
@@ -991,7 +1048,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 placeholder="Phone"
                 autoComplete="tel"
                 inputMode="tel"
-                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
+                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36 focus-visible:ring-2 focus-visible:ring-foreground/40"
               />
               <input
                 aria-label="Email"
@@ -1001,15 +1058,55 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
                 placeholder="Email"
                 autoComplete="email"
                 inputMode="email"
-                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36"
+                className="min-h-[58px] w-full rounded-2xl border border-foreground/14 bg-foreground/[0.04] px-4 font-body text-lg font-semibold text-foreground placeholder:text-foreground/44 outline-none focus:border-foreground/36 focus-visible:ring-2 focus-visible:ring-foreground/40"
               />
             </div>
           </div>
         </div>
       )}
 
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-foreground/12 bg-background/56 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_24px_90px_hsl(var(--foreground)/0.10)] backdrop-blur-2xl">
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.09] via-transparent to-transparent" />
+      {/* Wave-3 account intent — plan gate or one-time opt-in */}
+      {hasMembership && isSignedIn && (
+        <div className="rounded-2xl border border-foreground/10 bg-background/32 px-4 py-3 backdrop-blur-xl flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-body text-[12px] tracking-[0.22em] uppercase text-foreground/45">Signed in</p>
+            <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">{authedUser?.email || authedUser?.username || 'Your account'}</p>
+          </div>
+          <Link to="/login?next=/checkout" className="shrink-0 font-body text-[12px] tracking-widest uppercase text-foreground/55 hover:text-foreground underline-offset-4 hover:underline">
+            Use different
+          </Link>
+        </div>
+      )}
+      {planAccountRequired && (
+        <div className="rounded-2xl border border-foreground/20 bg-foreground/[0.05] px-4 py-4 backdrop-blur-xl space-y-2">
+          <p className="font-body text-[12px] tracking-[0.22em] uppercase text-foreground/55">Membership requires an account</p>
+          <p className="font-body text-[13px] leading-relaxed text-foreground/72">
+            We'll set up your account using the name and email above and email you a one-tap sign-in link after payment.
+          </p>
+          <p className="font-body text-[12px] text-foreground/55">
+            Already have an account?{' '}
+            <Link to="/login?next=/checkout" className="text-foreground underline underline-offset-4 hover:no-underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      )}
+      {!hasMembership && !isSignedIn && contactReady && (
+        <label className="flex gap-3 rounded-2xl border border-foreground/10 bg-background/32 px-4 py-3 backdrop-blur-xl cursor-pointer hover:border-foreground/24 transition-colors">
+          <input
+            type="checkbox"
+            checked={createAccountOptIn}
+            onChange={(event) => setCreateAccountOptIn(event.target.checked)}
+            disabled={loading}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-foreground"
+          />
+          <span className="font-body text-[13px] leading-relaxed text-foreground/72">
+            Create an account so I can see this order, book again faster, and message my nurse.
+          </span>
+        </label>
+      )}
+
+      <div className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-background/32 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl">
         <p className={`${labelClass} relative`}>Pay with</p>
         <div className="relative mt-3 flex min-h-[72px] items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-background/[0.18] p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)]">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-foreground/[0.08] text-foreground">
@@ -1017,26 +1114,27 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate font-body text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Stripe</span>
-            <span className="mt-1 block font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card · Apple Pay · Google Pay</span>
+            <span className="mt-1 block font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground/44">Card · Apple Pay · Google Pay</span>
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
-          <p className="font-body text-xs text-red-400">{error}</p>
+        <div role="alert" className="flex items-center gap-2.5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+          <p className="font-body text-xs">{error}</p>
         </div>
       )}
 
-      <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onBack} disabled={loading} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 disabled:opacity-50 transition-colors">
+      <div className="sticky bottom-0 z-30 flex gap-3 bg-gradient-to-t from-background via-background to-transparent pt-4 pb-3">
+        <button type="button" onClick={onBack} disabled={loading} aria-label="Back to previous checkout step" className="flex min-h-[58px] items-center gap-2 rounded-full border border-foreground/16 bg-background/42 px-5 font-body text-sm font-bold tracking-widest uppercase text-foreground/62 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] backdrop-blur-xl hover:text-foreground hover:border-foreground/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
         </button>
         <button
           type="button"
           onClick={handleCheckout}
           disabled={loading}
-          className="flex min-h-[58px] flex-1 items-center justify-center gap-2.5 rounded-full bg-foreground px-5 font-body text-sm font-extrabold tracking-widest uppercase text-background shadow-[0_24px_80px_hsl(var(--foreground)/0.16)] hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+          className="flex min-h-[58px] flex-1 items-center justify-center gap-2.5 rounded-full bg-foreground px-5 font-body text-sm font-extrabold tracking-widest uppercase text-background shadow-[0_24px_80px_hsl(var(--foreground)/0.16)] hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -1051,7 +1149,7 @@ function PaymentStep({ items, membership, contact, appointment, onBack }) {
         </button>
       </div>
 
-      <p className="font-body text-[10px] text-center text-foreground/45 tracking-wide">
+      <p className="font-body text-[13px] text-center text-foreground/45 tracking-wide">
         Review required.
       </p>
     </div>
@@ -1084,17 +1182,12 @@ export default function Checkout() {
         acuitySlot: sourceAppointment.acuitySlot || null,
         dob: sourceAppointment.dob || '',
         guests: sourceAppointment.guests || '1',
-        covidPositive: sourceAppointment.covidPositive || 'No',
-        infectiousDisease: sourceAppointment.infectiousDisease || 'No',
-        ivBefore: sourceAppointment.ivBefore || 'Yes',
-        medicalConditions: sourceAppointment.medicalConditions || 'None of the above',
-        allergies: sourceAppointment.allergies || '',
-        medications: sourceAppointment.medications || '',
         emergencyContact: sourceAppointment.emergencyContact || '',
+        emergencyContactName: sourceAppointment.emergencyContactName || '',
+        emergencyContactPhone: sourceAppointment.emergencyContactPhone || '',
         additionalComments: sourceAppointment.additionalComments || '',
-        privacyAck: sourceAppointment.privacyAck || false,
-        treatmentConsent: sourceAppointment.treatmentConsent || false,
-        generalConsent: sourceAppointment.generalConsent || false,
+        combinedConsent: Boolean(sourceAppointment.combinedConsent
+          || (sourceAppointment.privacyAck && sourceAppointment.treatmentConsent && sourceAppointment.generalConsent)),
         cbdConsent: sourceAppointment.cbdConsent || false,
         nadConsent: sourceAppointment.nadConsent || false,
       } : null,
@@ -1178,11 +1271,13 @@ export default function Checkout() {
           >
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
             <div className="relative">
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-foreground/14 bg-foreground/[0.08] text-foreground">
-                <Droplets className="h-7 w-7" strokeWidth={2.45} />
+              {/* Audit finding J2: standard 48×48 icon chip, matches every
+                  other card icon slot on the site. */}
+              <div className="av-icon-chip mb-5 text-foreground">
+                <Droplets className="h-6 w-6" strokeWidth={2.2} />
               </div>
-              <p className="font-body text-[11px] font-black uppercase tracking-[0.22em] text-foreground/54">Checkout</p>
-              <h1 className="mt-2 font-heading text-[3.1rem] uppercase leading-none tracking-normal text-foreground sm:text-[4rem]">Choose IV</h1>
+              <p className="av-eyebrow text-foreground/54">Checkout</p>
+              <h1 className="mt-2 font-heading text-display uppercase leading-none tracking-normal text-foreground">Choose IV</h1>
               <p className="mt-3 max-w-md font-body text-sm font-semibold leading-relaxed text-foreground/62">
                 Select a therapy first. Then confirm address, patient details, and secure payment.
               </p>
@@ -1219,10 +1314,8 @@ export default function Checkout() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="relative overflow-hidden rounded-[2rem] border border-foreground/[0.13] bg-background/58 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),0_32px_120px_hsl(var(--foreground)/0.14)] backdrop-blur-2xl sm:p-5"
+          className="relative"
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground/[0.08] via-transparent to-transparent" />
-          {hasCheckoutSelection && <CheckoutTrustConsole current={step} items={items} membership={membership} appointment={appointment} />}
           {hasCheckoutSelection && step !== 3 && <StepBar current={step} />}
           <div className="relative px-1 sm:px-2">
             <AnimatePresence mode="wait" custom={dir}>

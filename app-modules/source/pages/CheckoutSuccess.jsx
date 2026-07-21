@@ -4,6 +4,9 @@ import { useSeo } from '@/lib/seo';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Check, ArrowRight, CreditCard, MessageCircle, ShieldCheck } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
+import { readLastBooking } from '@/lib/localOs';
+import ReceiptCard from '@/components/booking/ReceiptCard';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -40,6 +43,30 @@ export default function CheckoutSuccess() {
 
   const verified = Boolean(verification.paid) || verification.state === 'local';
   const isChecking = verification.state === 'checking';
+  // Read the booking record that BookNow stored just before checkout. Same
+  // shape BookingConfirmation reads from, so the receipt looks identical on
+  // both pages and the customer can screenshot either one.
+  const [localBooking] = useState(() => readLastBooking());
+  const referenceNum = localBooking?.id
+    ? `AV-${String(localBooking.id).slice(-6).toUpperCase()}`
+    : null;
+  const dateLabel = localBooking?.date || null;
+  const timeLabel = localBooking?.time || null;
+  const whenLabel = dateLabel && timeLabel
+    ? `${dateLabel} · ${timeLabel}`
+    : dateLabel || null;
+  const depositLabel = localBooking?.depositAmount != null
+    ? `$${Number(localBooking.depositAmount).toLocaleString()} ${verified ? 'paid' : 'due'}`
+    : null;
+  const balanceLabel = localBooking?.balanceDue != null && Number(localBooking.balanceDue) > 0
+    ? `$${Number(localBooking.balanceDue).toLocaleString()} after visit`
+    : null;
+  const nextStepLabel = verified
+    ? (localBooking?.nextStep || 'Clinical review, registered nurse assignment, arrival text.')
+    : null;
+  const hasReceiptData = verified && Boolean(
+    localBooking?.service || whenLabel || localBooking?.address || depositLabel || referenceNum
+  );
   const fulfillmentFailed = verification.fulfillmentStatus === 'acuity_failed';
   const fulfillmentPending = Boolean(verification.pendingFulfillment) || fulfillmentFailed;
   const isSubscription = type === 'subscription' || type === 'membership';
@@ -61,7 +88,7 @@ export default function CheckoutSuccess() {
   return (
     <div className="av-page-surface min-h-screen">
       <Navbar />
-      <div className="max-w-md mx-auto px-4 pt-32 pb-20 text-center">
+      <main id="main-content" className="max-w-xl mx-auto px-4 pt-32 pb-20 text-center">
         <motion.div
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -82,18 +109,33 @@ export default function CheckoutSuccess() {
           <p className="mx-auto mb-8 max-w-sm font-body text-sm font-semibold leading-relaxed text-foreground/62">
             {statusCopy}
           </p>
-          <div className="mb-10 grid grid-cols-3 gap-2">
-            {[
-              [CreditCard, verified ? 'Paid' : isChecking ? 'Check' : 'Issue'],
-              [ShieldCheck, fulfillmentPending ? 'Confirm' : verified ? 'Review' : 'Verify'],
-              [MessageCircle, fulfillmentPending ? 'Nurse' : verified ? 'Text' : 'Support'],
-            ].map(([Icon, label]) => (
-              <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
-                <Icon className="mx-auto h-4 w-4 text-accent/75" strokeWidth={1.8} />
-                <p className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{label}</p>
-              </div>
-            ))}
-          </div>
+          {hasReceiptData ? (
+            <div className="mb-10 text-left">
+              <ReceiptCard
+                service={localBooking?.service || 'IV Therapy Session'}
+                when={whenLabel}
+                location={localBooking?.address || null}
+                depositPaid={depositLabel}
+                balanceDue={balanceLabel}
+                nextStep={nextStepLabel}
+                referenceNum={referenceNum}
+              />
+              <ClinicalTrustStrip variant="compact" className="mx-auto mt-3 max-w-xl" />
+            </div>
+          ) : (
+            <div className="mb-10 grid grid-cols-3 gap-2">
+              {[
+                [CreditCard, verified ? 'Paid' : isChecking ? 'Check' : 'Issue'],
+                [ShieldCheck, fulfillmentPending ? 'Confirm' : verified ? 'Review' : 'Verify'],
+                [MessageCircle, fulfillmentPending ? 'Nurse' : verified ? 'Text' : 'Support'],
+              ].map(([Icon, label]) => (
+                <div key={label} className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.035] p-3">
+                  <Icon className="mx-auto h-4 w-4 text-accent/75" strokeWidth={1.8} />
+                  <p className="mt-3 font-heading text-2xl uppercase leading-none text-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-3">
             <Link
@@ -112,7 +154,7 @@ export default function CheckoutSuccess() {
             )}
           </div>
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }

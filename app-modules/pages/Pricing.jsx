@@ -66,7 +66,7 @@ const TIERS = [
     features: [
       '2 IV credits/month',
       '1 credit may be Advanced tier (≤$399)',
-      '20% off add-ons',
+      '10% off add-ons',
       '1 free add-on per visit',
       '90-min arrival window',
       '3-month minimum',

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BatteryCharging,
+  ChevronLeft,
   Check,
   Droplets,
   Heart,
@@ -11,7 +12,9 @@ import {
   MessageCircle,
   Plane,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
+  Trash2,
   Users,
   Zap,
 } from 'lucide-react';
@@ -38,6 +41,7 @@ const QUICK_ADDONS = [
 ];
 
 const CUSTOM_GOALS = ['Recovery', 'Energy', 'Immunity', 'Glow', 'Travel', 'Performance', 'Longevity'];
+const QUANTITY_OPTIONS = [1, 2, 3, 4];
 
 function pickAddon({ type, match }) {
   const list = type === 'im' ? IM_SHOTS : IV_ADDONS;
@@ -64,13 +68,15 @@ export default function Store() {
   });
 
   const navigate = useNavigate();
-  const { addItem, clearItems } = useCart();
+  const { items: cart, addItem, removeItem, clearItems, itemsTotal } = useCart();
   const [mode, setMode] = useState('guided');
+  const [step, setStep] = useState('base');
   const [goalKey, setGoalKey] = useState('recovery');
   const [selectedProtocol, setSelectedProtocol] = useState(null);
   const [selectedAddons, setSelectedAddons] = useState(new Set());
   const [customGoals, setCustomGoals] = useState(new Set(['Recovery']));
   const [people, setPeople] = useState('1');
+  const [quantity, setQuantity] = useState(1);
   const [customNote, setCustomNote] = useState('');
 
   const goal = GOALS.find((item) => item.key === goalKey) || GOALS[0];
@@ -90,7 +96,12 @@ export default function Store() {
 
   const addonItems = QUICK_ADDON_ITEMS.filter((item) => selectedAddons.has(item.label));
   const addonTotal = addonItems.reduce((sum, item) => sum + item.price, 0);
-  const total = (recommended.price || recommended.doses?.[0]?.price || 0) + addonTotal;
+  const basePrice = recommended.price || recommended.doses?.[0]?.price || 0;
+  const total = (basePrice + addonTotal) * quantity;
+  const cartVisitCount = cart
+    .filter((item) => item.type === 'iv')
+    .reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+  const cartCount = cartVisitCount || cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
   const customNeedsContact = people === '5+';
 
   const toggleAddon = (label) => {
@@ -120,15 +131,46 @@ export default function Store() {
     }
   };
 
-  const continueGuided = () => {
-    clearItems();
-    const price = recommended.price || recommended.doses?.[0]?.price || 0;
-    addItem({ cartKey: recommended.key, label: recommended.label, price, type: 'iv' });
+  const scrollStoreTop = () => {
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      const storeShell = document.querySelector('[data-store-scroll]');
+      if (storeShell) {
+        storeShell.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  };
+
+  const resetBaseStep = () => {
+    setSelectedAddons(new Set());
+    setSelectedProtocol(null);
+    setQuantity(1);
+    setStep('base');
+    scrollStoreTop();
+  };
+
+  const openAddons = () => {
+    setStep('addons');
+    scrollStoreTop();
+  };
+
+  const addGuidedSelection = () => {
+    const orderId = `${recommended.key}-${Date.now()}`;
+    addItem({
+      cartKey: `${orderId}-base`,
+      label: recommended.label,
+      price: basePrice,
+      quantity,
+      type: 'iv',
+    });
     addonItems.forEach((item) => {
       addItem({
-        cartKey: `${item.type}-${item.label}`,
+        cartKey: `${orderId}-${item.type}-${item.label}`,
         label: item.type === 'im' ? `IM · ${item.label}` : item.label,
         price: item.price,
+        quantity,
         type: item.type === 'im' ? 'im' : 'addon',
       });
     });
@@ -136,10 +178,23 @@ export default function Store() {
       mode: 'guided',
       goal: goal.label,
       protocol: recommended.key,
+      quantity,
       addOns: addonItems.map((item) => item.label),
       total,
     });
-    navigate('/book');
+    resetBaseStep();
+  };
+
+  const continueGuided = () => {
+    if (step === 'base') {
+      openAddons();
+      return;
+    }
+    addGuidedSelection();
+  };
+
+  const continueToCheckout = () => {
+    navigate('/checkout');
   };
 
   const continueCustom = () => {
@@ -153,10 +208,10 @@ export default function Store() {
   };
 
   return (
-    <div className="av-page-surface min-h-screen text-foreground">
+    <div data-store-scroll className="av-page-surface h-screen overflow-y-auto text-foreground">
       <Navbar />
 
-      <main className="mx-auto max-w-lg px-4 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-24">
+      <main className="mx-auto max-w-lg px-4 pb-[calc(13rem+env(safe-area-inset-bottom))] pt-24">
         <motion.header
           initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -179,7 +234,10 @@ export default function Store() {
             <button
               key={key}
               type="button"
-              onClick={() => setMode(key)}
+              onClick={() => {
+                setMode(key);
+                if (key === 'guided') setStep('base');
+              }}
               className={`min-h-[52px] rounded-[1rem] font-body text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
                 mode === key ? 'bg-foreground text-background' : 'text-foreground/55'
               }`}
@@ -191,85 +249,135 @@ export default function Store() {
 
         {mode === 'guided' ? (
           <section className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-2">
-              {GOALS.map((item) => {
-                const Icon = item.icon;
-                const active = item.key === goalKey;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => {
-                      setGoalKey(item.key);
-                      setSelectedProtocol(null);
-                    }}
-                    className={`flex min-h-[76px] items-center gap-4 rounded-[1.35rem] border px-4 text-left transition-colors ${
-                      active
-                        ? 'border-foreground/22 bg-foreground text-background'
-                        : 'border-foreground/[0.10] bg-foreground/[0.035] text-foreground'
-                    }`}
-                  >
-                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${
-                      active ? 'border-background/12 bg-background/10' : 'border-foreground/[0.10] bg-foreground/[0.04]'
-                    }`}>
-                      <Icon className="h-5 w-5" strokeWidth={1.75} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-heading text-2xl uppercase leading-none">{item.label}</span>
-                      <span className={`mt-1 block font-body text-sm ${active ? 'text-background/62' : 'text-foreground/52'}`}>{item.sub}</span>
-                    </span>
-                    {active && <Check className="h-4 w-4 shrink-0" strokeWidth={2.4} />}
-                  </button>
-                );
-              })}
-            </div>
+            {cart.length > 0 && (
+              <CartReview
+                items={cart}
+                total={itemsTotal}
+                count={cartCount}
+                onRemove={removeItem}
+                onClear={clearItems}
+                onCheckout={continueToCheckout}
+              />
+            )}
 
-            <VisitCard session={recommended} active label="Selected" />
+            {step === 'base' ? (
+              <>
+                <div className="grid grid-cols-1 gap-2">
+                  {GOALS.map((item) => {
+                    const Icon = item.icon;
+                    const active = item.key === goalKey;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          setGoalKey(item.key);
+                          setSelectedProtocol(null);
+                        }}
+                        className={`flex min-h-[76px] items-center gap-4 rounded-[1.35rem] border px-4 text-left transition-colors ${
+                          active
+                            ? 'border-foreground/22 bg-foreground text-background'
+                            : 'border-foreground/[0.10] bg-foreground/[0.035] text-foreground'
+                        }`}
+                      >
+                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border ${
+                          active ? 'border-background/12 bg-background/10' : 'border-foreground/[0.10] bg-foreground/[0.04]'
+                        }`}>
+                          <Icon className="h-5 w-5" strokeWidth={1.75} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-heading text-2xl uppercase leading-none">{item.label}</span>
+                          <span className={`mt-1 block font-body text-sm ${active ? 'text-background/62' : 'text-foreground/52'}`}>{item.sub}</span>
+                        </span>
+                        {active && <Check className="h-4 w-4 shrink-0" strokeWidth={2.4} />}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Add-ons</p>
-                <p className="font-body text-xs text-foreground/45">{selectedAddons.size} selected</p>
-              </div>
-              <div className="grid gap-2">
-                {QUICK_ADDON_ITEMS.map((item) => {
-                  const active = selectedAddons.has(item.label);
-                  return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => toggleAddon(item.label)}
-                      className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left transition-colors ${
-                        active ? 'border-accent/35 bg-accent/[0.10]' : 'border-foreground/[0.08] bg-background/55'
-                      }`}
-                    >
-                      <span>
-                        <span className="block font-body text-sm font-medium">{item.type === 'im' ? `IM · ${item.label}` : item.label}</span>
-                        <span className="mt-0.5 block font-body text-[11px] text-foreground/42">{item.desc}</span>
-                      </span>
-                      <span className="shrink-0 font-body text-sm font-semibold">+{money(item.price)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                <VisitCard session={recommended} active label="Selected" />
+                <QuantitySelector value={quantity} onChange={setQuantity} />
 
-            <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
-              <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">More</p>
-              <div className="grid gap-2">
-                {alternatives.map((session) => (
-                  <button
-                    key={session.key}
-                    type="button"
-                    onClick={() => setSelectedProtocol(session.key)}
-                    className="flex min-h-[58px] items-center justify-between rounded-2xl border border-foreground/[0.08] bg-background/55 px-3 text-left"
-                  >
-                    <span className="font-body text-sm text-foreground/72">{session.label}</span>
-                    <span className="font-body text-sm text-foreground/45">{money(session.price || session.doses?.[0]?.price)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+                <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">More bases</p>
+                  <div className="grid gap-2">
+                    {alternatives.map((session) => (
+                      <button
+                        key={session.key}
+                        type="button"
+                        onClick={() => setSelectedProtocol(session.key)}
+                        className="flex min-h-[58px] items-center justify-between rounded-2xl border border-foreground/[0.08] bg-background/55 px-3 text-left"
+                      >
+                        <span className="font-body text-sm text-foreground/72">{session.label}</span>
+                        <span className="font-body text-sm text-foreground/45">{money(session.price || session.doses?.[0]?.price)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStep('base')}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-foreground/[0.12] px-4 font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/58"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} /> Bases
+                </button>
+
+                <div className="rounded-[1.5rem] border border-foreground/[0.12] bg-foreground/[0.045] p-4">
+                  <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Current order</p>
+                  <div className="mt-3 flex items-end justify-between gap-4">
+                    <div className="min-w-0">
+                      <h2 className="font-heading text-4xl uppercase leading-none">{recommended.label}</h2>
+                      <p className="mt-2 font-body text-sm text-foreground/54">{quantity} visit{quantity !== 1 ? 's' : ''} · {money(basePrice)} each</p>
+                    </div>
+                    <p className="shrink-0 font-heading text-3xl leading-none">{money(total)}</p>
+                  </div>
+                </div>
+
+                <QuantitySelector value={quantity} onChange={setQuantity} />
+
+                <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Add-ons</p>
+                    <p className="font-body text-xs text-foreground/45">{selectedAddons.size} selected</p>
+                  </div>
+                  <div className="grid gap-2">
+                    {QUICK_ADDON_ITEMS.map((item) => {
+                      const active = selectedAddons.has(item.label);
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => toggleAddon(item.label)}
+                          className={`flex min-h-[58px] items-center justify-between gap-3 rounded-2xl border px-3 text-left transition-colors ${
+                            active ? 'border-accent/35 bg-accent/[0.10]' : 'border-foreground/[0.08] bg-background/55'
+                          }`}
+                        >
+                          <span>
+                            <span className="block font-body text-sm font-medium">{item.type === 'im' ? `IM · ${item.label}` : item.label}</span>
+                            <span className="mt-0.5 block font-body text-[11px] text-foreground/42">{item.desc}</span>
+                          </span>
+                          <span className="shrink-0 text-right font-body text-sm font-semibold">
+                            +{money(item.price)}
+                            {quantity > 1 && <span className="block text-[10px] font-medium text-foreground/38">x {quantity}</span>}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addGuidedSelection}
+                  className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-5 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-background"
+                >
+                  Add to cart <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </>
+            )}
           </section>
         ) : (
           <section className="mt-4 space-y-4">
@@ -357,13 +465,49 @@ export default function Store() {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/[0.10] bg-background/94 px-4 pt-3 backdrop-blur-2xl"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.85rem)' }}
       >
+        {mode === 'guided' && cart.length > 0 && (
+          <div className="mx-auto mb-3 flex max-w-lg items-center gap-3 rounded-2xl border border-foreground/[0.10] bg-foreground/[0.045] p-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/58 text-foreground">
+              <ShoppingBag className="h-4 w-4" strokeWidth={1.9} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/42">{cartCount} selected</p>
+              <p className="mt-0.5 truncate font-body text-xs font-semibold text-foreground">{money(itemsTotal)} in cart</p>
+            </div>
+            <button
+              type="button"
+              onClick={continueToCheckout}
+              className="min-h-[42px] rounded-xl bg-foreground px-4 font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-background"
+            >
+              Book
+            </button>
+          </div>
+        )}
+        {mode === 'guided' && (
+          <div className="mx-auto mb-3 max-w-lg rounded-2xl border border-foreground/[0.10] bg-foreground/[0.035] p-2">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-body text-[10px] uppercase tracking-[0.22em] text-foreground/42">Quantity</p>
+              <p className="font-body text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/54">1-4</p>
+            </div>
+            <select
+              value={quantity}
+              onChange={(event) => setQuantity(Number(event.target.value))}
+              aria-label="Cart quantity"
+              className="min-h-[44px] w-full rounded-xl border border-foreground/[0.12] bg-background/72 px-3 font-body text-sm font-black text-foreground outline-none"
+            >
+              {QUANTITY_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">
-              {mode === 'guided' ? 'Total' : 'Custom'}
+              {mode === 'guided' ? (step === 'base' ? 'Base' : 'Add-ons') : 'Custom'}
             </p>
             <p className="mt-1 truncate font-body text-sm font-semibold text-foreground">
-              {mode === 'guided' ? `${recommended.label} · ${money(total)}` : `${Array.from(customGoals).slice(0, 2).join(' + ')} · ${people} people`}
+              {mode === 'guided' ? `${recommended.label} · ${quantity} · ${money(total)}` : `${Array.from(customGoals).slice(0, 2).join(' + ')} · ${people} people`}
             </p>
           </div>
           <button
@@ -371,13 +515,85 @@ export default function Store() {
             onClick={mode === 'guided' ? continueGuided : continueCustom}
             className="flex min-h-[60px] min-w-[148px] items-center justify-center gap-2 rounded-[1.35rem] bg-foreground px-5 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-background"
           >
-            Continue <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            {mode === 'guided' ? (step === 'base' ? 'Add add-ons' : 'Add to cart') : 'Continue'} <ArrowRight className="h-4 w-4" strokeWidth={2} />
           </button>
         </div>
         <p className="mx-auto mt-2 max-w-lg text-center font-body text-[10px] text-foreground/34">
           Confirmed after clinical review.
         </p>
       </div>
+    </div>
+  );
+}
+
+function QuantitySelector({ value, onChange }) {
+  return (
+    <div className="rounded-[1.35rem] border border-foreground/[0.10] bg-foreground/[0.03] p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Quantity</p>
+        <p className="font-body text-xs text-foreground/45">1-4 visits</p>
+      </div>
+      <select
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        aria-label="Base quantity"
+        className="min-h-[54px] w-full rounded-2xl border border-foreground/[0.12] bg-background/65 px-4 font-heading text-2xl leading-none text-foreground outline-none"
+      >
+        {QUANTITY_OPTIONS.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function CartReview({ items, total, count, onRemove, onClear, onCheckout }) {
+  return (
+    <div className="rounded-[1.35rem] border border-accent/20 bg-accent/[0.07] p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-body text-[10px] uppercase tracking-[0.28em] text-foreground/45">Cart</p>
+          <p className="mt-1 font-body text-xs font-semibold text-foreground/62">{count} selected · {money(total)}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Clear cart"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/[0.10] bg-background/45 text-foreground/48"
+        >
+          <Trash2 className="h-4 w-4" strokeWidth={1.8} />
+        </button>
+      </div>
+      <div className="grid gap-2">
+        {items.map((item) => {
+          const quantity = Number(item.quantity) || 1;
+          const lineTotal = (Number(item.price) || 0) * quantity;
+          return (
+            <div key={item.cartKey} className="flex min-h-[58px] items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-background/55 px-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-body text-sm font-medium text-foreground">{item.label}</p>
+                <p className="mt-0.5 font-body text-[11px] text-foreground/42">{quantity > 1 ? `${money(item.price)} x ${quantity}` : item.type}</p>
+              </div>
+              <p className="shrink-0 font-body text-sm font-semibold">{money(lineTotal)}</p>
+              <button
+                type="button"
+                onClick={() => onRemove(item.cartKey)}
+                aria-label={`Remove ${item.label}`}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-foreground/[0.08] text-foreground/42"
+              >
+                <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={onCheckout}
+        className="mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-4 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-background"
+      >
+        Review order <ArrowRight className="h-4 w-4" strokeWidth={2} />
+      </button>
     </div>
   );
 }
@@ -393,6 +609,7 @@ function VisitCard({ session, label }) {
           <Icon className="h-5 w-5" strokeWidth={1.75} />
         </span>
         <div className="min-w-0 flex-1">
+          {label && <p className="font-body text-[10px] uppercase tracking-[0.24em] text-foreground/38">{label}</p>}
           <h2 className="mt-2 font-heading text-4xl uppercase leading-none">{session.label}</h2>
           <p className="mt-2 font-body text-sm leading-relaxed text-foreground/58">{session.tagline || session.desc}</p>
         </div>

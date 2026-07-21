@@ -270,17 +270,22 @@ function renderRouteHtml(page, kind = 'page') {
   return html;
 }
 
-// Convert Vite's render-blocking main stylesheet into a non-blocking load so the
-// inline-styled prerender (above) paints immediately (fast FCP/LCP). The sheet is
-// preloaded at high priority, applied via the media="print" → onload swap, with a
-// <noscript> fallback for no-JS clients.
+// Preload the main stylesheet at high priority so it lands fast, then apply it
+// with a standard render-blocking <link>. We previously used the
+// media="print" → onload="this.media='all'" swap to make the sheet non-blocking,
+// but the production CSP (script-src without 'unsafe-hashes') blocks that inline
+// event handler, so the sheet stayed media="print" and never applied — the whole
+// site rendered unstyled. CSP hashes do not cover inline event handlers, so the
+// only CSP-safe options are a plain stylesheet link or an external activation
+// script. The prerendered critical inline styles already cover first paint, so a
+// standard link costs little FCP and can't be defeated by CSP. Do NOT reintroduce
+// an inline onload handler here.
 function makeCssNonBlocking(html) {
   return html.replace(
     /<link rel="stylesheet"((?:\s+crossorigin)?)\s+href="(\/assets\/[^"]+\.css)"\s*\/?>/g,
     (_m, cross, href) =>
       `<link rel="preload" as="style"${cross} href="${href}">` +
-      `<link rel="stylesheet"${cross} href="${href}" media="print" onload="this.media='all';this.onload=null;">` +
-      `<noscript><link rel="stylesheet"${cross} href="${href}"></noscript>`,
+      `<link rel="stylesheet"${cross} href="${href}">`,
   );
 }
 

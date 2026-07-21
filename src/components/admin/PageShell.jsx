@@ -15,7 +15,7 @@ import React, { useEffect } from 'react';
 export default function PageShell({ eyebrow, title, subtitle, action, children, embedded = false }) {
   useEffect(() => {
     if (!title || typeof document === 'undefined') return;
-    document.title = `${title} - Avalon OS`;
+    document.title = `${title} — Avalon OS`;
   }, [title]);
 
   // Embedded: the page already sits inside AdminShell, which owns the big title

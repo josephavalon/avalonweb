@@ -9,11 +9,11 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: 'What is mobile IV therapy?',
-        a: 'IV therapy delivers vitamins, minerals, and fluids directly into the bloodstream via a small catheter. A licensed nurse comes to your location and administers the drip in 30–90 minutes. No clinic visit required.',
+        a: 'IV therapy delivers vitamins, minerals, and fluids directly into the bloodstream via a small catheter. A licensed nurse comes to your location and administers the IV in 30–90 minutes. No clinic visit required.',
       },
       {
         q: 'How does Avalon work?',
-        a: 'Book online, choose your protocol, and we dispatch a registered nurse to your home, office, or hotel. Sessions typically take 30–90 minutes depending on the drip.',
+        a: 'Book online, choose your protocol, and we dispatch a registered nurse to your home, office, or hotel. Sessions typically take 30–90 minutes depending on the IV therapy.',
       },
       {
         q: 'What areas do you serve?',
@@ -45,12 +45,12 @@ const FAQ_SECTIONS = [
         a: 'Glutathione is a naturally occurring antioxidant produced by the body. IV glutathione is delivered as a push at the end of your session and is associated with skin clarity and antioxidant support.',
       },
       {
-        q: 'Can I customize my drip?',
+        q: 'Can I customize my IV therapy?',
         a: 'Yes. Every session can be enhanced with add-ons: extra fluids, high-dose Vitamin C, glutathione push, NAD+ (250mg), magnesium support, and more.',
       },
       {
         q: 'How long does a session take?',
-        a: 'Hydration sessions run 30-45 minutes. Most drips are 45-60 minutes. NAD+ IV appointments run 1-4 hours. Your nurse will confirm timing when they arrive.',
+        a: 'Hydration sessions run 30-45 minutes. Most IV therapies are 45-60 minutes. NAD+ IV appointments run 1-4 hours. Your nurse will confirm timing when they arrive.',
       },
     ],
   },
@@ -169,7 +169,7 @@ export default function FAQ() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-heading text-[9vw] md:text-8xl text-foreground tracking-wide mb-4 md:mb-8 md:whitespace-nowrap"
+          className="font-heading text-display text-foreground tracking-wide mb-4 md:mb-8 md:whitespace-nowrap"
         >
           FAQ
         </motion.h1>

@@ -5,23 +5,54 @@ import {
   reconciliationTypeForStripeEvent,
 } from '../../_reconciliation.js';
 import { requireLiveWebhook } from '../../_lib/pre-api-guard.js';
+import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../../_supabase-server.js';
+import { readCheckoutStoreRecord } from '../../_lib/checkout-store.js';
 import { sendCustomerPaymentPendingEmail, sendPaymentReceivedEmail } from '../../_booking-email.js';
+import {
+  sendBookingConfirmedEmail,
+  sendPaymentReceiptEmail,
+  sendPlanRenewedEmail,
+  sendPaymentFailedEmail,
+} from '../../_lib/billing-emails.js';
+import { sendWelcomeEmail, shouldSendCheckoutWelcome } from '../../_welcome-email.js';
+import { creditReferralOnFirstPaid } from '../../_lib/referrals.js';
+import { fulfillGiftCard } from '../../_lib/gift-cards.js';
+import { signWelcomeToken, isMagicLinkWelcomeEnabled } from '../../_lib/welcome-token.js';
+import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
+import { safeStripeMetadata } from '../../_lib/safe-stripe.js';
+import {
+  grantMembershipCredit,
+  redeemMemberCredit,
+  InsufficientMemberCreditError,
+} from '../../_lib/member-credits.js';
 import {
   checkoutPayloadFromRecord,
   checkoutPayloadFromStripeMetadata,
   createSchedulingAppointmentWithFallback,
+  createDeferredPlanSubscription,
   claimSchedulingCreation,
   readAcuityAppointmentId,
   isLegacyStripeMetadataPayload,
-  syncCheckoutAttioPerson,
+  syncCheckoutHubspotContact,
 } from '../../_checkout-fulfillment.js';
+import {
+  isEventSession,
+  isEventPaymentIntent,
+  handleEventCheckoutCompleted,
+  handleEventPaymentIntentSucceeded,
+  handleEventSessionExpired,
+  handleEventChargeRefunded,
+} from '../../_lib/events-webhook.js';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+// Dollar value (cents) attributed to each granted membership visit-credit.
+const VISIT_CREDIT_CENTS = 25000;
 
 const STRIPE_WEBHOOK_MAX_BODY_BYTES = Number.parseInt(process.env.STRIPE_WEBHOOK_MAX_BODY_BYTES || String(512 * 1024), 10);
 const STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS = Number.parseInt(process.env.STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS || '10000', 10);
@@ -40,6 +71,260 @@ function safeLogContext(err, fallback) {
     code: safeErrorCode(err, fallback),
     status: err?.statusCode || err?.status || null,
   };
+}
+
+// Escape LIKE wildcards so an email containing `_` or `%` matches literally.
+function likeLiteral(value) {
+  return String(value || '').replace(/([\\%_])/g, '\\$1');
+}
+
+function welcomeEmailOnCheckoutEnabled() {
+  return String(process.env.WELCOME_EMAIL_ON_CHECKOUT_ENABLED || '').trim().toLowerCase() !== 'false';
+}
+
+function firstNameFromContact(contact = {}) {
+  const first = String(contact.firstName || '').trim();
+  if (first) return first;
+  const full = String(contact.name || '').trim();
+  if (full) return full.split(/\s+/)[0];
+  return '';
+}
+
+// "First paid appointment for this email?" — used as the idempotency guard for
+// the post-checkout welcome email. We look for ANY other appointment row tied
+// to this contact email with a paid payment_status. If one already exists, the
+// caller is a repeat customer and the welcome has either already been sent (or
+// is moot because they've been around long enough to know us). Excludes the
+// current record so the call site can run AFTER its own patch lands.
+async function isFirstPaidAppointmentForEmail(db, { email, currentRecordId, tenantId }) {
+  if (!db || !email) return false;
+  const normalized = String(email).trim().toLowerCase();
+  if (!normalized) return false;
+  try {
+    let query = db
+      .from('appointments')
+      .select('id, payment_status')
+      .ilike('external_payload->contact->>email', likeLiteral(normalized))
+      .in('payment_status', ['paid_in_full', 'partial_payment']);
+    if (tenantId) query = query.eq('tenant_id', tenantId);
+    if (currentRecordId) query = query.neq('id', currentRecordId);
+    const { data, error } = await query.limit(1);
+    if (error) {
+      console.warn('[stripe/webhook] welcome-email first-paid lookup failed', safeLogContext(error, 'welcome_first_paid_lookup_failed'));
+      // Fail closed: if we can't tell, don't send (avoids spamming repeat buyers).
+      return false;
+    }
+    return !(Array.isArray(data) && data.length > 0);
+  } catch (err) {
+    console.warn('[stripe/webhook] welcome-email first-paid lookup threw', safeLogContext(err, 'welcome_first_paid_lookup_failed'));
+    return false;
+  }
+}
+
+// Best-effort welcome-email send after a paid checkout. Never throws — webhook
+// MUST keep returning 200 even when Resend is down. Idempotent via
+// audit_events (matches /api/auth/welcome-email's dedupe contract). Looks up
+// the auth user by email so the magic-link CTA can carry a signed token if the
+// caller wants to drop the recipient straight into /members/dashboard.
+async function sendCheckoutWelcomeEmail(db, { contact, currentRecordId, tenantId, sessionId, planSignup = false }) {
+  if (!welcomeEmailOnCheckoutEnabled()) {
+    console.log('[stripe/webhook] welcome-email skipped (flag off)', safeLogContext({ code: 'welcome_email_flag_off' }, 'welcome_email_flag_off'));
+    return { sent: false, reason: 'flag_off' };
+  }
+  const recipient = String(contact?.email || '').trim();
+  if (!recipient) return { sent: false, reason: 'no_recipient' };
+
+  const isFirst = await isFirstPaidAppointmentForEmail(db, {
+    email: recipient,
+    currentRecordId,
+    tenantId,
+  });
+  // Plan signups always get a welcome (new contract), even for a repeat
+  // customer; one-time visits only welcome on the first paid appointment.
+  // The audit-event dedupe below still prevents any double-send.
+  if (!shouldSendCheckoutWelcome({ planSignup, isFirstPaid: isFirst })) {
+    console.log('[stripe/webhook] welcome-email skipped (not first paid)', { event: 'welcome_email_skipped', reason: 'repeat_customer' });
+    return { sent: false, reason: 'repeat_customer' };
+  }
+
+  // Resolve the auth user (if any) so dedupe + magic-link share their contract
+  // with /api/auth/welcome-email. We use the service-role list-users by email.
+  let userId = null;
+  try {
+    if (db) {
+      const { data: profileRow } = await db
+        .from('profiles')
+        .select('id')
+        .ilike('email', likeLiteral(recipient))
+        .maybeSingle();
+      userId = profileRow?.id || null;
+    }
+  } catch (err) {
+    console.warn('[stripe/webhook] welcome-email profile lookup failed', safeLogContext(err, 'welcome_profile_lookup_failed'));
+  }
+
+  // Dedupe with the existing post-signup welcome path.
+  if (db && userId) {
+    try {
+      const { data: prior } = await db
+        .from('audit_events')
+        .select('id')
+        .eq('action', 'welcome_email_sent')
+        .eq('entity_type', 'profiles')
+        .eq('entity_id', userId)
+        .limit(1);
+      if (Array.isArray(prior) && prior.length > 0) {
+        return { sent: false, reason: 'already_sent' };
+      }
+    } catch (err) {
+      // Default to send rather than skip — better at-most-twice than never.
+      console.warn('[stripe/webhook] welcome-email dedupe check failed', safeLogContext(err, 'welcome_email_dedupe_failed'));
+    }
+  }
+
+  let magicToken;
+  if (userId && isMagicLinkWelcomeEnabled()) {
+    try {
+      magicToken = signWelcomeToken({ userId });
+    } catch (err) {
+      console.warn('[stripe/webhook] welcome-email token sign failed', safeLogContext(err, 'welcome_email_token_sign_failed'));
+    }
+  }
+
+  const name = firstNameFromContact(contact);
+  try {
+    const result = await sendWelcomeEmail({ to: recipient, name, magicToken, planSignup });
+    if (db && userId) {
+      await writeAuditEvent(db, {
+        tenantId,
+        actorProfileId: userId,
+        action: 'welcome_email_sent',
+        entityType: 'profiles',
+        entityId: userId,
+        phiTouched: false,
+        payload: { provider: 'resend', source: 'checkout', message_id: result?.id || null, stripeSessionId: sessionId || null },
+      });
+    }
+    return { sent: true, messageId: result?.id || null };
+  } catch (err) {
+    console.warn('[stripe/webhook] welcome-email send failed', safeLogContext(err, 'welcome_email_send_failed'));
+    return { sent: false, reason: 'send_failed' };
+  }
+}
+
+// Idempotent customer-email send, deduped via audit_events on a stable key
+// (e.g. the Stripe session/invoice id) so webhook retries never double-send.
+// Mirrors the welcome-email dedupe contract: check for a prior audit row with
+// the same action+entity, send, then record. Never throws — billing emails are
+// best-effort and the webhook MUST keep returning 200. The action string is the
+// dedupe namespace; entityId is the stable per-event key.
+async function sendCustomerEmailOnce(db, {
+  action,
+  entityId,
+  tenantId = null,
+  send,
+  auditPayload = {},
+}) {
+  if (typeof send !== 'function') return { sent: false, reason: 'no_sender' };
+  const dedupeKey = String(entityId || '').trim();
+
+  if (db && dedupeKey) {
+    try {
+      const { data: prior } = await db
+        .from('audit_events')
+        .select('id')
+        .eq('action', action)
+        .eq('entity_type', 'stripe_billing_email')
+        .eq('entity_id', dedupeKey)
+        .limit(1);
+      if (Array.isArray(prior) && prior.length > 0) {
+        return { sent: false, reason: 'already_sent' };
+      }
+    } catch (err) {
+      // Fail open (at-most-twice beats never) — same posture as welcome email.
+      console.warn('[stripe/webhook] billing-email dedupe check failed', safeLogContext(err, `${action}_dedupe_failed`));
+    }
+  }
+
+  try {
+    const result = await send();
+    if (db && dedupeKey) {
+      await writeAuditEvent(db, {
+        tenantId,
+        action,
+        entityType: 'stripe_billing_email',
+        entityId: dedupeKey,
+        phiTouched: false,
+        payload: { provider: 'resend', message_id: result?.id || null, ...auditPayload },
+      });
+    }
+    return { sent: true, messageId: result?.id || null };
+  } catch (err) {
+    // skipped (no Resend key / no recipient) is expected in some envs; log soft.
+    if (err?.code === 'email_delivery_skipped') {
+      console.log('[stripe/webhook] billing-email skipped', { action, reason: err.reason || 'skipped' });
+      return { sent: false, reason: err.reason || 'skipped' };
+    }
+    console.warn('[stripe/webhook] billing-email send failed', safeLogContext(err, `${action}_send_failed`));
+    return { sent: false, reason: 'send_failed' };
+  }
+}
+
+// #10 Customer booking-confirmation + receipt sends. PHI-FREE: first name,
+// date/time, generic service label, amounts only — never items/protocol/medical
+// detail. Deduped per checkout session via sendCustomerEmailOnce (audit_events),
+// so webhook retries / the parallel return-page path can't double-send.
+async function sendCheckoutConfirmationEmails(db, { checkout, session, tenantId, acuityCreated }) {
+  const contact = checkout?.contact || {};
+  const to = String(contact.email || '').trim();
+  if (!to || !session?.id) return;
+  const name = firstNameFromContact(contact);
+  const amounts = checkout?.amounts || {};
+  const depositCents = Number(amounts.depositAmountCents || 0) || Number(session.amount_total || 0);
+  const balanceDueCents = Number(amounts.balanceDueCents || 0);
+  // Generic, PHI-free service label. Plan name OR a generic "Avalon visit" — the
+  // specific protocol/IV is intentionally omitted from anything Resend touches.
+  const serviceLabel = checkout?.membership?.name
+    ? `${checkout.membership.name} plan`
+    : 'Avalon visit';
+  const dateTimeIso = checkout?.appointment?.acuityDatetime || '';
+
+  // Booking confirmed — only once the visit is actually scheduled in Acuity.
+  if (acuityCreated) {
+    await sendCustomerEmailOnce(db, {
+      action: 'booking_confirmed_email_sent',
+      entityId: session.id,
+      tenantId,
+      auditPayload: { stripeSessionId: session.id, channel: 'booking_confirmed' },
+      send: () => sendBookingConfirmedEmail({
+        to,
+        name,
+        dateTimeIso,
+        serviceLabel,
+        amountCents: depositCents,
+        balanceDueCents,
+      }),
+    });
+  }
+
+  // Payment receipt — gated by the same flag as the post-checkout welcome email
+  // so envs can disable customer-facing checkout mail wholesale. Deduped on the
+  // session id so retries don't re-receipt.
+  if (welcomeEmailOnCheckoutEnabled() && depositCents > 0) {
+    await sendCustomerEmailOnce(db, {
+      action: 'payment_receipt_email_sent',
+      entityId: session.id,
+      tenantId,
+      auditPayload: { stripeSessionId: session.id, channel: 'payment_receipt' },
+      send: () => sendPaymentReceiptEmail({
+        to,
+        name,
+        amountCents: depositCents,
+        dateIso: new Date().toISOString(),
+        label: serviceLabel,
+      }),
+    });
+  }
 }
 
 function readRawBody(req, maxBytes = STRIPE_WEBHOOK_MAX_BODY_BYTES) {
@@ -88,7 +373,7 @@ function withTimeout(promise, label, ms = STRIPE_WEBHOOK_PROCESSING_TIMEOUT_MS) 
 
 // Canonical record is public.appointments. Resolve by Acuity id, then Stripe session.
 async function findAppointmentRecord(db, { acuityId, sessionId, appointmentRecordId }) {
-  const columns = 'id, acuity_appointment_id, stripe_checkout_session_id, external_payload';
+  const columns = 'id, tenant_id, acuity_appointment_id, stripe_checkout_session_id, external_payload';
   if (appointmentRecordId) {
     const { data } = await db.from('appointments')
       .select(columns).eq('id', appointmentRecordId).maybeSingle();
@@ -149,14 +434,253 @@ async function pollAcuityAppointmentId(db, recordId, attempts = 5, delayMs = 100
 }
 
 function buildExternalPayload(existingPayload = {}, patch = {}) {
+  const { discount, comped, ...fulfillmentPatch } = patch || {};
   return {
     ...existingPayload,
+    ...(discount ? { discount } : {}),
+    ...(comped ? { comped } : {}),
     fulfillment: {
       ...(existingPayload.fulfillment || {}),
-      ...patch,
+      ...fulfillmentPatch,
       updatedAt: new Date().toISOString(),
     },
   };
+}
+
+function stripeObjectId(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  return value.id || null;
+}
+
+function unixToIso(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return new Date(seconds * 1000).toISOString();
+}
+
+function discountCoupon(discount = {}, sessionDiscount = {}) {
+  const direct = discount.coupon || sessionDiscount.coupon || null;
+  if (direct && typeof direct === 'object') return direct;
+  const sourceCoupon = discount.source?.coupon;
+  if (sourceCoupon && typeof sourceCoupon === 'object') return sourceCoupon;
+  return null;
+}
+
+function discountCouponId(discount = {}, sessionDiscount = {}) {
+  return stripeObjectId(discount.coupon)
+    || stripeObjectId(discount.source?.coupon)
+    || stripeObjectId(sessionDiscount.coupon);
+}
+
+function discountPromotionCode(discount = {}, sessionDiscount = {}) {
+  const direct = discount.promotion_code || sessionDiscount.promotion_code || null;
+  return direct && typeof direct === 'object' ? direct : null;
+}
+
+function discountPromotionCodeId(discount = {}, sessionDiscount = {}) {
+  return stripeObjectId(discount.promotion_code) || stripeObjectId(sessionDiscount.promotion_code);
+}
+
+function normalizeCheckoutDiscount({ amount = 0, discount = {}, sessionDiscount = {}, session, index = 0 } = {}) {
+  const coupon = discountCoupon(discount, sessionDiscount);
+  const promotionCode = discountPromotionCode(discount, sessionDiscount);
+  const couponId = coupon?.id || discountCouponId(discount, sessionDiscount);
+  const promotionCodeId = promotionCode?.id || discountPromotionCodeId(discount, sessionDiscount);
+  const percentOff = coupon?.percent_off == null ? null : Number(coupon.percent_off);
+  const amountOffCents = coupon?.amount_off == null ? null : Number(coupon.amount_off);
+  const amountDiscountCents = Math.max(0, Math.round(Number(amount || 0)));
+  const code = promotionCode?.code || '';
+  const redemptionKey = discount.id || promotionCodeId || couponId || code || `discount-${index}`;
+  return {
+    stripeDiscountId: discount.id || null,
+    stripeCouponId: couponId || null,
+    stripePromotionCodeId: promotionCodeId || null,
+    redemptionKey,
+    code,
+    couponName: coupon?.name || '',
+    discountType: percentOff != null ? 'percent' : amountOffCents != null ? 'amount' : 'unknown',
+    percentOff,
+    amountOffCents,
+    amountDiscountCents,
+    currency: (session.currency || coupon?.currency || 'usd').toLowerCase(),
+    redeemedAt: unixToIso(discount.start) || (session.created ? unixToIso(session.created) : null) || new Date().toISOString(),
+  };
+}
+
+function checkoutDiscountEntries(session = {}) {
+  const breakdownDiscounts = session.total_details?.breakdown?.discounts;
+  if (Array.isArray(breakdownDiscounts) && breakdownDiscounts.length) {
+    return breakdownDiscounts.map((entry, index) => normalizeCheckoutDiscount({
+      amount: entry.amount,
+      discount: entry.discount || {},
+      session,
+      index,
+    }));
+  }
+
+  const sessionDiscounts = Array.isArray(session.discounts) ? session.discounts : [];
+  const totalDiscount = Number(session.total_details?.amount_discount || 0);
+  return sessionDiscounts.map((entry, index) => normalizeCheckoutDiscount({
+    amount: index === 0 ? totalDiscount : 0,
+    sessionDiscount: entry || {},
+    session,
+    index,
+  }));
+}
+
+function isFullCompDiscount(session = {}, discounts = []) {
+  const hasFullPercentCoupon = discounts.some((discount) => Number(discount.percentOff || 0) >= 100);
+  return hasFullPercentCoupon && Number(session.amount_total || 0) === 0;
+}
+
+function discountPayload(discounts = [], { fullComp = false } = {}) {
+  if (!discounts.length) return null;
+  const primary = discounts[0];
+  return {
+    code: primary.code || primary.couponName || '',
+    couponName: primary.couponName || '',
+    stripeCouponId: primary.stripeCouponId || '',
+    stripePromotionCodeId: primary.stripePromotionCodeId || '',
+    amountDiscountCents: discounts.reduce((sum, discount) => sum + Number(discount.amountDiscountCents || 0), 0),
+    currency: primary.currency || 'usd',
+    percentOff: primary.percentOff,
+    fullComp: !!fullComp,
+    appliedAt: primary.redeemedAt || new Date().toISOString(),
+  };
+}
+
+async function recordDiscountRedemptions(db, {
+  session,
+  record,
+  tenantId,
+  paymentIntentId,
+  discounts = [],
+  fullComp = false,
+} = {}) {
+  if (!db || !session?.id || !tenantId || !discounts.length) return;
+  const rows = discounts.map((discount) => ({
+    tenant_id: tenantId,
+    appointment_id: record?.id || null,
+    stripe_checkout_session_id: session.id,
+    stripe_payment_intent_id: paymentIntentId || null,
+    stripe_customer_id: stripeObjectId(session.customer),
+    stripe_discount_id: discount.stripeDiscountId || null,
+    stripe_coupon_id: discount.stripeCouponId || null,
+    stripe_promotion_code_id: discount.stripePromotionCodeId || null,
+    redemption_key: discount.redemptionKey,
+    code: discount.code || null,
+    coupon_name: discount.couponName || null,
+    discount_type: discount.discountType || null,
+    percent_off: discount.percentOff,
+    amount_off_cents: discount.amountOffCents,
+    amount_discount_cents: discount.amountDiscountCents,
+    currency: discount.currency || 'usd',
+    full_comp: !!fullComp,
+    redeemed_at: discount.redeemedAt || new Date().toISOString(),
+    external_payload: {
+      checkoutAmountSubtotalCents: Number(session.amount_subtotal || 0),
+      checkoutAmountTotalCents: Number(session.amount_total || 0),
+    },
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { error } = await db.from('discount_redemptions').upsert(rows, {
+    onConflict: 'tenant_id,stripe_checkout_session_id,redemption_key',
+  });
+  if (error) {
+    console.warn('[stripe/webhook] discount redemption upsert failed', safeLogContext(error, 'discount_redemption_upsert_failed'));
+  }
+}
+
+function checkoutCreditRedemption(checkout = {}, md = {}) {
+  const payload = checkout.creditRedemption || {};
+  const units = Number(payload.units || checkout.amounts?.creditRedemptionUnits || md.creditRedemptionUnits || 0);
+  const amountCents = Number(payload.amountCents || checkout.amounts?.creditRedemptionCents || md.creditRedemptionCents || 0);
+  if (!(units > 0) || !(amountCents > 0)) return null;
+  return {
+    units: Math.max(1, Math.floor(units)),
+    amountCents: Math.max(0, Math.round(amountCents)),
+    memberProfileId: payload.memberProfileId || null,
+  };
+}
+
+async function recordMembershipInitialCredit(db, {
+  checkout,
+  record,
+  tenantId,
+  session,
+  planSubscriptionId = null,
+} = {}) {
+  if (!db || !checkout?.membership || !tenantId || !session?.id) return;
+  try {
+    await grantMembershipCredit(db, {
+      tenantId,
+      profileId: checkout.creditRedemption?.memberProfileId || null,
+      email: checkout.contact?.email || '',
+      appointmentId: record?.id || null,
+      stripeCheckoutSessionId: session.id,
+      stripeSubscriptionId: planSubscriptionId || null,
+      source: 'membership_initial_grant',
+      description: 'Membership IV credit',
+      units: Math.max(1, Number(checkout.membership?.visitsPerCycle || 1)),
+      creditValueCents: VISIT_CREDIT_CENTS,
+      externalPayload: {
+        membershipName: checkout.membership?.name || '',
+        membershipBilling: checkout.membership?.billing || '',
+      },
+    });
+  } catch (err) {
+    console.warn('[stripe/webhook] membership credit grant failed', safeLogContext(err, 'membership_credit_grant_failed'));
+  }
+}
+
+async function recordIvCreditRedemption(db, {
+  checkout,
+  record,
+  tenantId,
+  session,
+  md,
+} = {}) {
+  const credit = checkoutCreditRedemption(checkout, md);
+  if (!db || !tenantId || !session?.id || !credit) return;
+  try {
+    await redeemMemberCredit(db, {
+      tenantId,
+      profileId: credit.memberProfileId || null,
+      email: checkout.contact?.email || '',
+      appointmentId: record?.id || null,
+      stripeCheckoutSessionId: session.id,
+      units: credit.units,
+      creditValueCents: credit.amountCents,
+      description: 'IV credit redeemed',
+      externalPayload: {
+        service: checkout.primaryService || '',
+      },
+    });
+  } catch (err) {
+    if (err instanceof InsufficientMemberCreditError) {
+      // The visit was discounted at checkout but the member's live balance can't
+      // cover it (e.g. two near-simultaneous redemptions of the same credit).
+      // The ledger is protected (never goes negative); surface the under-charge
+      // for ops to collect the balance instead of silently corrupting the ledger.
+      console.warn('[stripe/webhook] IV credit redemption insufficient', safeLogContext(err, 'iv_credit_insufficient'));
+      await insertOperationalFailureCase(db, {
+        caseType: 'credit_redemption_insufficient',
+        provider: 'stripe',
+        externalReference: session.id,
+        tenantId,
+        payload: {
+          appointmentId: record?.id || null,
+          memberEmail: checkout.contact?.email || '',
+          units: credit.units,
+          creditValueCents: credit.amountCents,
+        },
+      });
+      return;
+    }
+    console.warn('[stripe/webhook] IV credit redemption failed', safeLogContext(err, 'iv_credit_redemption_failed'));
+  }
 }
 
 async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
@@ -167,85 +691,33 @@ async function updateStripeFulfillmentMetadata(stripe, session, patch = {}) {
 
   try {
     await stripe.paymentIntents.update(paymentIntentId, {
-      metadata: {
+      metadata: safeStripeMetadata({
         ...(typeof session.payment_intent === 'object' ? session.payment_intent?.metadata || {} : {}),
         ...patch,
-      },
+      }),
     });
   } catch (err) {
     console.warn('[stripe/webhook] payment intent metadata update failed', safeLogContext(err, 'stripe_metadata_update_failed'));
   }
 }
 
-function planRecurringInterval(billing) {
-  switch (billing) {
-    case 'annual': return { interval: 'year' };
-    case 'six-month': return { interval: 'month', interval_count: 6 };
-    case 'three-month': return { interval: 'month', interval_count: 3 };
-    default: return { interval: 'month' };
-  }
-}
-
-// Stripe requires trial_end strictly in the future. Anchor the first recurring
-// charge to ONE period after the first visit (so month one — already paid as the
-// $50 deposit + after-visit balance — isn't billed again), floored at now + 1h.
-function planTrialEndUnix(firstVisitIso, recurring) {
-  const nowSec = Math.floor(Date.now() / 1000);
-  const base = firstVisitIso ? new Date(firstVisitIso) : new Date();
-  const start = Number.isFinite(base.getTime()) ? new Date(base.getTime()) : new Date();
-  if (recurring.interval === 'year') {
-    start.setFullYear(start.getFullYear() + 1);
-  } else {
-    start.setMonth(start.getMonth() + (recurring.interval_count || 1));
-  }
-  return Math.max(Math.floor(start.getTime() / 1000), nowSec + 3600);
-}
-
-// Create the recurring full-price plan subscription that begins one period AFTER
-// the first visit. The deposit + after-visit balance cover month one, so the
-// subscription trials until the next period, then auto-bills the full price on
-// the saved card. Idempotent on the appointment/session id so webhook retries
-// never double-create. Returns the subscription id, or null if it can't run.
-async function createDeferredPlanSubscription(stripe, { session, md, paymentMethodId, recordId }) {
-  const monthlyCents = Math.round(Number(md.planMonthlyPriceCents || 0));
-  if (!session.customer || !paymentMethodId || !(monthlyCents > 0)) return null;
-  const recurring = planRecurringInterval(md.membershipBilling || 'monthly');
-  const trialEnd = planTrialEndUnix(md.planFirstVisitDate, recurring);
-  const planName = `${md.membershipName || 'Avalon'} Plan`;
-  const scope = recordId || session.id;
-  const product = await stripe.products.create(
-    { name: planName, metadata: { kind: 'plan_recurring' } },
-    { idempotencyKey: `plan-prod:${scope}` },
-  );
-  const subscription = await stripe.subscriptions.create(
-    {
-      customer: session.customer,
-      default_payment_method: paymentMethodId,
-      trial_end: trialEnd,
-      items: [{
-        price_data: {
-          currency: 'usd',
-          product: product.id,
-          unit_amount: monthlyCents,
-          recurring,
-        },
-      }],
-      metadata: {
-        kind: 'plan_recurring',
-        appointmentRecordId: recordId || '',
-        stripeCheckoutSessionId: session.id,
-        planName,
-      },
-    },
-    { idempotencyKey: `plan-sub:${scope}` },
-  );
-  return subscription.id;
-}
-
-async function handleCheckoutCompleted(stripe, db, session) {
+export async function handleCheckoutCompleted(stripe, db, session) {
   const md = session.metadata || {};
-  if (session.payment_status && session.payment_status !== 'paid') {
+  const fulfillablePaymentStatus = session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
+  if (session.payment_status && !fulfillablePaymentStatus) {
     return { action: 'ignored_unpaid_checkout', paymentStatus: session.payment_status };
+  }
+
+  // Gift-card purchases short-circuit before the appointment-shaped flow runs.
+  // fulfillGiftCard never throws and no-ops when the session isn't a gift card.
+  if (md.kind === 'gift_card') {
+    try {
+      const result = await fulfillGiftCard(db, { session });
+      return { action: 'gift_card_fulfilled', ...result };
+    } catch (err) {
+      console.warn('[stripe/webhook] gift card fulfill failed', safeLogContext(err, 'gift_card_fulfill_failed'));
+      return { action: 'gift_card_fulfill_failed' };
+    }
   }
 
   const appointmentRecordId = md.appointmentRecordId || null;
@@ -274,28 +746,37 @@ async function handleCheckoutCompleted(stripe, db, session) {
   }
 
   const now = new Date().toISOString();
-  const tenantId = db ? await getDefaultTenantId(db) : null;
+  const tenantId = db ? (record?.tenant_id || await getDefaultTenantId(db)) : null;
+  const storedCheckout = !record && md.checkoutStoreKey
+    ? await readCheckoutStoreRecord(md.checkoutStoreKey)
+    : null;
+  const discounts = checkoutDiscountEntries(session);
+  const fullComp = isFullCompDiscount(session, discounts);
+  const discountForPayload = discountPayload(discounts, { fullComp });
   let acuityAppointment = (record?.acuity_appointment_id || md.acuityAppointmentId)
     ? { id: record?.acuity_appointment_id || md.acuityAppointmentId, alreadyCreated: true }
     : null;
-  let attioPersonId = null;
-  let attioSynced = false;
+  let hubspotContactId = null;
+  let hubspotSynced = false;
   let fulfillmentError = null;
   const canUseStripeMetadataPayload = !record && isLegacyStripeMetadataPayload(md);
   const checkout = record
     ? checkoutPayloadFromRecord(record)
+    : storedCheckout?.checkout
+      ? storedCheckout.checkout
     : canUseStripeMetadataPayload
       ? checkoutPayloadFromStripeMetadata(md)
       : null;
+  const fulfillmentTenantId = record?.tenant_id || storedCheckout?.tenantId || tenantId;
 
   if (!checkout) {
-    await insertMissingCheckoutRecordCase(db, { session, appointmentRecordId, tenantId });
+    await insertMissingCheckoutRecordCase(db, { session, appointmentRecordId, tenantId: fulfillmentTenantId });
     return {
       action: 'deposit_paid_checkout_record_missing',
       matched: false,
       persisted: false,
       acuityAppointmentId: null,
-      attioSynced: false,
+      hubspotSynced: false,
     };
   }
 
@@ -315,14 +796,26 @@ async function handleCheckoutCompleted(stripe, db, session) {
       }
     } else {
       try {
+        const fulfillmentAmounts = fullComp
+          ? {
+              ...(checkout.amounts || {}),
+              depositAmountCents: 0,
+              balanceDueCents: 0,
+              discountAmountCents: discountForPayload?.amountDiscountCents || 0,
+              discountType: 'full_comp',
+            }
+          : checkout.amounts || {};
         acuityAppointment = await createSchedulingAppointmentWithFallback({
           appointment: checkout.appointment || {},
           contact: checkout.contact || {},
           items: checkout.items || [],
           membership: checkout.membership || null,
-          amounts: checkout.amounts || {},
+          amounts: fulfillmentAmounts,
           req: null,
         });
+        if (!acuityAppointment?.id) {
+          throw Object.assign(new Error('Acuity did not return an appointment id.'), { code: 'acuity_missing_appointment_id', status: 502 });
+        }
       } catch (err) {
         fulfillmentError = err;
         console.error('[stripe/webhook] Acuity fulfillment failed', safeLogContext(err, 'acuity_fulfillment_failed'));
@@ -330,26 +823,25 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
       if (acuityAppointment?.id && checkout.contact?.email) {
         try {
-          attioPersonId = await syncCheckoutAttioPerson({
+          const hubspotResult = await syncCheckoutHubspotContact({
             contact: checkout.contact,
-            primaryService: checkout.primaryService || md.service || 'Avalon Visit',
-            appointment: checkout.appointment || {},
-            items: checkout.items || [],
-            membership: checkout.membership || null,
-            amounts: checkout.amounts || {},
           });
-          attioSynced = true;
+          hubspotContactId = hubspotResult?.id || null;
+          // hubspotSynced=true only when the sync actually ran. Skipped calls
+          // (kill switch off) leave it false so reconciliation dashboards
+          // don't show a false positive.
+          hubspotSynced = Boolean(hubspotContactId) && !hubspotResult?.skipped;
         } catch (err) {
-          console.warn('[stripe/webhook] Attio sync failed', safeLogContext(err, 'attio_sync_failed'));
+          console.warn('[stripe/webhook] HubSpot sync failed', safeLogContext(err, 'hubspot_sync_failed'));
           await insertOperationalFailureCase(db, {
             caseType: 'crm_sync_failed',
-            provider: 'attio',
+            provider: 'hubspot',
             externalReference: session.id,
-            tenantId,
+            tenantId: fulfillmentTenantId,
             payload: {
               appointmentRecordId: record?.id || null,
               stripeSessionId: session.id,
-              errorCode: safeErrorCode(err, 'attio_sync_failed'),
+              errorCode: safeErrorCode(err, 'hubspot_sync_failed'),
               errorStatus: err?.statusCode || err?.status || null,
             },
           });
@@ -377,15 +869,14 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
   if (!schedulingDeferred && paymentIntentId && paymentIntent?.metadata?.opsPaymentEmailSent !== 'true') {
     try {
+      // Ops email is PHI-free per docs/PHI_DATA_FLOW.md: only the appointment
+      // record ID + a deep link into the admin. All client details are looked
+      // up by staff in Supabase, not transmitted via Resend.
       await sendPaymentReceivedEmail({
-        checkout,
-        sessionId: session.id,
-        paymentIntentId,
-        acuityAppointmentId: acuityAppointment?.id ? String(acuityAppointment.id) : '',
-        fulfillmentStatus: fulfillmentError ? 'acuity_failed' : acuityAppointment?.id ? 'acuity_created' : 'payment_received',
+        appointmentRecordId: record?.id || md.appointmentRecordId || '',
       });
       await stripe.paymentIntents.update(paymentIntentId, {
-        metadata: {
+        metadata: safeStripeMetadata({
           ...(paymentIntent?.metadata || {}),
           ...(acuityAppointment?.id ? {
             acuityAppointmentId: String(acuityAppointment.id),
@@ -396,7 +887,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
             fulfillmentError: '',
           } : {}),
           opsPaymentEmailSent: 'true',
-        },
+        }),
       });
     } catch (err) {
       console.warn('[stripe/webhook] payment email failed', safeLogContext(err, 'payment_email_failed'));
@@ -404,7 +895,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         caseType: 'operations_email_failed',
         provider: 'resend',
         externalReference: session.id,
-        tenantId,
+        tenantId: fulfillmentTenantId,
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
@@ -415,14 +906,43 @@ async function handleCheckoutCompleted(stripe, db, session) {
     }
   }
 
+  // Customer booking-confirmation SMS — auto, PHI-free (no name, time, address,
+  // service/protocol, or any clinical detail; details live in the email). Sent
+  // once per booking; the paymentIntent metadata flag guards webhook retries so
+  // we never double-text. Quo's runtime PHI block-list in send-sms.js is the
+  // backstop. See docs/PHI_DATA_FLOW.md.
+  if (acuityAppointment?.id && paymentIntentId && paymentIntent?.metadata?.customerBookingSmsSent !== 'true') {
+    const customerPhone = checkout.contact?.phone || '';
+    if (customerPhone && isSmsConfigured()) {
+      try {
+        const smsResult = await sendSms({
+          to: customerPhone,
+          body: 'Avalon Vitality: your visit is booked. Check your email for the details. Reply STOP to opt out.',
+        });
+        if (smsResult.ok) {
+          await stripe.paymentIntents.update(paymentIntentId, {
+            metadata: safeStripeMetadata({
+              ...(paymentIntent?.metadata || {}),
+              customerBookingSmsSent: 'true',
+            }),
+          });
+        } else {
+          console.warn('[stripe/webhook] booking SMS not sent', { code: smsResult.code, status: smsResult.status });
+        }
+      } catch (err) {
+        console.warn('[stripe/webhook] booking SMS failed', safeLogContext(err, 'booking_sms_failed'));
+      }
+    }
+  }
+
   if (fulfillmentError && paymentIntentId && paymentIntent?.metadata?.customerPaymentPendingEmailSent !== 'true') {
     try {
       await sendCustomerPaymentPendingEmail({ checkout });
       await stripe.paymentIntents.update(paymentIntentId, {
-        metadata: {
+        metadata: safeStripeMetadata({
           ...(paymentIntent?.metadata || {}),
           customerPaymentPendingEmailSent: 'true',
-        },
+        }),
       });
     } catch (err) {
       console.warn('[stripe/webhook] customer pending email failed', safeLogContext(err, 'customer_pending_email_failed'));
@@ -430,7 +950,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         caseType: 'customer_email_failed',
         provider: 'resend',
         externalReference: session.id,
-        tenantId,
+        tenantId: fulfillmentTenantId,
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
@@ -445,7 +965,67 @@ async function handleCheckoutCompleted(stripe, db, session) {
   // the customer, set up the recurring full-price subscription that starts one
   // period after the first visit. Idempotent, so safe on webhook retries.
   let planSubscriptionId = null;
-  if (md.planSignup === 'true') {
+  let planSubscriptionDeferredReason = null;
+
+  // #8 PAYMENT-METHOD-MISSING FALLBACK. The deferred plan subscription needs a
+  // saved card. Normally paymentMethodId comes off the deposit PaymentIntent
+  // (read above). If that came back null but this is a real plan signup with a
+  // paid deposit, take a loud last chance: re-retrieve the PaymentIntent
+  // (session.payment_intent), expanding latest_charge, and recover the card from
+  // pi.payment_method or the charge's payment_method. A non-comped paid deposit
+  // ALWAYS leaves a card on the customer, so a null here is an anomaly worth a
+  // recovery attempt + a loud log before we open a reconciliation case.
+  if (md.planSignup === 'true' && !fullComp && !paymentMethodId && paymentIntentId) {
+    try {
+      const recoveredPi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ['latest_charge'],
+      });
+      const fromPi = recoveredPi?.payment_method || null;
+      const charge = typeof recoveredPi?.latest_charge === 'object' ? recoveredPi.latest_charge : null;
+      const fromCharge = charge?.payment_method || null;
+      const recovered = stripeObjectId(fromPi) || stripeObjectId(fromCharge);
+      if (recovered) {
+        paymentMethodId = recovered;
+        console.warn('[stripe/webhook] plan payment_method recovered via PaymentIntent fallback', {
+          event: 'plan_payment_method_recovered',
+          source: fromPi ? 'payment_intent.payment_method' : 'latest_charge.payment_method',
+          stripeSessionId: session.id,
+          paymentIntentId,
+        });
+      } else {
+        console.error('[stripe/webhook] plan payment_method missing AND unrecoverable from PaymentIntent', {
+          event: 'plan_payment_method_unrecoverable',
+          stripeSessionId: session.id,
+          paymentIntentId,
+        });
+      }
+    } catch (err) {
+      console.error('[stripe/webhook] plan payment_method PaymentIntent fallback failed', safeLogContext(err, 'plan_payment_method_fallback_failed'));
+    }
+  }
+
+  if (md.planSignup === 'true' && fullComp) {
+    planSubscriptionDeferredReason = 'full_discount_no_payment_method';
+  } else if (md.planSignup === 'true' && !paymentMethodId) {
+    // A paid (non-comped) deposit should always leave a saved card on the customer.
+    // If we got here the card is missing, so the recurring subscription can't be
+    // created — and would otherwise be skipped silently, losing recurring revenue
+    // with no signal. Flag it so ops can set recurring up by hand.
+    planSubscriptionDeferredReason = 'payment_method_missing';
+    await insertOperationalFailureCase(db, {
+      caseType: 'stripe_subscription_creation_failed',
+      provider: 'stripe',
+      externalReference: session.id,
+      tenantId: fulfillmentTenantId,
+      payload: {
+        appointmentRecordId: record?.id || null,
+        stripeSessionId: session.id,
+        stripeCustomerId: session.customer || null,
+        reason: 'payment_method_missing',
+        local_contract: 'plan_subscription_after_first_acuity_appointment_v1',
+      },
+    });
+  } else if (md.planSignup === 'true' && acuityAppointment?.id && !fulfillmentError && !schedulingDeferred) {
     try {
       planSubscriptionId = await createDeferredPlanSubscription(stripe, {
         session,
@@ -459,7 +1039,7 @@ async function handleCheckoutCompleted(stripe, db, session) {
         caseType: 'stripe_subscription_creation_failed',
         provider: 'stripe',
         externalReference: session.id,
-        tenantId,
+        tenantId: fulfillmentTenantId,
         payload: {
           appointmentRecordId: record?.id || null,
           stripeSessionId: session.id,
@@ -469,30 +1049,81 @@ async function handleCheckoutCompleted(stripe, db, session) {
         },
       });
     }
+  } else if (md.planSignup === 'true') {
+    await insertOperationalFailureCase(db, {
+      caseType: 'stripe_subscription_creation_failed',
+      provider: 'stripe',
+      externalReference: session.id,
+      tenantId: fulfillmentTenantId,
+      payload: {
+        appointmentRecordId: record?.id || null,
+        stripeSessionId: session.id,
+        reason: schedulingDeferred ? 'acuity_creation_deferred' : 'acuity_appointment_missing',
+        local_contract: 'plan_subscription_after_first_acuity_appointment_v1',
+      },
+    });
   }
 
+  const recordedVisitSubtotalCents = Number(md.visitSubtotalCents || 0)
+    || (md.planSignup === 'true' ? Number(md.planMonthlyPriceCents || 0) : 0)
+    || Number(session.amount_subtotal || 0);
+
+  // Authoritative deposit + remaining balance, derived once so payment_status and
+  // balance_due_cents can never disagree. Both normally come from server-set
+  // checkout metadata; when balanceDueCents is absent (legacy session) we fall
+  // back to subtotal − deposit rather than defaulting to 0 — the old `|| 0`
+  // default silently marked such visits paid-in-full and suppressed balance
+  // collection (lost revenue). For current bookings (balanceDueCents present)
+  // this reproduces the previous values exactly.
+  const depositPaidCents = fullComp
+    ? 0
+    : (md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0));
+  const balanceDueCents = fullComp
+    ? 0
+    : (md.balanceDueCents != null
+        ? Number(md.balanceDueCents)
+        : Math.max(0, recordedVisitSubtotalCents - depositPaidCents));
+
   const patch = {
-    tenant_id:                    tenantId,
+    tenant_id:                    fulfillmentTenantId,
     stripe_checkout_session_id:   session.id,
     stripe_customer_id:           session.customer || null,
     stripe_deposit_payment_intent: paymentIntentId,
     stripe_payment_method_id:     paymentMethodId,
     deposit_paid_at:              now,
-    payment_status:               Number(md.balanceDueCents || 0) > 0 ? 'partial_payment' : 'paid_in_full',
+    payment_status:               balanceDueCents > 0 ? 'partial_payment' : 'paid_in_full',
     status:                       schedulingDeferred ? undefined : acuityAppointment?.id ? 'scheduled' : 'payment_received',
     acuity_appointment_id:         schedulingDeferred ? undefined : acuityAppointment?.id ? String(acuityAppointment.id) : null,
     reconciliation_status:         schedulingDeferred ? undefined : fulfillmentError ? 'action_required' : 'ok',
-    attio_person_id:               attioPersonId || undefined,
-    attio_synced_at:               attioSynced ? now : undefined,
-    balance_due_cents:            md.balanceDueCents != null ? Number(md.balanceDueCents) : null,
-    visit_subtotal_cents:         md.visitSubtotalCents != null ? Number(md.visitSubtotalCents) : null,
-    deposit_amount_cents:         md.depositAmountCents != null ? Number(md.depositAmountCents) : Number(session.amount_total || 0),
+    scheduling_lock_at:            fulfillmentError ? null : undefined,
+    hubspot_contact_id:            hubspotContactId || undefined,
+    hubspot_synced_at:             hubspotSynced ? now : undefined,
+    balance_due_cents:            balanceDueCents,
+    visit_subtotal_cents:         recordedVisitSubtotalCents || null,
+    deposit_amount_cents:         depositPaidCents,
     external_payload:              buildExternalPayload(record?.external_payload || {}, {
       stripeSessionId: session.id,
       stripePaymentIntentId: paymentIntentId,
       acuityAppointment,
-      attioPersonId,
-      planSubscriptionId,
+      hubspotContactId,
+      ...(planSubscriptionId ? { planSubscriptionId } : {}),
+      ...(planSubscriptionDeferredReason ? { planSubscriptionDeferredReason } : {}),
+      ...(discountForPayload ? { discount: discountForPayload } : {}),
+      ...(checkoutCreditRedemption(checkout, md) ? {
+        creditRedemption: {
+          units: checkoutCreditRedemption(checkout, md).units,
+          amountCents: checkoutCreditRedemption(checkout, md).amountCents,
+          redeemedAt: now,
+        },
+      } : {}),
+      ...(fullComp ? {
+        comped: {
+          source: 'stripe_discount',
+          code: discountForPayload?.code || discountForPayload?.couponName || '',
+          amountCompedCents: recordedVisitSubtotalCents,
+          appliedAt: discountForPayload?.appliedAt || now,
+        },
+      } : {}),
       error: fulfillmentError ? safeLogContext(fulfillmentError, 'acuity_fulfillment_failed') : null,
     }),
     updated_at:                   now,
@@ -501,6 +1132,34 @@ async function handleCheckoutCompleted(stripe, db, session) {
 
   if (db && record?.id) {
     await db.from('appointments').update(patch).eq('id', record.id);
+    await writeAuditEvent(db, {
+      tenantId, action: 'stripe_webhook_deposit_fulfilled',
+      entityType: 'appointment', entityId: record.id, phiTouched: true,
+      payload: { stripeSessionId: session.id, paymentIntentId: paymentIntentId || null, acuityAppointmentId: acuityAppointment?.id || null },
+    });
+    await recordDiscountRedemptions(db, {
+      session,
+      record,
+      tenantId,
+      paymentIntentId,
+      discounts,
+      fullComp,
+    });
+    await recordMembershipInitialCredit(db, {
+      checkout,
+      record,
+      tenantId,
+      session,
+      planSubscriptionId,
+    });
+    await recordIvCreditRedemption(db, {
+      checkout,
+      record,
+      tenantId,
+      session,
+      md,
+    });
+    try { await creditReferralOnFirstPaid(db, { refereeProfileId: checkout.creditRedemption?.memberProfileId || null, refereeEmail: checkout.contact?.email || '', appointmentId: record.id, tenantId }); } catch (err) { console.warn('[stripe/webhook] referral credit failed', safeLogContext(err, 'referral_credit_failed')); }
     if (fulfillmentError) {
       await insertReconciliationCase(db, buildReconciliationCase({
         caseType: 'stripe_succeeded_acuity_failed',
@@ -515,11 +1174,28 @@ async function handleCheckoutCompleted(stripe, db, session) {
         },
       }));
     }
+    // Post-checkout welcome email — best-effort, idempotent, never blocks the
+    // webhook. Sends on the FIRST paid appointment for this email (one-time or
+    // plan). Repeat customers are skipped via the appointments lookup.
+    await sendCheckoutWelcomeEmail(db, {
+      contact: checkout.contact || {},
+      currentRecordId: record.id,
+      tenantId: fulfillmentTenantId,
+      sessionId: session.id,
+      planSignup: md.planSignup === 'true',
+    });
+    // Customer booking-confirmation + receipt (PHI-free, deduped per session).
+    await sendCheckoutConfirmationEmails(db, {
+      checkout,
+      session,
+      tenantId: fulfillmentTenantId,
+      acuityCreated: Boolean(acuityAppointment?.id) && !fulfillmentError && !schedulingDeferred,
+    });
     return {
       action: fulfillmentError ? 'deposit_paid_acuity_failed' : 'deposit_paid_acuity_created',
       matched: true,
       acuityAppointmentId: acuityAppointment?.id || null,
-      attioSynced,
+      hubspotSynced,
     };
   }
 
@@ -529,18 +1205,62 @@ async function handleCheckoutCompleted(stripe, db, session) {
       matched: false,
       persisted: false,
       acuityAppointmentId: acuityAppointment?.id || null,
-      attioSynced,
+      hubspotSynced,
     };
   }
 
   // Legacy fallback for older sessions created before the paid-first flow.
-  const { error } = await db.from('appointments').insert({
-    tenant_id: tenantId,
+  const { data: insertedRecord, error } = await db.from('appointments').insert({
+    tenant_id: fulfillmentTenantId,
     acuity_appointment_id: md.acuityAppointmentId || null,
     ...patch,
     created_at: now,
-  });
+  }).select('id, tenant_id').single();
   if (error) console.warn('[stripe/webhook] appointment insert failed', safeLogContext(error, 'appointment_insert_failed'));
+  if (!error && insertedRecord?.id) {
+    await writeAuditEvent(db, {
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      action: 'stripe_webhook_appointment_inserted',
+      entityType: 'appointment', entityId: insertedRecord.id, phiTouched: true,
+      payload: { stripeSessionId: session.id, paymentIntentId: paymentIntentId || null, acuityAppointmentId: md.acuityAppointmentId || null },
+    });
+    await recordDiscountRedemptions(db, {
+      session,
+      record: insertedRecord,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      paymentIntentId,
+      discounts,
+      fullComp,
+    });
+    await recordMembershipInitialCredit(db, {
+      checkout,
+      record: insertedRecord,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      session,
+      planSubscriptionId,
+    });
+    await recordIvCreditRedemption(db, {
+      checkout,
+      record: insertedRecord,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      session,
+      md,
+    });
+    try { await creditReferralOnFirstPaid(db, { refereeProfileId: checkout.creditRedemption?.memberProfileId || null, refereeEmail: checkout.contact?.email || '', appointmentId: insertedRecord.id, tenantId: insertedRecord.tenant_id || fulfillmentTenantId }); } catch (err) { console.warn('[stripe/webhook] referral credit failed', safeLogContext(err, 'referral_credit_failed')); }
+    await sendCheckoutWelcomeEmail(db, {
+      contact: checkout.contact || {},
+      currentRecordId: insertedRecord.id,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      sessionId: session.id,
+      planSignup: md.planSignup === 'true',
+    });
+    await sendCheckoutConfirmationEmails(db, {
+      checkout,
+      session,
+      tenantId: insertedRecord.tenant_id || fulfillmentTenantId,
+      acuityCreated: Boolean(acuityAppointment?.id) && !fulfillmentError && !schedulingDeferred,
+    });
+  }
   return { action: 'deposit_paid', matched: false };
 }
 
@@ -559,8 +1279,157 @@ async function handleBalancePaid(db, paymentIntent) {
   if (md.acuityAppointmentId) {
     await db.from('appointments').update(patch)
       .eq('acuity_appointment_id', String(md.acuityAppointmentId));
+    try {
+      await writeAuditEvent(db, {
+        tenantId: await getDefaultTenantId(db),
+        action: 'stripe_webhook_balance_paid',
+        entityType: 'appointment', phiTouched: true,
+        payload: { acuityAppointmentId: String(md.acuityAppointmentId), paymentIntentId: paymentIntent.id },
+      });
+    } catch (err) { /* audit best-effort */ }
   }
   return { action: 'balance_paid' };
+}
+
+async function handleInvoicePaid(stripe, db, invoice) {
+  if (!db) return { action: 'membership_credit_skipped_db_not_configured' };
+  const subscriptionId = stripeObjectId(invoice.subscription);
+  if (!subscriptionId || !invoice.id) return { action: 'ignored_invoice_without_subscription' };
+  if (Number(invoice.amount_paid || 0) <= 0) return { action: 'ignored_zero_amount_membership_invoice' };
+  if (invoice.billing_reason === 'subscription_create') return { action: 'ignored_membership_subscription_create_invoice' };
+
+  let subscription = typeof invoice.subscription === 'object' ? invoice.subscription : null;
+  if (!subscription) {
+    try {
+      subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    } catch (err) {
+      console.warn('[stripe/webhook] subscription retrieve failed for invoice credit', safeLogContext(err, 'stripe_subscription_retrieve_failed'));
+      return { action: 'membership_credit_subscription_retrieve_failed' };
+    }
+  }
+
+  const md = subscription?.metadata || {};
+  if (md.kind !== 'plan_recurring') return { action: 'ignored_non_membership_invoice' };
+  const appointmentRecordId = md.appointmentRecordId || null;
+  const record = appointmentRecordId
+    ? await findAppointmentRecord(db, { appointmentRecordId })
+    : null;
+  if (!record) return { action: 'membership_credit_record_missing' };
+  const checkout = checkoutPayloadFromRecord(record);
+  const tenantId = record.tenant_id || await getDefaultTenantId(db);
+  const visitCredits = Math.max(1, Number(subscription?.metadata?.visits_per_cycle || 1));
+  await grantMembershipCredit(db, {
+    tenantId,
+    email: checkout?.contact?.email || '',
+    appointmentId: record.id,
+    stripeCheckoutSessionId: null,
+    stripeSubscriptionId: subscriptionId,
+    stripeInvoiceId: invoice.id,
+    source: 'membership_renewal_grant',
+    description: 'Membership renewal IV credit',
+    units: visitCredits,
+    creditValueCents: VISIT_CREDIT_CENTS,
+    externalPayload: {
+      membershipName: checkout?.membership?.name || md.planName || '',
+      invoiceBillingReason: invoice.billing_reason || '',
+    },
+  });
+
+  // #10 Subscription-renewal email — PHI-free (first name, plan name, credit
+  // count, amount). Deduped per invoice id so a redelivered invoice.paid can't
+  // re-send. Best-effort; never blocks the 200 ack.
+  await sendCustomerEmailOnce(db, {
+    action: 'plan_renewed_email_sent',
+    entityId: invoice.id,
+    tenantId,
+    auditPayload: { stripeInvoiceId: invoice.id, stripeSubscriptionId: subscriptionId },
+    send: () => sendPlanRenewedEmail({
+      to: checkout?.contact?.email || '',
+      name: firstNameFromContact(checkout?.contact || {}),
+      planName: checkout?.membership?.name || subscription?.metadata?.planName || md.planName || 'Avalon',
+      visitCredits,
+      amountCents: Number(invoice.amount_paid || 0),
+    }),
+  });
+  return { action: 'membership_renewal_credit_granted', matched: true, persisted: true };
+}
+
+// #7 FAILED-PAYMENT RECOVERY. On invoice.payment_failed for a recurring plan,
+// open a reconciliation case (so ops can recover the payment) and send the
+// customer a PHI-free "update your card" email deep-linking to /members/billing.
+// Idempotent: the reconciliation case dedupes on (case_type, provider, invoice
+// id) and the email dedupes per invoice id via sendCustomerEmailOnce.
+async function handleInvoicePaymentFailed(stripe, db, invoice) {
+  if (!db) return { action: 'payment_failed_skipped_db_not_configured' };
+  const subscriptionId = stripeObjectId(invoice.subscription);
+  if (!subscriptionId || !invoice.id) return { action: 'ignored_invoice_without_subscription' };
+
+  let subscription = typeof invoice.subscription === 'object' ? invoice.subscription : null;
+  if (!subscription) {
+    try {
+      subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    } catch (err) {
+      console.warn('[stripe/webhook] subscription retrieve failed for payment_failed', safeLogContext(err, 'stripe_subscription_retrieve_failed'));
+    }
+  }
+
+  const md = subscription?.metadata || {};
+  // Only act on Avalon recurring plans; ignore unrelated subscriptions.
+  if (md.kind !== 'plan_recurring') return { action: 'ignored_non_membership_payment_failed' };
+
+  const appointmentRecordId = md.appointmentRecordId || null;
+  const record = appointmentRecordId
+    ? await findAppointmentRecord(db, { appointmentRecordId })
+    : null;
+  const checkout = record ? checkoutPayloadFromRecord(record) : null;
+  const tenantId = record?.tenant_id || await getDefaultTenantId(db);
+  const planName = checkout?.membership?.name || md.planName || 'Avalon';
+  const amountCents = Number(invoice.amount_due || invoice.amount_remaining || 0);
+
+  // Reconciliation case — recover the payment by hand if auto-retry fails.
+  // acuity_succeeded_stripe_failed is the closest existing case type (critical,
+  // ops_manager, "recover payment, cancel, or manually reconcile"). See report
+  // note: a dedicated 'subscription_payment_failed' type would be cleaner but
+  // lives in _reconciliation.js, which is outside this change's file lane.
+  await insertOperationalFailureCase(db, {
+    caseType: 'acuity_succeeded_stripe_failed',
+    provider: 'stripe',
+    externalReference: invoice.id,
+    tenantId,
+    payload: {
+      appointmentRecordId: record?.id || null,
+      stripeInvoiceId: invoice.id,
+      stripeSubscriptionId: subscriptionId,
+      stripeCustomerId: stripeObjectId(invoice.customer),
+      reason: 'subscription_payment_failed',
+      attemptCount: invoice.attempt_count || null,
+      nextPaymentAttempt: unixToIso(invoice.next_payment_attempt),
+      amountDueCents: amountCents,
+      planName,
+      local_contract: 'plan_recurring_payment_recovery_v1',
+    },
+  });
+
+  // Customer "update your card" email — PHI-free, deduped per invoice id.
+  const recipient = String(checkout?.contact?.email || invoice.customer_email || '').trim();
+  if (recipient) {
+    await sendCustomerEmailOnce(db, {
+      action: 'payment_failed_email_sent',
+      entityId: invoice.id,
+      tenantId,
+      auditPayload: { stripeInvoiceId: invoice.id, stripeSubscriptionId: subscriptionId },
+      send: () => sendPaymentFailedEmail({
+        to: recipient,
+        name: firstNameFromContact(checkout?.contact || {}),
+        planName,
+        amountCents,
+      }),
+    });
+  } else {
+    console.warn('[stripe/webhook] payment_failed: no recipient email', { stripeInvoiceId: invoice.id });
+  }
+
+  return { action: 'subscription_payment_failed_recovered', matched: Boolean(record), persisted: true };
 }
 
 export default async function handler(req, res) {
@@ -585,6 +1454,7 @@ export default async function handler(req, res) {
 
   let event = null;
   let db = null;
+  let eventClaimed = false;
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const rawBody = await readRawBody(req);
@@ -592,55 +1462,158 @@ export default async function handler(req, res) {
 
     db = await getSupabaseServiceClient();
 
-    // Idempotency: Stripe redelivers an event (same id) on timeout / non-2xx. We
-    // record an event as processed only on success (below), so a failed first
-    // attempt is NOT recorded and still reprocesses correctly on redelivery.
+    // Idempotency: CLAIM the event before running any side effects. Stripe can
+    // deliver the same event id concurrently (parallel retries on timeout); the
+    // unique (provider, idempotency_key) index makes this insert the atomic
+    // claim, so only one delivery fulfills (no double credit / double email).
+    //  - insert wins        → we own it, process, then mark 'processed'.
+    //  - 'processed' exists  → already done, ack as duplicate.
+    //  - 'processing' exists → a sibling is in flight, ack without reprocessing.
+    //  - 'failed' exists     → reprocess by re-claiming the row.
     if (db) {
       try {
-        const { data: seenEvent } = await db.from('integration_events')
-          .select('id, status')
-          .eq('provider', 'stripe')
-          .eq('idempotency_key', event.id)
-          .maybeSingle();
-        if (seenEvent?.status === 'processed') {
-          return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
+        const { error: claimErr } = await db.from('integration_events').insert({
+          provider: 'stripe',
+          event_type: event.type,
+          external_event_id: event.id,
+          idempotency_key: event.id,
+          payload_hash: event.id,
+          signature_valid: true,
+          status: 'processing',
+        });
+        if (!claimErr) {
+          eventClaimed = true;
+        } else if (/duplicate|unique|23505/i.test(claimErr.message || '')) {
+          const { data: seenEvent } = await db.from('integration_events')
+            .select('status')
+            .eq('provider', 'stripe')
+            .eq('idempotency_key', event.id)
+            .maybeSingle();
+          if (seenEvent?.status === 'processing') {
+            return res.status(200).json({ received: true, inFlight: true, id: event.id, type: event.type });
+          }
+          if (seenEvent?.status !== 'failed') {
+            console.log('[stripe/webhook] event processed', {
+              event: 'stripe_webhook_event_processed',
+              id: event.id,
+              type: event.type,
+              action: 'duplicate_already_processed',
+              matched: null,
+              persisted: true,
+            });
+            return res.status(200).json({ received: true, duplicate: true, id: event.id, type: event.type });
+          }
+          // status 'failed' → re-claim atomically (only if still 'failed').
+          const { data: reclaimed, error: reclaimErr } = await db.from('integration_events')
+            .update({ status: 'processing', signature_valid: true })
+            .eq('provider', 'stripe')
+            .eq('idempotency_key', event.id)
+            .eq('status', 'failed')
+            .select('id');
+          if (reclaimErr || !reclaimed?.length) {
+            return res.status(200).json({ received: true, inFlight: true, id: event.id, type: event.type });
+          }
+          eventClaimed = true;
+        } else {
+          // Non-unique error: fail open and process (best-effort), as before.
+          console.warn('[stripe/webhook] idempotency claim skipped', safeLogContext(claimErr, 'idempotency_claim_skipped'));
         }
       } catch (err) {
-        console.warn('[stripe/webhook] idempotency check skipped', safeLogContext(err, 'idempotency_check_skipped'));
+        console.warn('[stripe/webhook] idempotency claim skipped', safeLogContext(err, 'idempotency_claim_skipped'));
       }
     }
 
     let result = { action: 'store_for_audit' };
     switch (event.type) {
-      case 'checkout.session.completed':
-        result = await withTimeout(
-          (async () => handleCheckoutCompleted(
-            stripe,
-            db,
-            await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id), 'stripe checkout session retrieve')
-          ))(),
-          'stripe checkout fulfillment'
-        );
+      case 'checkout.session.completed': {
+        const completedSession = await withTimeout(stripe.checkout.sessions.retrieve(event.data.object.id, {
+          expand: [
+            'discounts.coupon',
+            'discounts.promotion_code',
+            'total_details.breakdown.discounts.discount.coupon',
+            'total_details.breakdown.discounts.discount.promotion_code',
+          ],
+        }), 'stripe checkout session retrieve');
+        // Events platform sessions (metadata.kind === 'event') fulfill through
+        // events-core ONLY — they must never enter the mobile-IV path below.
+        result = isEventSession(completedSession)
+          ? await withTimeout(handleEventCheckoutCompleted(db, completedSession), 'event checkout fulfillment')
+          : await withTimeout(handleCheckoutCompleted(stripe, db, completedSession), 'stripe checkout fulfillment');
         break;
-      case 'payment_intent.succeeded':
+      }
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object;
         if (!db) {
           result = { action: 'balance_tracking_skipped_db_not_configured' };
           break;
         }
-        result = await handleBalancePaid(db, event.data.object);
+        // Inline event-checkout PaymentIntents (metadata.kind === 'event')
+        // fulfill through events-core, same as the hosted-session path.
+        if (isEventPaymentIntent(pi)) {
+          result = await withTimeout(handleEventPaymentIntentSucceeded(db, pi), 'event PI fulfillment');
+          break;
+        }
+        result = await handleBalancePaid(db, pi);
         break;
-      case 'checkout.session.expired':
-        result = { action: 'release_scheduling_hold' };
+      }
+      case 'invoice.paid':
+        result = await withTimeout(
+          handleInvoicePaid(stripe, db, event.data.object),
+          'stripe membership invoice credit'
+        );
+        break;
+      case 'invoice.payment_failed':
+        result = await withTimeout(
+          handleInvoicePaymentFailed(stripe, db, event.data.object),
+          'stripe invoice payment failed recovery'
+        );
+        break;
+      case 'checkout.session.expired': {
+        // The expired-event payload carries the full session (incl. metadata),
+        // so no retrieve round-trip is needed to route it.
+        const expiredSession = event.data.object;
+        result = isEventSession(expiredSession)
+          ? await withTimeout(handleEventSessionExpired(db, expiredSession), 'event checkout expiry release')
+          : { action: 'release_scheduling_hold' };
+        break;
+      }
+      case 'charge.refunded':
+        // Events state-sync ONLY (eng decision 2A): acts when the charge's
+        // payment intent matches an event order; every other refund returns
+        // {action:'ignored_non_event_refund'} — the refund_requests admin flow
+        // remains the sole initiator/handler for non-event refunds.
+        result = db
+          ? await withTimeout(handleEventChargeRefunded(db, event.data.object), 'event refund sync')
+          : { action: 'event_refund_skipped_db_not_configured' };
         break;
       default:
         result = { action: 'store_for_audit' };
     }
 
-    // Record successful processing so a redelivery of this event short-circuits
-    // the idempotency check above. Best-effort — never blocks the 200 ack.
-    if (db) {
+    console.log('[stripe/webhook] event processed', {
+      event: 'stripe_webhook_event_processed',
+      id: event.id,
+      type: event.type,
+      action: result?.action || 'unknown',
+      matched: result?.matched ?? null,
+      persisted: Boolean(db),
+    });
+
+    // Mark the claimed event 'processed' so a redelivery short-circuits.
+    // Best-effort — never blocks the 200 ack.
+    if (db && eventClaimed) {
       try {
-        await db.from('integration_events').insert({
+        await db.from('integration_events')
+          .update({ status: 'processed', processed_at: new Date().toISOString(), event_type: event.type })
+          .eq('provider', 'stripe')
+          .eq('idempotency_key', event.id);
+      } catch (err) {
+        console.warn('[stripe/webhook] event idempotency record failed', safeLogContext(err, 'idempotency_record_failed'));
+      }
+    } else if (db) {
+      // Claim was skipped (transient error above) — best-effort upsert.
+      try {
+        await db.from('integration_events').upsert({
           provider: 'stripe',
           event_type: event.type,
           external_event_id: event.id,
@@ -649,9 +1622,8 @@ export default async function handler(req, res) {
           signature_valid: true,
           status: 'processed',
           processed_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'provider,idempotency_key' });
       } catch (err) {
-        // Unique violation = a concurrent duplicate already recorded it; ignore.
         if (!/duplicate|unique|23505/i.test(err.message || '')) {
           console.warn('[stripe/webhook] event idempotency record failed', safeLogContext(err, 'idempotency_record_failed'));
         }
@@ -674,6 +1646,15 @@ export default async function handler(req, res) {
         code: safeErrorCode(err, 'stripe_webhook_invalid'),
       });
     }
+    // Release our claim so a redelivery of this event can reprocess it.
+    if (db && eventClaimed) {
+      try {
+        await db.from('integration_events')
+          .update({ status: 'failed', failure_reason: safeErrorCode(err, 'stripe_webhook_processing_failed') })
+          .eq('provider', 'stripe')
+          .eq('idempotency_key', event.id);
+      } catch (_) { /* best-effort */ }
+    }
     if (err.code === 'stripe_webhook_timeout') {
       await insertOperationalFailureCase(db, {
         caseType: 'webhook_missed',
@@ -685,6 +1666,14 @@ export default async function handler(req, res) {
           errorStatus: err?.statusCode || err?.status || null,
         },
       });
+      console.warn('[stripe/webhook] event processed', {
+        event: 'stripe_webhook_event_processed',
+        id: event.id,
+        type: event.type,
+        action: 'processing_timeout',
+        matched: null,
+        persisted: Boolean(db),
+      });
       return res.status(200).json({
         received: true,
         persisted: Boolean(db),
@@ -693,6 +1682,14 @@ export default async function handler(req, res) {
       });
     }
     console.error('[stripe/webhook] processing error', safeLogContext(err, 'stripe_webhook_processing_failed'));
+    console.warn('[stripe/webhook] event processed', {
+      event: 'stripe_webhook_event_processed',
+      id: event.id,
+      type: event.type,
+      action: 'processing_error',
+      matched: null,
+      persisted: false,
+    });
     return res.status(200).json({
       received: true,
       persisted: false,

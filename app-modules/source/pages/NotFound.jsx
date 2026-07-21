@@ -63,6 +63,48 @@ export default function NotFound() {
               Book a Session
             </Link>
           </motion.div>
+
+          {/* Helpful destinations so a lost visitor always has a next step. */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.42 }}
+            className="mt-12"
+          >
+            <p className="font-body text-[10px] font-bold uppercase tracking-[0.24em] text-foreground/40 mb-4">
+              Or try one of these
+            </p>
+            <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
+              <Link
+                to="/book"
+                className="rounded-xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3.5 text-left transition-colors duration-200 hover:border-foreground/30"
+              >
+                <p className="font-heading text-lg uppercase leading-none text-foreground">Book a visit</p>
+                <p className="mt-1 font-body text-[11px] text-foreground/50">We come to you</p>
+              </Link>
+              <Link
+                to="/subscription"
+                className="rounded-xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3.5 text-left transition-colors duration-200 hover:border-foreground/30"
+              >
+                <p className="font-heading text-lg uppercase leading-none text-foreground">Plans</p>
+                <p className="mt-1 font-body text-[11px] text-foreground/50">Bank visit credits</p>
+              </Link>
+              <Link
+                to="/members/dashboard"
+                className="rounded-xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3.5 text-left transition-colors duration-200 hover:border-foreground/30"
+              >
+                <p className="font-heading text-lg uppercase leading-none text-foreground">Member portal</p>
+                <p className="mt-1 font-body text-[11px] text-foreground/50">Your dashboard</p>
+              </Link>
+              <a
+                href="mailto:support@avalonvitality.co"
+                className="rounded-xl border border-foreground/10 bg-foreground/[0.04] px-4 py-3.5 text-left transition-colors duration-200 hover:border-foreground/30"
+              >
+                <p className="font-heading text-lg uppercase leading-none text-foreground">Support</p>
+                <p className="mt-1 font-body text-[11px] text-foreground/50">Get in touch</p>
+              </a>
+            </div>
+          </motion.div>
         </div>
       </main>
       <Footer />

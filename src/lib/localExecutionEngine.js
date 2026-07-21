@@ -135,7 +135,7 @@ function readinessForRequest({ request = {}, nurses = [], inventory = [], index 
   const paymentReady = done(request.payment || request.paymentStatus);
   const reservation = buildVisitSupplyReservation({ ...request, id }, inventory);
   const inventoryReady = reservation.status !== 'Blocked';
-  const eta = text(request.eta || request.routeEta);
+  const routeTiming = text(request.routeTiming || request.eta || request.routeEta);
   const transitions = transitionChecks(request);
 
   const blockers = [
@@ -152,9 +152,7 @@ function readinessForRequest({ request = {}, nurses = [], inventory = [], index 
     ? blockers[0] === 'GFE'
       ? 'Route Avalon NP first. Qualiphy only if no Avalon NP is on call.'
       : `Resolve ${blockers[0]}.`
-    : eta
-      ? 'Ready to execute.'
-      : 'Nurse sets final ETA.';
+    : 'Ready to execute.';
 
   return {
     id,
@@ -165,8 +163,8 @@ function readinessForRequest({ request = {}, nurses = [], inventory = [], index 
     request,
     nurse: nurse?.name || text(request.nurse || request.nurseName, 'Unassigned'),
     nurseId: nurse?.id || text(request.nurseId),
-    eta: eta || 'Nurse sets final ETA',
-    etaAuthority: assigned ? 'Nurse final say' : 'Locked until nurse accepts',
+    routeTiming: routeTiming || 'Route timing pending',
+    routeStatus: assigned ? 'Route ready' : 'Locked until nurse accepts',
     gfe,
     intakeReady,
     consentReady,
@@ -379,7 +377,7 @@ export function runLocalExecutionSweep({
         client: row.client,
         service: row.service,
         nurse: row.nurse,
-        eta: row.eta,
+        routeTiming: row.routeTiming,
         clientVisible: true,
         nurseVisible: true,
       },

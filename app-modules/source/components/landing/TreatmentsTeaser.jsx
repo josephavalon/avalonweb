@@ -9,9 +9,19 @@ import { EASE, premiumExpandTransition, premiumHover, premiumListContainer, prem
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import ScrollParallax from '@/components/ui/ScrollParallax';
+import { getProduct, slugify } from '@/data/products';
 
 const MotionLink = motion.create(Link);
 const FOLDOUT_TRANSITION = { ...premiumExpandTransition };
+
+const CATEGORY_SLUG_BY_KEY = { vitamins: 'iv-vitamins', nad: 'nad', cbd: 'cbd' };
+
+function productHrefFor(categoryKey, label) {
+  const categorySlug = CATEGORY_SLUG_BY_KEY[categoryKey];
+  if (!categorySlug) return '/protocols';
+  const slug = slugify(label);
+  return getProduct(categorySlug, slug) ? `/products/${categorySlug}/${slug}` : '/protocols';
+}
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -20,66 +30,49 @@ const SPECIALTY_IVS = [
     label: 'NAD+',
     icon: FlaskConical,
     treatments: [
-      { icon: FlaskConical, img: '/bags/nad-250.png',      label: 'NAD+ 250mg',    price: 350 },
-      { icon: FlaskConical, img: '/bags/nad-500.png',      label: 'NAD+ 500mg',    price: 500 },
-      { icon: FlaskConical, img: '/bags/nad-750.png',      label: 'NAD+ 750mg',    price: 650 },
-      { icon: FlaskConical, img: '/bags/nad-vitality.png', label: 'NAD+ Vitality', price: 700 },
-      { icon: FlaskConical, img: '/bags/nad-1000.png',     label: 'NAD+ 1000mg',   price: 800 },
-      { icon: FlaskConical, img: '/bags/nad-1250.png',     label: 'NAD+ 1250mg',   price: 1000 },
-      { icon: FlaskConical, img: '/bags/nad-1500.png',     label: 'NAD+ 1500mg',   price: 1200 },
+      { icon: FlaskConical, img: '/bags/nad-250.webp',      label: 'NAD+ 250mg',    price: 350 },
+      { icon: FlaskConical, img: '/bags/nad-500.webp',      label: 'NAD+ 500mg',    price: 500 },
+      { icon: FlaskConical, img: '/bags/nad-750.webp',      label: 'NAD+ 750mg',    price: 650 },
+      { icon: FlaskConical, img: '/bags/nad-vitality.webp', label: 'NAD+ Vitality', price: 700 },
+      { icon: FlaskConical, img: '/bags/nad-1000.webp',     label: 'NAD+ 1000mg',   price: 800 },
+      { icon: FlaskConical, img: '/bags/nad-1250.webp',     label: 'NAD+ 1250mg',   price: 1000 },
+      { icon: FlaskConical, img: '/bags/nad-1500.webp',     label: 'NAD+ 1500mg',   price: 1200 },
     ],
   },
   {
     label: 'CBD',
     icon: CannabisLeaf,
     treatments: [
-      { icon: CannabisLeaf, img: '/bags/cbd-33.png',       label: 'CBD 33mg',     price: 250 },
-      { icon: CannabisLeaf, img: '/bags/cbd-66.png',       label: 'CBD 66mg',     price: 300 },
-      { icon: CannabisLeaf, img: '/bags/cbd-vitality.png', label: 'CBD Vitality', price: 350 },
-      { icon: CannabisLeaf, img: '/bags/cbd-99.png',       label: 'CBD 99mg',     price: 350 },
-      { icon: CannabisLeaf, img: '/bags/cbd-132.png',      label: 'CBD 132mg',    price: 450 },
+      { icon: CannabisLeaf, img: '/bags/cbd-33.webp',       label: 'CBD 33mg',     price: 250 },
+      { icon: CannabisLeaf, img: '/bags/cbd-66.webp',       label: 'CBD 66mg',     price: 300 },
+      { icon: CannabisLeaf, img: '/bags/cbd-vitality.webp', label: 'CBD Vitality', price: 350 },
+      { icon: CannabisLeaf, img: '/bags/cbd-99.webp',       label: 'CBD 99mg',     price: 350 },
+      { icon: CannabisLeaf, img: '/bags/cbd-132.webp',      label: 'CBD 132mg',    price: 450 },
     ],
   },
 ];
 
+const VITAMIN_DRIPS = [
+  { icon: Droplets,     img: '/bags/dehydration.webp', label: 'Hydration IV',    price: 200, categoryKey: 'vitamins' },
+  { icon: Zap,          img: '/bags/energy.webp',      label: 'Energy IV',       price: 250, categoryKey: 'vitamins' },
+  { icon: ShieldCheck,  img: '/bags/immunity.webp',    label: 'Immunity IV',     price: 250, categoryKey: 'vitamins' },
+  { icon: Sparkles,     img: '/bags/beauty.webp',      label: 'Beauty IV',       price: 250, categoryKey: 'vitamins' },
+  { icon: FlaskConical, img: '/bags/myers.webp',       label: "Myers' Cocktail", price: 250, categoryKey: 'vitamins' },
+  { icon: Droplets,     img: '/bags/recovery.webp',    label: 'Recovery IV',     price: 250, categoryKey: 'vitamins' },
+  { icon: Sparkles,     img: '/bags/jet-lag.webp',     label: 'Travel IV',       price: 250, categoryKey: 'vitamins' },
+  { icon: Droplets,     img: '/bags/night-out.webp',   label: 'Night Out IV',    price: 250, categoryKey: 'vitamins' },
+];
+const CBD_DRIPS = ((SPECIALTY_IVS.find((s) => s.label === 'CBD') || {}).treatments || [])
+  .map((t) => ({ ...t, categoryKey: 'cbd' }));
+const NAD_DRIPS = ((SPECIALTY_IVS.find((s) => s.label === 'NAD+') || {}).treatments || [])
+  .map((t) => ({ ...t, categoryKey: 'nad' }));
+const ALL_DRIPS = [...VITAMIN_DRIPS, ...CBD_DRIPS, ...NAD_DRIPS];
+
 const TOP_CATEGORIES = [
-  {
-    key: 'vitamins',
-    label: 'VITAMINS',
-    icon: Droplets,
-    type: 'flat-treatments',
-    data: [
-      { icon: Droplets,     img: '/bags/dehydration.png', label: 'Hydration IV',    price: 200 },
-      { icon: Zap,          img: '/bags/energy.png',      label: 'Energy IV',       price: 250 },
-      { icon: ShieldCheck,  img: '/bags/immunity.png',    label: 'Immunity IV',     price: 250 },
-      { icon: Sparkles,     img: '/bags/beauty.png',      label: 'Beauty IV',       price: 250 },
-      { icon: FlaskConical, img: '/bags/myers.png',       label: "Myers' Cocktail", price: 250 },
-      { icon: Droplets,     img: '/bags/recovery.png',    label: 'Recovery IV',     price: 250 },
-      { icon: Sparkles,     img: '/bags/jet-lag.png',     label: 'Travel IV',       price: 250 },
-      { icon: Droplets,     img: '/bags/night-out.png',   label: 'Night Out IV',    price: 250 },
-    ],
-  },
-  {
-    key: 'cbd',
-    label: 'IV CBD',
-    icon: CannabisLeaf,
-    type: 'flat-treatments',
-    data: (SPECIALTY_IVS.find((s) => s.label === 'CBD') || {}).treatments || [],
-  },
-  {
-    key: 'nad',
-    label: 'IV NAD+',
-    icon: FlaskConical,
-    type: 'flat-treatments',
-    data: (SPECIALTY_IVS.find((s) => s.label === 'NAD+') || {}).treatments || [],
-  },
-  {
-    key: 'all',
-    label: 'ALL PROTOCOLS',
-    icon: ArrowRight,
-    type: 'link',
-    href: '/protocols',
-  },
+  { key: 'vitamins', label: 'IV VITAMINS', icon: Droplets,      type: 'flat-treatments', data: VITAMIN_DRIPS },
+  { key: 'cbd',      label: 'IV CBD',      icon: CannabisLeaf,  type: 'flat-treatments', data: CBD_DRIPS },
+  { key: 'nad',      label: 'IV NAD+',     icon: FlaskConical,  type: 'flat-treatments', data: NAD_DRIPS },
+  { key: 'all',      label: 'VIEW ALL',    icon: ArrowRight,    type: 'link',            href: '/protocols', data: ALL_DRIPS },
 ];
 
 // ── Sub-category row (inside Vitamin / Specialty) ─────────────────────────────
@@ -99,7 +92,7 @@ function SubRow({ sub }) {
         <div className="flex items-center gap-2.5">
           <Icon className="w-3.5 h-3.5 text-accent/70" strokeWidth={1.5} />
           <span className="font-body text-xs font-semibold tracking-[0.15em] uppercase text-foreground/80">{sub.label}</span>
-          <span className="font-body text-[9px] text-foreground/30 tracking-[0.1em]">{sub.treatments.length} options</span>
+          <span className="font-body text-[11px] text-foreground/30 tracking-[0.1em]">{sub.treatments.length} options</span>
         </div>
         <motion.span animate={{ rotate: open ? 90 : 0 }} transition={FOLDOUT_TRANSITION} className="shrink-0 text-foreground/25">
           <ChevronRight className="w-3 h-3" strokeWidth={2} />
@@ -129,7 +122,7 @@ function SubRow({ sub }) {
                   )}
                   <div className="min-w-0">
                     <p className="font-body text-[11px] text-foreground/80 leading-snug truncate">{t.label}</p>
-                    <p className="font-body text-[9px] text-foreground/35">${t.price}{sub.label === 'IV NAD+' ? ' · 1-4 hr' : ''}</p>
+                    <p className="font-body text-[11px] text-foreground/35">${t.price}{sub.label === 'IV NAD+' ? ' · 1-4 hr' : ''}</p>
                   </div>
                 </MotionLink>
               ))}
@@ -142,6 +135,15 @@ function SubRow({ sub }) {
 // ── Top-level category row ────────────────────────────────────────────────────
 function CategoryRow({ cat, index, open, onToggle }) {
   const Icon = cat.icon;
+  // Desktop rows are full-bleed; without a secondary value the collapsed card
+  // reads as label-left + chevron-right over a wide empty gap. Surface the
+  // option count + entry price (same treatment as HowItWorks' inline preview)
+  // so the row carries content end-to-end on md+.
+  const items = Array.isArray(cat.data) ? cat.data : [];
+  const fromPrice = items.length ? Math.min(...items.map((t) => t.price)) : null;
+  const rowMeta = items.length
+    ? `${items.length} options${fromPrice ? ` · from $${fromPrice}` : ''}`
+    : null;
 
   if (cat.type === 'link') {
     return (
@@ -194,17 +196,24 @@ function CategoryRow({ cat, index, open, onToggle }) {
           <div className="text-left">
             <p className="font-heading text-xl tracking-[0.06em] text-foreground/66 uppercase leading-none">{cat.label}</p>
             {cat.sub ? (
-              <p className="font-body text-[9px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
+              <p className="font-body text-[11px] text-foreground/35 tracking-[0.15em] uppercase mt-0.5">{cat.sub}</p>
             ) : null}
           </div>
         </div>
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.38, ease: EASE }}
-          className="text-foreground/30 shrink-0"
-        >
-          <ChevronDown className="w-4 h-4" strokeWidth={2} />
-        </motion.div>
+        <div className="flex shrink-0 items-center gap-4">
+          {rowMeta && (
+            <span className="hidden md:block font-body text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/45">
+              {rowMeta}
+            </span>
+          )}
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.38, ease: EASE }}
+            className="text-foreground/30 shrink-0"
+          >
+            <ChevronDown className="w-4 h-4" strokeWidth={2} />
+          </motion.div>
+        </div>
       </motion.button>
 
       {/* Expanded body */}
@@ -224,7 +233,7 @@ function CategoryRow({ cat, index, open, onToggle }) {
                   {cat.data.map((addon) => (
                     <MotionLink
                       key={addon.label}
-                      to="/book"
+                      to={productHrefFor(addon.categoryKey || cat.key, addon.label)}
                       variants={premiumListItem}
                       whileHover={premiumHover}
                       whileTap={premiumTap}
@@ -263,7 +272,7 @@ export default function TreatmentsTeaser() {
         {/* Header */}
         <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10">
           <div>
-            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Menu</h2>
+            <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">Menu</h2>
           </div>
         </ScrollParallax>
 

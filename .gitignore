@@ -44,3 +44,7 @@ deploy-to-vercel.command
 tmp/
 .gstack/
 .env*
+
+# Local scratch — never ship
+public/beta-preview/
+public/vital-signs/

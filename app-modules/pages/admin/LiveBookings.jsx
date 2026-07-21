@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save, MessageSquare, BellRing } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
 
@@ -31,6 +31,15 @@ function fmtWhen(iso) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return 'Date to be confirmed';
   return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+// ISO → value for <input type="datetime-local"> in the admin's local time.
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 const PAYMENT_LABEL = { paid_in_full: 'Paid', partial_payment: 'Partial', deposit_paid: 'Deposit paid', pending: 'Pending' };
@@ -91,21 +100,108 @@ function ActionResult({ result }) {
   );
 }
 
-function BookingRow({ booking, busy, result, onCharge, onLink }) {
+const FIELD_STYLE = {
+  background: 'hsl(var(--background))',
+  color: 'hsl(var(--foreground))',
+  border: '1px solid hsl(var(--foreground) / 0.16)',
+};
+
+function EditField({ label, type = 'text', value, onChange, placeholder }) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>{label}</span>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="min-h-[40px] rounded-xl px-3 font-body text-sm outline-none focus:ring-1"
+        style={FIELD_STYLE}
+      />
+    </label>
+  );
+}
+
+function EditForm({ booking, busy, onSave, onCancel }) {
+  const [form, setForm] = useState({
+    name: booking.customerName === '—' ? '' : (booking.customerName || ''),
+    email: booking.customerEmail || '',
+    phone: booking.customerPhone || '',
+    address: booking.address || '',
+    service: booking.service || '',
+    startsAt: toLocalInput(booking.startsAt),
+  });
+  const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  return (
+    <div className="mt-3 rounded-2xl p-4" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}` }}>
+      <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: MUTED }}>Edit booking details</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <EditField label="Client name" value={form.name} onChange={set('name')} placeholder="Full name" />
+        <EditField label="Email" type="email" value={form.email} onChange={set('email')} placeholder="name@email.com" />
+        <EditField label="Phone" type="tel" value={form.phone} onChange={set('phone')} placeholder="(415) 555-0100" />
+        <EditField label="Date & time" type="datetime-local" value={form.startsAt} onChange={set('startsAt')} />
+        <EditField label="Service" value={form.service} onChange={set('service')} placeholder="Avalon Visit" />
+        <EditField label="Address" value={form.address} onChange={set('address')} placeholder="Service address" />
+      </div>
+      <div className="mt-4 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onCancel}
+          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-50"
+          style={{ background: CARD, color: MUTED, border: `1px solid ${BORDER}` }}
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={2} /> Cancel
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onSave(booking, form)}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-full px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-50"
+          style={{ background: TEXT, color: INVERT }}
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Save className="h-3.5 w-3.5" strokeWidth={2} />}
+          Save changes
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBusy, consentBusy, editing, result, onCharge, onLink, onRetryAcuity, onDelete, onEdit, onSave, onCancelEdit, onSendReminder, onToggleConsent }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
   const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
   const paymentTypeLabel = PAYMENT_TYPE_LABEL[booking.paymentType] || titleize(booking.paymentType || '');
+  const needsScheduling = booking.reconciliationStatus === 'action_required' && !booking.acuityAppointmentId;
 
   return (
-    <div className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+    <div className="rounded-2xl px-4 py-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="truncate font-heading text-xl uppercase leading-none">{booking.customerName}</h3>
             <StatusPill status={booking.paymentStatus} />
+            {needsScheduling ? (
+              <span className="inline-flex min-h-[26px] items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-300/[0.08] px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200">
+                <AlertTriangle className="h-3 w-3" strokeWidth={2} />
+                Needs scheduling
+              </span>
+            ) : null}
             {booking.isMembership ? (
               <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Plan</span>
+            ) : null}
+            {booking.comped ? (
+              <span className="inline-flex min-h-[26px] items-center rounded-full border border-emerald-300/25 bg-emerald-300/[0.08] px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200">
+                Comped{booking.discountCode ? ` · ${booking.discountCode}` : ''}
+              </span>
+            ) : null}
+            {booking.creditRedeemed ? (
+              <span className="inline-flex min-h-[26px] items-center gap-1.5 rounded-full border border-sky-300/25 bg-sky-300/[0.08] px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.14em] text-sky-200">
+                <Sparkles className="h-3 w-3" strokeWidth={2} />
+                Credit · {booking.creditUnitsRedeemed || 1}
+              </span>
             ) : null}
           </div>
           <p className="mt-1.5 truncate font-body text-sm" style={{ color: MUTED }}>{booking.service}</p>
@@ -123,7 +219,7 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 border-t pt-3 sm:grid-cols-3" style={{ borderColor: BORDER }}>
+      <div className="mt-3 grid gap-2 border-t pt-2.5 sm:grid-cols-3" style={{ borderColor: BORDER }}>
         <div>
           <p className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Visit Total</p>
           <p className="mt-1 font-body text-sm font-semibold">{money(booking.visitSubtotal || 0)}</p>
@@ -138,8 +234,20 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
         </div>
       </div>
 
-      {collectable ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+      {(collectable || needsScheduling) ? (
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          {needsScheduling ? (
+            <button
+              type="button"
+              disabled={retryBusy}
+              onClick={() => onRetryAcuity(booking)}
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-full px-4 font-body text-[11px] font-bold uppercase tracking-[0.16em] transition-opacity disabled:opacity-50"
+              style={{ background: 'rgba(245,158,11,0.12)', color: 'hsl(38 92% 72%)', border: '1px solid rgba(245,158,11,0.28)' }}
+            >
+              {retryBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} />}
+              Retry Acuity
+            </button>
+          ) : null}
           {canPay ? (
             <>
               {booking.hasSavedCard ? (
@@ -165,11 +273,66 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
                 Copy payment link
               </button>
             </>
-          ) : (
+          ) : collectable ? (
             <span className="font-body text-xs" style={{ color: DIM }}>No payment method on file — collect in person.</span>
-          )}
+          ) : null}
         </div>
       ) : null}
+
+      {/* SMS reminders (45 CFR §164.522) + edit/delete — single tight action row */}
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t pt-2.5" style={{ borderColor: BORDER }}>
+        <span className="inline-flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: booking.smsConsent ? 'hsl(150 60% 45%)' : DIM }}>
+          <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
+          {booking.smsConsent ? 'SMS: opted in' : 'SMS: no consent'}
+        </span>
+        <button
+          type="button"
+          disabled={consentBusy || !booking.customerPhone}
+          onClick={() => onToggleConsent(booking, !booking.smsConsent)}
+          title={!booking.customerPhone ? 'No phone number on file' : undefined}
+          className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-40"
+          style={{ background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }}
+        >
+          {consentBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : null}
+          {booking.smsConsent ? 'Revoke' : 'Record'}
+        </button>
+        {booking.smsConsent && booking.customerPhone ? (
+          <button
+            type="button"
+            disabled={reminderBusy}
+            onClick={() => onSendReminder(booking)}
+            className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: TEXT, color: INVERT }}
+          >
+            {reminderBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <BellRing className="h-3.5 w-3.5" strokeWidth={2} />}
+            Remind
+          </button>
+        ) : null}
+        <span className="ml-auto inline-flex items-center gap-1">
+          <button
+            type="button"
+            disabled={saveBusy}
+            onClick={() => (editing ? onCancelEdit() : onEdit(booking))}
+            className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-50"
+            style={{ color: MUTED }}
+          >
+            {editing ? <X className="h-3.5 w-3.5" strokeWidth={2} /> : <Pencil className="h-3.5 w-3.5" strokeWidth={2} />}
+            {editing ? 'Close' : 'Edit'}
+          </button>
+          <button
+            type="button"
+            disabled={deleteBusy}
+            onClick={() => onDelete(booking)}
+            className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 font-body text-[10px] font-bold uppercase tracking-[0.12em] transition-opacity hover:opacity-80 disabled:opacity-50"
+            style={{ color: 'hsl(0 70% 62%)' }}
+          >
+            {deleteBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> : <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />}
+            Delete
+          </button>
+        </span>
+      </div>
+
+      {editing ? <EditForm booking={booking} busy={saveBusy} onSave={onSave} onCancel={onCancelEdit} /> : null}
 
       <ActionResult result={result} />
     </div>
@@ -179,6 +342,7 @@ function BookingRow({ booking, busy, result, onCharge, onLink }) {
 export default function LiveAdminBookings() {
   const [state, setState] = useState({ loading: true, error: '', bookings: [] });
   const [actions, setActions] = useState({}); // id -> { busy, message, tone, link }
+  const [editingId, setEditingId] = useState(null);
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: '' }));
@@ -207,12 +371,94 @@ export default function LiveAdminBookings() {
         setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'success', message: `Charged ${money(booking.balanceDue)} to the saved card.` } }));
         load();
       } else {
-        setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: res.error || 'Could not complete the charge.' } }));
+        setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: 'Could not complete the charge.' } }));
       }
     } catch (err) {
       setActions((m) => ({ ...m, [booking.id]: { busy: false, tone: 'error', message: 'Action failed.' } }));
     }
   }, [load]);
+
+  const retryAcuity = useCallback(async (booking) => {
+    setActions((m) => ({ ...m, [booking.id]: { busyRetry: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/retry-acuity', { appointmentId: booking.id });
+      if (res.ok) {
+        setActions((m) => ({ ...m, [booking.id]: { tone: 'success', message: `Acuity appointment created: ${res.acuityAppointmentId}` } }));
+        load();
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: 'Could not create the Acuity appointment.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { tone: 'error', message: 'Acuity retry failed.' } }));
+    }
+  }, [load]);
+
+  const deleteBooking = useCallback(async (booking) => {
+    if (!window.confirm(`Delete this booking${booking.customerName ? ` for ${booking.customerName}` : ''}? This permanently removes it and cannot be undone.`)) return;
+    setActions((m) => ({ ...m, [booking.id]: { busyDelete: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/delete', { appointmentId: booking.id });
+      if (res?.ok) { load(); }
+      else { setActions((m) => ({ ...m, [booking.id]: { busyDelete: false, tone: 'error', message: 'Could not delete this booking.' } })); }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busyDelete: false, tone: 'error', message: 'Delete failed.' } }));
+    }
+  }, [load]);
+
+  const saveBooking = useCallback(async (booking, form) => {
+    setActions((m) => ({ ...m, [booking.id]: { busySave: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/update', {
+        appointmentId: booking.id,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        service: form.service,
+        // datetime-local is local time; convert to a real ISO instant so the
+        // server stores the correct moment regardless of its timezone.
+        startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : '',
+      });
+      if (res?.ok) {
+        setEditingId(null);
+        setActions((m) => ({ ...m, [booking.id]: { busySave: false, tone: 'success', message: 'Booking details updated.' } }));
+        load();
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { busySave: false, tone: 'error', message: 'Could not save changes.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busySave: false, tone: 'error', message: 'Save failed.' } }));
+    }
+  }, [load]);
+
+  const toggleConsent = useCallback(async (booking, granted) => {
+    setActions((m) => ({ ...m, [booking.id]: { busyConsent: true } }));
+    try {
+      const res = await apiPost('/api/admin/bookings/update', { appointmentId: booking.id, smsConsent: granted });
+      if (res?.ok) {
+        setActions((m) => ({ ...m, [booking.id]: { busyConsent: false, tone: 'success', message: granted ? 'Text-reminder consent recorded.' : 'Consent revoked.' } }));
+        load();
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { busyConsent: false, tone: 'error', message: 'Could not update consent.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busyConsent: false, tone: 'error', message: 'Could not update consent.' } }));
+    }
+  }, [load]);
+
+  const sendReminder = useCallback(async (booking) => {
+    setActions((m) => ({ ...m, [booking.id]: { busyReminder: true } }));
+    try {
+      const res = await apiPost('/api/admin/communications/send-reminder', { appointmentId: booking.id });
+      if (res?.ok) {
+        setActions((m) => ({ ...m, [booking.id]: { busyReminder: false, tone: 'success', message: 'Reminder text sent.' } }));
+      } else {
+        setActions((m) => ({ ...m, [booking.id]: { busyReminder: false, tone: 'error', message: res?.error || 'Could not send the reminder.' } }));
+      }
+    } catch (err) {
+      setActions((m) => ({ ...m, [booking.id]: { busyReminder: false, tone: 'error', message: err?.body?.error || 'Could not send the reminder.' } }));
+    }
+  }, []);
 
   const { loading, error, bookings } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
@@ -220,7 +466,7 @@ export default function LiveAdminBookings() {
   return (
     <AdminShell title="Live Bookings">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
-        <div className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
+        <div className="mx-auto max-w-5xl px-4 py-2 md:px-8 md:py-3">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="font-body text-sm" style={{ color: MUTED }}>
@@ -257,9 +503,22 @@ export default function LiveAdminBookings() {
                 key={booking.id}
                 booking={booking}
                 busy={!!actions[booking.id]?.busy}
+                retryBusy={!!actions[booking.id]?.busyRetry}
                 result={actions[booking.id]}
                 onCharge={(b) => runAction(b, 'charge')}
                 onLink={(b) => runAction(b, 'link')}
+                onRetryAcuity={retryAcuity}
+                deleteBusy={!!actions[booking.id]?.busyDelete}
+                onDelete={deleteBooking}
+                editing={editingId === booking.id}
+                saveBusy={!!actions[booking.id]?.busySave}
+                onEdit={(b) => setEditingId(b.id)}
+                onCancelEdit={() => setEditingId(null)}
+                onSave={saveBooking}
+                reminderBusy={!!actions[booking.id]?.busyReminder}
+                consentBusy={!!actions[booking.id]?.busyConsent}
+                onSendReminder={sendReminder}
+                onToggleConsent={toggleConsent}
               />
             ))}
           </div>

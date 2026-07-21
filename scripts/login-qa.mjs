@@ -214,7 +214,19 @@ async function waitForPageCondition(cdp, expression, label, timeout = 8_000) {
     if (ok) return;
     await wait(160);
   }
-  throw new Error(`Timed out waiting for ${label}.`);
+  const debug = await evalOnPage(cdp, `(() => ({
+    href: location.href,
+    title: document.title,
+    text: (document.body?.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 500),
+    fields: Array.from(document.querySelectorAll('input, button[type="submit"], form')).map((el) => ({
+      tag: el.tagName.toLowerCase(),
+      id: el.id || '',
+      type: el.getAttribute('type') || '',
+      text: (el.innerText || el.textContent || '').trim().slice(0, 80),
+      visible: Boolean(el.getBoundingClientRect().width && el.getBoundingClientRect().height),
+    })).slice(0, 20),
+  }))()`);
+  throw new Error(`Timed out waiting for ${label}. Debug: ${JSON.stringify(debug)}`);
 }
 
 async function openLogin(cdp) {
@@ -265,6 +277,13 @@ async function openAdminLogin(cdp) {
       sessionStorage.clear();
       localStorage.setItem('cookieConsent', 'allowed');
     } catch {}
+    return true;
+  })()`);
+  const hasDemoForm = await evalOnPage(cdp, `Boolean(document.querySelector('#login-identifier') && document.querySelector('#login-password'))`);
+  if (!hasDemoForm) await evalOnPage(cdp, `(() => {
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const passwordButton = buttons.find((button) => /sign in with password/i.test(button.innerText || button.textContent || ''));
+    if (passwordButton) passwordButton.click();
     return true;
   })()`);
   await waitForPageCondition(cdp, `(() => {
@@ -355,7 +374,7 @@ async function runAdminLogin(cdp, testCase) {
     const setValue = ${SET_INPUT_VALUE_SOURCE};
     const ready = setValue('#login-identifier', ${JSON.stringify(testCase.username)})
       && setValue('#login-password', ${JSON.stringify(testCase.password)});
-    const submit = document.querySelector('form button[type="submit"]');
+    const submit = document.querySelector('#login-identifier')?.closest('form')?.querySelector('button[type="submit"]');
     if (!ready || !submit) return false;
     submit.click();
     return true;

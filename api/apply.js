@@ -5,8 +5,24 @@ import { safeLogContext } from './_lib/safe-error.js';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const INTERNAL_TO = 'littonjose@gmail.com';
-const FROM_INTERNAL = 'Avalon Apply <onboarding@resend.dev>';
 const FROM_APPLICANT = 'Avalon Vitality <support@avalonvitality.co>';
+
+function isProductionRuntime() {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
+function internalFromAddress() {
+  const from = String(process.env.RESEND_FROM_EMAIL || '').trim();
+  if (from) return from;
+  if (isProductionRuntime()) {
+    throw Object.assign(new Error('RESEND_FROM_EMAIL is required in production.'), {
+      code: 'resend_from_email_missing',
+      reason: 'resend_from_email_missing',
+      status: 500,
+    });
+  }
+  return 'Avalon Apply <onboarding@resend.dev>';
+}
 
 // --- Config ------------------------------------------------------------------
 
@@ -194,7 +210,7 @@ export default async function handler(req, res) {
 
     // 1. Internal notification — must succeed, or we fail the request.
     const applyResult = await resend.emails.send({
-      from: FROM_INTERNAL,
+      from: internalFromAddress(),
       to: INTERNAL_TO,
       replyTo: email,
       subject: `New Membership Application — ${firstName} ${lastName}`,

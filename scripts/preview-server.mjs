@@ -53,14 +53,16 @@ function readIfFile(file) {
 }
 
 function isPrivateRoute(urlPath) {
+  if (urlPath === '/admin/login') return false;
   return ['/admin', '/provider', '/members', '/api'].some((prefix) => urlPath === prefix || urlPath.startsWith(`${prefix}/`));
 }
 
 const PUBLIC_SPA_ROUTE_PATTERNS = [
   /^\/$/,
+  /^\/(event-iv-therapy-bay-area|pricing|safety|ingredients|gift|athlete|hangover|jet-lag|press)$/,
   /^\/(locations|learn|products|launches|events|presale|therapies)(\/.+)?$/,
   /^\/(our-story|team|medical-direction|apply|careers|faq|services\/nad|services\/cbd)$/,
-  /^\/(subscription|plan|corporate|hotel|service-area|partners|platform|b2b|custom|book|protocols|menu|checkout|login|signup|forgot|forgot-password|order|redeem)$/,
+  /^\/(subscription|plan|corporate|hotel|service-area|partners|platform|b2b|custom|book|protocols|menu|checkout|checkout\/success|login|signup|forgot|forgot-password|admin\/login|order|redeem)$/,
   /^\/booking\/confirmation$/,
   /^\/(privacy|privacy-policy|terms|terms-and-conditions|terms-of-service|telehealth-disclaimer|product-disclaimer|notice-of-privacy-practices|hipaa-notice|cookie-policy|cookies)$/,
 ];
@@ -91,6 +93,47 @@ function localAppointmentSummary(url) {
     status: 'local_preview',
     source: 'preview-server',
     preApi: true,
+  };
+}
+
+function readJsonBody(req) {
+  return new Promise((resolve) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('error', () => resolve({}));
+    req.on('end', () => {
+      if (!chunks.length) {
+        resolve({});
+        return;
+      }
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'));
+      } catch {
+        resolve({});
+      }
+    });
+  });
+}
+
+function localCheckoutSession(url, body = {}) {
+  const localId = `local-${Date.now()}`;
+  const origin = url.origin;
+  const items = Array.isArray(body.items) ? body.items : [];
+  const membership = body.membership && typeof body.membership === 'object' ? body.membership : null;
+  return {
+    ok: true,
+    provider: 'local-simulation',
+    previewOnly: true,
+    preApiHardWall: true,
+    code: 'pre_api_hard_wall',
+    appointment: {
+      id: localId,
+      provider: 'local-simulation',
+      type: items[0]?.label || membership?.name || 'Avalon local simulation',
+      datetime: body.appointment?.acuityDatetime || null,
+      preApi: true,
+    },
+    url: `${origin}/booking/confirmation?appointment=${encodeURIComponent(localId)}&preapi=1`,
   };
 }
 
@@ -182,15 +225,21 @@ function send(res, status, file, body, method) {
   res.end(body);
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const method = req.method || 'GET';
+  const url = new URL(req.url || '/', `http://${host}:${port}`);
+
+  if (url.pathname === '/api/create-checkout-session' && method === 'POST') {
+    sendJson(res, 200, localCheckoutSession(url, await readJsonBody(req)), method);
+    return;
+  }
+
   if (!['GET', 'HEAD'].includes(method)) {
     res.writeHead(405, { Allow: 'GET, HEAD' });
     res.end();
     return;
   }
 
-  const url = new URL(req.url || '/', `http://${host}:${port}`);
   const isAssetLike = /\.[a-z0-9]+$/i.test(url.pathname);
 
   if (url.pathname === '/api/appointment-summary') {

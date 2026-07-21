@@ -12,6 +12,14 @@
 const BASE = 'https://acuityscheduling.com/api/v1';
 let appointmentTypesCache = null;
 
+function isProductionRuntime() {
+  return Boolean(process.env.VERCEL || process.env.VERCEL_ENV) || process.env.NODE_ENV === 'production';
+}
+
+if (isProductionRuntime() && (!process.env.ACUITY_USER_ID || !process.env.ACUITY_API_KEY)) {
+  throw new Error('ACUITY_USER_ID + ACUITY_API_KEY are required');
+}
+
 function authHeader() {
   const userId = process.env.ACUITY_USER_ID;
   const apiKey = process.env.ACUITY_API_KEY;

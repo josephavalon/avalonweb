@@ -4,8 +4,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
-const BASE_URL = process.env.STABILITY_QA_BASE_URL || 'http://localhost:4173';
+const BASE_URL = process.env.STABILITY_QA_BASE_URL || 'http://127.0.0.1:4173';
 const PORT = Number(process.env.STABILITY_QA_DEBUG_PORT || 9342);
+const ROUTE_TIMEOUT_MS = Number(process.env.STABILITY_QA_ROUTE_TIMEOUT_MS || 45_000);
+const CONNECT_TIMEOUT_MS = Number(process.env.STABILITY_QA_CONNECT_TIMEOUT_MS || 8_000);
 const SAMPLE_DELAYS = (process.env.STABILITY_QA_DELAYS || '120,900,2600')
   .split(',')
   .map((value) => Number(value.trim()))
@@ -133,11 +135,31 @@ class CdpClient {
 
   connect() {
     return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`Timed out connecting to Chrome target after ${CONNECT_TIMEOUT_MS}ms.`));
+        this.ws?.close();
+      }, CONNECT_TIMEOUT_MS);
       this.ws = new WebSocket(this.wsUrl);
-      this.ws.addEventListener('open', resolve, { once: true });
-      this.ws.addEventListener('error', reject, { once: true });
+      this.ws.addEventListener('open', () => {
+        clearTimeout(timeout);
+        resolve();
+      }, { once: true });
+      this.ws.addEventListener('error', (error) => {
+        clearTimeout(timeout);
+        this.rejectPending(new Error(error.message || 'Chrome websocket error.'));
+        reject(error);
+      }, { once: true });
+      this.ws.addEventListener('close', () => {
+        clearTimeout(timeout);
+        this.rejectPending(new Error('Chrome websocket closed.'));
+      });
       this.ws.addEventListener('message', (event) => this.handleMessage(event));
     });
+  }
+
+  rejectPending(error) {
+    for (const { reject } of this.pending.values()) reject(error);
+    this.pending.clear();
   }
 
   handleMessage(event) {
@@ -203,6 +225,7 @@ class CdpClient {
   }
 
   close() {
+    this.rejectPending(new Error('Chrome websocket closed.'));
     this.ws?.close();
   }
 }
@@ -295,6 +318,51 @@ async function auditRoute(cdp, route, viewport) {
   };
 }
 
+async function auditRouteWithTimeout(cdp, route, viewport) {
+  let timeout;
+  const label = `Route stability ${route} @${viewport.width}`;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeout = setTimeout(() => {
+      cdp.close();
+      reject(new Error(`${label} timed out after ${ROUTE_TIMEOUT_MS}ms`));
+    }, ROUTE_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([auditRoute(cdp, route, viewport), timeoutPromise]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function openCdpTarget() {
+  const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
+  const client = new CdpClient(target.webSocketDebuggerUrl);
+  await client.connect();
+  await client.send('Page.enable');
+  await client.send('Runtime.enable');
+  await client.send('Network.enable');
+  if (SESSION_JSON) {
+    const sessionScript = `
+      try {
+        const session = ${SESSION_JSON};
+        if (location.protocol === 'http:' || location.protocol === 'https:') {
+          sessionStorage.setItem('av.session', JSON.stringify(session));
+        }
+      } catch {}
+    `;
+    await client.send('Page.addScriptToEvaluateOnNewDocument', { source: sessionScript });
+  }
+  return client;
+}
+
+async function closeCdpTarget(client) {
+  if (!client) return;
+  try {
+    await client.send('Page.close');
+  } catch {}
+  client.close();
+}
+
 function printFindings(results) {
   let failed = false;
   for (const result of results) {
@@ -338,29 +406,16 @@ try {
   ], { stdio: 'ignore' });
 
   await waitForChrome();
-  const target = await requestJson(`http://127.0.0.1:${PORT}/json/new?about:blank`, 'PUT');
-  cdp = new CdpClient(target.webSocketDebuggerUrl);
-  await cdp.connect();
-  await cdp.send('Page.enable');
-  await cdp.send('Runtime.enable');
-  await cdp.send('Network.enable');
-  if (SESSION_JSON) {
-    const sessionScript = `
-      try {
-        const session = ${SESSION_JSON};
-        if (location.protocol === 'http:' || location.protocol === 'https:') {
-          sessionStorage.setItem('av.session', JSON.stringify(session));
-        }
-      } catch {}
-    `;
-    await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: sessionScript });
-  }
-
   const results = [];
   for (const viewport of VIEWPORTS) {
     for (const route of ROUTES) {
+      cdp = null;
       try {
-        results.push(await auditRoute(cdp, route, viewport));
+        console.log(`CHECK stability ${route} @${viewport.width}`);
+        cdp = await openCdpTarget();
+        const result = await auditRouteWithTimeout(cdp, route, viewport);
+        results.push(result);
+        console.log(`DONE stability ${route} @${viewport.width}`);
       } catch (error) {
         results.push({
           route,
@@ -372,9 +427,10 @@ try {
           networkIssues: [],
         });
         try {
-          await cdp.send('Page.navigate', { url: 'about:blank' });
-          await waitForReady(cdp);
+          await closeCdpTarget(cdp);
         } catch {}
+      } finally {
+        await closeCdpTarget(cdp);
       }
     }
   }

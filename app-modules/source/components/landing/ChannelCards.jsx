@@ -71,7 +71,7 @@ export default function ChannelCards() {
           transition={{ duration: 0.95, ease: EASE }}
           className="mb-8 md:mb-10"
         >
-          <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">
+          <h2 className="font-heading text-display text-foreground uppercase tracking-tight leading-[0.92]">
             More Ways to Book
           </h2>
           <p className="font-body text-sm text-foreground/55 leading-relaxed mt-3 max-w-md">

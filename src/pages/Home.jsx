@@ -4,10 +4,15 @@ import React, { lazy, Suspense } from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
+import { isCareHost } from '@/components/CareAcuityForward';
 
+const SectionInterstitial = lazy(() => import('../components/landing/SectionInterstitial'));
 const HowItWorks = lazy(() => import('../components/landing/HowItWorks'));
+const WellnessQuiz = lazy(() => import('../components/landing/WellnessQuiz'));
 const TreatmentsTeaser = lazy(() => import('../components/landing/TreatmentsTeaser'));
+const InstagramFeed = lazy(() => import('../components/landing/InstagramFeed'));
 const MembershipSection = lazy(() => import('../components/landing/MembershipSection'));
+const EventsPosterSection = lazy(() => import('../components/landing/EventsPosterSection'));
 const Footer = lazy(() => import('../components/landing/Footer'));
 
 // Note: Reveal wrappers removed — each section owns its per-card whileInView
@@ -16,7 +21,7 @@ const Footer = lazy(() => import('../components/landing/Footer'));
 export default function Home() {
   useSeo({
     title: 'Avalon Vitality — Mobile IV Therapy in the SF Bay Area',
-    description: 'Avalon Vitality delivers mobile IV therapy at home, hotel, office, or event with registered nurses, clinical review, and fast SF Bay Area booking.',
+    description: 'Mobile IV therapy in the SF Bay Area — registered nurses, same-day booking, at home or on-site.',
     path: '/',
   });
 
@@ -33,9 +38,22 @@ export default function Home() {
         {/* ── Below fold — per-card whileInView animations handle entrance ── */}
         <div className="relative z-10">
           <Suspense fallback={null}>
+            <SectionInterstitial
+              kicker="Same-day · SF Bay Area"
+              title="Wellness delivered"
+            />
             <HowItWorks />
+            <WellnessQuiz />
             <TreatmentsTeaser />
-            <MembershipSection />
+            {!isCareHost() && (
+              <SectionInterstitial
+                title="Checkout in under 60 seconds"
+                body="Book once or start a monthly plan."
+              />
+            )}
+            {!isCareHost() && <MembershipSection />}
+            <EventsPosterSection />
+            <InstagramFeed />
           </Suspense>
         </div>
       </main>

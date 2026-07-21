@@ -8,6 +8,8 @@ import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS } from '@/config/verticals';
 import GlassCard from '@/components/ui/GlassCard';
 import PremiumButton from '@/components/ui/PremiumButton';
+import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
+import NotFound from '@/pages/NotFound';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
@@ -15,11 +17,27 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.9, delay, ease: EASE },
 });
 
+// Common slug variants that should resolve to a canonical IV_SESSIONS key.
+// Customers / SEO links arrive with NAD spelled "nad-plus", category-style
+// "iv-vitamins" etc. — match them rather than 404.
+const SLUG_ALIASES = {
+  'nad-plus': 'nad',
+  'nad+': 'nad',
+  'nadplus': 'nad',
+  'iv-vitamins': 'hydration',
+  'vitamins': 'hydration',
+  'myers-cocktail': 'myers',
+  'jet-lag': 'jetlag',
+  'post-night': 'postnight',
+  'cbd-iv': 'cbd',
+};
+
 export default function ProtocolPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const protocol = IV_SESSIONS.find((s) => s.key === slug);
+  const resolvedSlug = SLUG_ALIASES[String(slug || '').toLowerCase()] || slug;
+  const protocol = IV_SESSIONS.find((s) => s.key === resolvedSlug);
   const price = priceForProtocol(protocol);
   const ingredients = getComposition(protocol);
   const mechanism = getMechanism(protocol);
@@ -29,6 +47,8 @@ export default function ProtocolPage() {
     title: protocol ? `${protocol.label} IV Therapy — Avalon Vitality` : 'Protocol Not Found — Avalon Vitality',
     description: protocol?.tagline || 'Explore Avalon Vitality mobile IV therapy protocols.',
     path: `/therapies/${slug}`,
+    // Unknown slug → tell crawlers not to index; branded 404 body follows.
+    robots: protocol ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
     jsonLd: protocol ? {
       '@context': 'https://schema.org',
       '@type': 'MedicalProcedure',
@@ -46,15 +66,7 @@ export default function ProtocolPage() {
     } : undefined,
   });
 
-  if (!protocol) {
-    return (
-      <div className="av-page-surface min-h-screen flex flex-col items-center justify-center gap-4">
-        <Navbar />
-        <p className="font-heading text-3xl text-foreground uppercase">Protocol not found</p>
-        <Link to="/book" className="font-body text-sm text-foreground/60 underline">Back to booking</Link>
-      </div>
-    );
-  }
+  if (!protocol) return <NotFound />;
 
   const Icon = protocol.icon;
 
@@ -116,6 +128,10 @@ export default function ProtocolPage() {
               <p className="mt-4 truncate font-heading text-4xl uppercase leading-none text-foreground capitalize">{protocol.category || 'IV'}</p>
               <p className="mt-1 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/42">Type</p>
             </GlassCard>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.38)} className="mb-5 max-w-md">
+            <ClinicalTrustStrip variant="compact" />
           </motion.div>
 
           <motion.div {...fadeUp(0.4)} className="mb-14 max-w-md">

@@ -1,58 +1,48 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
-
-const HIDDEN_PREFIXES = [];
-const HIDDEN_PATHS = [];
-
-// Staff/operations surfaces are data-dense; the ambient photo must be heavily
-// blurred and darkened there so glass panels stay readable, not see-through.
-const OPS_PREFIXES = ['/admin', '/provider'];
-
-function shouldShowBackdrop(pathname) {
-  if (HIDDEN_PATHS.includes(pathname)) return false;
-  return !HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
-function isOpsSurface(pathname) {
-  return OPS_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
+// Site-wide static Avalon drop mark, rendered as a fixed, fit-to-viewport,
+// grayed-out watermark behind every page. Consumed by MobileShell so it
+// mounts on every route.
+//
+// z-index: `z-0` (not `-z-10`) — the HTML root paints an opaque
+// bg-background in dark mode (index.css:336), so a negative z-index
+// puts this element UNDER the root paint and it never renders. `z-0`
+// sits on top of the root bg and below anything with positive z.
+//
+// Color set as inline rgba (NOT text-foreground/[0.14]) because
+// Tailwind's alpha modifier compiled the mark near-full-opacity in the
+// earlier per-card variant, so we lock color explicitly here.
 export default function AvalonStaticBackdrop() {
-  const { pathname } = useLocation();
-  if (!shouldShowBackdrop(pathname)) return null;
-  const opsMode = isOpsSurface(pathname);
-
   return (
     <div
-      className={`avalon-static-backdrop pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-0 h-[100lvh] min-h-screen overflow-hidden bg-background${opsMode ? ' avalon-static-backdrop--ops' : ''}`}
       aria-hidden="true"
-      role="presentation"
-    >
-      <picture>
-        <source
-          type="image/avif"
-          srcSet="/images/avalon-static-back-512.avif 512w, /images/avalon-static-back-1024.avif 1024w, /images/avalon-static-back.avif 1536w"
-          sizes="100vw"
-        />
-        <source
-          type="image/webp"
-          srcSet="/images/avalon-static-back-512.webp 512w, /images/avalon-static-back-1024.webp 1024w, /images/avalon-static-back.webp 1536w"
-          sizes="100vw"
-        />
-        <img
-          src="/images/avalon-static-back.jpg"
-          srcSet="/images/avalon-static-back-512.jpg 512w, /images/avalon-static-back-1024.jpg 1024w, /images/avalon-static-back.jpg 1536w"
-          sizes="100vw"
-          alt=""
-          className="avalon-static-backdrop__image absolute inset-0 h-full w-full object-cover [object-position:86%_52%] md:[object-position:74%_52%]"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </picture>
-      <div className="avalon-static-backdrop__veil absolute inset-0" />
-      <div className="avalon-static-backdrop__side absolute inset-0" />
-      <div className="avalon-static-backdrop__bottom absolute inset-x-0 bottom-0 h-[78svh]" />
-      <div className="avalon-static-backdrop__top absolute inset-x-0 top-0 h-[38svh]" />
-    </div>
+      className="av-static-backdrop pointer-events-none fixed left-0 right-0 z-0"
+      style={{
+        // Nav bar height (~4.5rem) + iOS notch offset so the drop tip starts
+        // BELOW the pinned top menu instead of peeking behind it.
+        top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)',
+        // Explicit height using 100lvh (Large Viewport Height — the FULL
+        // viewport with browser chrome retracted). CRITICAL: this must NOT
+        // derive from `bottom` + viewport. On iOS Safari the URL bar
+        // collapses during the initial scroll gesture; that fluctuates the
+        // viewport height, which resized the box, which re-fit the
+        // `mask-size: contain` chevron — making the drop visibly shift.
+        // 100lvh is stationary through URL-bar transitions. `100vh` is
+        // fallback for browsers without lvh support (iOS <16, older Chromium):
+        // on those, 100vh already behaves like the large viewport.
+        height: 'calc(100vh - 4.5rem - env(safe-area-inset-top, 0px))',
+        maxHeight: 'calc(100lvh - 4.5rem - env(safe-area-inset-top, 0px))',
+        // Fill color uses a CSS var so themes can retint the watermark:
+        // - dark (default): 11% white → soft gray chevron
+        // - warriors: light yellow (overridden in src/index.css)
+        backgroundColor: 'var(--av-backdrop-fill, rgba(255, 255, 255, 0.11))',
+        WebkitMaskImage: 'url(/avalon-logo.svg)',
+        maskImage: 'url(/avalon-logo.svg)',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+      }}
+    />
   );
 }

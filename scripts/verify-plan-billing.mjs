@@ -9,10 +9,12 @@
  *
  * This mirrors the exact Stripe calls in:
  *   - api/create-checkout-session.js   (the $50 deposit, card saved off-session)
- *   - api/integrations/stripe/webhook.js  (createDeferredPlanSubscription)
+ *   - api/_checkout-fulfillment.js     (createDeferredPlanSubscription)
  *
- * SAFETY: refuses to run unless STRIPE_SECRET_KEY is a sk_test_ key.
- * Run:  STRIPE_SECRET_KEY=sk_test_... node scripts/verify-plan-billing.mjs [monthlyDollars]
+ * SAFETY: refuses to run unless STRIPE_SECRET_KEY is a sk_test_ key. The human
+ * operator supplies that test key from Stripe; never paste or commit it.
+ *
+ * Run:  STRIPE_SECRET_KEY=sk_test_... npm run verify:plan-billing -- [monthlyDollars]
  */
 import Stripe from 'stripe';
 

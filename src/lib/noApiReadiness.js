@@ -65,9 +65,9 @@ export const NO_API_BUILD_CONTROLS = [
   },
   {
     id: 'nurse-shift',
-    label: 'Nurse Shift + ETA Flow',
+    label: 'Nurse Shift + Route Flow',
     coverage: 95,
-    proof: 'Y/N shift replies, nurse-owned ETA, route links, and client text placeholders.',
+    proof: 'Y/N shift replies, route handoff, map links, and client text placeholders.',
   },
   {
     id: 'inventory-truth',
