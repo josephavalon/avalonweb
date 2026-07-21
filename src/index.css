@@ -1330,13 +1330,6 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
     font-size: 0.8rem;
   }
 
-  .home-hero__watermark {
-    top: 13%;
-    right: 12%;
-    width: min(30vw, 35rem);
-    height: 72%;
-  }
-
   .av-home-nav .av-home-nav__desktop {
     height: 4rem !important;
     border-radius: 1.5rem;
