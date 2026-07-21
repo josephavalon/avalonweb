@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CircleDollarSign, MapPin, ShieldPlus, Zap } from 'lucide-react';
 import AvalonStaticBackdrop from '@/components/AvalonStaticBackdrop';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
+import AsSeenAt from '@/components/landing/AsSeenAt';
 
 const BOOK_URL = '/book';
 const PROOF_POINTS = [
@@ -75,6 +76,10 @@ export default function Hero() {
           </div>
         </div>
       </div>
+
+      {/* Stable social-proof rail: part of the hero, but intentionally outside
+          the scroll-linked copy layers so the logos do not recede with them. */}
+      <AsSeenAt />
     </section>
   );
 }
