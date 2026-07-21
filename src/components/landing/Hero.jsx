@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CircleDollarSign, MapPin, ShieldPlus, Zap } from 'lucide-react';
-import AvalonMark from '@/components/AvalonMark';
+import AvalonStaticBackdrop from '@/components/AvalonStaticBackdrop';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 
 const BOOK_URL = '/book';
@@ -33,7 +33,9 @@ export default function Hero() {
 
   return (
     <section className="home-hero" aria-labelledby="home-hero-title">
-      <AvalonMark className="home-hero__watermark" />
+      {/* Use the original viewport-fixed, centered backdrop rather than a
+          hero-specific positioned mark. */}
+      <AvalonStaticBackdrop />
 
       <div className="home-hero__content">
         <p className="home-hero__eyebrow">Avalon Vitality</p>
