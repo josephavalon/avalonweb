@@ -9,7 +9,8 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 const SERVICES = [
   { label: 'Book',   to: '/book' },
   { label: 'Plans',  to: '/subscription' },
-  { label: 'IV Therapy',   to: '/protocols' },
+  { label: 'Menu',   to: '/protocols' },
+  { label: 'Events', to: '/events' },
   { label: 'Launches', to: '/launches' },
   { label: 'Bay Area IV', to: '/mobile-iv-therapy-bay-area' },
   { label: 'Locations', to: '/locations' },
@@ -25,6 +26,7 @@ const COMPANY = [
 const LEGAL = [
   { label: 'Terms',   to: '/terms-of-service' },
   { label: 'Privacy', to: '/privacy-policy' },
+  { label: 'Waiver',  to: '/waiver' },
 ];
 
 const GROUPS = [

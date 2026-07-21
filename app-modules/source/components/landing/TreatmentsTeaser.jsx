@@ -263,7 +263,7 @@ export default function TreatmentsTeaser() {
         {/* Header */}
         <ScrollParallax className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6 md:mb-10">
           <div>
-            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">IV Therapy</h2>
+            <h2 className="font-heading text-[9vw] md:text-7xl lg:text-8xl text-foreground uppercase tracking-tight leading-[0.92]">Menu</h2>
           </div>
         </ScrollParallax>
 
