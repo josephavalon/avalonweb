@@ -13,7 +13,9 @@ export default function MobileShell() {
   const loginSurface = pathname === '/login' || pathname === '/admin/login';
   return (
     <>
-      <AvalonStaticBackdrop />
+      {/* The homepage hero owns its single static logo watermark. Interior
+          routes keep the site-wide backdrop. */}
+      {pathname !== '/' && <AvalonStaticBackdrop />}
       <div className={loginSurface ? 'hidden md:block' : undefined}>
         <Navbar globalShell />
       </div>
