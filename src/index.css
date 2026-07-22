@@ -1077,6 +1077,11 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
   transition: transform 220ms ease;
 }
 
+.home-hero__book > svg,
+.home-hero__text-link > svg {
+  display: none;
+}
+
 /* One canonical marketing navigation is shared by the homepage and every
    public interior route so its geometry and typography never jump on browse. */
 .av-home-nav {
@@ -1651,6 +1656,108 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
 
   .home-hero .av-asa-mobile-viewport {
     margin-top: 0.5rem;
+  }
+}
+
+/* Screenshot-locked desktop composition. Preserve the compact first-frame
+   rhythm while scaling fluidly beyond the 964px reference viewport. */
+@media (min-width: 900px) and (min-height: 621px) {
+  .home-hero {
+    height: 100svh;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .home-hero__content {
+    min-height: 0;
+    flex: 0 1 auto;
+    padding-right: 4.45vw;
+    padding-left: 4.45vw;
+  }
+
+  .home-hero__eyebrow {
+    margin-bottom: clamp(1rem, 2.8dvh, 1.5rem);
+  }
+
+  .home-hero__title {
+    font-size: clamp(6.15rem, 10.2vw, 8rem);
+  }
+
+  .home-hero__proof {
+    margin-top: clamp(1rem, 2.5dvh, 1.5rem);
+  }
+
+  .home-hero__actions {
+    width: clamp(19.5rem, 32vw, 32rem);
+    margin-top: clamp(1rem, 2.5dvh, 1.5rem);
+  }
+
+  .home-hero__book {
+    min-height: clamp(2.9375rem, 7.35dvh, 4.5rem);
+    border-radius: clamp(0.625rem, 1.5dvh, 1.05rem);
+    padding-right: 1.375rem;
+    font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  }
+
+  .home-hero__book > svg,
+  .home-hero__text-link > svg {
+    display: block;
+  }
+
+  .home-hero__secondary-actions {
+    margin-top: clamp(1rem, 3.5dvh, 1.5rem);
+  }
+
+  .home-hero__text-link:first-child {
+    min-width: 8.125rem;
+    justify-content: space-between;
+  }
+
+  .home-hero > .av-asa {
+    margin-top: auto;
+    padding-bottom: 1rem;
+  }
+
+  .home-hero > .av-asa > div:first-child {
+    padding-right: 4.45vw;
+    padding-left: 4.45vw;
+  }
+
+  .av-home-nav {
+    top: 0.375rem !important;
+    right: 0.125rem !important;
+    left: 0.125rem !important;
+  }
+
+  .av-home-nav .av-home-nav__desktop {
+    height: 3.125rem !important;
+    border-radius: 1rem;
+  }
+
+  .av-home-nav .av-home-nav__mobile {
+    height: 3.125rem !important;
+    border-radius: 1rem;
+    padding-left: 1rem;
+  }
+
+  .av-home-nav .av-home-nav__mobile > div:last-child {
+    right: 1.125rem;
+  }
+
+  .av-home-nav .av-home-nav__mobile .lucide-phone,
+  .av-home-nav .av-home-nav__mobile .lucide-message-circle {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .av-home-nav .av-home-nav__mobile .lucide-menu {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .av-home-nav .av-home-nav__brand-mark {
+    width: 1.125rem !important;
+    height: 1.75rem !important;
   }
 }
 

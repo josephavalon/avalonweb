@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CircleDollarSign, MapPin, ShieldPlus, Zap } from 'lucide-react';
+import { ArrowRight, CircleDollarSign, MapPin, ShieldPlus, Zap } from 'lucide-react';
 import AvalonStaticBackdrop from '@/components/AvalonStaticBackdrop';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import AsSeenAt from '@/components/landing/AsSeenAt';
@@ -64,14 +64,17 @@ export default function Hero() {
             ariaLabel="Book nurse delivery"
           >
             <span>Book Now</span>
+            <ArrowRight aria-hidden="true" />
           </HeroLink>
 
           <div className="home-hero__secondary-actions">
             <Link to="/protocols" className="home-hero__text-link">
               <span>View Menu</span>
+              <ArrowRight aria-hidden="true" />
             </Link>
             <Link to="/events" className="home-hero__text-link">
               <span>Private Events</span>
+              <ArrowRight aria-hidden="true" />
             </Link>
           </div>
         </div>
