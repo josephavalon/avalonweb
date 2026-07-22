@@ -1431,6 +1431,72 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
   }
 }
 
+/* Short desktop and landscape-tablet viewports need a genuinely compact first
+   frame. Keep the press rail in normal flex flow and reduce the hero stack so
+   the secondary actions finish before the rail begins. */
+@media (min-width: 768px) and (max-height: 850px) {
+  .home-hero__content {
+    flex-basis: 0;
+    padding-top: clamp(5.5rem, 14dvh, 7rem);
+    padding-bottom: 0.25rem;
+  }
+
+  .home-hero__eyebrow {
+    margin-bottom: 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .home-hero__title {
+    font-size: clamp(4.25rem, 13dvh, 7.5rem);
+    line-height: 0.84;
+  }
+
+  .home-hero__proof {
+    gap: clamp(0.2rem, 0.6dvh, 0.35rem);
+    margin-top: 0.5rem;
+  }
+
+  .home-hero__proof li {
+    min-height: clamp(1.05rem, 2.5dvh, 1.25rem);
+    font-size: clamp(0.72rem, 1.8dvh, 0.9rem);
+  }
+
+  .home-hero__proof svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .home-hero__actions {
+    margin-top: 0.5rem;
+  }
+
+  .home-hero__book {
+    min-height: clamp(3rem, 8dvh, 3.75rem);
+    border-radius: 0.9rem;
+    font-size: clamp(0.85rem, 2dvh, 0.95rem);
+  }
+
+  .home-hero__secondary-actions {
+    gap: 0.2rem;
+    margin-top: 0.35rem;
+  }
+
+  .home-hero__text-link {
+    min-height: 1.35rem;
+    font-size: 0.72rem;
+  }
+
+  .home-hero > .av-asa {
+    flex: 0 0 auto;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
+
+  .home-hero .av-asa-marquee-viewport {
+    margin-top: 0.35rem;
+  }
+}
+
 @media (max-width: 767px) {
   .home-hero {
     min-height: max(100svh, 48rem);

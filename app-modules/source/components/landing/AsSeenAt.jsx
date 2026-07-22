@@ -14,6 +14,8 @@ const AS_SEEN_AT = [
   { name: 'Hereticon', src: '/logos/hereticon.png', filter: LIGHT_SOURCE_FILTER },
   { name: 'The Loom', src: '/logos/the-loom.png', filter: DARK_SOURCE_FILTER },
   { name: '111 Minna Gallery', src: '/logos/111-minna.png', filter: DARK_SOURCE_FILTER },
+  { name: 'Great Northern', src: '/logos/great-northern-gpt.png', scale: 1.35 },
+  { name: 'Monarch', src: '/logos/monarch-gpt.png', scale: 1.45 },
   { name: "Dante's Inferno", src: '/logos/dantes-inferno-gpt.png', scale: 1.18 },
   { name: 'FIRE', src: '/logos/fire-gpt.png' },
   { name: 'Discourse', src: '/logos/discourse.png', filter: 'grayscale(1) contrast(4) brightness(2)' },
