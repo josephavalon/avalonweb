@@ -60,11 +60,11 @@ export default function AsSeenAt() {
     <div
       className="av-asa relative z-10 w-full pb-6 pt-4 md:pb-5 md:pt-4"
       role="region"
-      aria-label="As seen at"
+      aria-label="As trusted by"
     >
       <div className="px-5 md:px-12">
         <p className="font-body text-[10px] font-semibold uppercase tracking-[0.32em] text-foreground md:text-[11px]">
-          As seen at
+          As trusted by
         </p>
       </div>
 
