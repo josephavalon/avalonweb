@@ -220,10 +220,10 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
 
       {/* Mobile uses a native scroll surface so the ribbon can be swiped. The
           two identical groups make the slow automatic scroll loop seamlessly. */}
-      <div className="relative w-full md:hidden">
+      <div className="relative w-full bg-transparent md:hidden">
         <div
           ref={mobileScrollerRef}
-          className="av-ig-mobile-scroller overflow-x-auto"
+          className="av-ig-mobile-scroller overflow-x-auto bg-transparent"
           aria-label="Avalon Vitality Instagram posts"
           onPointerDown={pauseForDrag}
           onPointerUp={resumeAfterDrag}
@@ -235,14 +235,17 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
             if (event.pointerType === 'mouse') setMobileHovered(false);
           }}
           style={{
-            WebkitOverflowScrolling: 'touch',
+            // Modern iOS scrolls with momentum without the legacy opt-in.
+            // That property forces a separate opaque compositor surface on
+            // some Safari builds, which reads as a dark bar behind the tiles.
+            backgroundColor: 'transparent',
             overscrollBehaviorX: 'contain',
             scrollbarWidth: 'none',
           }}
         >
-          <div className="flex w-max select-none">
+          <div className="flex w-max select-none bg-transparent">
             {[0, 1].map((group) => (
-              <div key={group} className="flex gap-2 pr-2" aria-hidden={group === 1 ? 'true' : undefined}>
+              <div key={group} className="flex gap-2 bg-transparent pr-2" aria-hidden={group === 1 ? 'true' : undefined}>
                 {source.map((post, i) => (
                   <RibbonTile key={`${group}-${post.id}-${i}`} post={post} />
                 ))}
