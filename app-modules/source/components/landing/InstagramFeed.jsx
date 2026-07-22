@@ -92,6 +92,7 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
   const [mobileHovered, setMobileHovered] = useState(false);
   const mobileTrackRef = useRef(null);
   const mobilePositionRef = useRef(0);
+  const mobileRenderedPositionRef = useRef(-1);
   const mobileDragRef = useRef({ pointerId: null, startX: 0, startPosition: 0, moved: false });
   const resumeTimerRef = useRef(null);
   const reduce = useReducedMotion();
@@ -103,6 +104,9 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
   const seed = posts.length ? posts : PLACEHOLDER_POSTS;
   const source = Array.from({ length: IG_LIMIT }, (_, i) => seed[i % seed.length]).slice(0, IG_LIMIT);
   const loop = [...source, ...source];
+  // A shorter mobile loop avoids the oversized image texture Safari creates
+  // for very long moving tracks. Twelve posts still provide a seamless rail.
+  const mobileSource = source.slice(0, 12);
 
   const isRunning = !hoverPaused && !reduce;
   const mobileInteractionPaused = mobileDragging || mobileHovered;
@@ -126,10 +130,14 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
 
       if (loopWidth > 0) {
         mobilePositionRef.current = (mobilePositionRef.current + ((pixelsPerSecond * elapsed) / 1000)) % loopWidth;
-        // Use a 2D transform rather than native horizontal scrolling. This
-        // keeps Safari from creating an opaque scroll layer that can repaint
-        // with cached tile imagery while the user drags the ribbon.
-        track.style.transform = `translateX(${-mobilePositionRef.current}px)`;
+        // Move in whole pixels through layout positioning. Transform-based
+        // animation makes Safari cache the entire image strip as one large
+        // texture, which can blur or replace the transparent page backdrop.
+        const renderedPosition = Math.round(mobilePositionRef.current);
+        if (renderedPosition !== mobileRenderedPositionRef.current) {
+          track.style.left = `${-renderedPosition}px`;
+          mobileRenderedPositionRef.current = renderedPosition;
+        }
       }
 
       frameId = window.requestAnimationFrame(move);
@@ -164,7 +172,9 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
     const delta = event.clientX - drag.startX;
     if (Math.abs(delta) > 4) drag.moved = true;
     mobilePositionRef.current = ((drag.startPosition - delta) % loopWidth + loopWidth) % loopWidth;
-    track.style.transform = `translateX(${-mobilePositionRef.current}px)`;
+    const renderedPosition = Math.round(mobilePositionRef.current);
+    track.style.left = `${-renderedPosition}px`;
+    mobileRenderedPositionRef.current = renderedPosition;
   };
 
   const resumeAfterDrag = (event) => {
@@ -250,8 +260,9 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
         `}</style>
       </div>
 
-      {/* Mobile uses a transparent draggable transform track rather than an
-          iOS scroll layer. The two identical groups loop seamlessly. */}
+      {/* Mobile uses a transparent, integer-positioned draggable track. There
+          is no native scroll layer or moving transform texture for iOS to
+          blend into the static Avalon background. */}
       <div className="relative w-full bg-transparent md:hidden">
         <div
           className="av-ig-mobile-scroller overflow-hidden bg-transparent"
@@ -274,10 +285,14 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
             touchAction: 'pan-y',
           }}
         >
-          <div ref={mobileTrackRef} className="flex w-max select-none bg-transparent">
+          <div
+            ref={mobileTrackRef}
+            className="relative left-0 flex w-max select-none bg-transparent"
+            style={{ transform: 'none', willChange: 'auto' }}
+          >
             {[0, 1].map((group) => (
               <div key={group} className="flex gap-2 bg-transparent pr-2" aria-hidden={group === 1 ? 'true' : undefined}>
-                {source.map((post, i) => (
+                {mobileSource.map((post, i) => (
                   <RibbonTile key={`${group}-${post.id}-${i}`} post={post} />
                 ))}
               </div>
