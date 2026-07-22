@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Instagram } from 'lucide-react';
-import { EASE, premiumHover, premiumTap } from '@/lib/motion';
+import { useReducedMotion } from '@/components/ui/PageTransitionMotion';
+import { Instagram } from 'lucide-react';
 import ScrollParallax from '@/components/ui/ScrollParallax';
-import { PLACEHOLDER_POSTS, IG_HANDLE_URL } from './InstagramFeed.data.js';
+import { PLACEHOLDER_POSTS } from './InstagramFeed.data.js';
 
 const IG_HANDLE = 'avalon_vitality';
 const IG_EMBED_URL = `https://www.instagram.com/${IG_HANDLE}/embed/`;
@@ -87,7 +86,7 @@ function RibbonTile({ post }) {
   );
 }
 
-export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS, handleUrl = IG_HANDLE_URL }) {
+export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS }) {
   const [hoverPaused, setHoverPaused] = useState(false);
   const [mobileDragging, setMobileDragging] = useState(false);
   const [mobileHovered, setMobileHovered] = useState(false);
@@ -259,24 +258,6 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS,
         `}</style>
       </div>
 
-      {/* Hairline separator + FOLLOW pill */}
-      <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-10">
-        <div className="border-t border-white/[0.12]" />
-        <div className="mt-6">
-          <motion.a
-            href={handleUrl}
-            onClick={openInstagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={premiumHover}
-            whileTap={premiumTap}
-            className="group inline-flex items-center gap-2 rounded-full border border-white/[0.18] bg-white/[0.04] px-5 py-2.5 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/85 transition-colors duration-base ease-editorial hover:border-white/[0.32] hover:text-foreground"
-          >
-            Follow
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
-          </motion.a>
-        </div>
-      </div>
     </section>
   );
 }
