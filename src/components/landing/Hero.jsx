@@ -42,9 +42,9 @@ export default function Hero() {
         <p className="home-hero__eyebrow">Avalon Vitality</p>
 
         <h1 id="home-hero-title" className="home-hero__title">
-          Mobile
+          Nurse
           <br />
-          Recovery
+          Delivery
         </h1>
 
         <ul className="home-hero__proof" aria-label="Avalon service benefits">
@@ -61,7 +61,7 @@ export default function Hero() {
             to={bookHref}
             external={care}
             className="home-hero__book"
-            ariaLabel="Book mobile recovery"
+            ariaLabel="Book nurse delivery"
           >
             <span>Book Now</span>
           </HeroLink>

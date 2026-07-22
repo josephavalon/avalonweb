@@ -1239,7 +1239,7 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
     gap: clamp(0.65rem, 0.9vw, 1rem);
   }
 
-  .av-home-nav .av-glass-widget {
+  .av-home-nav .av-home-nav__desktop .av-glass-widget {
     width: clamp(3.5rem, 3.8vw, 4.75rem);
     height: clamp(3.5rem, 3.8vw, 4.75rem);
     border-color: rgba(255, 255, 255, 0.18);
@@ -1247,11 +1247,11 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
     color: #f7f7f7;
   }
 
-  .av-home-nav .av-glass-widget::before {
+  .av-home-nav .av-home-nav__desktop .av-glass-widget::before {
     display: none;
   }
 
-  .av-home-nav .av-glass-widget svg {
+  .av-home-nav .av-home-nav__desktop .av-glass-widget svg {
     width: clamp(1.2rem, 1.45vw, 1.75rem);
     height: clamp(1.2rem, 1.45vw, 1.75rem);
   }
@@ -1420,12 +1420,12 @@ html:has(.av-home-redesign)::-webkit-scrollbar {
     font-size: 1.125rem;
   }
 
-  .av-home-nav .av-glass-widget {
+  .av-home-nav .av-home-nav__desktop .av-glass-widget {
     width: 3rem;
     height: 3rem;
   }
 
-  .av-home-nav .av-glass-widget svg {
+  .av-home-nav .av-home-nav__desktop .av-glass-widget svg {
     width: 1rem;
     height: 1rem;
   }

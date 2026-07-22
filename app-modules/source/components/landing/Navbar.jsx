@@ -531,7 +531,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           right cluster (contact icons + Sign In + Book Now) collide, so tablet keeps the
           compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
-        className={`av-home-nav__desktop av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
+        className={`av-home-nav__desktop av-glass-menu hidden rounded-3xl border items-center px-8 transition-all duration-500 ease-editorial ${
         compact ? 'h-12 px-4' : 'h-16'
         }`}
         style={{ gridTemplateColumns: 'var(--av-home-nav-columns)' }}
@@ -635,8 +635,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         </div>
       </div>
 
-      {/* Mobile + tablet bar (shown below lg; desktop grid above takes over at lg) */}
-      <div className={`av-home-nav__mobile av-glass-menu relative lg:hidden flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
+      {/* One compact navigation bar at every breakpoint: brand left, contact
+          actions and the menu trigger right. */}
+      <div className={`av-home-nav__mobile av-glass-menu relative flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
         compact ? 'h-12' : 'h-14'
       }`}>
         <div className="flex h-full min-w-0 flex-1 items-center gap-3 pr-[8rem]">
@@ -705,8 +706,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       </div>
 
       {/* Dimmed backdrop — blocks clicks to the page beneath while the menu is
-          open, and clicking it closes the menu. The mobile menu is below lg,
-          so we hide the backdrop above lg too. */}
+          open, and clicking it closes the menu. */}
       {!focusMode && (
         <AnimatePresence>
           {mobileOpen && (
@@ -720,21 +720,21 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE }}
-              className="fixed inset-0 z-30 bg-black/55 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-30 bg-black/55 backdrop-blur-sm"
             />
           )}
         </AnimatePresence>
       )}
 
-      {/* Mobile + tablet dropdown (below lg) */}
-      {!focusMode && <div className="lg:hidden overflow-hidden px-2">
+      {/* Full-width on phones; right-aligned half-width sheet on larger screens. */}
+      {!focusMode && <div className="overflow-hidden px-2 sm:ml-auto sm:w-1/2">
         <SmoothDisclosure open={mobileOpen} snapClosed className="pb-2" innerClassName="pb-0">
               <motion.div
                 id="mobile-nav-panel"
                 ref={mobilePanelRef}
                 role="dialog"
                 aria-modal="true"
-                aria-label="Mobile navigation"
+                aria-label="Site navigation"
                 initial={false}
                 animate={mobileOpen ? 'visible' : 'hidden'}
                 variants={{
