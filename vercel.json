@@ -5,6 +5,10 @@
     { "path": "/api/cron/expire-credits", "schedule": "0 3 * * *" },
     { "path": "/api/cron/post-visit-survey", "schedule": "0 16 * * *" }
   ],
+  "redirects": [
+    { "source": "/mo", "destination": "https://www.avalonvitality.co/", "permanent": false },
+    { "source": "/mo/", "destination": "https://www.avalonvitality.co/", "permanent": false }
+  ],
   "rewrites": [
     {
       "source": "/robots.txt",
