@@ -6,7 +6,7 @@ This file is loaded into agent context for every session in this workspace. Keep
 
 - **Page routing** uses a re-export shim pattern: every `src/pages/*.jsx` file is a 2-13 line shim that re-exports the real implementation from `app-modules/pages/*.jsx`. See [`docs/ROUTING_CONVENTION.md`](docs/ROUTING_CONVENTION.md) before "consolidating" what looks like duplication.
 - **Launch readiness** is tracked in [`docs/GO_LIVE_STATUS.md`](docs/GO_LIVE_STATUS.md) (GL-001..018). Read it before answering questions about whether something is "ready to ship."
-- **Deploy rule**: never `vercel deploy --prod` from this repo (auto-aliases `avalonvitality.co`, which still serves coming-soon). Deploy via preview alias: push branch → Vercel Preview → `vercel alias set <preview-url> beta.avalonvitality.co`. `snooches.avalonvitality.co` is retained as a legacy alias — safe to leave pointing at the same build during transition, but new deploys should target `beta`.
+- **Deploy rule**: never `vercel deploy --prod` from this repo — including from `.context/coming-soon-main/` (same Vercel project id `prj_YHh0a9k...`, so `--prod` there clobbers prod too). The apex `avalonvitality.co` + `www` now serve the LIVE app (main-URL swap has been executed — see `docs/MAIN_URL_SWAP_RUNBOOK.md`), so a stray `--prod` will replace the live site with whatever prebuilt output is in the cwd. Deploy via preview alias: push branch → Vercel Preview → `vercel alias set <preview-url> beta.avalonvitality.co`. `snooches.avalonvitality.co` is retained as a legacy alias.
 - **Never push to main.** Only push feature branches.
 
 ## Verify scripts
