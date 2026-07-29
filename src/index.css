@@ -743,6 +743,11 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
 }
 
 /* Accessibility: respect user's motion preference globally */
+/* THE global reduced-motion kill-switch. This was declared three times in this
+   file (here, and again near the old lines 854 and 2580) with identical bodies;
+   the duplicates are removed so there is one place to audit. Targeted
+   reduced-motion overrides for specific components stay next to those
+   components. */
 @media (prefers-reduced-motion: reduce) {
   .av-page-stage {
     animation: none !important;
@@ -753,6 +758,10 @@ html.av-user-zoomed [data-av-booking-mobile-footer="true"] {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }
 
@@ -851,17 +860,8 @@ html:is(.dark, .daytime, .light, .golden-hour, .golden, .warriors, .dubs, .pride
 }
 
 /* Honor prefers-reduced-motion globally — cuts parallax, scroll reveals, autoplay. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  html { scroll-behavior: auto; }
-}
+/* (duplicate global reduced-motion block removed — folded into the single
+   kill-switch near the top of this file) */
 
 /* Section-level motion is owned by Framer Motion (see src/lib/motion.js)
    using the editorial easing cubic-bezier(0.16, 1, 0.3, 1). The former
@@ -2577,14 +2577,8 @@ a:focus-visible,
 }
 
 /* ===== Reduced motion preference ===== */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
+/* (duplicate global reduced-motion block removed — folded into the single
+   kill-switch near the top of this file) */
 
 /* ===== 8. max-w-prose on body paragraphs for readable line lengths on desktop ===== */
 /* Targeted: paragraphs inside main landing sections that aren't already constrained */
@@ -3590,6 +3584,13 @@ body:has(.nd-product) .av-home-nav__mobile button {
   .nd-path__action svg {
     transition: none;
   }
+
+  /* The hover wipe and baseline rule still land, they just land instantly —
+     the hover state stays legible without the sweep. */
+  .nd-path::before,
+  .nd-path::after {
+    transition: none;
+  }
 }
 
 /* Editorial nurse-delivery polish.
@@ -4384,41 +4385,17 @@ body:has(.nd-product) .av-home-nav__mobile button {
       animation: nd-mobile-image-in 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    .nd-hero__brand,
+    /* .nd-hero__brand / .nd-hero__mobile-book / .nd-proof / .nd-paths__prompt
+       were in this ladder but are rendered by no component — verified zero
+       usage across src/ and app-modules/. Removed along with their delays and
+       the `nd-mobile-arrow-breathe` rule that hung off .nd-hero__mobile-book. */
     .nd-hero__message,
-    .nd-hero__mobile-book,
-    .nd-proof,
-    .nd-paths__prompt,
     .nd-path {
       animation: nd-mobile-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     .nd-hero__message {
       animation-delay: 80ms;
-    }
-
-    .nd-hero__mobile-book {
-      animation-delay: 150ms;
-    }
-
-    .nd-proof:nth-child(1) {
-      animation-delay: 180ms;
-    }
-
-    .nd-proof:nth-child(2) {
-      animation-delay: 230ms;
-    }
-
-    .nd-proof:nth-child(3) {
-      animation-delay: 280ms;
-    }
-
-    .nd-proof:nth-child(4) {
-      animation-delay: 330ms;
-    }
-
-    .nd-paths__prompt {
-      animation-delay: 260ms;
     }
 
     .nd-path:nth-of-type(1) {
@@ -4431,10 +4408,6 @@ body:has(.nd-product) .av-home-nav__mobile button {
 
     .nd-path:nth-of-type(3) {
       animation-delay: 460ms;
-    }
-
-    .nd-hero__mobile-book svg {
-      animation: nd-mobile-arrow-breathe 2.8s ease-in-out 1.2s infinite;
     }
   }
 
@@ -5812,6 +5785,84 @@ body:has(.nd-home) .avalon-static-backdrop {
     transform: translate3d(0.3rem, 0, 0);
   }
 
+  /* --- Door-card hover.
+         Base .nd-path:hover sets a background tint, but an unscoped override
+         further down resets it to transparent, so on desktop the only hover
+         feedback these cards had was the 0.3rem arrow nudge above. These are
+         the primary CTA on the homepage.
+
+         Wipe and rule are pseudo-elements driven by scaleX so the whole
+         interaction is transform + color — no layout, no filter. Guarded on
+         (hover: hover) so touch devices don't latch a sticky hover state. --- */
+  @media (hover: hover) and (pointer: fine) {
+    .nd-path::before,
+    .nd-path::after {
+      position: absolute;
+      content: '';
+      transform: scaleX(0);
+      transform-origin: left center;
+      pointer-events: none;
+      transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Background wipe, behind the card content. */
+    .nd-path::before {
+      z-index: 0;
+      inset: 0;
+      background: rgb(217 210 200 / 0.42);
+    }
+
+    /* Baseline rule. */
+    .nd-path::after {
+      z-index: 1;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 1px;
+      background: rgb(43 33 27 / 0.55);
+      transition-duration: 620ms;
+    }
+
+    .nd-path--primary::before {
+      background: rgb(255 253 248 / 0.07);
+    }
+
+    .nd-path--primary::after {
+      background: rgb(255 253 248 / 0.6);
+    }
+
+    .nd-path:hover::before,
+    .nd-path:focus-visible::before,
+    .nd-path:hover::after,
+    .nd-path:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    /* Keep the copy and the arrow above the wipe. */
+    .nd-path__copy,
+    .nd-path__action {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Arrow fills on hover. The primary card's action is already a solid
+       paper-filled pill, so it keeps its existing treatment and just rides
+       the translate. */
+    .nd-path:not(.nd-path--primary) .nd-path__action {
+      transition:
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 280ms ease,
+        border-color 280ms ease,
+        color 280ms ease;
+    }
+
+    .nd-path:not(.nd-path--primary):hover .nd-path__action {
+      border-color: var(--nd-ink);
+      background: var(--nd-ink);
+      color: #fffdf8 !important;
+    }
+  }
+
   .nd-hero__visual {
     position: relative;
     display: block;
@@ -6468,23 +6519,13 @@ body:has(.nd-home) .avalon-static-backdrop {
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .nd-hero__message,
-    .nd-hero__mobile-book,
-    .nd-hero__proof,
-    .nd-hero__paths {
+    /* .nd-hero__paths deliberately NOT in this ladder: the IntersectionObserver
+       in Hero.jsx already drives it via .nd-reveal-ready. Two systems on one
+       element means the animation's `both` fill paints it visible while the
+       reveal still holds pointer-events:none — a visible-but-dead CTA.
+       .nd-hero__mobile-book and .nd-hero__proof are rendered by no component. */
+    .nd-hero__message {
       animation: nd-mobile-rise 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-
-    .nd-hero__mobile-book {
-      animation-delay: 80ms;
-    }
-
-    .nd-hero__proof {
-      animation-delay: 140ms;
-    }
-
-    .nd-hero__paths {
-      animation-delay: 200ms;
     }
 
     .nd-path:hover .nd-path__action svg {
@@ -7707,7 +7748,58 @@ body:has(.nd-home) .avalon-static-backdrop {
   }
 }
 
-@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+/* ---------------------------------------------------------------------------
+   Consumer front-door motion (nd-).
+
+   iOS safety contract — mirrors src/lib/motion.js:6-15, non-negotiable:
+     - transform + opacity ONLY. Never `filter`/`blur`: WebKit promotes a
+       compositing layer that eats touch/scroll on off-screen elements.
+     - Reveals gate pointer-events none -> auto. An opacity:0 below-fold
+       section otherwise intercepts scroll gestures on iOS. The observer in
+       Hero.jsx is once:true, so the element flips to auto on entry and
+       never re-hides.
+     - Never scale a full-section wrapper (clips children edges). Scale is
+       item-level only — here, the hero <img>, never .nd-hero__visual.
+
+   Was scoped to max-width:900px, which made the whole reveal system a no-op
+   above 901px while Hero.jsx kept adding .nd-reveal-ready at every width.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* --- Scroll reveal. Driven by the IntersectionObserver in Hero.jsx. --- */
+  .nd-reveal-ready {
+    opacity: 0;
+    transform: translate3d(0, 1.2rem, 0);
+    pointer-events: none;
+    transition:
+      opacity 820ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 820ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .nd-reveal-ready.nd-reveal-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    pointer-events: auto;
+  }
+
+  .nd-press.nd-reveal-ready {
+    transition-duration: 980ms;
+  }
+
+  .nd-footer__main.nd-reveal-ready,
+  .nd-footer__notice.nd-reveal-ready {
+    transition-duration: 900ms;
+  }
+
+}
+
+/* Hero mount ladder — DESKTOP ONLY (>=901px).
+   Mobile already has a tuned entrance ladder (`nd-mobile-rise` +
+   `nd-mobile-image-in`, ~line 4382) that animates .nd-hero__message and
+   .nd-path directly. Running this ladder there too would animate a child of
+   an already-animating parent and multiply the two opacities — the documented
+   iOS flash (see premiumListItem, src/lib/motion.js:120-131). Desktop had no
+   mount motion at all, which is the gap this fills. */
+@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
   @keyframes nd-soft-arrive {
     from {
       opacity: 0;
@@ -7720,66 +7812,66 @@ body:has(.nd-home) .avalon-static-backdrop {
     }
   }
 
-  .nd-hero__brand,
-  .nd-hero__message,
-  .nd-hero__mobile-book,
-  .nd-proof {
+  @keyframes nd-image-settle {
+    from {
+      transform: scale(1.04);
+    }
+
+    to {
+      transform: scale(1);
+    }
+  }
+
+  .nd-hero__message h1,
+  .nd-hero__tagline,
+  .nd-hero__lede,
+  .nd-hero__trust-strip {
     animation: nd-soft-arrive 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .nd-hero__brand {
+  .nd-hero__message h1 {
     animation-delay: 60ms;
   }
 
-  .nd-hero__message {
+  .nd-hero__tagline {
     animation-delay: 140ms;
   }
 
-  .nd-hero__mobile-book {
+  .nd-hero__lede {
+    animation-delay: 200ms;
+  }
+
+  .nd-hero__trust-strip {
     animation-delay: 260ms;
   }
 
-  .nd-proof:nth-child(1) {
-    animation-delay: 360ms;
+  .nd-hero__image {
+    animation: nd-image-settle 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .nd-proof:nth-child(2) {
-    animation-delay: 430ms;
+  /* --- Door-card cascade. TRANSFORM-ONLY, deliberately no opacity: the
+         .nd-hero__paths wrapper already fades via .nd-reveal-ready, and
+         multiplying the two opacities is what produced the documented
+         flash on iOS (see premiumListItem in src/lib/motion.js:120-131). --- */
+  .nd-hero__paths.nd-reveal-ready .nd-path {
+    transform: translate3d(0, 0.6rem, 0);
+    transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .nd-proof:nth-child(3) {
-    animation-delay: 500ms;
-  }
-
-  .nd-proof:nth-child(4) {
-    animation-delay: 570ms;
-  }
-
-  .nd-reveal-ready {
-    opacity: 0;
-    transform: translate3d(0, 1.2rem, 0);
-    filter: blur(2px);
-    transition:
-      opacity 820ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 820ms cubic-bezier(0.22, 1, 0.36, 1),
-      filter 820ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .nd-reveal-ready.nd-reveal-visible {
-    opacity: 1;
+  .nd-hero__paths.nd-reveal-visible .nd-path {
     transform: translate3d(0, 0, 0);
-    filter: blur(0);
   }
 
-  .nd-press.nd-reveal-ready {
-    transition-duration: 980ms;
+  .nd-hero__paths.nd-reveal-visible .nd-path:nth-of-type(2) {
+    transition-delay: 70ms;
   }
 
-  .nd-footer__main.nd-reveal-ready,
-  .nd-footer__notice.nd-reveal-ready {
-    transition-duration: 900ms;
+  .nd-hero__paths.nd-reveal-visible .nd-path:nth-of-type(3) {
+    transition-delay: 140ms;
   }
+}
 
+@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
   .nd-path__action {
     transition:
       transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -9233,6 +9325,29 @@ body:has(.nd-hero) {
   transform: scale(0.97);
 }
 
+/* Scroll depth bar. `bg-accent` is white under the .dark theme, which is
+   invisible against the cream consumer body (#f6f2eb) — every nd- surface was
+   rendering a white bar on near-white paper. .nd-corner-header is the marker
+   for those surfaces; legacy dark pages keep the accent. */
+.av-scroll-progress {
+  transition: opacity 0.35s ease;
+}
+
+.av-scroll-progress__bar {
+  transition: transform 0.08s linear;
+}
+
+body:has(.nd-corner-header) .av-scroll-progress__bar {
+  background: #2b211b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .av-scroll-progress,
+  .av-scroll-progress__bar {
+    transition: none;
+  }
+}
+
 .nd-corner-menu {
   position: relative;
 }
@@ -9280,6 +9395,8 @@ body:has(.nd-hero) {
   border: 1px solid #d9d2c8;
   border-radius: 0.75rem;
   background: #faf7f1;
+  /* The panel grows out of the toggle, which sits at its top-right. */
+  transform-origin: top right;
   box-shadow:
     0 1rem 2.25rem rgb(43 33 27 / 0.12),
     0 0.25rem 0.75rem rgb(43 33 27 / 0.07);
@@ -9287,6 +9404,24 @@ body:has(.nd-hero) {
 
 .nd-corner-menu__panel[hidden] {
   display: none;
+}
+
+/* Each link is wrapped in a motion element so it can stagger in, which makes
+   the wrapper the grid item rather than the <a>. */
+.nd-corner-menu__panel > * {
+  display: grid;
+}
+
+.nd-corner-menu__glyph {
+  display: inline-flex;
+  width: 1.3rem;
+  height: 1.3rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nd-corner-menu__glyph > span {
+  display: inline-flex;
 }
 
 .nd-corner-menu__panel a {
@@ -9308,7 +9443,9 @@ body:has(.nd-hero) {
     padding-left 160ms ease;
 }
 
-.nd-corner-menu__panel a:last-child {
+/* :last-child on the <a> would now always match (it is the only child of its
+   wrapper), so the separator is keyed off the last wrapper instead. */
+.nd-corner-menu__panel > *:last-child a {
   border-bottom: 0;
 }
 

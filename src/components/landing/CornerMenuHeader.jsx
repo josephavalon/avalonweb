@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, MessageCircle, Phone, X } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
+import { AnimatePresence, motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
+import { DURATIONS, EASE } from '@/lib/motion';
 
 const ITEMS = [
   { label: 'Start', to: '/start' },
@@ -18,6 +20,39 @@ export default function CornerMenuHeader() {
   const { pathname } = useLocation();
   const menuId = useId();
   const menuRef = useRef(null);
+  const toggleRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+
+  // Panel opens from the toggle in the top-right corner. Transform + opacity
+  // only — this header is fixed chrome, so nothing here may introduce a
+  // containing block on an ancestor (see PageTransition.jsx:5-17). The panel
+  // is position:absolute inside the header, which is safe.
+  const panelMotion = reduceMotion
+    ? {
+        initial: { opacity: 0, transition: { duration: 0 } },
+        animate: { opacity: 1, transition: { duration: 0 } },
+        exit: { opacity: 0, transition: { duration: 0 } },
+      }
+    : {
+        initial: { opacity: 0, scale: 0.98, y: -4 },
+        animate: {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          transition: { duration: DURATIONS.quick, ease: EASE, staggerChildren: 0.028, delayChildren: 0.04 },
+        },
+        exit: { opacity: 0, scale: 0.98, y: -4, transition: { duration: 0.16, ease: EASE } },
+      };
+
+  const itemMotion = reduceMotion
+    ? {}
+    : {
+        variants: {
+          initial: { opacity: 0, y: -6 },
+          animate: { opacity: 1, y: 0, transition: { duration: DURATIONS.quick, ease: EASE } },
+          exit: { opacity: 0 },
+        },
+      };
 
   useEffect(() => {
     setOpen(false);
@@ -30,7 +65,10 @@ export default function CornerMenuHeader() {
       if (!menuRef.current?.contains(event.target)) setOpen(false);
     };
     const closeOnEscape = (event) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      // Escape must not strand focus on a node that is about to unmount.
+      toggleRef.current?.focus();
     };
 
     document.addEventListener('pointerdown', closeOnOutsidePress);
@@ -62,6 +100,7 @@ export default function CornerMenuHeader() {
 
         <div ref={menuRef} className="nd-corner-menu">
           <button
+            ref={toggleRef}
             type="button"
             className="nd-corner-menu__toggle"
             aria-label={open ? 'Close menu' : 'Open menu'}
@@ -69,21 +108,45 @@ export default function CornerMenuHeader() {
             aria-controls={menuId}
             onClick={() => setOpen((current) => !current)}
           >
-            {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            <span className="nd-corner-menu__glyph" aria-hidden="true">
+              <AnimatePresence initial={false} mode="wait">
+                <motion.span
+                  key={open ? 'close' : 'open'}
+                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, rotate: -45 }}
+                  animate={reduceMotion ? { opacity: 1 } : { opacity: 1, rotate: 0 }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, rotate: 45 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.11, ease: EASE }}
+                >
+                  {open ? <X /> : <Menu />}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </button>
 
-          <nav
-            id={menuId}
-            className={`nd-corner-menu__panel${open ? ' nd-corner-menu__panel--open' : ''}`}
-            aria-label="Primary navigation"
-            hidden={!open}
-          >
-            {ITEMS.map((item) => (
-              <Link key={item.label} to={item.to} onClick={() => setOpen(false)}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          {/* AnimatePresence unmounts the panel when closed, so it leaves the
+              accessibility tree entirely — the same guarantee the `hidden`
+              attribute was providing, without the hard display:none pop. */}
+          <AnimatePresence>
+            {open && (
+              <motion.nav
+                id={menuId}
+                className="nd-corner-menu__panel nd-corner-menu__panel--open"
+                aria-label="Primary navigation"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={panelMotion}
+              >
+                {ITEMS.map((item) => (
+                  <motion.div key={item.label} {...itemMotion}>
+                    <Link to={item.to} onClick={() => setOpen(false)}>
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.nav>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>
