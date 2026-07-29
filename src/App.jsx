@@ -349,9 +349,13 @@ function AppRoutes() {
             <Route path="/trips/:visitId" element={<TripPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
-            <Route path="/membership" element={<Navigate to="/subscription" replace />} />
-            <Route path="/subscription" element={<CareAcuityForward><Subscription /></CareAcuityForward>} />
-            <Route path="/plan" element={<CareAcuityForward><PlanCheckout /></CareAcuityForward>} />
+            {/* Plans + plan checkout are pulled for now (2026-07-29). Redirected
+                rather than 404'd: ~18 internal links and any live inbound link
+                still land somewhere useful. Subscription/PlanCheckout stay
+                imported and unreachable — restore by swapping these back. */}
+            <Route path="/membership" element={<Navigate to="/start" replace />} />
+            <Route path="/subscription" element={<Navigate to="/start" replace />} />
+            <Route path="/plan" element={<Navigate to="/start" replace />} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
@@ -393,9 +397,9 @@ function AppRoutes() {
             <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
             <Route path="/dashboard" element={<Navigate to="/members/dashboard" replace />} />
             <Route path="/kiosk" element={<Navigate to="/login?next=/kiosk" replace />} />
-            <Route path="/plans" element={<Navigate to="/subscription" replace />} />
-            <Route path="/plans/checkout" element={<PreserveSearchNavigate to="/plan" />} />
-            <Route path="/plan-checkout" element={<PreserveSearchNavigate to="/plan" />} />
+            <Route path="/plans" element={<Navigate to="/start" replace />} />
+            <Route path="/plans/checkout" element={<Navigate to="/start" replace />} />
+            <Route path="/plan-checkout" element={<Navigate to="/start" replace />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
             {/* /menu canonicalized to /protocols — both surfaces served the

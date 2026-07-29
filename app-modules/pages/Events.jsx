@@ -355,26 +355,6 @@ export default function Events() {
 
             <EventPlanner />
 
-            <nav className="nd-events-hero__links" aria-label="Explore Avalon events">
-              <a href="#upcoming-events">
-                <span>
-                  <strong>View upcoming events</strong>
-                  <small>Public pop-ups you can join.</small>
-                </span>
-                <span className="nd-events-hero__link-arrow" aria-hidden="true">
-                  <ArrowRight />
-                </span>
-              </a>
-              <a href="#past-events">
-                <span>
-                  <strong>See past events</strong>
-                  <small>What we’ve run and for whom.</small>
-                </span>
-                <span className="nd-events-hero__link-arrow" aria-hidden="true">
-                  <ArrowRight />
-                </span>
-              </a>
-            </nav>
           </div>
 
           <div className="nd-events-hero__visual nd-events-hero__visual--desktop">
@@ -393,12 +373,9 @@ export default function Events() {
           <AsSeenAt tone="light" />
         </div>
 
-        <div className="nd-events-main nd-events-main--listings">
-          <div className="nd-events-listings">
-            <EventList id="upcoming-events" title="Upcoming Events" events={UPCOMING_EVENTS} />
-            <EventList id="past-events" title="Past Events" events={PAST_EVENTS} past />
-          </div>
-        </div>
+        {/* Upcoming + Past listings hidden for now (2026-07-29). The EventList
+            component and the UPCOMING_EVENTS / PAST_EVENTS data stay in place so
+            this is a one-line restore when there's a calendar worth showing. */}
       </main>
 
       <ConsumerFooter />

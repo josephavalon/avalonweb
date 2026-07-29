@@ -829,14 +829,8 @@ export const publicStaticRoutes = [
   // /menu canonicalized to /protocols at the router level (App.jsx).
   // Intentionally excluded from the sitemap / SEO architecture so crawlers
   // don't index the redirect.
-  {
-    path: '/subscription',
-    title: 'Subscriptions — Avalon Vitality',
-    description: 'Avalon subscriptions for recurring mobile recovery support, credits, appointment planning, and clinician-reviewed service.',
-    h1: 'Subscriptions',
-    priority: '0.8',
-    changefreq: 'weekly',
-  },
+  // /subscription pulled from the sitemap 2026-07-29 — the route now redirects
+  // to /start, so prerendering it would publish a page that no longer exists.
   {
     path: '/pricing',
     title: 'Transparent Pricing — Avalon Vitality',
