@@ -38,7 +38,10 @@ export default function Hero() {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  useEffect(() => {
+  // useLayoutEffect, not useEffect: .nd-reveal-ready must land before the
+  // browser paints. Applied after paint, the section shows at full opacity for
+  // a frame and then blinks out.
+  useLayoutEffect(() => {
     const section = sectionRef.current;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
