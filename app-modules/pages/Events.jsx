@@ -1,203 +1,206 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Activity, Armchair, ArrowRight, Briefcase, Calendar, ChevronDown, Clock, Droplet, Gem, MapPin,
-  MoreHorizontal, Music, Pill, Presentation, Sparkles, Star, Syringe, Tent, Users, Wine,
+  ArrowLeft, ArrowRight, Calendar, ChevronDown, MapPin, Users,
 } from 'lucide-react';
-import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
-import AvalonMark from '@/components/AvalonMark';
-import CannabisLeaf from '@/components/icons/CannabisLeaf';
+import AsSeenAt from '@/components/landing/AsSeenAt';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
-
-const EVENT_TYPES = [
-  { key: 'Corporate', icon: Briefcase },
-  { key: 'Wedding', icon: Gem },
-  { key: 'Concert', icon: Music },
-  { key: 'Private Party', icon: Wine },
-  { key: 'Athletic', icon: Activity },
-  { key: 'Conference', icon: Presentation },
-  { key: 'Festival', icon: Tent },
-  { key: 'Other', icon: MoreHorizontal },
-];
 
 const GUEST_RANGES = ['4 – 10', '11 – 25', '26 – 50', '51 – 100', '100+'];
 
-const SERVICES = [
-  { key: 'IV Therapy', icon: Droplet },
-  { key: 'NAD+', icon: Sparkles },
-  { key: 'IM Injections', icon: Syringe },
-  { key: 'CBD', icon: CannabisLeaf },
-  { key: 'Vitamin Therapy', icon: Pill },
-  { key: 'Recovery Lounge', icon: Armchair },
-  { key: 'Other', icon: MoreHorizontal },
-];
-
 const UPCOMING_EVENTS = [
-  { name: 'Cannabis CE Night', date: '2026-08-28T19:00:00-07:00', status: 'Details coming soon' },
+  {
+    name: 'Cannabis CE Night',
+    date: '2026-08-28T19:00:00-07:00',
+    status: 'Details coming soon',
+    href: '/events/cannabis-ce',
+  },
 ];
 
 const PAST_EVENTS = [
-  { name: 'Maxim Superbowl Party', date: '2026-02-07T19:00:00-08:00', status: 'Event complete' },
+  {
+    name: 'Maxim Superbowl Party',
+    date: '2026-02-07T19:00:00-08:00',
+    status: 'Event complete',
+  },
 ];
 
-const inputClass = 'min-h-[52px] w-full rounded-xl border border-foreground/14 bg-background/60 px-4 font-body text-sm font-semibold text-foreground outline-none transition placeholder:text-foreground/36 focus:border-foreground/34';
-const whiteBtn = { background: '#fff', color: '#000' };   // true white — the global bg-white neutralizer would repaint it dark
-
 function formatEventDate(iso) {
-  if (!iso) return 'Date TBA';
-  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  if (!iso) return 'Any date';
+  return new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function formatListingDate(iso) {
   if (!iso) return 'Date TBA';
-  return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
-function EventList({ title, events, past = false }) {
+function EventList({ id, title, events, past = false }) {
   return (
-    <section aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-title`}>
-      <div className="flex items-end justify-between gap-4 border-b border-foreground/[0.12] pb-3">
-        <h2
-          id={`${title.toLowerCase().replace(/\s+/g, '-')}-title`}
-          className="font-heading text-4xl uppercase leading-none tracking-tight text-foreground md:text-5xl"
-        >
-          {title}
-        </h2>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/38">
-          {events.length} event
-        </span>
+    <section id={id} className="nd-events-list" aria-labelledby={`${id}-title`}>
+      <div className="nd-events-list__heading">
+        <h2 id={`${id}-title`} className="nd-events-list__title">{title}</h2>
+        <span className="nd-events-list__count">{events.length} event</span>
       </div>
-      <div className="mt-3 grid gap-3">
-        {events.map((event) => (
-          <article
-            key={`${event.name}-${event.date}`}
-            className={`av-treatment-card grid gap-4 rounded-[1.35rem] border px-5 py-5 sm:grid-cols-[1fr_auto] sm:items-end ${past ? 'opacity-58' : ''}`}
-          >
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-foreground/50">
-                {formatListingDate(event.date)}
+      <div className="nd-events-list__cards">
+        {events.map((event) => {
+          const className = `nd-events-list__card${past ? ' nd-events-list__card--past' : ''}${event.href ? ' nd-events-list__card--link' : ''}`;
+          const content = (
+            <>
+              <div>
+                <p className="nd-events-list__date">{formatListingDate(event.date)}</p>
+                <h3 className="nd-events-list__name">{event.name}</h3>
+              </div>
+              <p className="nd-events-list__status">
+                {event.status}{event.href ? ' →' : ''}
               </p>
-              <h3 className="mt-2 font-heading text-[2.25rem] uppercase leading-[0.9] tracking-tight text-foreground md:text-5xl">
-                {event.name}
-              </h3>
-            </div>
-            <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45 sm:pb-1">
-              {event.status}
-            </p>
-          </article>
-        ))}
+            </>
+          );
+
+          return event.href ? (
+            <Link
+              key={`${event.name}-${event.date}`}
+              to={event.href}
+              className={className}
+              aria-label={`${event.name} — event details`}
+            >
+              {content}
+            </Link>
+          ) : (
+            <article key={`${event.name}-${event.date}`} className={className}>
+              {content}
+            </article>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function sectionLabel(text) {
-  return <p className="mb-3 font-body text-[12px] font-black uppercase tracking-[0.12em] text-foreground/60">{text}</p>;
-}
-
-/* ───────────────────────── 60-second planner ───────────────────────── */
-
 function EventPlanner() {
   const [where, setWhere] = useState('');
   const [date, setDate] = useState('');
-  const [eventType, setEventType] = useState('');
   const [guestRange, setGuestRange] = useState('');
-  const [services, setServices] = useState([]);
-  const [active, setActive] = useState(null);   // one editor open at a time — the tiles ARE the controls; nothing open on arrival
+  const [active, setActive] = useState('');
+  const [stage, setStage] = useState('event');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
-  const summary = [
-    { key: 'where', icon: MapPin, label: 'Where', value: where || 'Anywhere', set: Boolean(where) },
-    { key: 'when', icon: Calendar, label: 'When', value: date ? formatEventDate(date) : 'Any date', set: Boolean(date) },
-    { key: 'guests', icon: Users, label: 'Guests', value: guestRange || 'Any size', set: Boolean(guestRange) },
-    { key: 'type', icon: Star, label: 'Event type', value: eventType || 'Choose', set: Boolean(eventType) },
-    { key: 'services', icon: Droplet, label: 'Services', value: services.length ? services.slice(0, 2).join(', ') + (services.length > 2 ? '…' : '') : 'Choose', set: services.length > 0 },
+  const rows = [
+    { key: 'where', label: 'Where', value: where || 'Anywhere', icon: MapPin },
+    { key: 'when', label: 'When', value: formatEventDate(date), icon: Calendar },
+    { key: 'guests', label: 'How many guests', value: guestRange || 'Any size', icon: Users },
   ];
-
-  function toggleService(key) {
-    setServices((cur) => (cur.includes(key) ? cur.filter((s) => s !== key) : [...cur, key]));
-  }
 
   async function submit() {
     setError('');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError('Add your email so we can send your quote.');
+    const contactName = name.trim();
+    const contactEmail = email.trim();
+    const contactPhone = phone.trim();
+
+    if (!contactName) {
+      setError('Add your name.');
       return;
     }
+    if (!contactEmail && !contactPhone) {
+      setError('Add an email or mobile number.');
+      return;
+    }
+    if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+      setError('Check your email address.');
+      return;
+    }
+    if (contactPhone && contactPhone.replace(/\D/g, '').length < 7) {
+      setError('Check your mobile number.');
+      return;
+    }
+
     setSending(true);
     try {
-      const res = await fetch('/api/events/host-inquiry', {
+      const response = await fetch('/api/events/host-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ where, date, eventType, guestRange, services, email: email.trim() }),
+        body: JSON.stringify({
+          where,
+          date,
+          guestRange,
+          name: contactName,
+          email: contactEmail,
+          phone: contactPhone,
+        }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok || body.ok === false) throw new Error(body.error || 'Something went wrong — try again.');
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.ok === false) {
+        throw new Error(body.error || 'Something went wrong — try again.');
+      }
       setSent(true);
-    } catch (err) {
-      setError(err.message || 'Something went wrong — try again.');
+    } catch (requestError) {
+      setError(requestError.message || 'Something went wrong — try again.');
     } finally {
       setSending(false);
     }
   }
 
-  if (sent) {
-    return (
-      <div className="av-treatment-card rounded-[1.55rem] border px-5 py-10 text-center">
-        <p className="font-heading text-3xl uppercase leading-none text-foreground">Request received</p>
-        <p className="mx-auto mt-3 max-w-sm font-body text-[14px] font-semibold text-foreground/55">
-          Your quote lands at {email.trim()} within 24 hours. We pull up with whatever, whoever, wherever.
-        </p>
-      </div>
-    );
-  }
-
-  /* The editor panel for whichever tile is active. */
-  const panels = {
+  const editor = {
     where: (
-      <div>
-        {sectionLabel('Where is your event?')}
+      <div className="nd-events-quote__editor">
+        <label htmlFor="event-location">Where is your event?</label>
         <input
+          id="event-location"
           autoFocus
-          className={inputClass}
           value={where}
-          onChange={(e) => setWhere(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') setActive('when'); }}
+          onChange={(event) => setWhere(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              setActive('');
+            }
+          }}
           placeholder="City, venue, or address"
-          aria-label="Where is your event"
           autoComplete="off"
         />
       </div>
     ),
     when: (
-      <div>
-        {sectionLabel('When is your event?')}
+      <div className="nd-events-quote__editor">
+        <label htmlFor="event-date">When is your event?</label>
         <input
+          id="event-date"
           type="date"
-          className={`${inputClass} [color-scheme:dark]`}
           value={date}
-          onChange={(e) => { setDate(e.target.value); setActive('guests'); }}
-          aria-label="Event date"
+          onChange={(event) => {
+            setDate(event.target.value);
+            setActive('');
+          }}
         />
-        <p className="mt-2 font-body text-[12px] font-semibold text-foreground/45">No date yet? Skip it — we'll plan around you.</p>
       </div>
     ),
     guests: (
-      <div>
-        {sectionLabel('How many guests?')}
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+      <div className="nd-events-quote__editor">
+        <span>How many guests?</span>
+        <div className="nd-events-quote__guest-options">
           {GUEST_RANGES.map((range) => (
             <button
               key={range}
               type="button"
-              onClick={() => { setGuestRange(guestRange === range ? '' : range); setActive('type'); }}
               aria-pressed={guestRange === range}
-              className={`min-h-[44px] rounded-full border px-3 font-body text-[13px] font-bold transition-colors ${
-                guestRange === range ? 'border-foreground/70 bg-foreground/[0.09] text-foreground' : 'border-foreground/14 text-foreground/70 hover:border-foreground/28'
-              }`}
+              onClick={() => {
+                setGuestRange(range);
+                setActive('');
+              }}
             >
               {range}
             </button>
@@ -205,164 +208,200 @@ function EventPlanner() {
         </div>
       </div>
     ),
-    type: (
-      <div>
-        {sectionLabel("What's the type of event?")}
-        <div className="grid grid-cols-4 gap-2 md:grid-cols-8">
-          {EVENT_TYPES.map(({ key, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => { setEventType(eventType === key ? '' : key); setActive('services'); }}
-              aria-pressed={eventType === key}
-              className={`flex flex-col items-center gap-2 rounded-[1.05rem] border px-2 py-4 transition-colors ${
-                eventType === key ? 'border-foreground/60 bg-foreground/[0.08]' : 'border-foreground/12 bg-foreground/[0.03] hover:border-foreground/26'
-              }`}
-            >
-              <Icon className="h-5 w-5 text-foreground/80" strokeWidth={1.6} />
-              <span className="font-body text-xs font-semibold text-foreground/75">{key}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    ),
-    services: (
-      <div>
-        {sectionLabel('Which services are you interested in?')}
-        <div className="flex flex-wrap gap-2">
-          {SERVICES.map(({ key, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => toggleService(key)}
-              aria-pressed={services.includes(key)}
-              className={`inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 font-body text-[13px] font-bold transition-colors ${
-                services.includes(key) ? 'border-foreground/70 bg-foreground/[0.09] text-foreground' : 'border-foreground/14 text-foreground/70 hover:border-foreground/28'
-              }`}
-            >
-              <Icon className="h-4 w-4" strokeWidth={1.6} />
-              {key}
-            </button>
-          ))}
-        </div>
-      </div>
-    ),
   };
 
-  const tileButton = ({ key, icon: Icon, label, value, set }, i, mobile = false) => (
-    <button
-      key={key}
-      type="button"
-      onClick={() => setActive(active === key && !mobile ? key : active === key ? '' : key)}
-      aria-expanded={active === key}
-      className={
-        mobile
-          ? `flex w-full items-center gap-4 px-4 py-4 text-left transition-colors ${i > 0 ? 'border-t border-foreground/[0.08]' : ''} ${active === key ? 'bg-foreground/[0.06]' : ''}`
-          : `flex flex-col items-center gap-2 px-3 py-5 text-center transition-colors ${i > 0 ? 'border-l border-foreground/[0.08]' : ''} ${active === key ? 'bg-foreground/[0.07]' : 'hover:bg-foreground/[0.04]'}`
-      }
-    >
-      <Icon className={`${mobile ? 'h-5 w-5' : 'h-6 w-6'} shrink-0 text-foreground/70`} strokeWidth={1.6} />
-      <span className={mobile ? 'flex min-w-0 flex-col' : 'contents'}>
-        <span className="font-body text-xs font-black uppercase tracking-[0.12em] text-foreground">{label}</span>
-        <span className={`font-body text-[13px] font-semibold ${set ? 'text-foreground/80' : 'text-foreground/45'} ${mobile ? 'truncate' : 'line-clamp-1'}`}>
-          {value}
-        </span>
-      </span>
-      <ChevronDown
-        className={`h-4 w-4 shrink-0 text-foreground/50 transition-transform duration-300 ${active === key ? 'rotate-180' : ''} ${mobile ? 'ml-auto' : ''}`}
-        strokeWidth={2}
-      />
-    </button>
-  );
+  if (sent) {
+    return (
+      <div className="nd-events-quote nd-events-quote--success" role="status">
+        <h2>Request received</h2>
+        <p>We’ll follow up within 24 hours using the contact details you provided.</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {/* Desktop: the tiles ARE the controls — one editor panel opens below */}
-      <div className="hidden md:block">
-        <div className="av-treatment-card grid rounded-[1.55rem] border md:grid-cols-5">
-          {summary.map((tile, i) => tileButton(tile, i))}
-        </div>
-        {active && panels[active] ? (
-          <div className="av-treatment-card mt-3 rounded-[1.55rem] border p-5">{panels[active]}</div>
-        ) : null}
-      </div>
-
-      {/* Mobile: accordion — each row expands its editor inline */}
-      <div className="av-treatment-card overflow-hidden rounded-[1.55rem] border md:hidden">
-        {summary.map((tile, i) => (
-          <div key={tile.key}>
-            {tileButton(tile, i, true)}
-            {active === tile.key ? (
-              <div className="border-t border-foreground/[0.08] px-4 pb-5 pt-4">{panels[tile.key]}</div>
-            ) : null}
+    <form
+      className={`nd-events-quote${stage === 'contact' ? ' nd-events-quote--contact' : ''}`}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (stage === 'event') {
+          setActive('');
+          setStage('contact');
+          return;
+        }
+        submit();
+      }}
+      noValidate
+    >
+      {stage === 'event' ? (
+        <>
+          <h2>Get a quote</h2>
+          <div className="nd-events-quote__rows">
+            {rows.map(({ key, label, value, icon: Icon }) => (
+              <div key={key}>
+                <button
+                  type="button"
+                  className="nd-events-quote__row"
+                  aria-expanded={active === key}
+                  onClick={() => setActive(active === key ? '' : key)}
+                >
+                  <span className="nd-events-quote__row-label">
+                    <Icon aria-hidden="true" />
+                    <span>{label}</span>
+                  </span>
+                  <span className="nd-events-quote__row-value">
+                    {value}
+                    <ChevronDown aria-hidden="true" />
+                  </span>
+                </button>
+                {active === key ? editor[key] : null}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-
-      <div className="mt-8">
-        {sectionLabel('Where should the quote go?')}
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            type="email"
-            className={inputClass}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@email.com"
-            aria-label="Your email"
-            autoComplete="email"
-          />
+          <button type="submit" className="nd-events-quote__submit">
+            Get a quote <ArrowRight aria-hidden="true" />
+          </button>
+        </>
+      ) : (
+        <>
           <button
             type="button"
-            onClick={submit}
-            disabled={sending}
-            className="flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-full px-8 font-heading text-lg uppercase leading-none tracking-[0.08em] transition-transform active:scale-[0.99] disabled:opacity-60"
-            style={whiteBtn}
+            className="nd-events-quote__back"
+            onClick={() => {
+              setError('');
+              setStage('event');
+            }}
           >
-            {sending ? 'Sending…' : 'Get a quote'} <ArrowRight className="h-4 w-4" />
+            <ArrowLeft aria-hidden="true" /> Event details
           </button>
-        </div>
-        {error ? <p role="alert" className="mt-2 font-body text-[13px] font-semibold text-foreground/75">{error}</p> : null}
-        <p className="mt-2 font-body text-[12px] font-semibold text-foreground/50">
-          Transparent pricing. Nothing medical is asked here.
-        </p>
-      </div>
-    </div>
+          <h2>Your details</h2>
+          <div className="nd-events-quote__contact-fields">
+            <label>
+              <span>Name</span>
+              <input
+                autoFocus
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                autoComplete="name"
+              />
+            </label>
+            <label>
+              <span>Email</span>
+              <input
+                type="email"
+                inputMode="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+              />
+            </label>
+            <label>
+              <span>Mobile</span>
+              <input
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                autoComplete="tel"
+              />
+            </label>
+          </div>
+          <p className="nd-events-quote__requirement">Name required. Add email or mobile.</p>
+          {error ? <p className="nd-events-quote__error" role="alert">{error}</p> : null}
+          <button type="submit" className="nd-events-quote__submit" disabled={sending}>
+            {sending ? 'Sending…' : 'Request quote'} <ArrowRight aria-hidden="true" />
+          </button>
+        </>
+      )}
+      <p className="nd-events-quote__privacy">
+        Transparent pricing. Nothing medical is asked here.
+      </p>
+    </form>
   );
 }
 
 export default function Events() {
-  const plannerRef = useRef(null);
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    const frame = window.requestAnimationFrame(() => window.scrollTo(0, 0));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useSeo({
     title: 'Wellness For Your Event — Avalon Vitality',
-    description: 'IV therapy, recovery, and wellness care for events of any size. Plan your event in under 60 seconds — quotes delivered within 24 hours.',
+    description: 'On-site IV therapy for parties, productions and private events. Request a transparent quote from Avalon Vitality.',
     path: '/events',
   });
 
   return (
-    <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-transparent text-foreground">
-      <header>
-        <Navbar />
-      </header>
+    <div className="nd-events-page nd-events-page--editorial">
+      <main>
+        <section className="nd-events-hero" aria-labelledby="events-title">
+          <div className="nd-events-hero__content">
+            <div className="nd-events-hero__intro">
+              <h1 id="events-title">Build your event</h1>
+              <p>On-site IV therapy for parties, productions and private events.</p>
+            </div>
 
-      <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-[5.25rem] md:px-8 md:pb-12 md:pt-[5.75rem]">
-        {/* Planner */}
-        <section ref={plannerRef} className="scroll-mt-24 pt-2">
-          <div className="mb-4 text-center md:mb-5">
-            <h1 className="av-h-hero [text-wrap:balance]">
-              Build your event
-            </h1>
+            <div className="nd-events-hero__visual nd-events-hero__visual--mobile">
+              <img
+                src="/images/avalon-events-hero.jpg"
+                alt="Avalon nurse preparing IV therapy at a private event"
+                width="1228"
+                height="1108"
+                decoding="async"
+              />
+            </div>
+
+            <EventPlanner />
+
+            <nav className="nd-events-hero__links" aria-label="Explore Avalon events">
+              <a href="#upcoming-events">
+                <span>
+                  <strong>View upcoming events</strong>
+                  <small>Public pop-ups you can join.</small>
+                </span>
+                <span className="nd-events-hero__link-arrow" aria-hidden="true">
+                  <ArrowRight />
+                </span>
+              </a>
+              <a href="#past-events">
+                <span>
+                  <strong>See past events</strong>
+                  <small>What we’ve run and for whom.</small>
+                </span>
+                <span className="nd-events-hero__link-arrow" aria-hidden="true">
+                  <ArrowRight />
+                </span>
+              </a>
+            </nav>
           </div>
-          <EventPlanner />
+
+          <div className="nd-events-hero__visual nd-events-hero__visual--desktop">
+            <img
+              src="/images/avalon-events-hero.jpg"
+              alt="Avalon nurse preparing IV therapy at a private event"
+              width="1228"
+              height="1108"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </div>
         </section>
 
-        <div className="mt-20 grid gap-16 md:mt-24">
-          <EventList title="Upcoming Events" events={UPCOMING_EVENTS} />
-          <EventList title="Past Events" events={PAST_EVENTS} past />
+        <div className="nd-events-press">
+          <AsSeenAt tone="light" />
+        </div>
+
+        <div className="nd-events-main nd-events-main--listings">
+          <div className="nd-events-listings">
+            <EventList id="upcoming-events" title="Upcoming Events" events={UPCOMING_EVENTS} />
+            <EventList id="past-events" title="Past Events" events={PAST_EVENTS} past />
+          </div>
         </div>
       </main>
 
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

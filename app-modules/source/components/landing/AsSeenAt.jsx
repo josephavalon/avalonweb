@@ -1,47 +1,47 @@
 import React, { useState } from 'react';
 import { useReducedMotion } from '@/components/ui/PageTransitionMotion';
 
-const DARK_SOURCE_FILTER = 'grayscale(1) contrast(4) brightness(1.55)';
-const LIGHT_SOURCE_FILTER = 'grayscale(1) invert(1) contrast(4)';
-
-// The supplied press marks are screenshots rather than transparent exports.
-// Their per-logo filters force each screenshot background to black, then
-// `mix-blend-mode: screen` makes that black disappear over the hero while the
-// mark remains white. This keeps the exact supplied artwork and avoids the
-// solid-white rectangles produced by brightness(0) invert(1).
+// The source press marks include both light and dark screenshot backgrounds.
+// `scripts/normalize-press-logos.mjs` converts them to transparent espresso
+// artwork so the rail stays crisp on either light or dark surfaces.
 const AS_SEEN_AT = [
-  { name: 'Faena Miami Beach', src: '/logos/faena.png', filter: DARK_SOURCE_FILTER },
-  { name: 'Maxim Magazine', src: '/logos/maxim.png', filter: LIGHT_SOURCE_FILTER },
-  { name: 'The Midway', src: '/logos/the-midway.png', filter: LIGHT_SOURCE_FILTER },
-  { name: 'Hereticon', src: '/logos/hereticon.png', filter: LIGHT_SOURCE_FILTER },
-  { name: 'The Loom', src: '/logos/the-loom.png', filter: DARK_SOURCE_FILTER },
-  { name: '111 Minna Gallery', src: '/logos/111-minna.png', filter: DARK_SOURCE_FILTER },
+  { name: 'Faena Miami Beach', src: '/logos/press-dark/faena.png' },
+  { name: 'Maxim Magazine', src: '/logos/press-dark/maxim.png' },
+  { name: 'The Midway', src: '/logos/press-dark/the-midway.png' },
+  { name: 'Hereticon', src: '/logos/press-dark/hereticon.png' },
+  { name: 'The Loom', src: '/logos/press-dark/the-loom.png' },
+  { name: '111 Minna Gallery', src: '/logos/press-dark/111-minna.png' },
   {
     name: "Dante's Inferno",
-    src: '/logos/dantes-inferno-gpt.png',
+    src: '/logos/press-dark/dantes-inferno-gpt.png',
     scale: 1.18,
   },
-  { name: 'FIRE', src: '/logos/fire-gpt.png' },
-  { name: 'Discourse', src: '/logos/discourse.png', filter: 'grayscale(1) contrast(4) brightness(2)' },
-  { name: 'Sanai', src: '/logos/sanai-gpt.png' },
-  { name: 'MobileCoin', src: '/logos/mobilecoin-gpt.png', scale: 1.08 },
+  { name: 'FIRE', src: '/logos/press-dark/fire-gpt.png' },
+  { name: 'Discourse', src: '/logos/press-dark/discourse.png' },
+  { name: 'Sanai', src: '/logos/press-dark/sanai-gpt.png' },
+  { name: 'MobileCoin', src: '/logos/press-dark/mobilecoin-gpt.png', scale: 1.08 },
 ];
-const MOBILE_GROUP_WIDTH = AS_SEEN_AT.length * 152;
-
+const MOBILE_AS_SEEN_AT = [
+  { name: 'Maxim Magazine', src: '/logos/press-dark/maxim.png' },
+  { name: 'The Midway', src: '/logos/press-dark/the-midway.png' },
+  { name: 'Hereticon', src: '/logos/press-dark/hereticon.png' },
+  { name: 'The Loom', src: '/logos/press-dark/the-loom.png' },
+];
 // Same iOS-safe scaffold as InstagramFeed's marquee: layer-promoted wrappers,
 // inline CSS keyframes on both strips, desktop hover pause, and reduced motion
 // honored on both surfaces. Standard press-band proportions — small, uniform,
 // trust-building.
-export default function AsSeenAt() {
+export default function AsSeenAt({ tone = 'dark' }) {
   const reduce = useReducedMotion();
   const [hoverPaused, setHoverPaused] = useState(false);
   const isRunning = !hoverPaused && !reduce;
+  const isLight = tone === 'light';
 
   const cell = (item, i) => {
     const imageStyle = {
-      filter: item.filter,
-      WebkitFilter: item.filter,
-      mixBlendMode: 'screen',
+      filter: isLight ? 'none' : 'brightness(0) invert(1)',
+      WebkitFilter: isLight ? 'none' : 'brightness(0) invert(1)',
+      mixBlendMode: 'normal',
       ...(item.scale || item.offsetY
         ? { transform: `translateY(${item.offsetY || '0'}) scale(${item.scale || 1})` }
         : {}),
@@ -69,12 +69,13 @@ export default function AsSeenAt() {
     <div
       className="av-asa relative z-10 w-full pb-6 pt-4 md:pb-5 md:pt-4"
       role="region"
-      aria-label="As seen at"
+      aria-label="Trusted by"
+      data-tone={tone}
     >
       {/* Eyebrow — left-aligned to the hero's content edge (px-5 md:px-12). */}
       <div className="px-5 md:px-12">
         <p className="font-body text-[10px] font-semibold uppercase tracking-[0.32em] text-foreground md:text-[11px]">
-          As seen at
+          Trusted by
         </p>
       </div>
 
@@ -113,28 +114,33 @@ export default function AsSeenAt() {
       {/* Mobile marquee — transform the strip instead of mutating scrollLeft.
           iOS can leave blend-mode paint trails when a native scroller is moved
           every animation frame, which makes adjacent logos appear to overlap. */}
-      <div className="av-asa-mobile-viewport relative mt-4 h-10 overflow-hidden md:hidden">
+      <div className="av-asa-mobile-viewport relative mt-4 md:hidden">
         <div
-          className="av-asa-mobile-strip flex h-10 items-center"
+          className="av-asa-mobile-moving-track"
           style={{
-            width: `${MOBILE_GROUP_WIDTH * 2}px`,
-            maxWidth: 'none',
-            animation: 'av-asa-marquee 90s linear infinite',
-            WebkitAnimation: 'av-asa-marquee 90s linear infinite',
+            animation: 'av-asa-marquee 24s linear infinite',
+            WebkitAnimation: 'av-asa-marquee 24s linear infinite',
             animationPlayState: isRunning ? 'running' : 'paused',
             WebkitAnimationPlayState: isRunning ? 'running' : 'paused',
-            transform: 'translate3d(0, 0, 0)',
-            willChange: 'transform',
           }}
         >
           {[0, 1].map((group) => (
             <div
               key={group}
-              className="flex shrink-0 select-none"
-              style={{ width: `${MOBILE_GROUP_WIDTH}px`, maxWidth: 'none' }}
+              className="av-asa-mobile-static-grid"
               aria-hidden={group === 1 ? 'true' : undefined}
             >
-              {AS_SEEN_AT.map(cell)}
+              {MOBILE_AS_SEEN_AT.map((item) => (
+                <div key={item.name} className="av-asa-mobile-static-cell">
+                  <img
+                    src={item.src}
+                    alt={group === 0 ? item.name : ''}
+                    loading="eager"
+                    decoding="async"
+                    draggable={false}
+                  />
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -144,10 +150,6 @@ export default function AsSeenAt() {
         .av-asa-marquee-viewport {
           -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
           mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
-        }
-        .av-asa-mobile-viewport {
-          -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
-          mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
         }
         @keyframes av-asa-marquee {
           0%   { transform: translate3d(0, 0, 0); }

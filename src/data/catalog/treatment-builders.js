@@ -3,11 +3,37 @@ import { IV_SESSIONS } from './iv-sessions.js';
 
 export const byKey = Object.fromEntries(IV_SESSIONS.map((session) => [session.key, session]));
 
+function splitIngredientList(value) {
+  const ingredients = [];
+  let current = '';
+  let depth = 0;
+
+  for (const character of String(value)) {
+    if (character === '(') depth += 1;
+    if (character === ')') depth = Math.max(0, depth - 1);
+
+    if (character === '·' && depth === 0) {
+      if (current.trim()) ingredients.push(current.trim());
+      current = '';
+    } else {
+      current += character;
+    }
+  }
+
+  if (current.trim()) ingredients.push(current.trim());
+  return ingredients;
+}
+
 export function includedSession(session, dose = null) {
+  if (session.key === 'nad' && dose?.key === 'nad_vitality') {
+    return ['NAD+ 750mg', "Myers' Cocktail", 'IV fluids', 'Clinical intake review', 'Registered nurse administration', '6 hr appointment window'];
+  }
   if (session.key === 'nad') return [`NAD+ ${dose?.label || 'dose selected during booking'}`, 'IV fluids', 'B-complex support', 'Clinical intake review', 'Registered nurse administration', '1-4 hr appointment window'];
+  if (session.key === 'cbd' && dose?.key === 'cbd_vitality') {
+    return ['CBD 66mg', 'Vitamin support', 'IV fluids', 'Clinical intake review', 'Registered nurse administration'];
+  }
   if (session.key === 'cbd') return [`CBD ${dose?.label || 'review dose'}`, 'IV fluids', 'Clinician-guided dose', 'Clinical intake review', 'Registered nurse administration'];
-  return String(session.inside || 'IV fluids · Electrolytes · Vitamin support')
-    .split(' · ')
+  return splitIngredientList(session.inside || 'IV fluids · Electrolytes · Vitamin support')
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 6);

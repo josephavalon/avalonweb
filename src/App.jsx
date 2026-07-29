@@ -160,13 +160,15 @@ const B2BThankYou = lazyRoute(() => import('./pages/B2BThankYou'));
 const CustomProtocol = lazyRoute(() => import('./pages/CustomProtocol'));
 const CookiePolicy = lazyRoute(() => import('./pages/CookiePolicy'));
 const ProtocolPage = lazyRoute(() => import('./pages/therapies/ProtocolPage'));
-const ProductDetail = lazyRoute(() => import('./pages/products/ProductDetail'));
-const Menu = lazyRoute(() => import('./pages/Menu'));
+const ProductDetail = lazyRoute(() => import('./pages/ConsumerProduct'));
+const Menu = lazyRoute(() => import('./pages/ConsumerMenu'));
 const BookingConfirmation = lazyRoute(() => import('./pages/BookingConfirmation'));
-const Subscription = lazyRoute(() => import('./pages/Membership'));
+const Subscription = lazyRoute(() => import('./pages/PlanInterest'));
 const PlanCheckout = lazyRoute(() => import('./pages/PlanCheckout'));
 const Corporate = lazyRoute(() => import('./pages/Corporate'));
 const EventsPage = lazyRoute(() => import('./pages/Events'));
+const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
+const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
 const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
 const PageNotFound = lazyRoute(() => import('./lib/PageNotFound'));
@@ -335,6 +337,11 @@ function AppRoutes() {
             <Route path="/launches/:slug" element={<EventPage />} />
             <Route path="/events/:slug/kiosk" element={<EventKiosk />} />
             <Route path="/events/:slug/board" element={<EventBoard />} />
+            <Route path="/events/cannabis-ce" element={<CannabisCeNight />} />
+            {/* /start is the canonical short URL for the focused booking screen.
+                /nurse-delivery stays for existing links and the ?path=guided flow. */}
+            <Route path="/start" element={<NurseDelivery entry="book" />} />
+            <Route path="/nurse-delivery" element={<NurseDelivery />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />

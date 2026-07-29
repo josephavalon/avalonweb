@@ -23,13 +23,21 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+    const name = clean(body.name, 120);
     const email = clean(body.email, 200).toLowerCase();
-    if (!EMAIL_RE.test(email)) {
-      return res.status(400).json({ ok: false, error: 'A valid email is required.' });
+    const phone = clean(body.phone, 40);
+    if (!name) {
+      return res.status(400).json({ ok: false, error: 'Your name is required.' });
     }
-    const services = Array.isArray(body.services)
-      ? body.services.slice(0, 12).map((s) => clean(s, 40)).filter(Boolean)
-      : [];
+    if (!email && !phone) {
+      return res.status(400).json({ ok: false, error: 'Add an email or mobile number.' });
+    }
+    if (email && !EMAIL_RE.test(email)) {
+      return res.status(400).json({ ok: false, error: 'Check your email address.' });
+    }
+    if (phone && phone.replace(/\D/g, '').length < 7) {
+      return res.status(400).json({ ok: false, error: 'Check your mobile number.' });
+    }
     const inquiry = {
       where: clean(body.where, 160) || 'Not specified',
       date: clean(body.date, 40) || 'Flexible',
@@ -38,8 +46,9 @@ export default async function handler(req, res) {
       guests: count(body.guests, 5000),
       ivDrips: count(body.ivDrips, 500),
       shots: count(body.shots, 2000),
-      services,
+      name,
       email,
+      phone,
     };
 
     const lines = [
@@ -49,9 +58,10 @@ export default async function handler(req, res) {
       `When:   ${inquiry.date}`,
       `Event type: ${inquiry.eventType || 'Not specified'}`,
       `Guests: ${inquiry.guestRange || inquiry.guests || 'Not specified'}`,
-      `Services: ${inquiry.services.join(', ') || 'Not specified'}`,
       inquiry.ivDrips || inquiry.shots ? `IV drips: ${inquiry.ivDrips} · Recovery shots: ${inquiry.shots}` : null,
-      `Contact: ${inquiry.email}`,
+      `Name: ${inquiry.name}`,
+      inquiry.email ? `Email: ${inquiry.email}` : null,
+      inquiry.phone ? `Mobile: ${inquiry.phone}` : null,
     ].filter(Boolean).join('\n');
 
     if (process.env.RESEND_API_KEY) {
@@ -59,7 +69,7 @@ export default async function handler(req, res) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'Avalon Events <support@avalonvitality.co>',
         to: INTERNAL_TO,
-        replyTo: inquiry.email,
+        ...(inquiry.email ? { replyTo: inquiry.email } : {}),
         subject: `Event inquiry — ${inquiry.where} · ${inquiry.date}`,
         text: lines,
       });

@@ -691,6 +691,14 @@ export const indexedSeoPaths = [
 
 export const publicStaticRoutes = [
   {
+    path: '/start',
+    title: 'Start — Avalon Vitality',
+    description: 'Start a mobile wellness visit. Leave your name and mobile — a registered nurse comes to you in the SF Bay Area. $50 deposit applies to your visit.',
+    h1: 'Start',
+    priority: '0.9',
+    changefreq: 'monthly',
+  },
+  {
     path: '/',
     title: 'Avalon Vitality | Mobile IV Therapy in the SF Bay Area',
     description: 'Avalon Vitality delivers mobile IV therapy to homes, hotels, offices, and events with registered nurse visits, clinical review, flat pricing, and fast SF Bay Area booking.',

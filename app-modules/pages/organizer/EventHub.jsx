@@ -365,6 +365,27 @@ export default function OrganizerEventHub() {
     } finally { setBusy(''); }
   };
 
+  // Admin-only self-approve for draft events. Promoters still see the passive
+  // "Avalon publishing approval required" message; admins get an inline button
+  // that flips draft → presale via /api/admin/events/management (the same
+  // endpoint /admin/events uses). Non-admin callers hit the 403 there and see
+  // an error notice.
+  const approveActiveEvent = async () => {
+    if (!active || user?.role !== 'admin') return;
+    setBusy('approve'); setNotice(null);
+    try {
+      if (authBackend === 'demo') {
+        setHub((current) => ({ ...current, events: current.events.map((event) => event.id === active.id ? { ...event, status: 'presale' } : event) }));
+      } else {
+        await apiPost('/api/admin/events/management', { action: 'set_status', status: 'presale', containerId: active.id });
+        await load();
+      }
+      setNotice({ type: 'success', message: 'Event approved — presale is live.' });
+    } catch (error) {
+      setNotice({ type: 'error', message: error.message || 'Could not approve this event.' });
+    } finally { setBusy(''); }
+  };
+
   const upload = async (file, kind) => {
     if (!active) return;
     if (file.size > 12 * 1024 * 1024) { setNotice({ type: 'error', message: 'Image must be 12 MB or smaller.' }); return; }
@@ -435,6 +456,15 @@ export default function OrganizerEventHub() {
                   <p className="mt-3 font-body text-sm text-foreground/54">{eventDate(active.startsAt)} · {active.venue || 'Venue to be confirmed'}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {user?.role === 'admin' && active.status === 'draft' && (
+                    <button
+                      onClick={approveActiveEvent}
+                      disabled={busy === 'approve'}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#C8F135] px-5 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-background disabled:opacity-60"
+                    >
+                      <ShieldCheck className="h-4 w-4" /> {busy === 'approve' ? 'Approving…' : 'Approve (admin)'}
+                    </button>
+                  )}
                   <button onClick={copySaleLink} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground/16 px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em]"><Copy className="h-4 w-4" /> Copy ticket link</button>
                   <Link to={`/events/${active.slug}`} target="_blank" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-background">Public page <ArrowUpRight className="h-4 w-4" /></Link>
                 </div>
@@ -468,7 +498,7 @@ export default function OrganizerEventHub() {
                       ['Upgrade requests', Boolean(active.logistics?.upgradeRequests), active.logistics?.upgradeRequests ? 'Awaiting Avalon confirmation' : 'No upgrades requested'],
                       ['Experience tickets', active.tickets.some((ticket) => ticket.active), 'Pricing, allocation, and sale windows'],
                       ['Brand approved', active.assets.live > 0, `${active.assets.live} live · ${active.assets.pending} in review`],
-                      ['Ticket page', ['presale', 'public'].includes(active.status), active.status === 'draft' ? 'Avalon publishing approval required' : 'Ready to share'],
+                      ['Ticket page', ['presale', 'public'].includes(active.status), active.status === 'draft' ? (user?.role === 'admin' ? 'Tap "Approve (admin)" above to publish' : 'Avalon publishing approval required') : 'Ready to share'],
                     ].map(([label, ready, detail]) => <div key={label} className="flex items-center gap-3 py-4"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${ready ? 'border-[#C8F135]/30 text-[#C8F135]' : 'border-foreground/14 text-foreground/32'}`}>{ready ? <Check className="h-4 w-4" /> : <CalendarDays className="h-4 w-4" />}</span><div><p className="font-body text-sm font-semibold">{label}</p><p className="mt-1 font-body text-[12px] text-foreground/44">{detail}</p></div></div>)}</div>
                   </div>
                   <TrustBoundary />

@@ -291,7 +291,10 @@ function IVTherapyHover({ link, linkClassName }) {
   );
 }
 
-const BOOK_URL = '/book';
+// Top nav "Book" now routes marketing visitors into the /nurse-delivery
+// guided intake. Care-host visitors (logged-in customer domain) still fall
+// through to ACUITY_URL via the `care ? ACUITY_URL : BOOK_URL` branch below.
+const BOOK_URL = '/nurse-delivery';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
@@ -469,7 +472,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   ];
 
   // Sign-in / sign-up screens (customer + admin) intentionally DO show the
-  // marketing bar — users mid-funnel need to get back to Plans / Book Now
+  // marketing bar — users mid-funnel need to get back to Plans / Book
   // without having to navigate out of the auth card first.
   const loginRoute = location.pathname === '/login'
     || location.pathname === '/admin/login'
@@ -529,7 +532,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       {/* Desktop — compact left column + flexible nav + right actions keeps the
           primary menu aligned beside the logo instead of centered on the page.
           Gated at lg (not md): at the 768-1023 tablet band the desktop links and the
-          right cluster (contact icons + Sign In + Book Now) collide, so tablet keeps the
+          right cluster (contact icons + Sign In + Book) collide, so tablet keeps the
           compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
         className={`av-home-nav__desktop av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { LockKeyhole } from 'lucide-react';
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
@@ -12,7 +13,7 @@ export default function CookieConsent() {
     if (suppressed) return;
     const consentGiven = localStorage.getItem('cookieConsent');
     if (!consentGiven) {
-      const delay = 8000;
+      const delay = 1100;
       const timer = window.setTimeout(() => setShowConsent(true), delay);
       return () => window.clearTimeout(timer);
     }
@@ -36,49 +37,49 @@ export default function CookieConsent() {
     <>
       {showConsent ? (
         <div
-          className={`fixed left-2 right-2 z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-reveal sm:left-auto sm:right-3 sm:w-[360px] ${
-            path.startsWith('/book')
-              ? 'bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]'
-              : 'bottom-16 sm:bottom-3'
-          }`}
+          className="pointer-events-none fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-[60] animate-in fade-in slide-in-from-bottom-4 duration-reveal sm:left-auto sm:right-5 sm:w-[430px]"
         >
-          <div className="ml-auto border border-foreground/10 bg-background/82 backdrop-blur-2xl rounded-[0.9rem] p-2 shadow-[0_-10px_30px_rgba(0,0,0,0.18)] pointer-events-auto relative">
-            {/* Dismiss without picking YES/NO — audit finding E1. Records
-                'dismissed' so the banner comes back next session but doesn't
-                block content in the meantime. */}
-            <button
-              type="button"
-              onClick={() => setShowConsent(false)}
-              aria-label="Dismiss privacy banner"
-              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-background border border-foreground/16 text-foreground/62 hover:text-foreground hover:border-foreground/30 flex items-center justify-center text-[10px] leading-none transition-colors"
-            >
-              ×
-            </button>
-            <div className="flex items-center gap-2">
+          <aside
+            aria-labelledby="cookie-consent-title"
+            className="pointer-events-auto relative ml-auto rounded-[1.4rem] border border-[#d9d2c8] bg-[#f6f2eb] p-5 text-[#2b211b] shadow-[0_18px_56px_rgba(43,33,27,0.14)]"
+          >
+            <div className="flex items-start gap-3.5">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d9d2c8]">
+                <LockKeyhole className="h-[18px] w-[18px]" strokeWidth={1.7} aria-hidden="true" />
+              </span>
               <div className="min-w-0">
-                <p className="font-heading text-lg text-foreground tracking-[0.04em] uppercase leading-none">
+                <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em] text-[#6e6258]">
                   Privacy
                 </p>
-                <p className="font-body text-[11px] text-foreground/78 leading-snug mt-0.5 max-w-[13rem]">
-                  Essential only unless allowed.
-                </p>
-              </div>
-              <div className="ml-auto grid grid-cols-2 gap-1.5 shrink-0">
-                <button
-                  onClick={handleDecline}
-                  className="min-h-[34px] px-3 py-1 border border-foreground/16 text-foreground/62 font-heading text-[11px] uppercase tracking-[0.14em] rounded-full hover:bg-foreground/5 hover:border-foreground/30 active:scale-[0.99] transition-all duration-base ease-editorial"
+                <h2 id="cookie-consent-title" className="mt-1 font-body text-[15px] font-semibold leading-[1.45] tracking-[-0.01em]">
+                  Allow optional analytics to help improve Avalon?
+                </h2>
+                <Link
+                  to="/cookie-policy"
+                  className="mt-2 inline-flex min-h-7 items-center font-body text-[11px] font-semibold text-[#6e6258] underline underline-offset-4 hover:text-[#2b211b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b211b]"
                 >
-                  No
-                </button>
-                <button
-                  onClick={handleAllow}
-                  className="min-h-[34px] px-3 py-1 bg-foreground text-background font-heading text-[11px] uppercase tracking-[0.14em] rounded-full hover:bg-foreground/90 active:scale-[0.99] transition-all duration-base ease-editorial"
-                >
-                  OK
-                </button>
+                  Cookie policy
+                </Link>
               </div>
             </div>
-          </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={handleDecline}
+                className="min-h-[46px] rounded-full border border-[#bfb6aa] px-3 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-[#2b211b] transition-colors hover:bg-[#eee8df] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b211b]"
+              >
+                Essential only
+              </button>
+              <button
+                type="button"
+                onClick={handleAllow}
+                className="min-h-[46px] rounded-full bg-[#2b211b] px-3 font-body text-[11px] font-bold uppercase tracking-[0.08em] text-[#fffdf8] transition-colors hover:bg-[#44372f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b211b]"
+              >
+                Allow analytics
+              </button>
+            </div>
+          </aside>
         </div>
       ) : null}
     </>

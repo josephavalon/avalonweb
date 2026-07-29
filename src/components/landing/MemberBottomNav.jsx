@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Calendar, Crown, MessageCircle, User } from 'lucide-react';
+import { Home, Calendar, MessageCircle, User } from 'lucide-react';
 import { useCommunicationCenter } from '@/hooks/useCommunicationCenter';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 
@@ -12,7 +12,6 @@ export default function MemberBottomNav() {
     { icon: Home,          label: 'Home', href: '/members/dashboard' },
     { icon: MessageCircle, label: 'Chat', href: '/members/messages', badge: snapshot.unreadTotal > 0 ? snapshot.unreadTotal : null },
     { icon: Calendar,      label: 'Book', href: BOOK_URL, primary: true },
-    { icon: Crown,         label: 'Plan', href: '/subscription' },
     { icon: User,          label: 'Me',   href: '/members/account' },
   ];
 
@@ -20,7 +19,7 @@ export default function MemberBottomNav() {
     <MobileNavBar
       items={items.map(({ href, ...item }) => ({ ...item, to: href }))}
       ariaLabel="Member navigation"
-      columns={5}
+      columns={4}
       zIndex="default"
     />
   );

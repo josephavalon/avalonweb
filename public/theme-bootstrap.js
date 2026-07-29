@@ -1,17 +1,15 @@
 (function () {
   window.__AV_BOOT_STARTED_AT = Date.now();
   document.documentElement.classList.add('av-js');
-  // Only `dark` and `warriors` are user-facing. Anything else (daytime,
-  // golden-hour, light, giants, pride, july, dubs, golden) resolves back to
-  // dark — the site must never boot with a light theme flash.
-  var ALLOWED = ['dark', 'warriors'];
+  // Seasonal and legacy themes are disabled. Always boot the base theme.
+  var ALLOWED = ['dark'];
   try {
     var stored = window.localStorage.getItem('avalon.theme');
     var path = String(window.location.pathname || '/');
     var isPortal = /^\/(provider|admin|members|account)(\/|$)/.test(path)
       || /^\/(login|signup|forgot|forgot-password)(\/|$)/.test(path);
     if (isPortal) stored = 'dark';
-    if (stored === 'dubs') stored = 'warriors';
+    if (stored === 'dubs' || stored === 'warriors') stored = 'dark';
     var theme = (stored && ALLOWED.indexOf(stored) !== -1) ? stored : 'dark';
     // Rewrite storage so any legacy value (daytime/light/golden-hour/etc.)
     // never resurrects on a later paint.

@@ -600,7 +600,7 @@ function VisitsCreditBanner({ visitsRemaining, loading }) {
             {loading
               ? 'Checking your visit credits…'
               : hasVisits
-                ? 'Each credit covers up to $250 of a visit. Book now and use one.'
+                ? 'Each credit covers up to $250 of a visit. Book a visit and use one.'
                 : 'No visit credits left — add a plan to bank more visits.'}
           </p>
         </div>

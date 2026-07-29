@@ -137,7 +137,7 @@ export default function ProtocolPage() {
           <motion.div {...fadeUp(0.4)} className="mb-14 max-w-md">
             <PremiumButton
               as={Link}
-              to="/book"
+              to={`/start?therapy=${encodeURIComponent(protocol.label)}&protocol=${encodeURIComponent(protocol.key)}`}
               className="flex min-h-[58px] w-full items-center justify-between rounded-full bg-foreground px-6 font-body text-xs font-black tracking-[0.16em] uppercase text-background shadow-[0_18px_50px_hsl(var(--foreground)/0.16)]"
               wrapperClassName="w-full"
             >
