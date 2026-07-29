@@ -63,12 +63,63 @@ export default function Hero() {
       },
     );
 
+    const reveal = (target) => {
+      target.classList.add('nd-reveal-visible');
+      observer.unobserve(target);
+    };
+
+    // Fail open.
+    //
+    // The hidden state now gates pointer-events (an opacity:0 below-fold
+    // section otherwise swallows scroll gestures on iOS). That makes a silent
+    // observer far more expensive than it used to be: .nd-hero__paths is the
+    // homepage's primary CTA, so a target that never receives a callback is a
+    // visible-but-unclickable card rather than merely an un-animated one.
+    //
+    // Observers can stay silent for seconds — a backgrounded tab throttles
+    // rendering hard enough to starve the callback, and the page is then
+    // restored mid-state. So anything already on screen is revealed manually
+    // on a timer, and a passive scroll/resize backstop keeps checking until
+    // every target has been dealt with. Losing the animation is acceptable;
+    // losing the CTA is not.
+    const sweep = () => {
+      let remaining = 0;
+      revealTargets.forEach((target) => {
+        if (target.classList.contains('nd-reveal-visible')) return;
+        const rect = target.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) reveal(target);
+        else remaining += 1;
+      });
+      if (remaining === 0) teardownBackstop();
+    };
+
+    let backstopAttached = false;
+    function teardownBackstop() {
+      if (!backstopAttached) return;
+      backstopAttached = false;
+      window.removeEventListener('scroll', sweep);
+      window.removeEventListener('resize', sweep);
+    }
+
     revealTargets.forEach((target) => {
       target.classList.add('nd-reveal-ready');
       observer.observe(target);
     });
 
-    return () => observer.disconnect();
+    const failOpen = window.setTimeout(() => {
+      sweep();
+      if (![...revealTargets].every((t) => t.classList.contains('nd-reveal-visible'))) {
+        backstopAttached = true;
+        window.addEventListener('scroll', sweep, { passive: true });
+        window.addEventListener('resize', sweep);
+      }
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(failOpen);
+      teardownBackstop();
+      observer.disconnect();
+    };
   }, []);
 
   return (
