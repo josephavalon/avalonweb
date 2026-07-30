@@ -449,7 +449,6 @@ Findings and fixes:
   surrounding layout and content were intentionally preserved.
 
 final result: passed
----
 
 # Snooches Desktop Homepage Design QA
 
@@ -501,5 +500,40 @@ The wide-screen follow-up was checked at 2560 × 1440. The 576px first-view comp
 - `npm run test:accessibility`: passed 500/500.
 - `npm run assets:audit`: ran and reported the two existing oversized NAD bag images (`nad-back.png` and `nad-three-quarter.png`); this change adds no assets.
 - `git diff --check`: passed.
+
+final result: passed
+
+---
+
+# Snooches Full-Bleed Desktop Centering Correction
+
+## Visual truth and capture state
+
+- Source visual truth: `.context/attachments/RUqD5I/Screenshot 2026-07-30 at 9.14.11 AM.png`
+  (`2560 × 1421`, treated as a Retina capture of approximately `1280 × 710`
+  CSS pixels).
+- Browser-rendered implementation:
+  `.context/snooches-homepage-centered-1280x710.png`.
+- Combined comparison:
+  `.context/snooches-homepage-centered-comparison.png` (reference left,
+  corrected implementation right).
+- State: `/`, cookie consent resolved, menu closed, entrance motion settled.
+
+## Findings and correction
+
+- Removed the black canvas, rounded desktop frame, compact header, constrained
+  image crop, and compact six-logo rail introduced by the prior pass.
+- Restored the established full-bleed cream composition and the original moving
+  desktop press marquee.
+- Centered the complete editorial group inside the left hero column using equal
+  responsive side insets and vertical grid alignment. The image, type scale,
+  START slab, helper links, header, press rail, and footer retain their existing
+  dimensions and behavior.
+- The corrected press rail begins at the existing hero boundary and no longer
+  inherits the framed layout's lowered first-paint position.
+- Mobile remains outside the desktop-only rule; the `405 × 854` browser check
+  showed the established mobile composition, active marquee variant, cream
+  background, and no horizontal overflow.
+- No actionable P0, P1, or P2 mismatch remains.
 
 final result: passed
