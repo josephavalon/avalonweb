@@ -10635,11 +10635,21 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   align-content: start !important;
 }
 
+/* Height tracks the column, so the slab stays a bar at every desktop width
+   rather than a block. The old 10rem floor won below ~1100px and squared it off
+   — at 974px it forced 180px against a 426px column (0.42), where the intended
+   proportion is nearer 0.27. 13vw holds that ratio; the 14rem ceiling stops it
+   growing without limit on very wide screens. */
 .nd-hero__paths .nd-path--primary,
 .nd-hero__paths .nd-path--primary:first-child {
-  min-height: clamp(10rem, 16vw, 15rem) !important;
-  padding: clamp(1.5rem, 2.3vw, 2.9rem) clamp(1.6rem, 2.2vw, 2.9rem) !important;
+  min-height: clamp(7rem, 13vw, 14rem) !important;
+  padding: clamp(0.9rem, 1.45vw, 2.1rem) clamp(1.6rem, 2.2vw, 2.9rem) !important;
   grid-template-columns: minmax(0, 1fr) clamp(6.2rem, 7.8vw, 9rem) !important;
+  /* The base .nd-path sets gap: 2rem. The card resolves to two grid rows (the
+     second is empty at 0px), so that 2rem lands as a row-gap and pads 32px of
+     dead height onto the slab — min-height never even becomes the constraint.
+     Column gap is what the two-column layout actually wants. */
+  row-gap: 0 !important;
   border-radius: 1.5rem !important;
 }
 
@@ -10667,18 +10677,24 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 
 /* Two labelled doors under the slab, split by a hairline. Deliberately not
    pills: a bordered pill is still a button, and these must not read as one. */
+/* Content-sized and packed left, not two 1fr halves. Split 50/50 the second
+   cell gets far more width than "Browse all therapies." needs while the first
+   is squeezed into wrapping its description — at ~974px that wrap is the only
+   thing separating this from the intended layout. */
 .nd-hero__ghosts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto auto;
   align-items: center;
-  gap: clamp(1rem, 2vw, 2.2rem);
+  justify-content: start;
+  gap: clamp(0.7rem, 1.2vw, 1.6rem);
   margin: clamp(1.1rem, 1.6vw, 1.7rem) 0 0;
 }
 
 .nd-hero__ghosts .nd-ghost {
   display: flex;
+  min-width: 0;
   align-items: center;
-  gap: clamp(0.7rem, 1vw, 1rem);
+  gap: clamp(0.55rem, 0.8vw, 0.9rem);
   padding: 0.35rem 0;
   color: #2b211b;
   text-decoration: none;
@@ -10687,13 +10703,13 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 /* The divider belongs to the second cell so it never dangles at a row end. */
 .nd-hero__ghosts .nd-ghost + .nd-ghost {
   border-left: 1px solid #d9d2c8;
-  padding-left: clamp(1rem, 2vw, 2.2rem);
+  padding-left: clamp(0.7rem, 1.2vw, 1.6rem);
 }
 
 .nd-hero__ghosts .nd-ghost__icon {
   display: inline-flex;
-  width: clamp(2.6rem, 3vw, 3.1rem);
-  height: clamp(2.6rem, 3vw, 3.1rem);
+  width: clamp(2.1rem, 2.4vw, 2.7rem);
+  height: clamp(2.1rem, 2.4vw, 2.7rem);
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
@@ -10733,7 +10749,7 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 .nd-hero__ghosts .nd-ghost__description {
   color: #6e6258;
   font-family: var(--font-body);
-  font-size: clamp(0.8rem, 0.9vw, 0.95rem);
+  font-size: clamp(0.76rem, 0.86vw, 0.92rem);
   font-weight: 430;
   line-height: 1.3;
 }
@@ -10788,6 +10804,10 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
      stop lining up. */
   .nd-hero__ghosts {
     grid-template-columns: minmax(0, 1fr);
+    /* Desktop packs the two cells left with justify-content: start. Left as-is
+       here the stacked rows would shrink to their text width instead of filling
+       the card, so the divider and the trailing arrows would stop short. */
+    justify-content: stretch;
     gap: 0;
     margin-top: 0.85rem;
     overflow: hidden;
