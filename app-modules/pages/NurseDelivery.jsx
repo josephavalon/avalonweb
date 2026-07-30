@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ArrowRight, ArrowLeft, Check, Lock, ChevronDown, Phone,
+  ArrowRight, ArrowLeft, Check, Lock, ChevronDown,
   Zap, MapPin, DollarSign,
   Sparkles, Battery, Droplet, ShieldCheck,
   GlassWater, Moon, Plane,
@@ -332,9 +332,6 @@ const FEATURES = [
   { icon: DollarSign,   label: 'No hidden fees' },
 ];
 
-const PHONE_DISPLAY = '(415) 980-7708';
-const PHONE_URL = 'tel:+14159807708';
-
 // What happens after Start. Timing copy is the real FAQ language (same-day,
 // 90-minute arrival window) — do not promise a number we don't publish.
 const NEXT_STEPS = [
@@ -477,37 +474,6 @@ function Landing({
             By submitting, you consent to service-related SMS from Avalon Vitality. Reply STOP to opt out. Message and data rates may apply.
           </p>
         </div>
-
-        {/* Focused mode used to dead-end on a single Submit. These are the same
-            escape hatches the full landing has, kept as visible controls. */}
-        {focused && (
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onHelpMeDecide}
-              data-testid="landing-help-me-decide"
-              className="inline-flex min-h-11 items-center rounded-full border border-foreground/15 px-3.5 font-body text-[12px] font-bold uppercase tracking-[0.12em] text-foreground/75 transition hover:border-foreground/40 hover:text-foreground"
-            >
-              Help me choose
-            </button>
-            <Link
-              to="/protocols"
-              data-testid="landing-browse-menu"
-              className="inline-flex min-h-11 items-center rounded-full border border-foreground/15 px-3.5 font-body text-[12px] font-bold uppercase tracking-[0.12em] text-foreground/75 transition hover:border-foreground/40 hover:text-foreground"
-            >
-              View full menu
-            </Link>
-            <a
-              href={PHONE_URL}
-              data-testid="landing-call"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground/15 px-3.5 font-body text-[12px] font-bold uppercase tracking-[0.12em] text-foreground/75 transition hover:border-foreground/40 hover:text-foreground"
-            >
-              <Phone className="h-3.5 w-3.5" strokeWidth={2} />
-              Call
-              <span className="hidden sm:inline">{PHONE_DISPLAY}</span>
-            </a>
-          </div>
-        )}
 
         {!focused && (
           <>
