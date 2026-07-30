@@ -5687,9 +5687,7 @@ body:has(.nd-home) .avalon-static-backdrop {
     color: #191410 !important;
   }
 
-  .nd-path:first-of-type,
-  .nd-path:nth-of-type(2),
-  .nd-path:last-of-type {
+  .nd-path:first-of-type {
     min-height: 0 !important;
   }
 
@@ -7869,13 +7867,6 @@ body:has(.nd-home) .avalon-static-backdrop {
     transform: translate3d(0, 0, 0);
   }
 
-  .nd-hero__paths.nd-reveal-visible .nd-path:nth-of-type(2) {
-    transition-delay: 70ms;
-  }
-
-  .nd-hero__paths.nd-reveal-visible .nd-path:nth-of-type(3) {
-    transition-delay: 140ms;
-  }
 }
 
 @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
@@ -8262,10 +8253,6 @@ body:has(.nd-hero) {
     line-height: 0.88 !important;
     text-transform: uppercase !important;
     white-space: nowrap !important;
-  }
-
-  .nd-hero__paths .nd-path:last-of-type .nd-path__copy strong {
-    font-size: clamp(2rem, 9.7vw, 2.7rem) !important;
   }
 
   .nd-hero__paths .nd-path__description {
@@ -10626,4 +10613,196 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   [class*="text-sky-"], [class*="text-yellow-"], [class*="text-green-"]
 ) {
   color: #f6f2eb !important;
+}
+
+/* --- Hero front door: one START, two ghosts.
+       The hero used to stack three near-identical .nd-path cards, so landing on
+       the homepage meant choosing before you could act. There is now a single
+       card — it grows into the space the other two vacated — followed by two
+       ghost pills that are unmistakably tier two.
+
+       This block deliberately sits at the end of the file and overrides rather
+       than edits the ~25 earlier .nd-path blocks: the desktop treatment lives at
+       the (min-width: 901px) block around line 5634 and the mobile one around
+       line 8214, the latter entirely !important. Rewriting those in place is how
+       this cascade got to 25 blocks in the first place. --- */
+.nd-hero__paths {
+  /* The nav is align-self:stretch with fr rows sized for three cards. With one
+     card left an auto row still stretches (align-content defaults to normal →
+     stretch), ballooning the slab into a half-empty dark rectangle. Pin the row
+     to its content and let the leftover space stay leftover. */
+  grid-template-rows: auto !important;
+  align-content: start !important;
+}
+
+.nd-hero__paths .nd-path--primary,
+.nd-hero__paths .nd-path--primary:first-child {
+  min-height: clamp(10rem, 16vw, 15rem) !important;
+  padding: clamp(1.5rem, 2.3vw, 2.9rem) clamp(1.6rem, 2.2vw, 2.9rem) !important;
+  grid-template-columns: minmax(0, 1fr) clamp(6.2rem, 7.8vw, 9rem) !important;
+  border-radius: 1.5rem !important;
+}
+
+.nd-hero__paths .nd-path--primary .nd-path__copy strong {
+  font-size: clamp(4.4rem, 6.4vw, 8rem) !important;
+}
+
+.nd-hero__paths .nd-path--primary .nd-path__description {
+  font-size: clamp(1.05rem, 1.3vw, 1.5rem) !important;
+}
+
+/* An open ring, not a filled disc: at this size a solid white circle reads as a
+   second button competing with the word START. The base .nd-path__action is
+   already a ring — it is the --primary rule near line 5766, and the colour
+   override near 9554, that fill it in. Both have to be undone. */
+.nd-hero__paths .nd-path--primary .nd-path__action {
+  width: clamp(6.2rem, 7.8vw, 9rem) !important;
+  height: clamp(6.2rem, 7.8vw, 9rem) !important;
+  min-width: clamp(6.2rem, 7.8vw, 9rem) !important;
+  min-height: clamp(6.2rem, 7.8vw, 9rem) !important;
+  border: 3px solid #fffdf8 !important;
+  background: transparent !important;
+  color: #fffdf8 !important;
+}
+
+/* Two labelled doors under the slab, split by a hairline. Deliberately not
+   pills: a bordered pill is still a button, and these must not read as one. */
+.nd-hero__ghosts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 2.2rem);
+  margin: clamp(1.1rem, 1.6vw, 1.7rem) 0 0;
+}
+
+.nd-hero__ghosts .nd-ghost {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1vw, 1rem);
+  padding: 0.35rem 0;
+  color: #2b211b;
+  text-decoration: none;
+}
+
+/* The divider belongs to the second cell so it never dangles at a row end. */
+.nd-hero__ghosts .nd-ghost + .nd-ghost {
+  border-left: 1px solid #d9d2c8;
+  padding-left: clamp(1rem, 2vw, 2.2rem);
+}
+
+.nd-hero__ghosts .nd-ghost__icon {
+  display: inline-flex;
+  width: clamp(2.6rem, 3vw, 3.1rem);
+  height: clamp(2.6rem, 3vw, 3.1rem);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #6e6258;
+  border-radius: 50%;
+  color: #2b211b;
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 1.1vw, 1.15rem);
+  font-weight: 500;
+  line-height: 1;
+  transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nd-hero__ghosts .nd-ghost__icon svg {
+  width: 45%;
+  height: 45%;
+  stroke-width: 2;
+}
+
+.nd-hero__ghosts .nd-ghost__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.16rem;
+}
+
+.nd-hero__ghosts .nd-ghost__copy strong {
+  color: #2b211b;
+  font-family: var(--font-body);
+  font-size: clamp(0.76rem, 0.85vw, 0.9rem);
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.nd-hero__ghosts .nd-ghost__description {
+  color: #6e6258;
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 0.9vw, 0.95rem);
+  font-weight: 430;
+  line-height: 1.3;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nd-hero__ghosts .nd-ghost:hover .nd-ghost__icon {
+    border-color: #2b211b;
+  }
+}
+
+@media (max-width: 900px) {
+  /* :first-child is not decoration. The mobile block near line 8214 sizes the
+     card through `.nd-hero__paths .nd-path--primary:first-child`, and now that
+     START is the only card that selector matches — and outranks a plain
+     `.nd-hero__paths .nd-path--primary` no matter how far down the file it
+     sits. Without this the slab silently stays at the old three-card height. */
+  .nd-hero__paths .nd-path--primary,
+  .nd-hero__paths .nd-path--primary:first-child {
+    min-height: 8.5rem !important;
+    padding: 1.15rem 1.15rem !important;
+    grid-template-columns: minmax(0, 1fr) 4rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .nd-hero__paths .nd-path--primary .nd-path__copy strong {
+    font-size: clamp(3rem, 13vw, 3.9rem) !important;
+  }
+
+  .nd-hero__paths .nd-path--primary .nd-path__description {
+    font-size: 0.85rem !important;
+  }
+
+  .nd-hero__paths .nd-path--primary .nd-path__action {
+    width: 4rem !important;
+    height: 4rem !important;
+    min-width: 4rem !important;
+    min-height: 4rem !important;
+    border-width: 2px !important;
+  }
+
+  .nd-hero__ghosts {
+    gap: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .nd-hero__ghosts .nd-ghost {
+    gap: 0.6rem;
+  }
+
+  .nd-hero__ghosts .nd-ghost + .nd-ghost {
+    padding-left: 0.9rem;
+  }
+
+  .nd-hero__ghosts .nd-ghost__icon {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+}
+
+/* Ghosts join the door-card cascade one beat behind the card. Transform-only,
+   for the same reason the card is (see the note near line 7859). */
+@media (prefers-reduced-motion: no-preference) {
+  .nd-hero__paths.nd-reveal-ready .nd-hero__ghosts {
+    transform: translate3d(0, 0.6rem, 0);
+    transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .nd-hero__paths.nd-reveal-visible .nd-hero__ghosts {
+    transform: translate3d(0, 0, 0);
+    transition-delay: 70ms;
+  }
 }

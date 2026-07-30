@@ -1,29 +1,33 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, List } from 'lucide-react';
 import AsSeenAt from '@/components/landing/AsSeenAt';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 
-const PATHS = [
+// One door, not three. The hero used to offer these as three near-identical
+// cards, which made the visitor choose before they could act. START is now the
+// only card; the other two are ghost pills at an obviously lower tier.
+const PRIMARY_PATH = {
+  title: 'Start',
+  description: 'Begin your care in seconds.',
+  to: '/start',
+  ariaLabel: 'Start a therapy request with an Avalon concierge',
+};
+
+const SECONDARY_PATHS = [
   {
-    title: 'Start',
-    description: 'Begin your care in seconds.',
-    mobileDescription: 'Begin your care in seconds.',
-    to: '/start',
-    primary: true,
-    ariaLabel: 'Start a therapy request with an Avalon concierge',
-  },
-  {
-    title: 'Help Me Choose',
+    title: 'Help me choose',
     description: 'We’ll help you find your therapy.',
-    mobileDescription: 'We’ll help you find\nyour therapy.',
+    // A bare glyph, not lucide's HelpCircle: the mark already sits inside a
+    // bordered circle, and HelpCircle would draw a second ring inside the first.
+    glyph: '?',
     to: '/nurse-delivery?path=guided',
     ariaLabel: 'Get help choosing a therapy',
   },
   {
     title: 'Therapies',
-    description: 'Browse therapies.',
-    mobileDescription: 'Browse therapies.',
+    description: 'Browse all therapies.',
+    icon: List,
     to: '/protocols',
     ariaLabel: 'Browse the therapy menu',
   },
@@ -168,27 +172,41 @@ export default function Hero() {
           </div>
 
           <nav className="nd-hero__paths" aria-label="Choose how to begin">
-            {PATHS.map((path) => (
-              <Link
-                key={path.title}
-                to={path.to}
-                className={`nd-path${path.primary ? ' nd-path--primary' : ''}`}
-                aria-label={path.ariaLabel}
-              >
-                <span className="nd-path__copy">
-                  <strong>{path.title}</strong>
-                  {path.description && (
-                    <span className="nd-path__description">
-                      <span className="nd-path__description-desktop">{path.description}</span>
-                      <span className="nd-path__description-mobile">{path.mobileDescription}</span>
-                    </span>
-                  )}
-                </span>
-                <span className="nd-path__action" aria-hidden="true">
-                  <ArrowRight />
-                </span>
-              </Link>
-            ))}
+            <Link
+              to={PRIMARY_PATH.to}
+              className="nd-path nd-path--primary"
+              aria-label={PRIMARY_PATH.ariaLabel}
+            >
+              <span className="nd-path__copy">
+                <strong>{PRIMARY_PATH.title}</strong>
+                <span className="nd-path__description">{PRIMARY_PATH.description}</span>
+              </span>
+              <span className="nd-path__action" aria-hidden="true">
+                <ArrowRight />
+              </span>
+            </Link>
+
+            {/* Inside the nav, not after it: .nd-hero__editorial distributes its
+                own children, which strands these at the bottom of the column,
+                hundreds of px from the button they belong to. */}
+            <div className="nd-hero__ghosts">
+              {SECONDARY_PATHS.map((path) => (
+                <Link
+                  key={path.title}
+                  to={path.to}
+                  className="nd-ghost"
+                  aria-label={path.ariaLabel}
+                >
+                  <span className="nd-ghost__icon" aria-hidden="true">
+                    {path.icon ? <path.icon /> : path.glyph}
+                  </span>
+                  <span className="nd-ghost__copy">
+                    <strong>{path.title}</strong>
+                    <span className="nd-ghost__description">{path.description}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
           </nav>
         </div>
 
