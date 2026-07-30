@@ -450,8 +450,6 @@ Findings and fixes:
 
 final result: passed
 
----
-
 # Snooches Desktop Homepage Design QA
 
 ## Visual truth and capture state
@@ -504,8 +502,6 @@ The wide-screen follow-up was checked at 2560 × 1440. The 576px first-view comp
 - `git diff --check`: passed.
 
 final result: passed
-
----
 
 # Snooches Full-Bleed Desktop Centering Correction
 
@@ -591,5 +587,59 @@ final result: passed
 - `npm run test:visual`: passed.
 - `MOBILE_QA_ROUTES=/ MOBILE_QA_WIDTHS=390,430 npm run test:mobile`: passed 2/2.
 - `git diff --check`: passed.
+
+final result: passed
+
+---
+
+# Snooches Start Page Centering and Control Removal
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/4KX7PM/Screenshot 2026-07-30 at 10.29.38 AM.png`
+  (`2560 × 1420` physical pixels, normalized to a `1280 × 710` CSS viewport at
+  device pixel ratio 2).
+- Control-removal reference:
+  `.context/attachments/NHYI7h/Screenshot 2026-07-30 at 10.37.37 AM.png`.
+- Browser-rendered implementation:
+  `.context/snooches-start-centered-1200x683.png`.
+- Combined comparison:
+  `.context/snooches-start-centered-comparison.png` (reported state left,
+  corrected implementation right).
+- State: `/start`, menu closed, form loaded, desktop cream theme.
+
+## Findings, correction, and post-fix evidence
+
+- [P2 resolved] The `1024px` booking module was already horizontally centered,
+  but its visible envelope began at approximately `80px`, leaving the module
+  visually pinned beneath the fixed header. The desktop-only page grid now
+  reserves the `86px` header and centers the module within the remaining
+  viewport height.
+- At the verified `1200 × 683` live viewport, the module measures `1024px`
+  wide at `x=88px` and spans `y=144.48px` through `624.91px`. Its midpoint
+  matches the usable area below the header to within one pixel.
+- The page reports zero vertical overflow at the verified viewport.
+- Removed the focused-booking shortcut row containing `Help me choose`,
+  `View full menu`, and `Call (415) 980-7708`, as shown in the control-removal
+  reference. The full form and request rail remain intact.
+- The desktop header, typography, cream canvas, form fields, request summary,
+  three-step explanation, and existing form behavior are unchanged.
+- Automated `390px` and `430px` checks confirm that the desktop-only centering
+  rule does not change the mobile layout.
+- Fonts/typography, spacing/layout rhythm, colors/tokens, image quality, and
+  copy/content were checked against the combined evidence. No actionable P0,
+  P1, or P2 mismatch remains.
+
+## Automated and live checks
+
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test:visual`: passed.
+- `MOBILE_QA_ROUTES=/start MOBILE_QA_WIDTHS=390,430 npm run test:mobile`:
+  passed 2/2.
+- Live alias resolves to deployment `dpl_9uQZcz4FVtBbHmVKcArN5cBKjRCb`
+  with status `READY`; preview and live CSS asset hashes match.
+- Post-deploy error scan: clean.
 
 final result: passed
