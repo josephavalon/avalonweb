@@ -10863,3 +10863,288 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     transition-delay: 70ms;
   }
 }
+
+/* Snooches desktop landing frame.
+   The first view is one centered editorial card on a black canvas. Mobile keeps
+   the established full-bleed composition, so every rule here stays behind the
+   existing 901px breakpoint. */
+@media (min-width: 901px) {
+  body:has(.nd-home) {
+    --nd-home-frame-width: min(calc(100% - 4.625rem), 90rem);
+    /* Keep the reference's compact 576px first-view composition on tall
+       displays. Once there is extra vertical room, center that composition as
+       a unit instead of stretching the hero and pushing the trust rail down. */
+    --nd-home-frame-top: max(
+      clamp(2rem, 9.5svh, 4.125rem),
+      calc((100svh - 36rem) / 2)
+    );
+    --nd-home-frame-bottom: clamp(2rem, 7svh, 3rem);
+    --nd-home-frame-height: min(
+      calc(100svh - var(--nd-home-frame-top) - var(--nd-home-frame-bottom)),
+      36rem
+    );
+    --nd-home-header-height: 4.2rem;
+    --nd-home-press-height: 4.7rem;
+    background: #020202 !important;
+  }
+
+  html:has(.nd-home),
+  html:has(.nd-home) body,
+  html:has(.nd-home) #root {
+    background: #020202 !important;
+  }
+
+  body:has(.nd-home) .nd-global-corner-header {
+    top: var(--nd-home-frame-top);
+    right: auto;
+    left: 50%;
+    width: var(--nd-home-frame-width);
+    transform: translateX(-50%);
+  }
+
+  body:has(.nd-home) .nd-global-corner-header__spacer {
+    height: calc(var(--nd-home-frame-top) + var(--nd-home-header-height));
+    background: transparent;
+  }
+
+  body:has(.nd-home) .nd-corner-header {
+    height: var(--nd-home-header-height);
+    padding: 0 1.25rem 0 1.55rem;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  body:has(.nd-home) .nd-corner-header__brand {
+    gap: 0.65rem;
+  }
+
+  body:has(.nd-home) .nd-corner-header__mark {
+    width: 1.25rem;
+    height: 1.9rem;
+  }
+
+  body:has(.nd-home) .nd-corner-header__wordmark {
+    font-size: 1.35rem;
+    letter-spacing: 0.055em;
+  }
+
+  body:has(.nd-home) .nd-corner-header__actions,
+  body:has(.nd-home) .nd-corner-header__contact {
+    gap: 0.55rem;
+  }
+
+  body:has(.nd-home) .nd-corner-header__contact a,
+  body:has(.nd-home) .nd-corner-menu__toggle {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-width: 2.25rem !important;
+    min-height: 2.25rem !important;
+    border-width: 1px;
+  }
+
+  body:has(.nd-home) .nd-corner-header__contact a svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  body:has(.nd-home) .nd-corner-menu__toggle svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  body:has(.nd-home) .nd-home {
+    width: var(--nd-home-frame-width);
+    min-height: 0;
+    margin: 0 auto;
+    overflow: visible;
+    background: transparent;
+  }
+
+  body:has(.nd-home) .nd-hero {
+    min-height: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  body:has(.nd-home) .nd-hero__split {
+    width: 100%;
+    height: calc(
+      var(--nd-home-frame-height)
+      - var(--nd-home-header-height)
+      - var(--nd-home-press-height)
+    );
+    min-height: 23.25rem;
+    grid-template-columns: minmax(0, 58.75fr) minmax(0, 41.25fr);
+  }
+
+  body:has(.nd-home) .nd-hero__editorial {
+    display: block;
+    padding: clamp(2.25rem, 9.2svh, 4rem) 3.125rem 2.5rem;
+    overflow: hidden;
+  }
+
+  body:has(.nd-home) .nd-hero__message {
+    width: 100%;
+  }
+
+  body:has(.nd-home) .nd-hero__message h1 {
+    font-size: clamp(3.2rem, 6.25vw, 3.85rem);
+    line-height: 0.95;
+    letter-spacing: -0.012em;
+  }
+
+  body:has(.nd-home) .nd-hero__message .nd-hero__tagline {
+    margin-top: 0.55rem;
+    font-size: 1rem;
+    line-height: 1.32;
+  }
+
+  body:has(.nd-home) .nd-hero__paths {
+    display: block;
+    height: auto;
+    margin-top: 1.62rem;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary,
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary:first-child {
+    min-height: 7.55rem !important;
+    grid-template-columns: minmax(0, 1fr) 4.25rem !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    column-gap: 1.5rem !important;
+    padding: 0.9rem 1.65rem 0.9rem 1.75rem !important;
+    border: 0 !important;
+    border-radius: 0.9rem !important;
+    background: #30251f !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__copy {
+    gap: 0.25rem;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__copy strong {
+    font-size: 3.2rem !important;
+    line-height: 0.86;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__description {
+    font-size: 0.78rem !important;
+    line-height: 1.3;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__action {
+    width: 4.25rem !important;
+    height: 4.25rem !important;
+    min-width: 4.25rem !important;
+    min-height: 4.25rem !important;
+    border-width: 1.5px !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__action > svg {
+    width: 1.45rem !important;
+    height: 1.45rem !important;
+    min-width: 1.45rem !important;
+    min-height: 1.45rem !important;
+    stroke-width: 2.1 !important;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts {
+    gap: 1.45rem;
+    margin-top: 1.55rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost {
+    gap: 0.65rem;
+    padding: 0.2rem 0;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost + .nd-ghost {
+    padding-left: 1.45rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__icon {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 0.9rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__copy {
+    gap: 0.12rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__copy strong {
+    font-size: 0.66rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__description {
+    font-size: 0.64rem;
+  }
+
+  body:has(.nd-home) .nd-hero__visual .nd-hero__image {
+    object-position: 68% center;
+  }
+
+  body:has(.nd-home) .nd-press {
+    height: var(--nd-home-press-height) !important;
+    min-height: var(--nd-home-press-height) !important;
+    border-top: 1px solid rgb(110 98 88 / 0.18);
+    border-radius: 0 0 1rem 1rem;
+  }
+
+  /* The compact rail is part of the desktop frame, so it must occupy its final
+     row on the very first paint. The shared section reveal otherwise starts it
+     1.2rem low and briefly makes the frame look open at the bottom. */
+  body:has(.nd-home) .nd-press.nd-reveal-ready,
+  body:has(.nd-home) .nd-press.nd-reveal-ready.nd-reveal-visible {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: none;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa--homepage-compact {
+    display: grid;
+    height: 100%;
+    grid-template-columns: 5.2rem minmax(0, 1fr);
+    align-items: center;
+    padding: 0 1.8rem !important;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa--homepage-compact > div:first-child {
+    padding: 0 !important;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa--homepage-compact > div:first-child p {
+    color: var(--nd-muted);
+    font-size: 0.5rem;
+    letter-spacing: 0.22em;
+  }
+
+  body:has(.nd-home) .av-asa-compact-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  body:has(.nd-home) .av-asa-compact-cell {
+    display: flex;
+    height: 3.2rem;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.72rem;
+  }
+
+  body:has(.nd-home) .av-asa-compact-cell img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 2rem;
+    opacity: 0.88;
+    object-fit: contain;
+  }
+
+  body:has(.nd-home) .nd-footer {
+    margin-top: var(--nd-home-frame-bottom);
+    overflow: hidden;
+    border-radius: 1rem;
+  }
+}

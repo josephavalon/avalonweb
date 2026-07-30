@@ -449,3 +449,57 @@ Findings and fixes:
   surrounding layout and content were intentionally preserved.
 
 final result: passed
+---
+
+# Snooches Desktop Homepage Design QA
+
+## Visual truth and capture state
+
+- Source visual truth: `.context/attachments/mQt8zA/Screenshot 2026-07-30 at 8.15.01 AM.png`
+- Implementation capture: `.context/snooches-homepage-984x686-final.jpg`
+- Full-view comparison: `.context/snooches-homepage-comparison-final.png`
+- Focused frame comparison: `.context/snooches-homepage-frame-detail-final.png`
+- Requested comparison viewport: 984 × 686 at device pixel ratio 1.
+- Browser capture viewport: 999 × 696, normalized by the browser surface to an exact 984 × 686 output.
+- Source metadata: 984 × 686 PNG, 144 ppi.
+- Implementation metadata: 984 × 686 JPEG, 72 ppi.
+- Density metadata was ignored because both comparison images have identical pixel dimensions.
+- State: `/`, cookie consent resolved, menu closed, entrance motion settled.
+
+## Final comparison
+
+The framed first view matches the reference composition: centered black surround, cream card, 67px header, 59/41 hero split, compact editorial spacing, START slab, two helper links, image crop, and six-mark trust rail. The focused crop keeps the complete card at readable scale, so no additional detail crops were needed.
+
+The wide-screen follow-up was checked at 2560 × 1440. The 576px first-view composition centers vertically instead of stretching with viewport height. The trust rail is part of the fixed frame row and has no initial reveal offset, so its first-paint and settled positions are identical.
+
+## Findings and fixes
+
+- Pass 1: the inherited page background produced a cream outer canvas, the frame height expanded on tall displays, and the default press marquee did not match the reference.
+- Pass 2: added the black desktop canvas, framed header/hero/footer geometry, reference crop and typography, and the six-logo homepage compact rail.
+- Pass 3: constrained and vertically centered the compact first view on tall desktops and removed the trust rail's first-load reveal shift.
+- Final: no actionable P0, P1, or P2 visual differences remain. Minor P3 differences are limited to raster antialiasing and source/capture color-profile rendering.
+
+## Responsive and interaction evidence
+
+- 974 × 618: frame compresses without horizontal overflow or clipped controls; the trust rail remains inside the lower rounded edge.
+- 1440 × 1000: frame is vertically and horizontally centered; the consumer footer remains below a black separation gap.
+- 2560 × 1440: capped composition is optically centered and the trust rail stays in its final position on first paint.
+- 390 × 844 and 430 × 844: original cream mobile layout and moving mobile press marquee remain active with no horizontal overflow.
+- START routes to `/start`.
+- Help Me Choose routes to `/nurse-delivery?path=guided`.
+- Therapies routes to `/protocols`.
+- Text and call controls retain `sms:+14159807708` and `tel:+14159807708`.
+- Menu open, close, outside-click, and Escape behavior remain intact.
+- Browser console: no errors in the verified homepage state.
+
+## Automated checks
+
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test:visual`: passed.
+- `MOBILE_QA_ROUTES=/ MOBILE_QA_WIDTHS=390,430 npm run test:mobile`: passed 2/2.
+- `npm run test:accessibility`: passed 500/500.
+- `npm run assets:audit`: ran and reported the two existing oversized NAD bag images (`nad-back.png` and `nad-three-quarter.png`); this change adds no assets.
+- `git diff --check`: passed.
+
+final result: passed
