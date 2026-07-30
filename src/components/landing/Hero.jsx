@@ -204,6 +204,12 @@ export default function Hero() {
                     <strong>{path.title}</strong>
                     <span className="nd-ghost__description">{path.description}</span>
                   </span>
+                  {/* Mobile only. On desktop the two cells sit side by side and
+                      the hairline between them carries the affordance; stacked
+                      as full-width rows they read as list items without it. */}
+                  <span className="nd-ghost__arrow" aria-hidden="true">
+                    <ArrowRight />
+                  </span>
                 </Link>
               ))}
             </div>
