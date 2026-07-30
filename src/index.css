@@ -10883,3 +10883,17 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     font-size: clamp(3rem, 3.75vw, 5.2rem);
   }
 }
+
+/* Keep the focused Start module centered within the viewport below the fixed
+   desktop header. The section already owns its horizontal max-width; this
+   supplies the missing header offset and balances the remaining vertical
+   space without touching the mobile locked-viewport form. */
+@media (min-width: 901px) {
+  .nd-flow--focused-booking > main {
+    display: grid;
+    min-height: 100svh;
+    place-items: center;
+    padding-top: calc(5.4rem + 2rem);
+    padding-bottom: 2rem;
+  }
+}
