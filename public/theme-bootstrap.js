@@ -18,6 +18,11 @@
     var cl = document.documentElement.classList;
     cl.remove('dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
     cl.add(theme);
+    // Consumer cream theme (2026-07-29): every consumer page shares the new
+    // snooches design. Set pre-paint so there's no dark flash before React
+    // mounts; App.jsx keeps it in sync on client-side navigation.
+    // Portals + auth stay dark — not shipping yet.
+    if (!isPortal && !/^\/(organizer|kiosk)(\/|$)/.test(path)) cl.add('av-cream');
     var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
     var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
     var skipOnce = window.sessionStorage.getItem('av.skipSplashOnce') === '1';

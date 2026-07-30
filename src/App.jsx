@@ -259,6 +259,21 @@ const AnalyticsRouteTracker = () => {
   return null;
 };
 
+// Keeps html.av-cream in sync across client-side navigation. The initial value
+// is set pre-paint by public/theme-bootstrap.js (same predicate) so the first
+// render never flashes dark; this only handles route changes after mount.
+// Portals and auth keep the dark theme — they aren't shipping yet.
+const PORTAL_PREFIX = /^\/(provider|admin|members|account|organizer|kiosk|login|signup|forgot|forgot-password)(\/|$)/;
+
+const ConsumerThemeSync = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('av-cream', !PORTAL_PREFIX.test(pathname));
+  }, [pathname]);
+  return null;
+};
+
 const GlobalZoomState = () => {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
@@ -525,6 +540,7 @@ function App() {
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <AnalyticsRouteTracker />
+          <ConsumerThemeSync />
           <GlobalZoomState />
           <ScrollProgress />
           <MobileShell />
