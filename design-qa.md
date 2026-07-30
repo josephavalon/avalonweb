@@ -450,6 +450,8 @@ Findings and fixes:
 
 final result: passed
 
+---
+
 # Snooches Desktop Homepage Design QA
 
 ## Visual truth and capture state
@@ -535,5 +537,59 @@ final result: passed
   showed the established mobile composition, active marquee variant, cream
   background, and no horizontal overflow.
 - No actionable P0, P1, or P2 mismatch remains.
+
+final result: passed
+
+---
+
+# Snooches Desktop Headline and Press-Rail Correction
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/LkJ2ch/Screenshot 2026-07-30 at 10.17.47 AM.png`
+  (`2560 × 1420` physical pixels, normalized to a `1280 × 710` CSS viewport at
+  device pixel ratio 2).
+- Browser-rendered implementation:
+  `.context/snooches-headline-press-corrected-1280x710.png`.
+- Full-view comparison:
+  `.context/snooches-headline-press-comparison.png` (reported live state left,
+  corrected implementation right).
+- Focused comparison was not required because the headline scale and press-rail
+  boundary remain clearly readable in the normalized full-view comparison.
+- State: `/`, cookie consent resolved, menu closed, entrance motion settled,
+  desktop cream theme.
+
+## Findings, correction, and post-fix evidence
+
+- [P2 resolved] The desktop headline resolved near `57px` and read too large.
+  The homepage-only desktop override now resolves it near `48.5px` at the
+  reference viewport, a reduction of approximately 15%.
+- [P2 resolved] The inherited `34rem` hero minimum overrode the viewport-based
+  height and placed the press rail around `39px` below its natural fold
+  position. A homepage-only `29.5rem` minimum lets the existing calculated hero
+  height win, moving the entire rail upward in normal document flow while
+  preserving its full `7.4rem` height and marquee behavior.
+- The corrected comparison preserves the full-bleed cream canvas, header,
+  image, START slab, helper links, logo artwork, colors, copy, and existing
+  interactions.
+- `974 × 618`: rail begins at `558px`, headline resolves to `48px`, and there is
+  no horizontal overflow.
+- `1440 × 900`: rail begins at `792px`, headline resolves near `54.6px`, and
+  there is no horizontal overflow.
+- `405 × 854`, plus automated `390px` and `430px` checks: the desktop rule is
+  inactive; mobile typography, image, cards, and moving press track are
+  unchanged.
+- Fonts/typography, spacing/layout rhythm, colors/tokens, image quality, and
+  copy/content were checked against the combined evidence. No actionable P0,
+  P1, or P2 mismatch remains.
+
+## Automated checks
+
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test:visual`: passed.
+- `MOBILE_QA_ROUTES=/ MOBILE_QA_WIDTHS=390,430 npm run test:mobile`: passed 2/2.
+- `git diff --check`: passed.
 
 final result: passed
