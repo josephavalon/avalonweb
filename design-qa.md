@@ -450,6 +450,79 @@ Findings and fixes:
 
 final result: passed
 
+---
+
+# Snooches Homepage Headline, Spacing, and Privacy Controls
+
+## Visual truth and capture state
+
+- Homepage source visual truth:
+  `.context/attachments/hTa9mh/Screenshot 2026-07-31 at 1.58.21 PM.png`
+  (`2070 × 1306` physical pixels, normalized to a `1035 × 653` CSS
+  viewport at device pixel ratio 2).
+- Privacy-content reference:
+  `.context/attachments/7BkD1h/Screenshot 2026-07-31 at 2.06.23 PM.png`.
+  Its control set and information depth were used without adopting its red and
+  white styling.
+- Browser-rendered homepage:
+  `.context/snooches-homepage-sizing-final-1035x653.png`.
+- Combined comparison:
+  `.context/snooches-homepage-sizing-comparison.png` (source left, corrected
+  implementation right).
+- Privacy states:
+  `.context/snooches-cookie-notice-desktop.png`,
+  `.context/snooches-cookie-preferences-desktop.png`, and
+  `.context/snooches-cookie-notice-mobile-390x844.png`.
+- Homepage comparison state: cookie consent resolved, menu closed, and motion
+  settled.
+
+## Findings, correction, and post-fix evidence
+
+- [P2 resolved] The desktop headline was undersized and read as one line. It is
+  now the dominant two-line element, with ink bands aligned to the reference:
+  target line one `x=61–325.5, y=132.5–193`; implementation
+  `x=63–328, y=132–195`. Target line two `x=63.5–346.5, y=208–267.5`;
+  implementation `x=65–347, y=208–269`.
+- [P2 resolved] The hero moved from an image-light `61/39` composition to the
+  reference's balanced editorial/photo split (approximately `51/49`) while
+  preserving the existing nurse image asset.
+- [P2 resolved] The primary START slab was reduced to the reference's compact
+  footprint: target approximately `370 × 79px`; implementation approximately
+  `368 × 76px`, with the open arrow ring and existing interaction retained.
+- [P2 resolved] The helper row now uses content-width links with the reference
+  icon scale, spacing, and hairline separation.
+- [P2 resolved] The homepage desktop press rail no longer begins at a visually
+  arbitrary marquee offset. It uses a stable six-logo row on first paint;
+  other pages and the mobile homepage retain the existing marquee behavior.
+- The privacy notice now explains essential and optional analytics cookies in
+  fuller language and presents `Accept all`, `Manage preferences`, and
+  `Reject all`. Preferences expose essential cookies as always active and a
+  saved optional analytics choice. The existing Avalon cream palette, consent
+  storage key, consent-change event, homepage-only scope, and delayed display
+  behavior are preserved.
+- The privacy card fits without internal clipping at `390 × 844`; the
+  desktop notice and preferences states were also click-tested.
+- Navigation, START, helper links, menu behavior, and footer content remain
+  unchanged. Browser console output was clean in the verified homepage state.
+- Fonts/typography, spacing/layout rhythm, colors/tokens, image quality, and
+  copy/content were checked against the combined comparison. No actionable P0,
+  P1, or P2 mismatch remains for the requested sizing, spacing, headline
+  emphasis, press alignment, or privacy controls.
+
+## Automated checks
+
+- `npm run lint`: passed (212 files).
+- `npm run build`: passed.
+- `npm run test:visual`: passed.
+- `MOBILE_QA_ROUTES=/,/start MOBILE_QA_WIDTHS=390,430 npm run test:mobile`:
+  passed 4/4.
+- `npm run test:accessibility`: passed 500/500.
+- `npm run assets:audit`: passed; only two pre-existing oversized bag renders
+  were reported.
+- `git diff --check`: passed.
+
+final result: passed
+
 # Snooches Desktop Homepage Design QA
 
 ## Visual truth and capture state

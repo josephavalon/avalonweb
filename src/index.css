@@ -10897,3 +10897,213 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     padding-bottom: 2rem;
   }
 }
+
+/* Snooches homepage — 2026-07-31 desktop reference.
+   The first view is one composed canvas: compact header, balanced 51/49 hero,
+   dominant two-line headline, short START slab, helper row, and a six-rem press
+   rail. Scope every change to Home so the focused booking page and mobile
+   composition keep their established geometry. */
+@media (min-width: 901px) {
+  body:has(.nd-home) .nd-global-corner-header__spacer,
+  body:has(.nd-home) .nd-corner-header {
+    height: 5rem;
+  }
+
+  body:has(.nd-home) .nd-corner-header {
+    padding-right: clamp(2rem, 3.25vw, 3rem);
+    padding-left: clamp(2rem, 3.25vw, 3rem);
+  }
+
+  body:has(.nd-home) .nd-corner-header__mark {
+    height: 2.2rem;
+  }
+
+  body:has(.nd-home) .nd-corner-header__contact a {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    min-height: 2.35rem;
+  }
+
+  body:has(.nd-home) .nd-corner-menu__toggle {
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
+  body:has(.nd-home) .nd-hero__split {
+    height: calc(100svh - 11.125rem);
+    min-height: 29.5rem;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+
+  body:has(.nd-home) .nd-hero__editorial {
+    width: 100%;
+    grid-template-rows: auto auto;
+    align-content: start;
+    justify-items: start;
+    padding: 3.325rem 0 0 clamp(3.7rem, 5.9vw, 4.25rem);
+  }
+
+  body:has(.nd-home) .nd-hero__message,
+  body:has(.nd-home) .nd-hero__paths {
+    width: min(100%, 23.4375rem);
+  }
+
+  body:has(.nd-home) .nd-hero__message h1 {
+    max-width: 23.4375rem;
+    font-size: clamp(5rem, 8.6vw, 6.2rem);
+    line-height: 0.84;
+    white-space: normal;
+  }
+
+  body:has(.nd-home) .nd-hero__headline-desktop {
+    display: block;
+  }
+
+  body:has(.nd-home) .nd-hero__visual--desktop .nd-hero__image {
+    object-position: 66% center;
+  }
+
+  body:has(.nd-home) .nd-hero__message .nd-hero__tagline {
+    margin-top: 0.55rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.08rem, 1.9vw, 1.25rem);
+    line-height: 1.2;
+  }
+
+  body:has(.nd-home) .nd-hero__paths {
+    margin-top: 1.4rem;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary,
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary:first-child {
+    min-height: 5rem !important;
+    grid-template-columns: minmax(0, 1fr) 3rem !important;
+    padding: 0.75rem 1.25rem !important;
+    border: 0 !important;
+    border-radius: 1rem !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__copy {
+    gap: 0.28rem;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__copy strong {
+    font-size: 2.15rem !important;
+    line-height: 0.88;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__description {
+    font-size: 0.875rem !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__action {
+    width: 3rem !important;
+    height: 3rem !important;
+    min-width: 3rem !important;
+    min-height: 3rem !important;
+    border-width: 2px !important;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts {
+    width: 24.2rem;
+    grid-template-columns: 13.55rem auto;
+    gap: 0;
+    margin-top: 1.55rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost {
+    gap: 0.75rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__description {
+    font-size: 0.66rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost:first-child .nd-ghost__description {
+    white-space: nowrap;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost:nth-child(2) .nd-ghost__description {
+    font-size: 0.625rem;
+    white-space: nowrap;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost + .nd-ghost {
+    padding-left: 1.55rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__icon {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  body:has(.nd-home) .nd-press {
+    height: 6.125rem !important;
+    min-height: 6.125rem !important;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa {
+    grid-template-columns: 6rem minmax(0, 1fr);
+    padding-right: 2.15rem !important;
+    padding-left: 2.15rem !important;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa > div:first-child p {
+    font-size: 0.625rem;
+    letter-spacing: 0.28em;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact {
+    width: 52.75rem;
+    max-width: 100%;
+    gap: clamp(0.65rem, 1.25vw, 1rem);
+    justify-self: start;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div {
+    width: auto;
+    height: 2.45rem;
+    padding: 0 clamp(0.35rem, 0.7vw, 0.65rem);
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(1) img {
+    width: 4.6rem;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(2) img {
+    width: 4.7rem;
+    position: relative;
+    left: -1.1rem;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(3) img {
+    width: 6.5rem;
+    position: relative;
+    left: -0.4rem;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(4) img {
+    width: 5.35rem;
+    position: relative;
+    left: -0.25rem;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(5) img {
+    width: 7rem;
+    position: relative;
+    left: 0.35rem;
+  }
+
+  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(6) img {
+    width: 4.1rem;
+    position: relative;
+    left: 0.8rem;
+  }
+}
+
+@media (min-width: 901px) and (min-height: 760px) {
+  body:has(.nd-home) .nd-hero__editorial {
+    align-content: center;
+    padding-top: 0;
+  }
+}

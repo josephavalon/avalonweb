@@ -27,11 +27,12 @@ const MOBILE_AS_SEEN_AT = [
   { name: 'Hereticon', src: '/logos/press-dark/hereticon.png' },
   { name: 'The Loom', src: '/logos/press-dark/the-loom.png' },
 ];
+const HOMEPAGE_COMPACT = AS_SEEN_AT.slice(0, 6);
 // Same iOS-safe scaffold as InstagramFeed's marquee: layer-promoted wrappers,
 // inline CSS keyframes on both strips, desktop hover pause, and reduced motion
 // honored on both surfaces. Standard press-band proportions — small, uniform,
 // trust-building.
-export default function AsSeenAt({ tone = 'dark' }) {
+export default function AsSeenAt({ tone = 'dark', compact = false }) {
   const reduce = useReducedMotion();
   const [hoverPaused, setHoverPaused] = useState(false);
   const isRunning = !hoverPaused && !reduce;
@@ -79,37 +80,43 @@ export default function AsSeenAt({ tone = 'dark' }) {
         </p>
       </div>
 
-      {/* Desktop marquee — CSS keyframe on a doubled strip. */}
-      <div
-        className="av-asa-marquee-viewport relative mt-3 hidden overflow-hidden md:block"
-        onMouseEnter={() => setHoverPaused(true)}
-        onMouseLeave={() => setHoverPaused(false)}
-      >
+      {compact ? (
+        <div className="av-asa-compact hidden min-w-0 grid-cols-6 items-center md:grid">
+          {HOMEPAGE_COMPACT.map(cell)}
+        </div>
+      ) : (
+        /* Desktop marquee — CSS keyframe on a doubled strip. */
         <div
-          className="av-asa-strip-wrap"
-          style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+          className="av-asa-marquee-viewport relative mt-3 hidden overflow-hidden md:block"
+          onMouseEnter={() => setHoverPaused(true)}
+          onMouseLeave={() => setHoverPaused(false)}
         >
           <div
-            className="av-asa-strip flex w-max"
-            style={{
-              animation: 'av-asa-marquee 90s linear infinite',
-              WebkitAnimation: 'av-asa-marquee 90s linear infinite',
-              animationPlayState: isRunning ? 'running' : 'paused',
-              WebkitAnimationPlayState: isRunning ? 'running' : 'paused',
-            }}
+            className="av-asa-strip-wrap"
+            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
           >
-            {[0, 1].map((group) => (
-              <div
-                key={group}
-                className="flex"
-                aria-hidden={group === 1 ? 'true' : undefined}
-              >
-                {AS_SEEN_AT.map(cell)}
-              </div>
-            ))}
+            <div
+              className="av-asa-strip flex w-max"
+              style={{
+                animation: 'av-asa-marquee 90s linear infinite',
+                WebkitAnimation: 'av-asa-marquee 90s linear infinite',
+                animationPlayState: isRunning ? 'running' : 'paused',
+                WebkitAnimationPlayState: isRunning ? 'running' : 'paused',
+              }}
+            >
+              {[0, 1].map((group) => (
+                <div
+                  key={group}
+                  className="flex"
+                  aria-hidden={group === 1 ? 'true' : undefined}
+                >
+                  {AS_SEEN_AT.map(cell)}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile marquee — transform the strip instead of mutating scrollLeft.
           iOS can leave blend-mode paint trails when a native scroller is moved
