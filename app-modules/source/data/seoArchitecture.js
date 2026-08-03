@@ -928,14 +928,6 @@ export const publicStaticRoutes = [
     changefreq: 'monthly',
   },
   {
-    path: '/gift',
-    title: 'Gift Avalon Recovery — Avalon Vitality',
-    description: 'Gift Avalon Vitality mobile recovery credit for eligible Bay Area appointments subject to clinical review.',
-    h1: 'Gift Avalon Recovery',
-    priority: '0.5',
-    changefreq: 'monthly',
-  },
-  {
     path: '/jet-lag',
     title: 'Travel Hydration Support — Avalon Vitality',
     description: 'Mobile hydration and recovery support for Bay Area travelers, hotels, and post-flight routines subject to clinical approval.',
