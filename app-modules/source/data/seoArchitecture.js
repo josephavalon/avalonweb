@@ -700,7 +700,7 @@ export const publicStaticRoutes = [
   },
   {
     path: '/',
-    title: 'Avalon Vitality - Wellness Delivered',
+    title: 'Avalon Vitality',
     description: 'IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area.',
     h1: 'Mobile IV Therapy',
     priority: '1.0',
