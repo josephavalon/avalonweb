@@ -366,8 +366,12 @@ function RequestRail({ therapyName = '', duration = '' }) {
   const [open, setOpen] = useState(false);
   const rows = requestRows({ therapyName, duration });
 
+  // min-w-0 below: this aside is a grid child in an `fr` track, and `fr` tracks
+  // carry an implicit min-width:auto. The press marquee at the foot of the rail
+  // is a wide logo strip, so without it the strip's intrinsic width expands the
+  // track past its share and crushes the form column beside it.
   return (
-    <aside className="mt-8 lg:mt-0 lg:flex lg:h-full lg:flex-col" data-testid="landing-request-rail">
+    <aside className="mt-8 min-w-0 lg:mt-0 lg:flex lg:h-full lg:flex-col" data-testid="landing-request-rail">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -454,6 +458,16 @@ function RequestRail({ therapyName = '', duration = '' }) {
             </li>
           ))}
         </ol>
+
+        {/* Press marquee. It lives on the landing variant too, but that copy is
+            inside `{!focused && …}` so it never reached this screen. It goes in
+            the rail rather than under the form because the form column already
+            ends flush with the fold — the only free height on this page is the
+            rail's centring slack, so placing it here costs no scroll.
+            Desktop only: the mobile layout is a locked 100dvh column. */}
+        <div className="mt-8 hidden overflow-hidden border-t border-foreground/[0.10] pt-5 lg:block [&_.av-asa]:!px-0 [&_.av-asa>div:first-child]:!px-0">
+          <AsSeenAt />
+        </div>
       </div>
     </aside>
   );

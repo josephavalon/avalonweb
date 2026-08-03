@@ -11662,3 +11662,13 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 .nd-flow:has(.cog-form.is-success) [data-when='post-submit'] {
   display: revert;
 }
+
+/* Press marquee inside the Start rail. AsSeenAt ships the press-dark logo set
+   and forces it white (`brightness(0) invert(1)`) because its usual home is a
+   dark band. The Start page is cream, so white-on-cream rendered them
+   invisible. Re-point the same filter at black here only — the dark-surface
+   usages elsewhere are untouched. */
+[data-testid='landing-request-rail'] .av-asa img {
+  filter: brightness(0) !important;
+  opacity: 0.45 !important;
+}
