@@ -1,25 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useReducedMotion } from '@/components/ui/PageTransitionMotion';
 
 // The source press marks include both light and dark screenshot backgrounds.
 // `scripts/normalize-press-logos.mjs` converts them to transparent espresso
 // artwork so the rail stays crisp on either light or dark surfaces.
+// `h` is a per-mark cap height in px, not a uniform one. These logos run from
+// 1:1 (MobileCoin) to 9.45:1 (Faena), so a shared height makes width follow the
+// aspect ratio: at 26px Faena rendered 246px wide while Dante's Inferno was
+// 36px and unreadable. Heights are area-normalised instead — h = sqrt(A / ratio)
+// against a constant target area — so every mark carries roughly the same
+// visual mass and the widths land in a 32-132px band instead of 26-246px.
 const AS_SEEN_AT = [
-  { name: 'Faena Miami Beach', src: '/logos/press-dark/faena.png' },
-  { name: 'Maxim Magazine', src: '/logos/press-dark/maxim.png' },
-  { name: 'The Midway', src: '/logos/press-dark/the-midway.png' },
-  { name: 'Hereticon', src: '/logos/press-dark/hereticon.png' },
-  { name: 'The Loom', src: '/logos/press-dark/the-loom.png' },
-  { name: '111 Minna Gallery', src: '/logos/press-dark/111-minna.png' },
-  // The per-item `scale` values here were compensating for the old fixed-box
-  // sizing, where these marks rendered short of the cell. Cells are cap-height
-  // normalised now, so a scale just makes them taller than everyone else —
-  // Dante's measured 31px and MobileCoin 28px against a 26px row.
-  { name: "Dante's Inferno", src: '/logos/press-dark/dantes-inferno-gpt.png' },
-  { name: 'FIRE', src: '/logos/press-dark/fire-gpt.png' },
-  { name: 'Discourse', src: '/logos/press-dark/discourse.png' },
-  { name: 'Sanai', src: '/logos/press-dark/sanai-gpt.png' },
-  { name: 'MobileCoin', src: '/logos/press-dark/mobilecoin-gpt.png' },
+  { name: 'Faena Miami Beach', src: '/logos/press-dark/faena.png', h: 14 },
+  { name: 'Maxim Magazine', src: '/logos/press-dark/maxim.png', h: 28 },
+  { name: 'The Midway', src: '/logos/press-dark/the-midway.png', h: 22 },
+  { name: 'Hereticon', src: '/logos/press-dark/hereticon.png', h: 26 },
+  { name: 'The Loom', src: '/logos/press-dark/the-loom.png', h: 22 },
+  { name: '111 Minna Gallery', src: '/logos/press-dark/111-minna.png', h: 30 },
+  { name: "Dante's Inferno", src: '/logos/press-dark/dantes-inferno-gpt.png', h: 38 },
+  { name: 'FIRE', src: '/logos/press-dark/fire-gpt.png', h: 24 },
+  { name: 'Discourse', src: '/logos/press-dark/discourse.png', h: 21 },
+  { name: 'Sanai', src: '/logos/press-dark/sanai-gpt.png', h: 20 },
+  { name: 'MobileCoin', src: '/logos/press-dark/mobilecoin-gpt.png', h: 42 },
 ];
 const MOBILE_AS_SEEN_AT = [
   { name: 'Maxim Magazine', src: '/logos/press-dark/maxim.png' },
@@ -34,8 +36,10 @@ const HOMEPAGE_COMPACT = AS_SEEN_AT.slice(0, 6);
 // trust-building.
 export default function AsSeenAt({ tone = 'dark', compact = false }) {
   const reduce = useReducedMotion();
-  const [hoverPaused, setHoverPaused] = useState(false);
-  const isRunning = !hoverPaused && !reduce;
+  // No hover pause. The band is decorative and should read as one continuous,
+  // unhurried movement; stopping under the cursor made it feel interactive when
+  // there is nothing to interact with. Reduced motion is still honoured.
+  const isRunning = !reduce;
   const isLight = tone === 'light';
 
   const cell = (item, i) => {
@@ -43,9 +47,8 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
       filter: isLight ? 'none' : 'brightness(0) invert(1)',
       WebkitFilter: isLight ? 'none' : 'brightness(0) invert(1)',
       mixBlendMode: 'normal',
-      ...(item.scale || item.offsetY
-        ? { transform: `translateY(${item.offsetY || '0'}) scale(${item.scale || 1})` }
-        : {}),
+      ...(item.h ? { height: `${item.h}px`, width: 'auto' } : {}),
+      ...(item.offsetY ? { transform: `translateY(${item.offsetY})` } : {}),
     };
 
     return (
@@ -55,7 +58,7 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
       // width follow the artwork, and space the cells with padding.
       <div
         key={`${item.name}-${i}`}
-        className="flex h-[32px] shrink-0 items-center justify-center px-5 md:h-[38px] md:px-7"
+        className="flex h-[40px] shrink-0 items-center justify-center px-5 md:h-[46px] md:px-7"
       >
         <img
           src={item.src}
@@ -64,7 +67,7 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
           decoding="async"
           draggable={false}
           style={imageStyle}
-          className="select-none h-[22px] w-auto max-w-none object-contain opacity-70 transition-opacity duration-base ease-editorial hover:opacity-100 md:h-[26px]"
+          className="select-none w-auto max-w-none object-contain opacity-70"
         />
       </div>
     );
@@ -113,8 +116,6 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
         /* Desktop marquee — CSS keyframe on a doubled strip. */
         <div
           className="av-asa-marquee-viewport relative mt-3 hidden overflow-hidden md:block"
-          onMouseEnter={() => setHoverPaused(true)}
-          onMouseLeave={() => setHoverPaused(false)}
         >
           <div
             className="av-asa-strip-wrap"
