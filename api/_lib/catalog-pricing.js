@@ -27,6 +27,32 @@ function addPriceKey(map, key, price) {
   map.set(normalizedKey, amount);
 }
 
+// Shots that left IM_SHOTS in the 2026-08 menu update, at the price they were
+// sold for. `B12` was renamed `B-12` and bare `NAD+` became dose-tiered, so both
+// normalize to keys the live catalog no longer produces.
+const LEGACY_IM_SHOT_PRICES = {
+  b12: 40,
+  mic: 50,
+  biotin: 35,
+  vitamin_d: 35,
+  vitamin_c_im_500mg: 30,
+  vitamin_c_im_1000mg: 45,
+  // Bundle line items repointed off the retired shots in the same update.
+  perf_mic: 50,
+  glow_biotin: 35,
+};
+
+const LEGACY_IM_SHOT_LABEL_PRICES = {
+  b12: 40,
+  mic: 50,
+  biotin: 35,
+  'vitamin d': 35,
+  'vitamin c im 500mg': 30,
+  'vitamin c im 1000mg': 45,
+  // normalize() strips the `+`, so this covers the retired undosed `NAD+` shot.
+  nad: 80,
+};
+
 function buildItemPriceMap() {
   const map = new Map();
 
@@ -64,6 +90,11 @@ function buildItemPriceMap() {
   };
   for (const [key, price] of Object.entries(aliasEntries)) addPriceKey(map, key, price);
 
+  // IM shots retired or renamed in the 2026-08 menu update. Carts persist in
+  // localStorage, so a stale `im-<label>` cartKey must still resolve or
+  // sanitizeCheckoutItems throws 400 on an otherwise valid checkout.
+  for (const [key, price] of Object.entries(LEGACY_IM_SHOT_PRICES)) addPriceKey(map, key, price);
+
   return map;
 }
 
@@ -84,6 +115,11 @@ function buildAddonLabelMap() {
   };
   for (const [label, price] of Object.entries(aliasEntries)) {
     if (Number.isFinite(price)) map.set(label, price);
+  }
+
+  // Retired/renamed shots — only fill gaps, never shadow a live catalog label.
+  for (const [label, price] of Object.entries(LEGACY_IM_SHOT_LABEL_PRICES)) {
+    if (!map.has(label)) map.set(label, price);
   }
 
   return map;

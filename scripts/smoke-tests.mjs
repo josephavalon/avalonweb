@@ -5,6 +5,7 @@ import {
   IV_ADDONS,
   IV_SESSIONS,
   IM_SHOTS,
+  IM_SHOT_FAMILIES,
   PACKAGES,
   getProduct,
   productsByCategory,
@@ -142,7 +143,8 @@ for (const route of ['/waiver', '/liability-waiver']) {
 
 assert(IV_SESSIONS.length >= 10, 'Expected full IV session catalog');
 assert(IV_ADDONS.length >= 10, 'Expected tiered IV add-ons');
-assert(IM_SHOTS.length >= 8, 'Expected IM shot catalog');
+assert(IM_SHOTS.length >= 6, 'Expected IM shot catalog');
+assert(IM_SHOTS.every((shot) => shot.addOnOnly), 'IM shots must stay add-on only — they are never sold standalone');
 assert(PACKAGES.length >= 4, 'Expected package catalog');
 
 for (const [category, data] of Object.entries(productsByCategory)) {
@@ -164,6 +166,33 @@ assert(ITEM_PRICE_BY_KEY.get('nad') === 350, 'NAD session key must use the first
 assert(ITEM_PRICE_BY_KEY.get('hydration') === IV_SESSIONS.find((item) => item.key === 'hydration')?.price, 'Server hydration price must match client catalog');
 assert(ITEM_PRICE_BY_KEY.get('custom_hydration') === ITEM_PRICE_BY_KEY.get('hydration'), 'Custom hydration alias must track canonical hydration price');
 assert(ADDON_PRICE_BY_LABEL.get('nad') === 80, 'NAD+ IM label must remain priced through label lookup');
+
+// Every live IM shot must price through both server maps, or an add-on-bearing
+// checkout 400s in sanitizeCheckoutItems.
+for (const shot of IM_SHOTS) {
+  const label = shot.label.toLowerCase().replace(/\+/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  assert(ADDON_PRICE_BY_LABEL.get(label) === shot.price, `Client/server IM shot price drifted: ${shot.label}`);
+}
+assert(ADDON_PRICE_BY_LABEL.get('glutathione im 200mg') === 80, 'Glutathione IM 200mg retail price drifted');
+assert(ADDON_PRICE_BY_LABEL.get('glutathione im 400mg') === 120, 'Glutathione IM 400mg retail price drifted');
+assert(ADDON_PRICE_BY_LABEL.get('nad im 50mg') === 80, 'NAD+ IM 50mg retail price drifted');
+assert(ADDON_PRICE_BY_LABEL.get('nad im 100mg') === 150, 'NAD+ IM 100mg retail price drifted');
+// The dosed NAD+ IM labels must not fall through to the NAD+ *IV* mg ladder.
+assert(ADDON_PRICE_BY_LABEL.get('nad im 50mg') !== 500, 'NAD+ IM 50mg must not resolve to the 500mg IV price');
+assert(ADDON_PRICE_BY_LABEL.get('nad im 100mg') !== 800, 'NAD+ IM 100mg must not resolve to the 1000mg IV price');
+
+// Retired/renamed shots still resolve so a persisted cart survives checkout.
+for (const [key, price] of Object.entries({ b12: 40, mic: 50, biotin: 35, vitamin_d: 35 })) {
+  assert(ITEM_PRICE_BY_KEY.get(key) === price, `Legacy IM shot key stopped resolving: ${key}`);
+}
+
+// IM_SHOT_FAMILIES powers the /protocols shots block: dose ladders collapse to
+// one row, single-dose shots keep a null dose so the menu omits the label.
+const glutathioneFamily = IM_SHOT_FAMILIES.find((family) => family.name === 'Glutathione');
+assert(IM_SHOT_FAMILIES.length === 4, 'Expected 4 IM shot families on the menu');
+assert(glutathioneFamily?.tiers.length === 2, 'Glutathione must render as a two-dose ladder');
+assert(glutathioneFamily.tiers.map((tier) => tier.price).join(',') === '80,120', 'Glutathione dose ladder must run cheapest first');
+assert(IM_SHOT_FAMILIES.find((family) => family.name === 'B-12')?.tiers[0].dose === null, 'Single-dose shots must carry a null dose');
 
 const expectedNadPrices = {
   nad_250: 350,
