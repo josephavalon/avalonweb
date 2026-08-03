@@ -2,10 +2,14 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { productsByCategory, slugify } from '@/data/products';
-import { IM_SHOT_FAMILIES } from '@/data/catalog';
 import { useSeo } from '@/lib/seo';
 
-const CATEGORY_ORDER = ['iv-vitamins', 'nad', 'cbd'];
+const CATEGORY_ORDER = ['iv-vitamins', 'nad', 'cbd', 'shots'];
+
+const SECTION_EYEBROWS = { shots: 'Added to any IV' };
+const SECTION_NOTES = {
+  shots: 'Shots are given during an IV visit. They aren’t available on their own.',
+};
 
 function price(product) {
   return product.oneTime || product.price || 'Price confirmed before booking';
@@ -54,6 +58,8 @@ export default function ConsumerMenu() {
               key={categorySlug}
               id={`menu-${categorySlug}`}
               heading={category.categoryLabel || category.title}
+              eyebrow={SECTION_EYEBROWS[categorySlug]}
+              note={SECTION_NOTES[categorySlug]}
               defaultOpen={index === 0}
             >
               {category.treatments.map((product) => (
@@ -78,38 +84,6 @@ export default function ConsumerMenu() {
             </MenuSection>
           );
         })}
-
-        <MenuSection
-          id="menu-shots"
-          heading="Shots"
-          eyebrow="Added to any IV"
-          note={'Shots are given during an IV visit. They aren’t available on their own.'}
-        >
-          {IM_SHOT_FAMILIES.map((family) => (
-            <Link
-              key={family.name}
-              to={`/products/shots/${slugify(family.name)}`}
-              className="nd-menu__shot"
-            >
-              <span className="nd-menu__shot-bag" aria-hidden="true">
-                {family.img && <img src={family.img} alt="" loading="lazy" decoding="async" />}
-              </span>
-              <span className="nd-menu__shot-copy">
-                <strong>{family.name}</strong>
-                <small>{family.desc}</small>
-              </span>
-              <span className="nd-menu__shot-doses">
-                {family.tiers.map((tier) => (
-                  <span key={tier.label} className="nd-menu__shot-dose">
-                    {tier.dose && <span className="nd-menu__shot-dose-label">{tier.dose}</span>}
-                    <span className="nd-menu__shot-price av-price">${tier.price}</span>
-                  </span>
-                ))}
-              </span>
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          ))}
-        </MenuSection>
 
         <p className="nd-consumer__medical-note">
           General wellness services only. Treatment requires intake, consent, and clinical approval.

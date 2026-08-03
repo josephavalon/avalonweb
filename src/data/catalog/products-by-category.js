@@ -1,5 +1,5 @@
 import { money, subscriberPrice, slugify } from './slugify.js';
-import { IM_SHOT_FAMILIES } from './im-shots.js';
+import { IM_SHOTS } from './im-shots.js';
 import {
   byKey,
   defaultFaq,
@@ -8,22 +8,21 @@ import {
   treatmentFromDose,
 } from './treatment-builders.js';
 
-// A shot family becomes one product page. `addOnOnly` tells the product page to
-// swap the standalone Book CTA for the menu — a shot can't be ordered by itself.
-function shotTreatment(family) {
-  const prices = family.tiers.map((tier) => tier.price);
-  const low = Math.min(...prices);
-  const high = Math.max(...prices);
+// One row and one product page per shot dose, exactly like the NAD+ IV and
+// CBD IV ladders — a dose is the thing you buy, so it gets its own price.
+// `addOnOnly` tells the product page to swap the standalone Book CTA for the
+// menu, since a shot can't be ordered by itself.
+function shotTreatment(shot) {
+  const name = shot.label.replace(' · ', ' ');
   return {
-    name: family.name,
+    name,
     addOnOnly: true,
-    price: low === high ? money(low) : `${money(low)}–${money(high)}`,
-    desc: family.desc,
-    benefitStatement: family.desc,
-    seoDescription: `${family.name} IM shot from Avalon Vitality, added to an IV visit. ${family.desc}.`,
+    price: money(shot.price),
+    desc: shot.desc,
+    benefitStatement: shot.desc,
+    seoDescription: `${name} IM shot from Avalon Vitality, added to an IV visit. ${shot.desc}.`,
     duration: 'Given during your visit',
-    doseTiers: family.tiers,
-    image: family.img,
+    image: shot.img,
   };
 }
 
@@ -38,7 +37,7 @@ export const productsByCategory = {
     categoryLabel: 'Shots',
     backTo: '/protocols',
     backLabel: 'Back to the menu',
-    treatments: IM_SHOT_FAMILIES.map(shotTreatment),
+    treatments: IM_SHOTS.map(shotTreatment),
   },
   cbd: {
     title: 'CBD IV Therapy',
@@ -170,6 +169,11 @@ const PRODUCT_SLUG_ALIASES = {
     'nad-1250mg': 'nad-iv-1250mg',
     'nad-1500mg': 'nad-iv-1500mg',
     'nad-vitality': 'nad-iv-vitality',
+  },
+  // The family-level shot slugs were briefly live and are in the sitemap.
+  shots: {
+    glutathione: 'glutathione-im-200mg',
+    nad: 'nad-im-50mg',
   },
   cbd: {
     'cbd-33mg': 'cbd-iv-33mg',

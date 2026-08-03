@@ -101,21 +101,6 @@ export default function ConsumerProduct() {
           <p><House aria-hidden="true" /><span>Home · Hotel · Office</span></p>
         </section>
 
-        {/* A shot's real detail is its dose ladder, not an ingredient list. */}
-        {treatment.doseTiers?.some((tier) => tier.dose) && (
-          <section className="nd-product-page__included" aria-labelledby="product-doses">
-            <h2 id="product-doses">Doses</h2>
-            <ul className="nd-product-page__doses">
-              {treatment.doseTiers.map((tier) => (
-                <li key={tier.label}>
-                  <span>{tier.dose}</span>
-                  <span className="av-price">${tier.price}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
         {ingredients.length > 0 && (
           <section className="nd-product-page__included" aria-labelledby="product-ingredients">
             <h2 id="product-ingredients">Ingredients</h2>

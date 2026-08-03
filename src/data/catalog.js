@@ -7,7 +7,7 @@
 export { slugify, money, subscriberPrice, annualPrice } from './catalog/slugify.js';
 export { IV_SESSIONS } from './catalog/iv-sessions.js';
 export { IV_ADDONS } from './catalog/iv-addons.js';
-export { IM_SHOTS, IM_SHOT_FAMILIES } from './catalog/im-shots.js';
+export { IM_SHOTS } from './catalog/im-shots.js';
 export { PACKAGES } from './catalog/packages.js';
 export { IV_CATEGORIES, IV_GOAL_RECOMMENDATION } from './catalog/categories.js';
 export { VERTICALS } from './catalog/verticals.js';

@@ -5,7 +5,6 @@ import {
   IV_ADDONS,
   IV_SESSIONS,
   IM_SHOTS,
-  IM_SHOT_FAMILIES,
   PACKAGES,
   getProduct,
   productsByCategory,
@@ -186,13 +185,6 @@ for (const [key, price] of Object.entries({ b12: 40, mic: 50, biotin: 35, vitami
   assert(ITEM_PRICE_BY_KEY.get(key) === price, `Legacy IM shot key stopped resolving: ${key}`);
 }
 
-// IM_SHOT_FAMILIES powers the /protocols shots block: dose ladders collapse to
-// one row, single-dose shots keep a null dose so the menu omits the label.
-const glutathioneFamily = IM_SHOT_FAMILIES.find((family) => family.name === 'Glutathione');
-assert(IM_SHOT_FAMILIES.length === 4, 'Expected 4 IM shot families on the menu');
-assert(glutathioneFamily?.tiers.length === 2, 'Glutathione must render as a two-dose ladder');
-assert(glutathioneFamily.tiers.map((tier) => tier.price).join(',') === '80,120', 'Glutathione dose ladder must run cheapest first');
-assert(IM_SHOT_FAMILIES.find((family) => family.name === 'B-12')?.tiers[0].dose === null, 'Single-dose shots must carry a null dose');
 
 const expectedNadPrices = {
   nad_250: 350,
