@@ -11,7 +11,7 @@ export const IM_SHOTS = [
   { label: 'B-Complex', family: 'B-Complex', dose: null, price: 40, max: 5, icon: Zap, addOnOnly: true, desc: 'Full-spectrum B vitamin support', img: '/addons/b-complex.png' },
   { label: 'Glutathione IM · 200mg', family: 'Glutathione', dose: '200mg', price: 80, max: 5, icon: Sparkles, addOnOnly: true, desc: 'Antioxidant + skin clarity', img: '/addons/glutathione.png' },
   { label: 'Glutathione IM · 400mg', family: 'Glutathione', dose: '400mg', price: 120, max: 5, icon: Sparkles, addOnOnly: true, desc: 'Higher-dose antioxidant support', img: '/addons/glutathione.png' },
-  { label: 'NAD+ IM · 50mg', family: 'NAD+', dose: '50mg', price: 80, icon: FlaskConical, addOnOnly: true, desc: 'Clinician-reviewed NAD+ support', img: '/addons/nad.png' },
+  { label: 'NAD+ IM · 50mg', family: 'NAD+', dose: '50mg', price: 80, icon: FlaskConical, addOnOnly: true, desc: 'NAD+ support', img: '/addons/nad.png' },
   { label: 'NAD+ IM · 100mg', family: 'NAD+', dose: '100mg', price: 150, icon: FlaskConical, addOnOnly: true, desc: 'Higher-dose NAD+ support', img: '/addons/nad.png' },
 ];
 

@@ -32,7 +32,7 @@ export function includedSession(session, dose = null) {
   if (session.key === 'cbd' && dose?.key === 'cbd_vitality') {
     return ['CBD 66mg', 'Vitamin support', 'IV fluids', 'Clinical intake review', 'Registered nurse administration'];
   }
-  if (session.key === 'cbd') return [`CBD ${dose?.label || 'review dose'}`, 'IV fluids', 'Clinician-guided dose', 'Clinical intake review', 'Registered nurse administration'];
+  if (session.key === 'cbd') return [`CBD ${dose?.label || 'review dose'}`, 'IV fluids', 'Registered nurse administration'];
   return splitIngredientList(session.inside || 'IV fluids · Electrolytes · Vitamin support')
     .map((item) => item.trim())
     .filter(Boolean)

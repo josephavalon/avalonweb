@@ -42,10 +42,9 @@ export const productsByCategory = {
   },
   cbd: {
     title: 'CBD IV Therapy',
-    subtitle: 'Clinical review',
-    badge: 'Eligibility confirmed before treatment',
+    subtitle: 'Eligibility confirmed before treatment',
     description:
-      'CBD IV appointments are clinician-reviewed wellness visits. Avalon confirms eligibility, dose, and timing before treatment.',
+      'Avalon confirms eligibility, dose, and timing before treatment.',
     heroImage: null,
     categoryLabel: 'CBD IV Therapy',
     backTo: '/services/cbd',
@@ -53,15 +52,14 @@ export const productsByCategory = {
     treatments: byKey.cbd.doses.map((dose) => ({
       ...treatmentFromDose(byKey.cbd, dose),
       name: `CBD IV ${dose.label}`,
-      desc: 'Clinician-reviewed CBD IV wellness appointment. Eligibility and dosing are confirmed before treatment.',
+      desc: 'CBD IV wellness appointment. Eligibility and dosing are confirmed before treatment.',
     })),
   },
   nad: {
     title: 'IV NAD+',
     subtitle: 'The longevity molecule',
-    badge: 'Clinician Reviewed',
     description:
-      'NAD+ is a coenzyme involved in energy metabolism. Your clinician confirms whether IV NAD+ is appropriate before treatment.',
+      'NAD+ is a coenzyme involved in energy metabolism. Eligibility and dosing are confirmed before treatment.',
     heroImage: null,
     categoryLabel: 'IV NAD+',
     backTo: '/services/nad',

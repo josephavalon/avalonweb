@@ -5590,6 +5590,20 @@ body:has(.nd-home) .avalon-static-backdrop {
     grid-row: 1;
   }
 
+  /* ConsumerFooter already carries a superset of this disclaimer a few hundred
+     pixels below, so on mobile it is pure duplication plus 5rem of dead space. */
+  .nd-menu > .nd-consumer__medical-note {
+    display: none;
+  }
+
+  .nd-menu {
+    padding-bottom: 1.5rem;
+  }
+
+  .nd-menu__section {
+    padding: 1.75rem 0;
+  }
+
   .nd-menu__shot-doses {
     justify-content: flex-start;
     gap: 1.75rem;

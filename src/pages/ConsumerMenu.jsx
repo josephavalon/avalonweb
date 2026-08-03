@@ -54,7 +54,6 @@ export default function ConsumerMenu() {
               key={categorySlug}
               id={`menu-${categorySlug}`}
               heading={category.categoryLabel || category.title}
-              eyebrow={categorySlug === 'iv-vitamins' ? null : 'Clinician reviewed'}
               defaultOpen={index === 0}
             >
               {category.treatments.map((product) => (
