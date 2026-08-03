@@ -1,136 +1,102 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 
-// Cognito Forms embed wrapper.
+// Cognito Forms embed — SEAMLESS. This is PHI-handling code.
 //
-// - When `formId` or `accountKey` is falsy, renders a placeholder card with a
-//   "Simulate submit" button so the intake flow can be walked end-to-end
-//   without provisioning.
-// - When both are set, drops Cognito's seamless.js <script> into the container
-//   (the script replaces itself with the form iframe at that spot) and calls
-//   `onSubmit()` when a postMessage from cognitoforms.com signals a submit.
+// DECISION 2026-07-31 (user, explicit, after being shown the tradeoff twice):
+// this component was a sealed cross-origin iframe. It is now Cognito's
+// `seamless.js` embed. The iframe imposed Cognito's own chrome — white card,
+// "Page 1 / Page 2" indicator, its own type — and Cognito's Theme editor has
+// no custom-CSS escape hatch, so the front door could not be made to match the
+// approved design. The user chose design fidelity over origin isolation.
 //
-// Pre-ship gate: the connected Cognito form MUST be on the HIPAA plan with a
-// BAA in place before this component accepts real PHI. Set the ids via
-// VITE_COGNITO_INTAKE_FORM_ID and VITE_COGNITO_ACCOUNT_KEY at build time.
+// WHAT THAT COSTS — read before touching this file or the route that mounts it:
+//   * seamless.js injects the form into AVALON'S document. The patient's name
+//     and mobile number are real nodes in our DOM. `document.querySelector`
+//     reaches them. So does every dependency in our bundle.
+//   * therefore this component, and every page that mounts it, is PHI-handling
+//     code. Do NOT add analytics with properties, error/exception reporting,
+//     session replay, heatmaps, form-field instrumentation, or any DOM capture
+//     to these routes. The only telemetry allowed here is the anonymous,
+//     propertyless fire-once load ping below.
+//   * a compromised dependency — ours or Cognito's — can read the fields. The
+//     control is no longer the browser's origin boundary; it is our dependency
+//     hygiene plus Cognito's CSP allowance.
+//
+// WHAT DID NOT CHANGE:
+//   * Cognito is still the BAA-covered backend (HIPAA Enterprise plan, entry
+//     encryption ON, every field Protected).
+//   * form values still POST directly to cognitoforms.com. They never touch an
+//     Avalon server, an Avalon API route, or Supabase.
+//   * this component still renders NO fields of its own. Only Cognito's script
+//     may create them — see the fail-closed fallback below.
+//
+// Ship requirement: set VITE_COGNITO_ACCOUNT_KEY (and optionally
+// VITE_COGNITO_INTAKE_FORM_ID) at build time, and keep
+// https://www.cognitoforms.com + https://static.cognitoforms.com in the
+// front-door CSP's script-src / connect-src (see vercel.json).
 
-const SEAMLESS_SRC = 'https://www.cognitoforms.com/f/seamless.js';
+const COGNITO_ORIGIN = 'https://www.cognitoforms.com';
+const SEAMLESS_SRC = `${COGNITO_ORIGIN}/f/seamless.js`;
+
+// The live intake ("Avalon Intake") is account form number 1 — confirmed from
+// the Cognito Publish tab. `formId` is kept as the prop name for callsite
+// compatibility, but it is a form NUMBER, not the form's name or id.
+const DEFAULT_FORM_NUMBER = '1';
 
 export default function CognitoFormEmbed({
-  formId = import.meta.env.VITE_COGNITO_INTAKE_FORM_ID,
+  formId = import.meta.env.VITE_COGNITO_INTAKE_FORM_ID || DEFAULT_FORM_NUMBER,
   accountKey = import.meta.env.VITE_COGNITO_ACCOUNT_KEY,
-  onSubmit,
-  name,
-  phone,
-  onNameChange,
-  onPhoneChange,
-  buttonLabel = 'Continue',
   compact = false,
   tight = false,
-  nameTestId = 'cognito-name',
-  phoneTestId = 'cognito-phone',
-  submitTestId = 'cognito-simulate-submit',
 }) {
   const mountRef = useRef(null);
-  const [loadError, setLoadError] = useState(false);
-  const [previewName, setPreviewName] = useState('');
-  const [previewPhone, setPreviewPhone] = useState('');
+  const trackedRef = useRef(false);
+
+  // Anonymous, propertyless, fire-once. There is deliberately no submit event:
+  // observing a submission means reading the form, and an unreliable funnel
+  // number is not worth touching patient fields.
+  const trackLoadedOnce = useCallback(() => {
+    if (trackedRef.current) return;
+    trackedRef.current = true;
+    track(ANALYTICS_EVENTS.COGNITO_FORM_LOADED);
+  }, []);
 
   useEffect(() => {
     if (!formId || !accountKey) return undefined;
     const host = mountRef.current;
     if (!host) return undefined;
 
-    host.innerHTML = '';
+    // seamless.js replaces itself in place with the rendered form, so it has
+    // to be appended into the mount node rather than <head>.
+    host.replaceChildren();
     const script = document.createElement('script');
     script.src = SEAMLESS_SRC;
     script.async = true;
     script.setAttribute('data-key', accountKey);
-    script.setAttribute('data-form', formId);
-    script.onerror = () => setLoadError(true);
+    script.setAttribute('data-form', String(formId));
+    script.addEventListener('load', trackLoadedOnce);
     host.appendChild(script);
 
-    const onMessage = (event) => {
-      if (event.origin !== 'https://www.cognitoforms.com') return;
-      const data = event.data;
-      const type = typeof data === 'string' ? data : data?.type || data?.event;
-      if (typeof type === 'string' && /submit|success|thankyou/i.test(type)) {
-        onSubmit?.();
-      }
-    };
-    window.addEventListener('message', onMessage);
     return () => {
-      window.removeEventListener('message', onMessage);
-      if (host) host.innerHTML = '';
+      script.removeEventListener('load', trackLoadedOnce);
+      // Tear the form out on unmount so no patient-entered value survives a
+      // client-side navigation in a detached node.
+      host.replaceChildren();
     };
-  }, [formId, accountKey, onSubmit]);
+  }, [formId, accountKey, trackLoadedOnce]);
 
+  // Fail closed. A build with missing config shows a phone number, never a
+  // "temporary" name/phone form of our own — that exact shortcut is how this
+  // component ended up collecting PHI on Avalon's servers in the first place.
+  // Only Cognito's script may create fields here. If you are here to make the
+  // flow testable without provisioning: don't. Provision the form.
   if (!formId || !accountKey) {
-    const resolvedName = name ?? previewName;
-    const resolvedPhone = phone ?? previewPhone;
-    const setResolvedName = onNameChange || setPreviewName;
-    const setResolvedPhone = onPhoneChange || setPreviewPhone;
-    const canSubmit = resolvedName.trim().length > 0 && resolvedPhone.trim().length >= 7;
-
     return (
-      <form
-        aria-label="Cognito contact form placeholder"
-        data-cognito-placeholder="true"
-        className={tight
-          ? 'grid gap-3.5'
-          : compact
-          ? 'grid gap-5'
-          : 'grid gap-5 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] p-6'}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (canSubmit) onSubmit?.();
-        }}
+      <div
+        data-testid="cognito-unavailable"
+        className="rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] p-6"
       >
-        <label className="block">
-          <span className={`${tight ? 'mb-1.5 text-[11px]' : 'mb-2 text-[13px]'} block font-body font-bold uppercase tracking-[0.12em] text-foreground/55`}>
-            Your name
-          </span>
-          <input
-            type="text"
-            name="full_name"
-            autoComplete="name"
-            value={resolvedName}
-            onChange={(event) => setResolvedName(event.target.value)}
-            placeholder="Full name"
-            data-testid={nameTestId}
-            className={`${tight ? 'rounded-xl px-4 py-3 text-[15px]' : 'rounded-2xl px-5 py-4 text-base'} w-full border border-foreground/[0.18] bg-transparent font-body font-medium text-foreground placeholder:text-foreground/35 focus:border-foreground/60 focus:outline-none`}
-          />
-        </label>
-        <label className="block">
-          <span className={`${tight ? 'mb-1.5 text-[11px]' : 'mb-2 text-[13px]'} block font-body font-bold uppercase tracking-[0.12em] text-foreground/55`}>
-            Mobile number
-          </span>
-          <input
-            type="tel"
-            name="mobile_number"
-            inputMode="tel"
-            autoComplete="tel"
-            value={resolvedPhone}
-            onChange={(event) => setResolvedPhone(event.target.value)}
-            placeholder="(415) 000-0000"
-            data-testid={phoneTestId}
-            className={`${tight ? 'rounded-xl px-4 py-3 text-[15px]' : 'rounded-2xl px-5 py-4 text-base'} w-full border border-foreground/[0.18] bg-transparent font-body font-medium text-foreground placeholder:text-foreground/35 focus:border-foreground/60 focus:outline-none`}
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          data-testid={submitTestId}
-          className={`${tight ? 'min-h-11' : 'min-h-12'} inline-flex items-center justify-center rounded-full bg-foreground px-6 font-body text-[13px] font-bold uppercase tracking-[0.12em] text-background transition disabled:cursor-not-allowed disabled:opacity-30`}
-        >
-          {buttonLabel}
-        </button>
-      </form>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] p-6">
         <p className="font-body text-sm font-semibold text-foreground/80">
           Form failed to load. Please refresh, or reach us at (415) 980-7708.
         </p>
@@ -138,10 +104,14 @@ export default function CognitoFormEmbed({
     );
   }
 
+  // `cognito` is the styling hook. The skin lives in src/index.css — Cognito's
+  // own rules are authored at :root:root:root:root:root specificity, so that
+  // block is where the design is enforced, not here.
   return (
     <div
       ref={mountRef}
-      className="cognito overflow-hidden rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03]"
+      data-testid="cognito-embed"
+      className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}`}
     />
   );
 }

@@ -12,6 +12,7 @@
 import { getAuthedUser } from '../_lib/supabase-auth.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeErrorCode } from '../_lib/safe-error.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 const ACTIVE_EVENT_STATUSES = new Set(['draft', 'presale', 'public', 'sold_out']);
 const EDITABLE_EVENT_STATUSES = new Set(['draft', 'presale', 'public']);
@@ -172,6 +173,9 @@ async function hubPayload(authed) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Event organizer console')) return;
+
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ ok: false, error: 'Method not allowed' });
   const limit = await checkRateLimit({ key: `events-organizer:${clientIp(req)}`, windowMs: 60_000, max: 80 });
   if (!limit.ok) return res.status(429).json({ ok: false, error: 'Too many requests. Try again shortly.' });

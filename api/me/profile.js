@@ -15,6 +15,7 @@
 import { getAuthedUser } from '../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 // Columns we expose on the profile API. Kept in one place so GET and PATCH
 // agree on the wire shape, and the field allow-list for PATCH is derived from
@@ -100,6 +101,9 @@ async function readProfileRow(db, userId, email) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Profile read/write')) return;
+
   const authed = await getAuthedUser(req);
   if (!authed) return res.status(401).json({ error: 'Sign in required' });
   const { db, user, email, tenantId } = authed;

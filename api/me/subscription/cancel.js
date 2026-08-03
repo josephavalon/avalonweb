@@ -12,6 +12,7 @@ import Stripe from 'stripe';
 import { writeAuditEvent } from '../../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
 import { authAndActiveSubscription } from './_helpers.js';
+import { blockFrontDoorPhiRoute } from '../../_lib/pre-api-guard.js';
 
 // Known, non-PHI cancellation categories the portal surfaces. The category
 // (an enum, never free text) is the only piece allowed onto Stripe metadata,
@@ -25,6 +26,9 @@ function normalizeReasonCategory(value) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Subscription cancellation')) return;
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });

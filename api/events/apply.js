@@ -8,10 +8,14 @@
  */
 import { getSupabaseServiceClient } from '../_supabase-server.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Event application')) return;
+
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
   const limit = await checkRateLimit({ key: `events-apply:${clientIp(req)}`, windowMs: 600_000, max: 10 });
   if (!limit.ok) return res.status(429).json({ ok: false, error: 'Too many requests. Please try again shortly.' });

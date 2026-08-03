@@ -17,6 +17,7 @@
  */
 import { getSupabaseServiceClient } from '../_supabase-server.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 function initialsOf(first, last) {
   const f = String(first || '').trim();
@@ -28,6 +29,9 @@ const BOARD_STATUSES = ['waiting', 'notified', 'called', 'at_station', 'in_gfe']
 const LANE_BY_INTEREST = { shots: 'express', im: 'express', shot_bar: 'express' };
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Event kiosk queue')) return;
+
   let db;
   try {
     db = await getSupabaseServiceClient();

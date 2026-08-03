@@ -10,6 +10,7 @@ import AppLoader from '@/components/AppLoader';
 import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
 import CareAcuityForward from '@/components/CareAcuityForward';
+import FrontDoorRedirect from '@/components/FrontDoorRedirect';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -250,11 +251,18 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Intake routes never emit a page view. localAnalyticsProvider writes the event
+// to localStorage BEFORE the consent gate, so excluding the route removes the
+// write entirely — stronger than sanitizing the payload. Attribution still runs:
+// it reads an allowlist of UTM/click-id keys only, so it carries no PII.
+const ANALYTICS_EXCLUDED_ROUTES = /^\/(start|nurse-delivery|support)(\/|$)/;
+
 const AnalyticsRouteTracker = () => {
   const { pathname, search } = useLocation();
   useEffect(() => {
     captureAttribution(search);
-    trackPageView({ path: `${pathname}${search}` });
+    if (ANALYTICS_EXCLUDED_ROUTES.test(pathname)) return;
+    trackPageView({ path: pathname });
   }, [pathname, search]);
   return null;
 };
@@ -393,8 +401,13 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
-            <Route path="/custom" element={<CareAcuityForward><CustomProtocol /></CareAcuityForward>} />
-            <Route path="/book" element={<CareAcuityForward><BookNow /></CareAcuityForward>} />
+            {/* PHI-collecting routes. CareAcuityForward stays OUTERMOST so apex/
+                www/care behavior is bit-for-bit unchanged (it returns null and
+                hard-navigates to Acuity before FrontDoorRedirect ever mounts).
+                FrontDoorRedirect only fires on the front-door host, where these
+                funnels must be unreachable — see src/lib/frontDoor.js. */}
+            <Route path="/custom" element={<CareAcuityForward><FrontDoorRedirect><CustomProtocol /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/book" element={<CareAcuityForward><FrontDoorRedirect><BookNow /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/booking" element={<Navigate to="/book" replace />} />
             <Route path="/book-now" element={<Navigate to="/book" replace />} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
@@ -422,14 +435,14 @@ function AppRoutes() {
             <Route path="/menu" element={<Navigate to="/protocols" replace />} />
             <Route path="/store" element={<Navigate to="/protocols" replace />} />
             <Route path="/store/confirmation" element={<Navigate to="/protocols" replace />} />
-            <Route path="/booking/confirmation" element={<CareAcuityForward><BookingConfirmation /></CareAcuityForward>} />
-            <Route path="/checkout" element={<CareAcuityForward><Checkout /></CareAcuityForward>} />
-            <Route path="/checkout/success" element={<CareAcuityForward><CheckoutSuccess /></CareAcuityForward>} />
+            <Route path="/booking/confirmation" element={<CareAcuityForward><FrontDoorRedirect><BookingConfirmation /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/checkout" element={<CareAcuityForward><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/checkout/success" element={<CareAcuityForward><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/signup" element={<FrontDoorRedirect><Signup /></FrontDoorRedirect>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
-            <Route path="/order" element={<ManageOrder />} />
+            <Route path="/order" element={<FrontDoorRedirect><ManageOrder /></FrontDoorRedirect>} />
             <Route path="/redeem" element={<Navigate to="/order" replace />} />
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
@@ -441,7 +454,15 @@ function AppRoutes() {
             <Route path="/organizer" element={<RequireAuth allowedRoles={['promoter', 'admin']}><OrganizerEventHub /></RequireAuth>} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/book" element={<RequireAuth allowedRoles={['client', 'admin', 'staff']}><MemberBook /></RequireAuth>} />
-            <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
+            {/* The account surface is the one member page whose every panel
+                calls a now-server-gated api/me/* route (profile, payment
+                methods, password, unlink, delete-request). Without this a
+                logged-in user on the front door would mount the page and see
+                raw 409s. FrontDoorRedirect goes OUTSIDE RequireAuth so the
+                bounce to /start happens before the auth check.
+                NOTE: the canonical path is /members/account — there is no
+                top-level /account route (only /account/new-password). */}
+            <Route path="/members/account" element={<FrontDoorRedirect><RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth></FrontDoorRedirect>} />
             <Route path="/members/messages" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMessages /></RequireAuth>} />
             <Route path="/members/bookings" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBookings /></RequireAuth>} />
             <Route path="/members/memberships" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMemberships /></RequireAuth>} />
@@ -511,8 +532,8 @@ function AppRoutes() {
             <Route path="/safety" element={<Safety />} />
             <Route path="/support" element={<Support />} />
             <Route path="/ingredients" element={<Ingredients />} />
-            <Route path="/gift" element={<Gift />} />
-            <Route path="/review" element={<Review />} />
+            <Route path="/gift" element={<FrontDoorRedirect><Gift /></FrontDoorRedirect>} />
+            <Route path="/review" element={<FrontDoorRedirect><Review /></FrontDoorRedirect>} />
             <Route path="/members/redeem" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberRedeemGift /></RequireAuth>} />
             <Route path="/athlete" element={<Athlete />} />
             <Route path="/hangover" element={<Hangover />} />

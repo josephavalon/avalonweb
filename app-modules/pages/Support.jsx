@@ -11,6 +11,7 @@ import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 import { Button } from '@/components/ui/button';
 import { avalonFieldClass, avalonLabelClass, avalonErrorClass } from '@/components/ui/formStyles';
+import { isFrontDoorHost } from '@/lib/frontDoor';
 
 const EASE = [0.16, 1, 0.3, 1];
 const REVEAL = {
@@ -36,6 +37,13 @@ export default function Support() {
     description: 'Open a support ticket with Avalon Vitality. Ask a question, report an issue, or share feedback — anonymously if you prefer.',
     path: '/support',
   });
+
+  // On the PHI-free front door there is no ticket form at all. The free-text
+  // textarea below is where PHI actually lands, so the whole <form> is swapped
+  // for a direct-contact card. Not a redirect — /support is footer-linked and
+  // dropping a billing question into a medical intake form is worse than a
+  // dead link. Read once at mount so the first render is already correct.
+  const [frontDoor] = useState(isFrontDoorHost);
 
   const [form, setForm] = useState({ category: 'general', subject: '', message: '', name: '', email: '' });
   const [anonymous, setAnonymous] = useState(false);
@@ -120,7 +128,9 @@ export default function Support() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.16 }}
               className="font-body text-sm md:text-base text-foreground/70 leading-relaxed max-w-xl"
             >
-              Open a ticket and our team will get back to you within one business day. Prefer to stay anonymous? You can.
+              {frontDoor
+                ? 'Email or call us and our team will get back to you within one business day.'
+                : 'Open a ticket and our team will get back to you within one business day. Prefer to stay anonymous? You can.'}
             </motion.p>
           </div>
         </section>
@@ -131,7 +141,36 @@ export default function Support() {
 
             {/* Ticket form / success */}
             <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-8">
-              {status === 'success' ? (
+              {frontDoor ? (
+                <div>
+                  <h2 className="font-heading text-3xl text-foreground uppercase mb-3">Talk to us</h2>
+                  <p className="font-body text-sm text-foreground/65 leading-relaxed max-w-md">
+                    Billing, scheduling, feedback, or anything else — reach the team directly.
+                  </p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <a
+                      href="mailto:support@avalonvitality.co"
+                      className="flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-4 font-body text-sm text-foreground/80 transition-colors hover:border-foreground/20 hover:text-foreground"
+                    >
+                      <Mail className="h-4 w-4 flex-shrink-0 text-foreground/45" />
+                      support@avalonvitality.co
+                    </a>
+                    <a
+                      href="tel:+14159807708"
+                      className="flex items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-4 font-body text-sm text-foreground/80 transition-colors hover:border-foreground/20 hover:text-foreground"
+                    >
+                      <Phone className="h-4 w-4 flex-shrink-0 text-foreground/45" />
+                      (415) 980-7708
+                    </a>
+                  </div>
+                  <div className="mt-5 flex items-start gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-foreground/45" />
+                    <p className="font-body text-[13px] text-foreground/55 leading-relaxed">
+                      Please don’t include medical details in your message.
+                    </p>
+                  </div>
+                </div>
+              ) : status === 'success' ? (
                 <div className="py-6 text-center">
                   <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
                     <CheckCircle2 className="h-6 w-6 text-emerald-400" />

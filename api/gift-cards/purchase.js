@@ -17,7 +17,7 @@
  */
 
 import Stripe from 'stripe';
-import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
+import { blockFrontDoorPhiRoute, isLiveApiEnabled } from '../_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { getSupabaseServiceClient } from '../_supabase-server.js';
 import { createPendingGiftCard } from '../_lib/gift-cards.js';
@@ -58,6 +58,9 @@ function isEmailish(value = '') {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Gift card purchase')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

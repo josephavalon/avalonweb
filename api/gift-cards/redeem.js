@@ -14,8 +14,12 @@ import { getAuthedUser } from '../_lib/supabase-auth.js';
 import { redeemGiftCard, GiftCardRedeemError } from '../_lib/gift-cards.js';
 import { getDefaultTenantId } from '../_supabase-server.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Gift card redemption')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

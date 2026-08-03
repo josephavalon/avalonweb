@@ -24,6 +24,7 @@ import { getServiceClient } from '../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 const TOKEN_PATTERN = /^[a-f0-9]{32,80}$/i;
 const MAX_TEXT_LEN = 2000;
@@ -39,6 +40,9 @@ function badRequest(res, code = 'invalid_request') {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Review submission')) return;
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });

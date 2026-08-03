@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, ShieldCheck } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
@@ -12,8 +11,6 @@ const TRUST_POINTS = [
 ];
 
 export default function PlanInterest() {
-  const [submitted, setSubmitted] = useState(false);
-
   useSeo({
     title: 'Plans — Avalon Vitality',
     description: 'Request simple, clinician-supported wellness plan information from Avalon Vitality.',
@@ -47,38 +44,23 @@ export default function PlanInterest() {
           </ul>
         </section>
 
+        {/* The Cognito iframe confirms on its own origin, so there is no local
+            "submitted" state here — this page never learns that a request was
+            sent, by design. */}
         <section className="nd-plan__form" aria-labelledby="plan-form-title">
-          {submitted ? (
-            <div className="nd-plan__thanks" role="status">
-              <span><Check aria-hidden="true" /></span>
-              <p className="nd-plan__eyebrow">Request received</p>
-              <h2 id="plan-form-title">We&apos;ll text you.</h2>
-              <p>A real person will explain the plan options and next steps.</p>
-            </div>
-          ) : (
-            <>
-              <p className="nd-plan__eyebrow">Start here</p>
-              <h2 id="plan-form-title">Name + mobile</h2>
-              <p className="nd-plan__form-copy">That&apos;s all we need for now.</p>
-              <CognitoFormEmbed
-                formId=""
-                accountKey=""
-                compact
-                buttonLabel="Request plan details"
-                onSubmit={() => setSubmitted(true)}
-                submitTestId="plan-request-submit"
-              />
-              <p className="nd-plan__privacy">
-                <ShieldCheck aria-hidden="true" />
-                Do not include medical information. This request is for plan information only.
-              </p>
-              <p className="nd-plan__consent">
-                By submitting, you consent to service-related SMS from Avalon Vitality.
-                Reply STOP to opt out. Message and data rates may apply. This request
-                does not confirm an appointment or guarantee treatment.
-              </p>
-            </>
-          )}
+          <p className="nd-plan__eyebrow">Start here</p>
+          <h2 id="plan-form-title">Name + mobile</h2>
+          <p className="nd-plan__form-copy">That&apos;s all we need for now.</p>
+          <CognitoFormEmbed compact />
+          <p className="nd-plan__privacy">
+            <ShieldCheck aria-hidden="true" />
+            Do not include medical information. This request is for plan information only.
+          </p>
+          <p className="nd-plan__consent">
+            By submitting, you consent to service-related SMS from Avalon Vitality.
+            Reply STOP to opt out. Message and data rates may apply. This request
+            does not confirm an appointment or guarantee treatment.
+          </p>
         </section>
       </main>
     </div>

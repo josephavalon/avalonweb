@@ -36,6 +36,10 @@ export const ANALYTICS_EVENTS = Object.freeze({
   APPLY_STARTED: 'apply_started',
   APPLY_SUBMITTED: 'apply_submitted',
 
+  // Intake front door — anonymous only. No submit event: the form payload is PHI.
+  START_CLICKED: 'start_clicked',
+  COGNITO_FORM_LOADED: 'cognito_form_loaded',
+
   // Member lifecycle — the ARPM spine.
   MEMBER_SIGNUP: 'member_signup',
   MEMBERSHIP_UPGRADE: 'membership_upgrade',
@@ -58,6 +62,18 @@ export const ANALYTICS_EVENTS = Object.freeze({
   VERTICAL_CROSSOVER: 'vertical_crossover',
   PROTOCOL_ACTIVATED: 'protocol_activated',
   PROTOCOL_RENEWED: 'protocol_renewed',
+
+  // Custom-protocol builder. These predate the taxonomy and are still emitted
+  // as string literals from app-modules/pages/CustomProtocol.jsx; they live
+  // here so scripts/front-door-qa.mjs can assert that EVERY track() literal in
+  // the tree is a known event name. A name that is not in this object is how a
+  // free-form (and potentially PHI-shaped) event slips into the pipeline.
+  PROTOCOL_COMPLETED: 'protocol_completed',
+  PROTOCOL_VITAMIN_SELECTED: 'protocol_vitamin_selected',
+  PROTOCOL_NAD_SELECTED: 'protocol_nad_selected',
+
+  // Emitted by getExperimentVariant() inside this module.
+  EXPERIMENT_ASSIGNED: 'experiment_assigned',
 
   // Referral / growth
   REFERRAL_SENT: 'referral_sent',
@@ -193,11 +209,32 @@ export function getExperimentVariant(name, variants = ['control', 'variant']) {
   }
 }
 
+// Query strings and hashes can carry health interest (?therapy=...). Strip them
+// here, not just at callsites — callers must never be the only line of defense.
+function pathOnly(value) {
+  return String(value || '').split('?')[0].split('#')[0];
+}
+
+// document.referrer is a FULL url, so it carries the previous page's query
+// string (e.g. /start?therapy=NAD+IV → a health interest). Reduce it to
+// origin + pathname before it can reach storage or a provider.
+function referrerOrigin(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    return `${url.origin}${pathOnly(url.pathname)}`;
+  } catch {
+    // Not an absolute url (or no URL support) — fall back to strip-only.
+    return pathOnly(raw);
+  }
+}
+
 export function trackPageView({ path, title, referrer } = {}) {
   track(ANALYTICS_EVENTS.PAGE_VIEW, {
-    path: path || (typeof window !== 'undefined' ? window.location.pathname : ''),
+    path: pathOnly(path) || (typeof window !== 'undefined' ? window.location.pathname : ''),
     title: title || (typeof document !== 'undefined' ? document.title : ''),
-    referrer: referrer || (typeof document !== 'undefined' ? document.referrer : ''),
+    referrer: referrerOrigin(referrer || (typeof document !== 'undefined' ? document.referrer : '')),
     attribution: getAttribution(),
   });
 }

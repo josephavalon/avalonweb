@@ -15,10 +15,13 @@ import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
 import { IV_SESSIONS } from '@/config/verticals';
 
 // Nurse Delivery — lightweight mobile-first intake.
-// Landing → 2 goal selections → recommendation → Cognito form → thanks.
+// Landing → 2 goal selections → recommendation → Cognito form (which confirms
+// on its own origin; this page has no 'thanks' step and never learns that a
+// submit happened).
 // All step transitions are in-page state — no route changes, no localStorage,
-// no analytics beacons carrying answers. Cognito form must be on the HIPAA
-// plan with a BAA before this page accepts live PHI.
+// no analytics beacons carrying answers. This page collects no name, phone, or
+// any other identifier: the only intake surface is the sealed Cognito iframe,
+// which must be on the HIPAA plan with a BAA before it accepts live PHI.
 
 // Three broad support lanes keep the experience future-safe without asking a
 // visitor to diagnose themselves. Do not add symptom or disease language here.
@@ -225,7 +228,10 @@ function getRecommendation(categoryId) {
   };
 }
 
-const STEPS = ['landing', 'q1', 'q2', 'match', 'compare', 'form', 'thanks'];
+// No 'thanks' step: the Cognito iframe renders its own confirmation on its own
+// origin. The host page must not react to submission — knowing a submit
+// happened would mean listening to the frame that holds the PHI.
+const STEPS = ['landing', 'q1', 'q2', 'match', 'compare', 'form'];
 
 function Progress({ index, total }) {
   return (
@@ -335,7 +341,7 @@ const FEATURES = [
 // What happens after Start. Timing copy is the real FAQ language (same-day,
 // 90-minute arrival window) — do not promise a number we don't publish.
 const NEXT_STEPS = [
-  { n: '01', title: 'We call to confirm', hint: 'Same day · 8am–8pm' },
+  { n: '01', title: 'We call to confirm', hint: 'Same day • 8am–8pm' },
   { n: '02', title: 'You get a deposit link', hint: 'Applies to your visit' },
   { n: '03', title: 'A nurse arrives', hint: '90-minute arrival window' },
 ];
@@ -350,7 +356,6 @@ function requestRows({ therapyName, duration }) {
     { label: 'Applied to', value: 'Your visit' },
     { label: 'Visit length', value: duration || '30–60 min' },
     { label: 'Area', value: 'SF Bay Area' },
-    { label: 'Nurse', value: 'Registered' },
   ];
 }
 
@@ -362,7 +367,7 @@ function RequestRail({ therapyName = '', duration = '' }) {
   const rows = requestRows({ therapyName, duration });
 
   return (
-    <aside className="mt-8 lg:mt-0" data-testid="landing-request-rail">
+    <aside className="mt-8 lg:mt-0 lg:flex lg:h-full lg:flex-col" data-testid="landing-request-rail">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -379,16 +384,30 @@ function RequestRail({ therapyName = '', duration = '' }) {
         />
       </button>
 
-      <div id="nd-request-body" className={`${open ? 'mt-3 block' : 'hidden'} lg:mt-0 lg:block`}>
-        <div className="rounded-[2rem] border border-foreground/[0.10] px-6 py-5 md:px-8 md:py-7">
+      <div
+        id="nd-request-body"
+        className={`${open ? 'mt-3 block' : 'hidden'} lg:mt-0 lg:flex lg:flex-1 lg:flex-col lg:justify-center`}
+      >
+        {/* The card hugs its rows — it must NOT stretch to eat the column's
+            slack. It used to (`grow-[4]` + `justify-between` on the dl), which
+            was tolerable at five rows but at four opened ~57px of dead air
+            between 48px rows, so hairline-separated rows drifted apart inside a
+            bordered box while the form beside them stayed dense.
+            Slack now falls to the spacer below, which is whitespace BETWEEN two
+            elements rather than inside one — and it bottom-aligns the steps with
+            the form column. */}
+        <div className="rounded-[2rem] border border-foreground/[0.10] px-6 py-5 md:px-8 md:py-7 lg:flex lg:flex-col">
           <p className="av-mono text-[11px] uppercase tracking-[0.12em] text-foreground/50">
             Your request
           </p>
+          {/* last:pb-0 — every row carries 12px of bottom padding, so on the
+              final row it stacked on top of the card's own 28px and left the
+              content sitting 13px high inside the card. */}
           <dl className="mt-4">
             {rows.map((row) => (
               <div
                 key={row.label}
-                className="flex items-baseline justify-between gap-4 border-t border-foreground/[0.10] py-3"
+                className="flex items-baseline justify-between gap-4 border-t border-foreground/[0.10] py-3 last:pb-0"
               >
                 <dt className="av-mono text-[11px] uppercase tracking-[0.1em] text-foreground/50 md:text-[12px]">
                   {row.label}
@@ -401,14 +420,35 @@ function RequestRail({ therapyName = '', duration = '' }) {
           </dl>
         </div>
 
-        <ol className="mt-6 grid gap-4 sm:grid-cols-3">
-          {NEXT_STEPS.map((s) => (
-            <li key={s.n} className="border-t border-foreground/[0.10] pt-3">
-              <span className="av-mono block text-[13px] text-foreground/35">{s.n}</span>
-              <span className="mt-1.5 block font-body text-[13px] font-semibold leading-tight text-foreground">
+        {/* Numerals are large and set in the body face, not av-mono: at this
+            size the mono figures read as data rather than as a sequence, and
+            the approved comp calls for weight. Columns are separated by hairline
+            rules rather than each carrying a top border. */}
+        {/* Left edge lines up with the card's CONTENT, not its border: the
+            transparent 1px border plus the card's own padding scale reproduces
+            its 33px inset exactly, so "01" and "YOUR REQUEST" share a rail.
+            Only the left is inset — padding both sides cost 64px and wrapped the
+            titles. Column widths are uneven on purpose: "You get a deposit link"
+            is the long one and gets the extra. */}
+        {/* Padding must mirror the card's on BOTH sides. It carried pl only, so
+            the steps ran 32px past the card's right content edge — the labels
+            lined up on the left and drifted on the right. */}
+        <ol className="mt-5 lg:mt-8 grid grid-cols-[1fr_1.24fr_0.88fr] border-l border-transparent pl-6 pr-6 md:pl-8 md:pr-8">
+          {NEXT_STEPS.map((s, i) => (
+            <li
+              key={s.n}
+              className={i === 0 ? 'pr-3 lg:pr-2' : 'border-l border-foreground/[0.12] pl-3 lg:pl-2'}
+            >
+              <span className="block font-body text-[2rem] font-bold leading-none tracking-[-0.02em] text-foreground">
+                {s.n}
+              </span>
+              {/* One line each, as in the comp. This fits naturally now the
+                  columns are near-even; it needed a tracking hack back when the
+                  rail was the narrower 0.88fr. */}
+              <span className="mt-3 block font-body text-[13px] font-semibold leading-tight text-foreground">
                 {s.title}
               </span>
-              <span className="mt-1 block font-body text-[12px] font-medium leading-tight text-foreground/50">
+              <span className="mt-1.5 block font-body text-[12px] font-medium leading-snug text-foreground/55">
                 {s.hint}
               </span>
             </li>
@@ -420,12 +460,7 @@ function RequestRail({ therapyName = '', duration = '' }) {
 }
 
 function Landing({
-  onBook,
   onHelpMeDecide,
-  name,
-  setName,
-  phone,
-  setPhone,
   focused = false,
   therapyName = '',
   duration = '',
@@ -437,13 +472,33 @@ function Landing({
       transition={{ duration: 0.4 }}
       className={`relative mx-auto w-full ${focused ? 'max-w-xl lg:max-w-5xl' : 'max-w-xl'}${focused ? ' nd-focused-booking' : ''}`}
     >
+      {/* items-stretch (not items-start) so the rail can fill the column and
+          bottom-align its step row with the left column's last line — otherwise
+          the right side ends ~110px short and reads as dead space. Column ratio
+          is near-even so the two halves carry comparable visual weight. */}
       <div
-        className={`relative${focused ? ' lg:grid lg:grid-cols-[1.12fr_0.88fr] lg:items-start lg:gap-12 xl:gap-16' : ''}`}
+        className={`relative${focused ? ' lg:grid lg:grid-cols-[1.06fr_0.94fr] lg:items-stretch lg:gap-12 xl:gap-16' : ''}`}
       >
         <div>
+        {/* One h1, two labels. "START" is an instruction and reads as stale once
+            the intake is in — the heading swaps to "RECEIVED" on Cognito's
+            success class, same CSS-only mechanism as the microcopy below. Kept
+            as spans inside a single h1 so the page never has two h1 elements. */}
         <h1 className={`font-heading uppercase tracking-tight text-foreground md:text-[8rem] ${focused ? 'whitespace-nowrap text-[4.25rem] leading-none' : 'text-[5rem] leading-[0.84]'}`}>
-          Start
+          <span data-when="pre-submit">Start</span>
+          <span data-when="post-submit">Received</span>
         </h1>
+
+        {/* Two hard lines, not a wrapped paragraph — the comp breaks after
+            "started." and the rhythm goes if the browser chooses the break. */}
+        <p
+          data-when="pre-submit"
+          className={`font-body font-medium text-foreground ${focused ? 'mt-4 text-[1.0625rem] leading-[1.45]' : 'mt-5 text-lg leading-[1.45]'}`}
+        >
+          Let&apos;s get your care started.
+          <br />
+          It only takes a minute.
+        </p>
 
         {therapyName && (
           <p className="mt-5 inline-flex rounded-full border border-foreground/15 px-4 py-2 font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/65">
@@ -452,24 +507,23 @@ function Landing({
         )}
 
         <div className={`${focused ? 'mt-6 gap-3.5' : 'mt-10 gap-5'} grid`} data-testid="landing-form">
-          <CognitoFormEmbed
-            compact
-            tight={focused}
-            name={name}
-            phone={phone}
-            onNameChange={setName}
-            onPhoneChange={setPhone}
-            onSubmit={onBook}
-            buttonLabel="Start"
-            nameTestId="landing-name"
-            phoneTestId="landing-phone"
-            submitTestId="landing-book-now"
-          />
-          <p className={`font-body font-medium text-foreground/65 ${focused ? 'text-sm leading-[1.55]' : 'text-base leading-relaxed'}`}>
+          <CognitoFormEmbed compact tight={focused} />
+          {/* data-when="pre-submit": both lines speak to a form that hasn't been sent
+              yet ("we'll text you", "by submitting"), so they read as stale once
+              Cognito swaps in its confirmation. Hidden by a :has() rule in
+              index.css keyed on Cognito's own .is-success class — CSS only, so
+              nothing here has to observe the form to know it was submitted. */}
+          <p
+            data-when="pre-submit"
+            className={`font-body font-medium text-foreground/65 ${focused ? 'text-sm leading-[1.55]' : 'text-base leading-relaxed'}`}
+          >
             We&apos;ll text a $50 deposit link after confirmation. Applied to your visit.
             Refunded if ineligible.
           </p>
-          <p className={`flex items-start gap-2 font-body font-medium text-foreground/50 ${focused ? 'text-[11px] leading-[1.55]' : 'text-[12px] leading-relaxed'}`}>
+          <p
+            data-when="pre-submit"
+            className={`flex items-start gap-2 font-body font-medium text-foreground/50 ${focused ? 'text-[11px] leading-[1.55]' : 'text-[12px] leading-relaxed'}`}
+          >
             <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} />
             By submitting, you consent to service-related SMS from Avalon Vitality. Reply STOP to opt out. Message and data rates may apply.
           </p>
@@ -549,8 +603,6 @@ export default function NurseDelivery({ entry = null }) {
   );
   const [step, setStep] = useState(entryPath === 'guided' ? 'q1' : 'landing');
   const [answers, setAnswers] = useState({ goal: null, category: null, customize: null });
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
 
   useEffect(() => {
     if (step === 'landing') {
@@ -585,14 +637,9 @@ export default function NurseDelivery({ entry = null }) {
           {step === 'landing' && (
             <StepShell key="landing" wide>
               <Landing
-                name={name}
-                setName={setName}
-                phone={phone}
-                setPhone={setPhone}
                 focused={entryPath === 'book'}
                 therapyName={therapyName}
                 duration={protocolDuration}
-                onBook={() => setStep('thanks')}
                 onHelpMeDecide={() => setStep('q1')}
               />
             </StepShell>
@@ -770,7 +817,7 @@ export default function NurseDelivery({ entry = null }) {
               </p>
 
               <div className="mt-10">
-                <CognitoFormEmbed onSubmit={() => setStep('thanks')} />
+                <CognitoFormEmbed />
               </div>
 
               <p className="mt-6 font-body text-[12px] font-medium leading-relaxed text-foreground/40">
@@ -785,31 +832,6 @@ export default function NurseDelivery({ entry = null }) {
             </StepShell>
           )}
 
-          {step === 'thanks' && (
-            <StepShell key="thanks">
-              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-foreground/25">
-                <Check className="h-6 w-6 text-foreground" strokeWidth={2} />
-              </span>
-              <h2 className="mt-10 font-heading text-[3.5rem] uppercase leading-[0.9] tracking-tight text-foreground md:text-[4.5rem]">
-                Thank you.
-              </h2>
-              <p className="mt-5 max-w-md font-body text-lg font-medium text-foreground/60">
-                {answers.customize === 'events'
-                  ? 'We’ll be in touch shortly to plan your event.'
-                  : !match.available
-                    ? 'A real member of our team will follow up about this category. This request does not create an appointment or guarantee service availability.'
-                    : `${therapyName ? `${therapyName}: ` : ''}A real member of our team will verify your request. Once accepted, we’ll send a $50 deposit link. It applies to your visit and is refunded if you’re not clinically eligible.`}
-              </p>
-
-              <Link
-                to="/"
-                className="mt-12 inline-flex min-h-12 items-center gap-2 font-heading text-base uppercase tracking-tight text-foreground/70 hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-                Back to home
-              </Link>
-            </StepShell>
-          )}
         </AnimatePresence>
       </main>
 

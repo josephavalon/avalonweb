@@ -6,6 +6,7 @@ import {
   buildStripeCheckoutMetadata,
   isLegacyStripeMetadataPayload,
 } from '../api/_checkout-fulfillment.js';
+import { runFrontDoorChecks } from './front-door-qa.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -677,6 +678,17 @@ function checkAdminApiFunctionsAreDeployable() {
   }
 }
 
+// The PHI-free front door (snooches.avalonvitality.co) is a launch blocker in
+// its own right: if the sealed iframe, the host-scoped route gates, or the
+// split CSP regress, patient identity lands back in Avalon's DOM and Supabase.
+// Imported rather than shelled out to so a failure is a real launch-blocker
+// failure, not a subprocess exit code someone can miss.
+async function checkFrontDoorLockdown() {
+  for (const failure of await runFrontDoorChecks()) {
+    fail(`front-door lockdown: ${failure}`);
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
@@ -693,6 +705,7 @@ checkGoLiveStatusLedger();
 checkServiceWorkerKillSwitch();
 checkNoProdDeployAutomation();
 checkAdminApiFunctionsAreDeployable();
+await checkFrontDoorLockdown();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');

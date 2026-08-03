@@ -13,7 +13,7 @@
 
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { requireInternalAccess } from './_lib/pre-api-guard.js';
+import { blockFrontDoorPhiRoute, requireInternalAccess } from './_lib/pre-api-guard.js';
 import { collectBalance } from './_lib/balance-core.js';
 import { writeAuditEvent } from './_lib/audit-events.js';
 import { checkRateLimit } from './_lib/rate-limit.js';
@@ -59,6 +59,9 @@ async function getSupabase() {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Balance collection')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

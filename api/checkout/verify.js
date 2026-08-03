@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { isLiveApiEnabled } from '../_lib/pre-api-guard.js';
+import { blockFrontDoorPhiRoute, isLiveApiEnabled } from '../_lib/pre-api-guard.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
 import { readCheckoutStoreRecord } from '../_lib/checkout-store.js';
@@ -395,6 +395,9 @@ export async function fulfillPaidCheckoutIfNeeded({ stripe, session, appointment
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Checkout verification')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

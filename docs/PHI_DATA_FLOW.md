@@ -12,7 +12,8 @@ This map identifies where protected or sensitive health/payment-adjacent informa
 - HubSpot: hospitality CRM for identifiers (name/email/phone/city) + lifecycle facets + guest-profile preferences (social handles, style, wardrobe, beverage, music, "anything to help" notes). Fires on signup, on consent-signed (metadata only), on booking lifecycle events, and on admin guest-profile edits. **BAA: not signed; outbound sync is killed by default** — `api/_hubspot.js` refuses all calls unless `HUBSPOT_SYNC_ENABLED=true`. PHI is architecturally excluded via a hard property allowlist + a per-property PHI-token deny sweep on free-text values. CI guard: `scripts/no-phi-in-hubspot-qa.mjs` (`npm run test:no-phi-in-hubspot`). NEVER sends: DOB, address street, emergency contact, allergies, medications, conditions, GFE state, appointment notes, Acuity intake, signature hashes.
 - Quo (SMS): OTP-only message bodies. SMS is excluded from Quo's BAA, so we lock the body to authentication codes + staff invite codes. `api/_lib/send-sms.js` refuses bodies containing PHI-shaped tokens as defense-in-depth.
 - Sentry-compatible endpoint: telemetry endpoint must use sanitized events and no raw PHI payloads. **BAA: required if `VITE_SENTRY_DSN` is shipped, self-serve on Business tier (Org Settings → Legal & Compliance).**
-- Vercel: hosts all PHI-touching API routes. **BAA: required, click-through on Pro tier; signed on Enterprise.**
+- Cognito Forms: the patient intake form, and **the sole PHI ingress on front-door hosts**. Served as a sealed `<iframe>` on the `https://www.cognitoforms.com` origin (`src/components/forms/CognitoFormEmbed.jsx`), so every keystroke lands in a document Avalon's JavaScript cannot read — no field value ever enters Avalon's DOM, analytics, or error telemetry. Account key `Tj34pIQDwkyKMQlnT_qpRQ`, form number `1`. Required configuration: **HIPAA Enterprise plan**, entry encryption **ON**, and every field marked **Protected**. **BAA: NOT YET SIGNED (pending signature).** Until it is countersigned the live form must take **synthetic data only** — no real patient may be routed to it. See `docs/COGNITO_FRONT_DOOR.md`.
+- Vercel: hosts the app. On the apex/www funnel it hosts all PHI-touching API routes. **On front-door hosts (`snooches.avalonvitality.co`) it serves static assets only** — every PHI-writing API route answers `409 front_door_phi_route_disabled` via `blockFrontDoorPhiRoute()` in `api/_lib/pre-api-guard.js`, so no patient identity reaches a Vercel function or Supabase from that host. CI guard: `scripts/front-door-qa.mjs` (`npm run test:front-door`, also folded into `npm run test:launch-blockers`). **BAA: required, click-through on Pro tier; signed on Enterprise.**
 - Nominatim (OpenStreetMap): proxied via `api/address-search.js` and `api/reverse-geocode.js` for address autocomplete and lat/lng lookup. **BAA: not signed; relied on as a de-identified utility.** Route-around: the outbound `fetch` carries only the address string plus a static User-Agent/Referer — no cookies, no Authorization header, no patient identifier. The browser never calls Nominatim directly (it would carry session cookies); all calls go through these two proxies. No responses are persisted. If patient identity ever needs to be attached to a geocode lookup, swap to a BAA-eligible provider (e.g. Google Maps under the Google Maps Platform BAA) before doing so.
 - Google Places (New) via `src/components/store/PlacesAutocomplete.jsx`: called directly from the browser using `VITE_GOOGLE_MAPS_API_KEY` (client-visible). Loaded only on `/book`, `/checkout`, `/plan` for address autocomplete. **BAA: not signed.** Route-around: the query is the free-text partial address the user typed; no patient identifier, DOB, name, or appointment ID is included in the query. The autocomplete widget's `componentRestrictions: 'us'` and `types: 'address'` limit the query. If the SDK fails or the key is missing, the component silently falls back to the Nominatim-backed `AddressAutocomplete` above. **Runbook TODO:** lock the API key's HTTP-referrer restrictions in Google Cloud Console to `beta.avalonvitality.co`, `avalonvitality.co`, `*.vercel.app`, `localhost` — the key ships unrestricted at deploy and MUST be restricted immediately after (see `docs/GO_LIVE_STATUS.md`).
 
@@ -40,7 +41,8 @@ Appointment Summary Access requires either a signed summary token from `APPOINTM
 - Keep raw provider errors out of customer responses.
 - Keep reconciliation cases for Acuity, email, and CRM failures.
 - Use persistent rate limiting for auth, invite, SMS, and public side-effect endpoints.
-- Maintain BAAs before real PHI flows with Supabase, Acuity, Vercel, Sentry. For vendors that won't sign a BAA (Stripe, HubSpot, Resend), keep PHI architecturally walled off via the route-around controls listed in the Stores And Processors section.
+- Maintain BAAs before real PHI flows with Supabase, Acuity, Vercel, Sentry, Cognito Forms. For vendors that won't sign a BAA (Stripe, HubSpot, Resend, Quo SMS), keep PHI architecturally walled off via the route-around controls listed in the Stores And Processors section — those four are **architecturally walled, not contractually covered**, and that distinction must survive every refactor. A signed BAA is not a substitute for the wall, and the wall is not a substitute for a BAA.
+- The **Cognito Forms BAA is not signed yet.** The front-door intake form is live but must receive synthetic data only until it is countersigned.
 
 ## Route-Around Controls (vendors without a BAA)
 
@@ -50,3 +52,17 @@ Appointment Summary Access requires either a signed summary token from `APPOINTM
 | Resend | Ops email body stripped to admin deep link; client details only inside Supabase admin | `api/_booking-email.js` |
 | HubSpot | Property allowlist in `buildHubspotProperties`; free-text PHI-token deny sweep throws `HubspotPhiRefused`; kill switch (`HUBSPOT_SYNC_ENABLED`); CI regression guard | `api/_hubspot.js`, `scripts/no-phi-in-hubspot-qa.mjs` |
 | Quo SMS | Body is OTP/invite-code only; PHI-token deny patterns refuse the send | `api/_lib/send-sms.js` |
+
+## Front-door hosts (PHI-free)
+
+`snooches.avalonvitality.co` is a PHI-free brochure. Two independent gates hold that:
+
+| Layer | Mechanism | Source of truth |
+|---|---|---|
+| Client routes | `<FrontDoorRedirect>` bounces 10 PHI-collecting routes to `/start` | `src/lib/frontDoor.js`, `src/components/FrontDoorRedirect.jsx`, `src/App.jsx` |
+| Server routes | `blockFrontDoorPhiRoute()` answers `409` on 25 PHI-writing handlers | `api/_lib/pre-api-guard.js` |
+| Intake | Sealed Cognito iframe; no native input/textarea/select in Avalon's DOM | `src/components/forms/CognitoFormEmbed.jsx` |
+| CSP | Two mutually-exclusive blocks; `cognitoforms.com` in `frame-src` only, never `script-src` | `vercel.json` |
+| Regression guard | 9 assertions, wired to both `npm run test:front-door` and `npm run test:launch-blockers` | `scripts/front-door-qa.mjs` |
+
+Architecture record and rationale: `docs/COGNITO_FRONT_DOOR.md`.

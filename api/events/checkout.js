@@ -18,6 +18,7 @@ import { getSupabaseServiceClient } from '../_supabase-server.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { fetchPublicEvent, createEventOrderWithHolds, HOLD_MINUTES } from '../_lib/events-core.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 const RATE_LIMIT = { windowMs: 60 * 1000, max: 10 };
 const OPEN_STATUSES = new Set(['presale', 'public']);
@@ -94,6 +95,9 @@ function checkoutExpiresAt() {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Event checkout')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

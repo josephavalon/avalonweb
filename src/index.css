@@ -11107,3 +11107,558 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     padding-top: 0;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Cognito seamless embed — the front-door skin.
+
+   Cognito's Field Style is set to "Chameleon", which means Cognito ships no
+   opinion of its own and the form inherits this page. Everything below is
+   therefore the design, not an override of one: without this block the form
+   renders as unstyled Times.
+
+   `!important` is used deliberately. Cognito's base sheet is authored at
+   :root:root:root:root:root specificity, which no sane selector here can beat.
+   Scope is always `.cognito` so nothing leaks to the rest of the site.
+
+   Tokens are DESIGN.md's cream palette: canvas #f6f2eb, ink #2b211b, muted ink
+   #6e6258, hairline #d9d2c8, input fill #fffdf8.
+--------------------------------------------------------------------------- */
+.cognito .cog-cognito,
+.cognito .cog-form,
+.cognito .cog-form__container,
+.cognito .cog-form__content,
+.cognito .cog-body,
+.cognito .cog-page {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+  color: #2b211b !important;
+  max-width: none !important;
+}
+
+/* The page already renders the Bebas "START" headline and the deposit / SMS
+   copy. Cognito's own title, description and page-step rail would duplicate it. */
+.cognito .cog-header,
+.cognito .cog-page-progress,
+.cognito .cog-asterisk,
+.cognito .cog-powered-by,
+.cognito [class*='cog-branding'] {
+  display: none !important;
+}
+
+.cognito .cog-field,
+.cognito .cog-col {
+  padding: 0 !important;
+  margin: 0 0 1.375rem !important;
+  float: none !important;
+  width: 100% !important;
+}
+
+.cognito .cog-label {
+  display: block !important;
+  margin: 0 0 0.625rem !important;
+  font-family: inherit !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+  color: #6e6258 !important;
+}
+
+/* Cognito's seamless bundle renders Element UI internally, so a text field is
+   three nested nodes: div.cog-input > div.el-input > input.el-input__inner.
+   Reset the two wrappers and put the visible box on the real input only —
+   styling the wrapper as well is what produced a box inside a box. */
+.cognito .cog-input,
+.cognito .el-input {
+  display: block !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.cognito input.el-input__inner,
+.cognito input[type='text'],
+.cognito input[type='tel'],
+.cognito input[type='email'] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  display: block !important;
+  height: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 1.125rem 1.25rem !important;
+  background: #fffdf8 !important;
+  border: 1px solid #d9d2c8 !important;
+  border-radius: 0.875rem !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  line-height: 1.3 !important;
+  color: #2b211b !important;
+  transition: border-color 0.18s ease !important;
+}
+
+.cognito input.el-input__inner:focus,
+.cognito input[type='text']:focus,
+.cognito input[type='tel']:focus,
+.cognito input[type='email']:focus {
+  outline: none !important;
+  border-color: #2b211b !important;
+}
+
+.cognito input::placeholder {
+  color: #a89f94 !important;
+  opacity: 1 !important;
+}
+
+/* Consent row. Kept visible and legible on purpose — it is the stored per-entry
+   record that a TCPA complaint is defended with. Do not hide it in CSS. */
+.cognito .cog-checkable {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 400 !important;
+  color: #2b211b !important;
+}
+
+/* Element UI visually hides the real <input type=checkbox> (.el-checkbox__original)
+   and paints .el-checkbox__inner in its place, with the tick as an ::after
+   border triangle. So the box has to be styled on __inner, not on the input. */
+.cognito .el-checkbox,
+.cognito .el-checkbox__label {
+  display: inline !important;
+  font: inherit !important;
+  color: inherit !important;
+  white-space: normal !important;
+  padding: 0 !important;
+}
+
+.cognito .el-checkbox__inner {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  background: #fffdf8 !important;
+  border: 1px solid #d9d2c8 !important;
+  border-radius: 0.25rem !important;
+  cursor: pointer !important;
+}
+
+.cognito .el-checkbox__input.is-checked .el-checkbox__inner,
+.cognito .el-checkbox__original:checked + .el-checkbox__inner {
+  background: #2b211b !important;
+  border-color: #2b211b !important;
+}
+
+.cognito .el-checkbox__inner::after {
+  border-color: #fffdf8 !important;
+  border-width: 2px !important;
+  left: 0.3rem !important;
+  top: 0.09rem !important;
+}
+
+.cognito .el-checkbox__input.is-focus .el-checkbox__inner {
+  border-color: #2b211b !important;
+}
+
+.cognito .cog-helptext {
+  margin: 0.625rem 0 0 !important;
+  font-family: inherit !important;
+  font-size: 0.78125rem !important;
+  font-style: normal !important;
+  line-height: 1.5 !important;
+  color: #6e6258 !important;
+}
+
+.cognito .cog-button,
+.cognito .cog-button--primary,
+.cognito .cog-button--next {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 3.625rem !important;
+  margin: 0.25rem 0 0 !important;
+  padding: 1rem 1.5rem !important;
+  background: #2b211b !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+  color: #fffdf8 !important;
+  cursor: pointer !important;
+  transition: opacity 0.18s ease !important;
+}
+
+.cognito .cog-button:hover:not(:disabled) { opacity: 0.88 !important; }
+
+.cognito .cog-button:disabled,
+.cognito .cog-button[aria-disabled='true'] {
+  background: #b3aca3 !important;
+  cursor: not-allowed !important;
+}
+
+/* Cognito ships a chevron next to the next-page button; the pill reads cleaner
+   without it, and the label already says START. */
+.cognito .cog-button__icon,
+.cognito .cog-i-next,
+.cognito .cog-i-chevron { display: none !important; }
+
+.cognito .cog-button__text {
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  color: inherit !important;
+}
+
+/* Validation. Cognito ships these as a solid red fill; DESIGN.md reserves red
+   for clinical stops, and a filled bar under every field reads as an alarm.
+   Quiet inline text instead — and the fill has to be cleared explicitly, or the
+   colour below lands red-on-red and the message is unreadable. */
+.cognito .cog-error-message,
+.cognito [class*='cog-error-message'] {
+  display: block !important;
+  margin: 0.375rem 0 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+  color: #b3261e !important;
+}
+
+/* The invalid field itself carries the signal, so the message can stay quiet. */
+.cognito .cog-field--error input.el-input__inner,
+.cognito .is-error input.el-input__inner,
+.cognito input.el-input__inner[aria-invalid='true'] {
+  border-color: #b3261e !important;
+}
+
+/* Cognito paints a grey skeleton bar (.cog-field__placeholder) under each field
+   while its bundle boots. With a styled input above it, it just reads as a
+   stray artifact. */
+.cognito .cog-field__placeholder {
+  display: none !important;
+}
+
+/* Element UI hides the native checkbox off-screen and paints __inner instead.
+   The generic flex rule above was stretching __input to full width and letting
+   the native box show through alongside the painted one — pin all three back. */
+.cognito .cog-checkable .el-checkbox {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  margin: 0 !important;
+}
+
+.cognito .el-checkbox__input {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0.15rem 0 0 !important;
+}
+
+.cognito .el-checkbox__original {
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.cognito .el-checkbox__label {
+  flex: 1 1 auto !important;
+  padding: 0 !important;
+  font: inherit !important;
+  line-height: 1.5 !important;
+  color: #2b211b !important;
+}
+
+/* Cognito stamps the page number as .cog-page::after. With the step rail hidden
+   it renders as a bare "1" floating under the button. */
+.cognito .cog-page::after,
+.cognito .cog-page::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* --- Approved comp polish, 2026-08-01 ------------------------------------- */
+
+/* START carries a right-pointing arrow, text still optically centred. Cognito's
+   own next-chevron stays hidden (it sits inline and shifts the label off
+   centre); this is drawn on the button itself so the label can stay centred. */
+/* Must cover every button the arrow is drawn on, or `top: 50%` below resolves
+   against a distant positioned ancestor and the arrow lands off the button. */
+.cognito .cog-button--next,
+.cognito .cog-button--submit {
+  position: relative !important;
+}
+
+.cognito .cog-button--next::after,
+.cognito .cog-button--submit::after {
+  content: '' !important;
+  position: absolute !important;
+  right: 1.75rem !important;
+  top: 50% !important;
+  width: 1.375rem !important;
+  height: 1.375rem !important;
+  transform: translateY(-50%) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fffdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  pointer-events: none !important;
+}
+
+/* Comp shows a larger, softer consent box than Element UI's 14px default. */
+.cognito .el-checkbox__inner {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  border-radius: 0.375rem !important;
+  border-color: #ddd6cc !important;
+}
+
+.cognito .el-checkbox__inner::after {
+  left: 0.44rem !important;
+  top: 0.16rem !important;
+  height: 0.6rem !important;
+  width: 0.3rem !important;
+  border-width: 0 2px 2px 0 !important;
+}
+
+.cognito .cog-checkable .el-checkbox {
+  gap: 0.875rem !important;
+}
+
+.cognito .el-checkbox__input {
+  margin-top: 0.05rem !important;
+}
+
+/* Focused Book on DESKTOP — fit the whole intake in one viewport.
+   The 100dvh lock further up is `@media (max-width: 760px)`, i.e. mobile only,
+   so desktop was never height-constrained and on a laptop-height window the
+   START button fell below the fold. A patient should never have to scroll to
+   finish the primary CTA.
+   Compress rather than lock: a genuinely tiny window still scrolls instead of
+   clipping content. */
+@media (min-width: 1024px) and (max-height: 920px) {
+  .nd-flow--focused-booking > main {
+    padding-top: 4.4rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 {
+    font-size: 3.9rem !important;
+    line-height: 0.86 !important;
+  }
+
+  /* Subhead */
+  .nd-flow--focused-booking .nd-focused-booking h1 + p {
+    margin-top: 0.5rem !important;
+    font-size: 1rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] {
+    margin-top: 0.65rem !important;
+    gap: 0.4rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-label {
+    margin-bottom: 0.25rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito input.el-input__inner {
+    padding-top: 0.62rem !important;
+    padding-bottom: 0.62rem !important;
+    font-size: 1rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field,
+  .nd-flow--focused-booking .cognito .cog-col {
+    margin-bottom: 0.35rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-checkable {
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-helptext {
+    margin-top: 0.375rem !important;
+    font-size: 0.71875rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-button {
+    min-height: 2.9rem !important;
+    margin-top: 0 !important;
+  }
+
+  /* Deposit line, then the SMS consent line. */
+  .nd-flow--focused-booking [data-testid='landing-form'] > p {
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p:last-of-type {
+    font-size: 0.6875rem !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* Cognito marks some labels .cog-offscreen — screen-reader-only text like the
+   "(required)" suffix and the checkbox's duplicate label. The .cog-label rule
+   above sets display:block, which partially un-hid them and left a 6px sliver
+   of uppercase text above the consent row.
+   Restore the visually-hidden pattern rather than display:none, so the text
+   stays in the accessibility tree where it belongs. */
+.cognito .cog-offscreen,
+.cognito .cog-label.cog-offscreen {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* --- Page 2 of the intake ------------------------------------------------- */
+
+/* Page 2 puts BACK + SUBMIT together in .cog-page__navigation. The full-width
+   button rule further up was written for page 1's single START and turns these
+   into two stacked dark slabs. Lay them out as a row instead: BACK quiet and
+   auto-width, SUBMIT primary and taking the rest. */
+.cognito .cog-page__navigation {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+}
+
+.cognito .cog-page__navigation .cog-button {
+  width: auto !important;
+  flex: 1 1 auto !important;
+  margin: 0 !important;
+}
+
+/* BACK is secondary — outline, muted, and narrow. It must never read as loud as
+   the action that actually submits the intake. */
+.cognito .cog-button--back,
+.cognito .cog-page__navigation .cog-button--secondary {
+  flex: 0 0 auto !important;
+  min-width: 7.5rem !important;
+  background: transparent !important;
+  border: 1px solid #d9d2c8 !important;
+  color: #6e6258 !important;
+}
+
+.cognito .cog-button--back:hover:not(:disabled),
+.cognito .cog-page__navigation .cog-button--secondary:hover:not(:disabled) {
+  border-color: #2b211b !important;
+  color: #2b211b !important;
+  opacity: 1 !important;
+}
+
+/* The arrow rides the forward action only. The intake is a single page, so that
+   action is now the SUBMIT button (styled with --next above); BACK never gets
+   one. Keep BACK listed even though the form is single-page today — restoring a
+   page break would otherwise silently put an arrow on a back button. */
+.cognito .cog-button--back::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* The service dropdown is a <select> carrying .el-input__inner, so the text-input
+   rule above (scoped to `input.el-input__inner`) skipped it and it rendered as a
+   22px native control next to 51px fields. Same box, plus our own chevron. */
+.cognito select.el-input__inner {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  display: block !important;
+  height: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0.8rem 2.75rem 0.8rem 1.25rem !important;
+  background-color: #fffdf8 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 1.1rem center !important;
+  background-size: 1.05rem !important;
+  border: 1px solid #d9d2c8 !important;
+  border-radius: 0.875rem !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  /* Must stay >= 16px and match the text inputs above. iOS Safari zooms the
+     viewport on focus for any control under 16px and never zooms back. */
+  font-size: 1rem !important;
+  line-height: 1.3 !important;
+  color: #2b211b !important;
+}
+
+.cognito select.el-input__inner:focus {
+  outline: none !important;
+  border-color: #2b211b !important;
+}
+
+.cognito select.el-input__inner.is-null {
+  color: #a89f94 !important;
+}
+
+/* The skeleton bar again — on page 2 the inner node is the one that paints, so
+   hiding only the wrapper left a grey slab under the dropdown. */
+.cognito .cog-field__placeholder,
+.cognito .cog-field__placeholder-inner {
+  display: none !important;
+}
+
+/* Once Cognito swaps in its confirmation it sets .is-success on the form. The
+   surrounding Avalon microcopy is written in the future tense ("we'll text
+   you...", "by submitting...", "let's get started") and reads as stale next to
+   the confirmation. Keyed off Cognito's own class so no JS watches the form.
+   Scoped to the .nd-flow ancestor rather than a `~` sibling of .cognito: the
+   subhead sits BEFORE the embed and a sibling combinator only reaches forwards.
+   .nd-flow also covers the non-focused render path, which has no
+   .nd-focused-booking wrapper. */
+.nd-flow:has(.cog-form.is-success) [data-when='pre-submit'] {
+  display: none;
+}
+
+/* The mirror of the above: hidden until the form succeeds. `revert` rather than
+   a fixed value so the element returns to its own natural display — inline for
+   a span, block for a div — instead of being forced to one of them. */
+[data-when='post-submit'] {
+  display: none;
+}
+
+.nd-flow:has(.cog-form.is-success) [data-when='post-submit'] {
+  display: revert;
+}
