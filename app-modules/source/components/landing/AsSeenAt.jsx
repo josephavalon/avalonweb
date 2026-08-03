@@ -81,8 +81,29 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
       </div>
 
       {compact ? (
-        <div className="av-asa-compact hidden min-w-0 grid-cols-6 items-center md:grid">
-          {HOMEPAGE_COMPACT.map(cell)}
+        /* Cap-height normalisation, not box-fitting. These marks range from
+           2.2:1 (111 Minna) to 9.4:1 (Faena). Fitting them all into one fixed
+           152/184px cell makes the widest one width-bound and collapse — Faena
+           rendered 8px tall against everyone else's 26-29px. Sharing a height
+           and letting width follow the artwork is how a press band stays
+           optically even. max-w keeps the widest mark from eating the row. */
+        <div className="av-asa-compact hidden min-w-0 items-center justify-between gap-6 px-5 md:flex md:px-12">
+          {HOMEPAGE_COMPACT.map((item, i) => (
+            <img
+              key={`${item.name}-${i}`}
+              src={item.src}
+              alt={item.name}
+              loading="eager"
+              decoding="async"
+              draggable={false}
+              style={{
+                filter: isLight ? 'none' : 'brightness(0) invert(1)',
+                WebkitFilter: isLight ? 'none' : 'brightness(0) invert(1)',
+                ...(item.scale ? { transform: `scale(${item.scale})` } : {}),
+              }}
+              className="h-[22px] w-auto max-w-[20%] shrink select-none object-contain opacity-70 transition-opacity duration-base ease-editorial hover:opacity-100 md:h-[26px]"
+            />
+          ))}
         </div>
       ) : (
         /* Desktop marquee — CSS keyframe on a doubled strip. */

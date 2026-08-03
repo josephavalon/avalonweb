@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, Calendar, ChevronDown, MapPin, Users,
 } from 'lucide-react';
-import AsSeenAt from '@/components/landing/AsSeenAt';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 
@@ -368,10 +367,6 @@ export default function Events() {
             />
           </div>
         </section>
-
-        <div className="nd-events-press">
-          <AsSeenAt tone="light" />
-        </div>
 
         {/* Upcoming + Past listings hidden for now (2026-07-29). The EventList
             component and the UPCOMING_EVENTS / PAST_EVENTS data stay in place so

@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { EASE, premiumTap } from '@/lib/motion';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
+import { isFrontDoorHost } from '@/lib/frontDoor';
 
 // Matches the hero's one and only front door. The bar is the persistent version
 // of that button, so it has to say and do the same thing.
@@ -18,7 +19,11 @@ export default function StickyBookBar() {
   // common mobile case where the hero is tall and the button starts off-screen
   // below. Default hidden so there is no flash before the observer fires.
   const [scrolledPast, setScrolledPast] = useState(false);
-  const hidden = pathname === '/book' ||
+  // On the front door the whole site funnels to a single /start CTA that the
+  // hero already carries, so a second floating START is pure duplication.
+  // Host-scoped rather than deleted outright: apex/www still want the bar.
+  const hidden = isFrontDoorHost() ||
+    pathname === '/book' ||
     pathname.startsWith('/book/') ||
     pathname.startsWith('/protocols') ||
     pathname.startsWith('/subscription') ||
