@@ -11133,10 +11133,17 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
      that and `justify-self: start` dumped all the leftover track on the right —
      on a 2560px display it read as a small cluster hugging the left edge.
      max-width keeps the logos from drifting absurdly far apart on ultrawides. */
+  /* Width scales gently with the viewport instead of either extreme. It was a
+     hardcoded 52.75rem, which left a small cluster hugging the left edge on a
+     2560px display; stretching it to fill the track instead pushed the gaps to
+     149px, so six marks totalling 661px read as scattered rather than as a
+     band. `58rem + 6vw` keeps the gaps in the 65-85px range from 1280 through
+     2560, so the row stays legible as a group at every width. */
   body:has(.nd-home) .nd-press .av-asa-compact {
     width: 100%;
+    max-width: min(100%, 58rem + 6vw);
     gap: clamp(0.9rem, 2vw, 2.75rem);
-    justify-self: stretch;
+    justify-self: start;
   }
 
   /* The per-logo pixel widths that used to live here targeted
