@@ -320,6 +320,19 @@ async function checkCspSplit(failures) {
       failures.push(`${rel}: ${label} CSP script-src is missing the JSON-LD sha256- hash`);
     }
   }
+
+  // 'unsafe-eval' is granted ONLY to the front door. Cognito's form runtime
+  // builds functions from strings (`new Function`), so without it the embed
+  // hangs on its spinner — this is invisible locally because `vite preview`
+  // serves no CSP at all, and only shows up on a deployed host.
+  // It is a real relaxation, so it must never spread to the app that holds
+  // Supabase sessions. Assert the grant is confined.
+  if (!cspDirective(snoochesBlock.value, 'script-src').includes("'unsafe-eval'")) {
+    failures.push(`${rel}: front-door CSP script-src is missing 'unsafe-eval' — the Cognito embed will not render`);
+  }
+  if (cspDirective(otherBlock.value, 'script-src').includes("'unsafe-eval'")) {
+    failures.push(`${rel}: default CSP script-src allows 'unsafe-eval' — only the front-door host may grant it`);
+  }
 }
 
 // 6. A page path with its query string attached is a health interest
