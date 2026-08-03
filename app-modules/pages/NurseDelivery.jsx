@@ -527,6 +527,20 @@ function Landing({
             <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} />
             By submitting, you consent to service-related SMS from Avalon Vitality. Reply STOP to opt out. Message and data rates may apply.
           </p>
+
+          {/* The confirmation is a dead end otherwise — Cognito replaces the form
+              in place, so there is nothing left to click. Shown only once the
+              form succeeds, via the same .is-success rule that hides the
+              pre-submit copy above. */}
+          <Link
+            to="/"
+            data-when="post-submit"
+            data-testid="landing-return-home"
+            className="group mt-1 w-fit items-center gap-2 border-b border-foreground/30 pb-1 font-body text-[1.0625rem] font-medium text-foreground transition-colors duration-base ease-editorial hover:border-foreground"
+          >
+            Return home
+            <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2} />
+          </Link>
         </div>
 
         {!focused && (
