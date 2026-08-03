@@ -1,14 +1,20 @@
 // Host-scoped "front door" gate.
 //
-// snooches.avalonvitality.co is the PHI-free front door: a static brochure plus
+// The public site is the PHI-free front door: a static brochure plus
 // the Cognito-hosted intake. Every legacy route that collects name / DOB /
 // address / emergency contact and posts to Stripe + Supabase must be
 // unreachable there, so that host stays out of PHI scope.
 //
-// IMPORTANT: the apex (avalonvitality.co) and www MUST NOT be listed here.
-// Those hosts are handled by CareAcuityForward and their behavior is unchanged.
-// A guard script asserts this set contains only the front-door host.
+// 2026-08-03: the front door was promoted to the main URL. The apex and www now
+// serve the same PHI-free brochure that snooches has been staging, so all three
+// hosts are listed. snooches stays in the set as a regression target.
+//
+// This list is load-bearing twice over: it decides which routes redirect to
+// /start, and its twin in api/_lib/pre-api-guard.js decides which API routes
+// return 409. The two MUST stay in sync — a guard script asserts it.
 const FRONT_DOOR_HOSTS = new Set([
+  'avalonvitality.co',
+  'www.avalonvitality.co',
   'snooches.avalonvitality.co',
 ]);
 

@@ -29,7 +29,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/(account|account/.*|admin|admin/.*|apply|athlete|auth|auth/.*|book|booking|booking/.*|book-now|careers|checkout|checkout/.*|cookie-policy|cookies|corporate|custom|dashboard|events|events/.*|faq|forgot|forgot-password|gift|hangover|hipaa-notice|hotel|ingredients|invite|invite/.*|iv-therapy|jet-lag|kiosk|launches|launches/.*|learn|learn/.*|liability-waiver|locations|locations/.*|login|medical-direction|membership|members|members/.*|menu|notice-of-privacy-practices|nurse|nurse-delivery|nurses|order|our-story|our-team|partners|platform|plan|plans|plan-checkout|plans/checkout|presale|presale/.*|press|pricing|privacy|privacy-policy|product-disclaimer|products/.*|protocols|provider|provider/.*|providers|provider/login|redeem|review|safety|service-area|services|services/.*|signin|sign-in|signup|start|store|store/.*|subscribe|subscription|team|telehealth-disclaimer|terms|terms-and-conditions|terms-of-service|therapies/.*|trips|trips/.*|waiver)",
+      "source": "/(account|account/.*|admin|admin/.*|apply|athlete|auth|auth/.*|b2b/thank-you|book|book-now|booking|booking/.*|careers|checkout|checkout/.*|cookie-policy|cookies|corporate|custom|dashboard|events|events/.*|faq|forgot|forgot-password|gift|hangover|hipaa-notice|hotel|ingredients|invite|invite/.*|iv-therapy|jet-lag|kiosk|launches|launches/.*|learn|learn/.*|liability-waiver|locations|locations/.*|login|medical-direction|members|members/.*|membership|menu|notice-of-privacy-practices|nurse|nurse-delivery|nurses|order|our-story|our-team|partners|plan|plan-checkout|plans|plans/checkout|platform|presale|presale/.*|press|pricing|privacy|privacy-policy|product-disclaimer|products/.*|protocols|provider|provider/.*|provider/login|providers|redeem|review|safety|service-area|services|services/.*|sign-in|signin|signup|start|store|store/.*|subscribe|subscription|support|team|telehealth-disclaimer|terms|terms-and-conditions|terms-of-service|therapies/.*|trips|trips/.*|waiver)",
       "destination": "/index.html"
     }
   ],
@@ -94,12 +94,6 @@
     },
     {
       "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "snooches.avalonvitality.co"
-        }
-      ],
       "headers": [
         {
           "key": "Strict-Transport-Security",
@@ -128,45 +122,6 @@
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-BBL6wzWMk0biPpDXn2mUa0e/Xi/+z26OVRepNJTTQ7c=' https://fonts.googleapis.com https://js.stripe.com https://translate.google.com https://vercel.live https://www.cognitoforms.com https://static.cognitoforms.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://translate.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://api.resend.com https://api.stripe.com https://acuityscheduling.com https://translate.googleapis.com https://translate.google.com https://*.supabase.co wss://*.supabase.co https://vercel.live wss://vercel.live https://www.cognitoforms.com https://static.cognitoforms.com; frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://translate.google.com https://vercel.live https://www.cognitoforms.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; object-src 'none'; upgrade-insecure-requests"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "missing": [
-        {
-          "type": "host",
-          "value": "snooches.avalonvitality.co"
-        }
-      ],
-      "headers": [
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=63072000; includeSubDomains; preload"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin-allow-popups"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(self), microphone=(), geolocation=(), interest-cohort=(), payment=(self \"https://checkout.stripe.com\" \"https://js.stripe.com\")"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-BBL6wzWMk0biPpDXn2mUa0e/Xi/+z26OVRepNJTTQ7c=' https://fonts.googleapis.com https://js.stripe.com https://translate.google.com https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://translate.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://api.resend.com https://api.stripe.com https://acuityscheduling.com https://translate.googleapis.com https://translate.google.com https://*.supabase.co wss://*.supabase.co https://vercel.live wss://vercel.live; frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://translate.google.com https://vercel.live; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; object-src 'none'; upgrade-insecure-requests"
         }
       ]
     },

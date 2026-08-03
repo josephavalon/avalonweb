@@ -24,9 +24,11 @@ const PRIVATE_HOST_PATTERNS = [
 // alias and reads `window`; serverless functions must not depend on it. If you
 // change one list, change the other — they are load-bearing together.
 //
-// IMPORTANT: apex (avalonvitality.co) and www MUST NOT be listed here. Those
+// 2026-08-03: apex and www were promoted to front-door hosts. Keep this list
 // hosts run the full legacy funnel and their behavior is unchanged.
 const FRONT_DOOR_HOSTS = new Set([
+  'avalonvitality.co',
+  'www.avalonvitality.co',
   'snooches.avalonvitality.co',
 ]);
 

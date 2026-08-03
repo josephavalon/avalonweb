@@ -1,16 +1,16 @@
 // Front-door lockdown QA.
 //
-// snooches.avalonvitality.co is the PHI-free front door: a static brochure plus
-// a Cognito-hosted intake iframe. Zero patient identity may touch Avalon's DOM,
+// The public site is the PHI-free front door: a static brochure plus a
+// Cognito-hosted intake. Zero patient identity may touch Avalon's DOM,
 // Avalon's analytics, or Avalon's Supabase from that host. Several independent
 // mechanisms hold that line, and every one of them is a one-line edit away from
 // silently disappearing:
 //
 //   * the sealed iframe (a "temporary" native input would re-open PHI capture)
-//   * the host list (adding the apex would take the WHOLE site down the gate)
+//   * the host list (a host in one list but not the other = half-open gate)
 //   * the client route gate + the server route gate (need both, see below)
-//   * the two mutually-exclusive CSP blocks (a merged block would hand
-//     cognitoforms.com script rights on every host)
+//   * exactly one CSP block (two matching blocks are enforced as their
+//     INTERSECTION, which silently kills the Cognito embed)
 //   * PHI-free analytics (a path with a query string is a health interest)
 //
 // This script is the tripwire for all of them. It is wired two ways on purpose:
@@ -27,12 +27,19 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCAN_DIRS = ['src', 'app-modules'];
 const EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs']);
 
-const FRONT_DOOR_HOST = 'snooches.avalonvitality.co';
-
-// Hosts that must NEVER appear in either front-door host list. The apex and www
-// run the full legacy funnel; listing them here would 404-by-redirect the real
-// business into /start.
-const FORBIDDEN_HOSTS = ['avalonvitality.co', 'www.avalonvitality.co'];
+// 2026-08-03: the front door was promoted to the main URL, so the apex and www
+// are now expected members of this set rather than forbidden ones. The old
+// FORBIDDEN_HOSTS tripwire is gone by design — it existed to stop the gate going
+// global by accident, and going global is now the intent.
+//
+// What still has to hold: every host that serves the brochure must be in BOTH
+// lists. A host present in one and missing from the other leaves half the gate
+// open — client redirects with the API still answering, or vice versa.
+const REQUIRED_FRONT_DOOR_HOSTS = [
+  'avalonvitality.co',
+  'www.avalonvitality.co',
+  'snooches.avalonvitality.co',
+];
 
 // Routes that mount a PHI-collecting funnel and therefore must be wrapped in
 // <FrontDoorRedirect> in src/App.jsx. Hardcoded deliberately: deriving this
@@ -43,15 +50,19 @@ const GATED_ROUTES = [
   '/booking/confirmation',
   '/checkout',
   '/checkout/success',
-  '/signup',
   '/order',
-  '/gift',
   '/review',
   // The account surface — every panel calls a server-gated api/me/* route.
   // There is no top-level /account route; /members/account is the canonical
   // path (/account/new-password is a password-reset landing, not PHI).
   '/members/account',
 ];
+
+// Routes deleted outright for the main-URL launch rather than gated. A redirect
+// still ships the page's code in the bundle and leaves it one config change from
+// being reachable; deletion is the stronger guarantee. Asserted absent so a
+// merge cannot quietly restore them.
+const DELETED_ROUTES = ['/gift', '/signup'];
 
 // Handlers that write patient identity / appointment / payment data and already
 // call blockFrontDoorPhiRoute(). Snapshotted at authoring time so this is a
@@ -138,11 +149,6 @@ function cspDirective(value, name) {
   return '';
 }
 
-function matchesHostCondition(conditions) {
-  return Array.isArray(conditions)
-    && conditions.some((c) => c?.type === 'host' && c?.value === FRONT_DOOR_HOST);
-}
-
 // --- Checks ------------------------------------------------------------------
 
 // 1. The embed is Cognito's seamless script and nothing of our own.
@@ -190,8 +196,8 @@ async function checkSeamlessEmbed(failures) {
   }
 }
 
-// 2. The gate must stay scoped to the front-door host. If the apex ever lands
-//    in either list, every PHI route on the real site redirects to /start.
+// 2. Every brochure host must appear in BOTH host lists, and the two lists must
+//    match exactly. Drift means half the gate is open.
 async function checkHostListScope(failures) {
   const lists = [
     { rel: 'src/lib/frontDoor.js', name: 'FRONT_DOOR_HOSTS' },
@@ -209,12 +215,9 @@ async function checkHostListScope(failures) {
       failures.push(`${rel}: could not find a "${name} = new Set([...])" host list`);
       continue;
     }
-    if (!entries.includes(FRONT_DOOR_HOST)) {
-      failures.push(`${rel}: ${name} does not contain ${FRONT_DOOR_HOST}`);
-    }
-    for (const forbidden of FORBIDDEN_HOSTS) {
-      if (entries.includes(forbidden)) {
-        failures.push(`${rel}: ${name} contains "${forbidden}" — the front-door gate must never go global`);
+    for (const required of REQUIRED_FRONT_DOOR_HOSTS) {
+      if (!entries.includes(required)) {
+        failures.push(`${rel}: ${name} does not contain ${required} — that host would serve the PHI funnel ungated`);
       }
     }
     seen.push({ rel, entries: [...entries].sort().join(',') });
@@ -223,6 +226,18 @@ async function checkHostListScope(failures) {
   // between them means one half of the gate is silently open.
   if (seen.length === 2 && seen[0].entries !== seen[1].entries) {
     failures.push(`front-door host lists drift: ${seen[0].rel} [${seen[0].entries}] vs ${seen[1].rel} [${seen[1].entries}]`);
+  }
+}
+
+// 2b. Deleted routes must stay deleted.
+async function checkDeletedRoutes(failures) {
+  const rel = 'src/App.jsx';
+  const source = await read(rel);
+  if (source === null) return;
+  for (const route of DELETED_ROUTES) {
+    if (source.includes(`<Route path="${route}"`)) {
+      failures.push(`${rel}: route "${route}" is back — it was deleted for the main-URL launch, not gated`);
+    }
   }
 }
 
@@ -278,60 +293,42 @@ async function checkCspSplit(failures) {
     }
   }
 
-  if (blocks.length !== 2) {
-    failures.push(`${rel}: expected exactly 2 Content-Security-Policy header blocks (one has-host, one missing-host), found ${blocks.length}`);
+  // One unconditional policy. It used to be a has-host/missing-host pair, back
+  // when only snooches could talk to Cognito; now every host we serve is the
+  // front door, so a split would have no second side. Exactly one also removes
+  // the failure mode that pair had: two rules matching the same request makes
+  // the browser enforce their INTERSECTION, which silently kills the embed.
+  if (blocks.length !== 1) {
+    failures.push(`${rel}: expected exactly 1 Content-Security-Policy header block, found ${blocks.length} — two matching blocks are enforced as their intersection and will break the Cognito embed`);
     return;
   }
 
-  const snoochesBlock = blocks.find((b) => matchesHostCondition(b.entry.has));
-  const otherBlock = blocks.find((b) => matchesHostCondition(b.entry.missing));
-
-  if (!snoochesBlock) {
-    failures.push(`${rel}: no CSP block keyed on has host=${FRONT_DOOR_HOST}`);
-  }
-  if (!otherBlock) {
-    failures.push(`${rel}: no CSP block keyed on missing host=${FRONT_DOOR_HOST} — without it every other host loses its CSP entirely`);
-  }
-  if (!snoochesBlock || !otherBlock || snoochesBlock === otherBlock) return;
+  const policy = blocks[0];
 
   // The seamless embed executes Cognito's script in our document and XHRs back
-  // to them on submit, so the front-door host needs script-src and connect-src
-  // as well. Inverted 2026-07-31 alongside the embed switch.
+  // to them on submit, so script-src and connect-src both need the grant.
   for (const directive of ['script-src', 'connect-src']) {
-    if (!cspDirective(snoochesBlock.value, directive).includes('https://www.cognitoforms.com')) {
-      failures.push(`${rel}: front-door CSP ${directive} is missing https://www.cognitoforms.com — the seamless embed would be blocked`);
+    if (!cspDirective(policy.value, directive).includes('https://www.cognitoforms.com')) {
+      failures.push(`${rel}: CSP ${directive} is missing https://www.cognitoforms.com — the seamless embed would be blocked`);
     }
   }
 
-  // Every other host stays clean. This is the tripwire that stops the grant
-  // spreading to the apex along with a careless copy-paste.
-  for (const directive of ['script-src', 'connect-src', 'frame-src']) {
-    if (cspDirective(otherBlock.value, directive).includes('cognitoforms.com')) {
-      failures.push(`${rel}: default CSP ${directive} allows cognitoforms.com — only the front-door host may grant it`);
-    }
+  const scriptSrc = cspDirective(policy.value, 'script-src');
+
+  if (scriptSrc.includes("'unsafe-inline'")) {
+    failures.push(`${rel}: CSP script-src contains 'unsafe-inline'`);
+  }
+  if (!scriptSrc.includes('sha256-')) {
+    failures.push(`${rel}: CSP script-src is missing the JSON-LD sha256- hash`);
   }
 
-  for (const [label, block] of [['front-door', snoochesBlock], ['default', otherBlock]]) {
-    const scriptSrc = cspDirective(block.value, 'script-src');
-    if (scriptSrc.includes("'unsafe-inline'")) {
-      failures.push(`${rel}: ${label} CSP script-src contains 'unsafe-inline'`);
-    }
-    if (!scriptSrc.includes('sha256-')) {
-      failures.push(`${rel}: ${label} CSP script-src is missing the JSON-LD sha256- hash`);
-    }
-  }
-
-  // 'unsafe-eval' is granted ONLY to the front door. Cognito's form runtime
-  // builds functions from strings (`new Function`), so without it the embed
-  // hangs on its spinner — this is invisible locally because `vite preview`
-  // serves no CSP at all, and only shows up on a deployed host.
-  // It is a real relaxation, so it must never spread to the app that holds
-  // Supabase sessions. Assert the grant is confined.
-  if (!cspDirective(snoochesBlock.value, 'script-src').includes("'unsafe-eval'")) {
-    failures.push(`${rel}: front-door CSP script-src is missing 'unsafe-eval' — the Cognito embed will not render`);
-  }
-  if (cspDirective(otherBlock.value, 'script-src').includes("'unsafe-eval'")) {
-    failures.push(`${rel}: default CSP script-src allows 'unsafe-eval' — only the front-door host may grant it`);
+  // Cognito's form runtime builds functions from strings (`new Function`), so
+  // without 'unsafe-eval' the embed hangs on its spinner. Invisible locally —
+  // `vite preview` serves no CSP at all — and only shows up on a deployed host.
+  // It is a genuine relaxation, kept because the alternative is the iframe
+  // embed that was rejected on design grounds.
+  if (!scriptSrc.includes("'unsafe-eval'")) {
+    failures.push(`${rel}: CSP script-src is missing 'unsafe-eval' — the Cognito embed will not render`);
   }
 }
 
@@ -423,7 +420,7 @@ async function checkServerGateCoverage(failures) {
     // leaving `import { blockFrontDoorPhiRoute }` in place is the exact shape
     // a careless refactor takes, and a substring check would sleep through it.
     if (!/blockFrontDoorPhiRoute\s*\(\s*req\s*,\s*res/.test(source)) {
-      failures.push(`${rel}: lost its blockFrontDoorPhiRoute(req, res, ...) call — PHI can be POSTed to it on ${FRONT_DOOR_HOST}`);
+      failures.push(`${rel}: lost its blockFrontDoorPhiRoute(req, res, ...) call — PHI can be POSTed to it on every front-door host`);
     }
   }
 }
@@ -432,6 +429,7 @@ export async function runFrontDoorChecks() {
   const failures = [];
   await checkSeamlessEmbed(failures);
   await checkHostListScope(failures);
+  await checkDeletedRoutes(failures);
   await checkRouteGates(failures);
   await checkCspSplit(failures);
   await checkPageViewPathIsBare(failures);
@@ -453,6 +451,6 @@ if (invokedDirectly) {
   }
   console.log(
     `Front-door QA passed. ${GATED_ROUTES.length} routes client-gated, `
-    + `${PHI_WRITING_HANDLERS.length} handlers server-gated, CSP split intact.`,
+    + `${PHI_WRITING_HANDLERS.length} handlers server-gated, single CSP grants Cognito.`,
   );
 }

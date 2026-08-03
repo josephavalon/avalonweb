@@ -100,7 +100,6 @@ const Checkout = lazyRoute(() => import('./pages/Checkout'));
 const BookNow = lazyRoute(() => import('./pages/BookNow'));
 const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
-const Signup = lazyRoute(() => import('./pages/Signup'));
 const ForgotPassword = lazyRoute(() => import('./pages/ForgotPassword'));
 const AuthCallback = lazyRoute(() => import('./pages/AuthCallback'));
 const Nurses = lazyRoute(() => import('./pages/Nurses'));
@@ -178,7 +177,6 @@ const Safety = lazyRoute(() => import('./pages/Safety'));
 const Support = lazyRoute(() => import('./pages/Support'));
 const Ingredients = lazyRoute(() => import('./pages/Ingredients'));
 const MedicalDirection = lazyRoute(() => import('./pages/MedicalDirection'));
-const Gift = lazyRoute(() => import('./pages/Gift'));
 const Athlete = lazyRoute(() => import('./pages/Athlete'));
 const Hangover = lazyRoute(() => import('./pages/Hangover'));
 const JetLag = lazyRoute(() => import('./pages/JetLag'));
@@ -439,7 +437,6 @@ function AppRoutes() {
             <Route path="/checkout" element={<CareAcuityForward><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/checkout/success" element={<CareAcuityForward><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<FrontDoorRedirect><Signup /></FrontDoorRedirect>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
             <Route path="/order" element={<FrontDoorRedirect><ManageOrder /></FrontDoorRedirect>} />
@@ -532,7 +529,6 @@ function AppRoutes() {
             <Route path="/safety" element={<Safety />} />
             <Route path="/support" element={<Support />} />
             <Route path="/ingredients" element={<Ingredients />} />
-            <Route path="/gift" element={<FrontDoorRedirect><Gift /></FrontDoorRedirect>} />
             <Route path="/review" element={<FrontDoorRedirect><Review /></FrontDoorRedirect>} />
             <Route path="/members/redeem" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberRedeemGift /></RequireAuth>} />
             <Route path="/athlete" element={<Athlete />} />
