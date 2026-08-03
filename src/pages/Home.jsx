@@ -4,7 +4,7 @@ import Hero from '../components/landing/Hero';
 
 export default function Home() {
   useSeo({
-    title: 'Avalon Vitality — Wellness Delivered.',
+    title: 'Avalon Vitality - Wellness Delivered',
     description: 'IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area.',
     path: '/',
   });
