@@ -1,4 +1,5 @@
 import { money, subscriberPrice, slugify } from './slugify.js';
+import { IM_SHOT_FAMILIES } from './im-shots.js';
 import {
   byKey,
   defaultFaq,
@@ -7,7 +8,38 @@ import {
   treatmentFromDose,
 } from './treatment-builders.js';
 
+// A shot family becomes one product page. `addOnOnly` tells the product page to
+// swap the standalone Book CTA for the menu — a shot can't be ordered by itself.
+function shotTreatment(family) {
+  const prices = family.tiers.map((tier) => tier.price);
+  const low = Math.min(...prices);
+  const high = Math.max(...prices);
+  return {
+    name: family.name,
+    addOnOnly: true,
+    price: low === high ? money(low) : `${money(low)}–${money(high)}`,
+    desc: family.desc,
+    benefitStatement: family.desc,
+    seoDescription: `${family.name} IM shot from Avalon Vitality, added to an IV visit. ${family.desc}.`,
+    duration: 'Given during your visit',
+    doseTiers: family.tiers,
+    image: family.img,
+  };
+}
+
 export const productsByCategory = {
+  shots: {
+    title: 'Shots',
+    subtitle: 'Added to any IV',
+    badge: 'Add-on only',
+    description:
+      'IM shots are given by your nurse during an IV visit. They are not available as a standalone appointment.',
+    heroImage: null,
+    categoryLabel: 'Shots',
+    backTo: '/protocols',
+    backLabel: 'Back to the menu',
+    treatments: IM_SHOT_FAMILIES.map(shotTreatment),
+  },
   cbd: {
     title: 'CBD IV Therapy',
     subtitle: 'Clinical review',

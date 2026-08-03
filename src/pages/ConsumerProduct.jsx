@@ -66,18 +66,33 @@ export default function ConsumerProduct() {
             />
           </figure>
 
-          <aside className="nd-product-page__booking" aria-label="Booking">
-            <p>Per visit</p>
-            <strong>{productPrice(treatment)}</strong>
-            <Link to={bookingPath(treatment, category, slug)}>
-              Book
-              <ArrowRight aria-hidden="true" />
-            </Link>
-            <small>
-              A $50 deposit is requested after acceptance, applies to your visit,
-              and is refunded if you&apos;re not clinically eligible.
-            </small>
-          </aside>
+          {treatment.addOnOnly ? (
+            <aside className="nd-product-page__booking" aria-label="Booking">
+              <p>Per shot</p>
+              <strong>{productPrice(treatment)}</strong>
+              <Link to="/protocols">
+                Choose an IV
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <small>
+                Shots are added to an IV visit and aren&apos;t available on their own.
+                Pick your IV first, then add this at booking.
+              </small>
+            </aside>
+          ) : (
+            <aside className="nd-product-page__booking" aria-label="Booking">
+              <p>Per visit</p>
+              <strong>{productPrice(treatment)}</strong>
+              <Link to={bookingPath(treatment, category, slug)}>
+                Book
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <small>
+                A $50 deposit is requested after acceptance, applies to your visit,
+                and is refunded if you&apos;re not clinically eligible.
+              </small>
+            </aside>
+          )}
         </section>
 
         <section className="nd-product-page__facts" aria-label="Visit details">
@@ -85,6 +100,21 @@ export default function ConsumerProduct() {
           <p><Clock aria-hidden="true" /><span>{duration}</span></p>
           <p><House aria-hidden="true" /><span>Home · Hotel · Office</span></p>
         </section>
+
+        {/* A shot's real detail is its dose ladder, not an ingredient list. */}
+        {treatment.doseTiers?.some((tier) => tier.dose) && (
+          <section className="nd-product-page__included" aria-labelledby="product-doses">
+            <h2 id="product-doses">Doses</h2>
+            <ul className="nd-product-page__doses">
+              {treatment.doseTiers.map((tier) => (
+                <li key={tier.label}>
+                  <span>{tier.dose}</span>
+                  <span className="av-price">${tier.price}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {ingredients.length > 0 && (
           <section className="nd-product-page__included" aria-labelledby="product-ingredients">

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ArrowRight, ArrowLeft, Check, Lock, ChevronDown,
+  ArrowRight, ArrowLeft, Check, Lock,
   Zap, MapPin, DollarSign,
   Sparkles, Battery, Droplet, ShieldCheck,
   GlassWater, Moon, Plane,
@@ -358,35 +358,19 @@ function requestRows({ therapyName, duration }) {
   ];
 }
 
-// Context rail for the focused booking screen. Desktop: always-open card in
-// the empty right half. Mobile: collapsed to one summary line, because
-// .nd-flow--focused-booking is a locked 100dvh column (src/index.css).
+// Context rail for the focused booking screen. Desktop only.
+//
+// It used to collapse to a tappable "$50 deposit · 30-60 min · SF Bay Area"
+// summary on mobile. That line has been removed: .nd-flow--focused-booking is a
+// locked 100dvh column, so every element competes for the same fixed height,
+// and the deposit and visit length are already covered by the microcopy under
+// the button. Dropping it returns ~76px to the intake itself.
 function RequestRail({ therapyName = '', duration = '' }) {
-  const [open, setOpen] = useState(false);
   const rows = requestRows({ therapyName, duration });
 
   return (
-    <aside className="mt-8 lg:mt-0 lg:flex lg:h-full lg:flex-col" data-testid="landing-request-rail">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-controls="nd-request-body"
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-foreground/[0.10] px-4 py-3 text-left lg:hidden"
-      >
-        <span className="av-mono whitespace-nowrap text-[10px] uppercase tracking-[0.04em] text-foreground/70 sm:text-[11px] sm:tracking-[0.08em]">
-          $50 deposit · {duration || '30–60 min'} · SF Bay Area
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-foreground/50 transition-transform ${open ? 'rotate-180' : ''}`}
-          strokeWidth={2}
-        />
-      </button>
-
-      <div
-        id="nd-request-body"
-        className={`${open ? 'mt-3 block' : 'hidden'} lg:mt-0 lg:flex lg:flex-1 lg:flex-col lg:justify-center`}
-      >
+    <aside className="hidden lg:mt-0 lg:flex lg:h-full lg:flex-col" data-testid="landing-request-rail">
+      <div className="lg:mt-0 lg:flex lg:flex-1 lg:flex-col lg:justify-center">
         {/* The card hugs its rows — it must NOT stretch to eat the column's
             slack. It used to (`grow-[4]` + `justify-between` on the dl), which
             was tolerable at five rows but at four opened ~57px of dead air
