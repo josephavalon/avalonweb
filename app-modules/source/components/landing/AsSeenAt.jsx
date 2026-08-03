@@ -11,15 +11,15 @@ const AS_SEEN_AT = [
   { name: 'Hereticon', src: '/logos/press-dark/hereticon.png' },
   { name: 'The Loom', src: '/logos/press-dark/the-loom.png' },
   { name: '111 Minna Gallery', src: '/logos/press-dark/111-minna.png' },
-  {
-    name: "Dante's Inferno",
-    src: '/logos/press-dark/dantes-inferno-gpt.png',
-    scale: 1.18,
-  },
+  // The per-item `scale` values here were compensating for the old fixed-box
+  // sizing, where these marks rendered short of the cell. Cells are cap-height
+  // normalised now, so a scale just makes them taller than everyone else —
+  // Dante's measured 31px and MobileCoin 28px against a 26px row.
+  { name: "Dante's Inferno", src: '/logos/press-dark/dantes-inferno-gpt.png' },
   { name: 'FIRE', src: '/logos/press-dark/fire-gpt.png' },
   { name: 'Discourse', src: '/logos/press-dark/discourse.png' },
   { name: 'Sanai', src: '/logos/press-dark/sanai-gpt.png' },
-  { name: 'MobileCoin', src: '/logos/press-dark/mobilecoin-gpt.png', scale: 1.08 },
+  { name: 'MobileCoin', src: '/logos/press-dark/mobilecoin-gpt.png' },
 ];
 const MOBILE_AS_SEEN_AT = [
   { name: 'Maxim Magazine', src: '/logos/press-dark/maxim.png' },
@@ -49,9 +49,13 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
     };
 
     return (
+      // Cap-height normalisation, not box-fitting. A fixed 152/184px cell makes
+      // the widest marks width-bound and collapses them: Faena is 9.4:1 and
+      // rendered 8px tall against everyone else's 26px. Share a height, let
+      // width follow the artwork, and space the cells with padding.
       <div
         key={`${item.name}-${i}`}
-        className="flex h-[32px] w-[152px] shrink-0 items-center justify-center px-3 md:h-[38px] md:w-[184px] md:px-4"
+        className="flex h-[32px] shrink-0 items-center justify-center px-5 md:h-[38px] md:px-7"
       >
         <img
           src={item.src}
@@ -60,7 +64,7 @@ export default function AsSeenAt({ tone = 'dark', compact = false }) {
           decoding="async"
           draggable={false}
           style={imageStyle}
-          className="select-none max-h-full max-w-full w-auto h-auto object-contain opacity-70 transition-opacity duration-base ease-editorial hover:opacity-100"
+          className="select-none h-[22px] w-auto max-w-none object-contain opacity-70 transition-opacity duration-base ease-editorial hover:opacity-100 md:h-[26px]"
         />
       </div>
     );

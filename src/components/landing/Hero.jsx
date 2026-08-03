@@ -236,7 +236,7 @@ export default function Hero() {
       </div>
 
       <div className="nd-press">
-        <AsSeenAt tone="light" compact />
+        <AsSeenAt tone="light" />
       </div>
 
       <ConsumerFooter />
