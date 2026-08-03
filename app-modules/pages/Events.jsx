@@ -342,29 +342,8 @@ export default function Events() {
               <p>On-site IV therapy for parties, productions and private events.</p>
             </div>
 
-            <div className="nd-events-hero__visual nd-events-hero__visual--mobile">
-              <img
-                src="/images/avalon-events-hero.jpg"
-                alt="Avalon nurse preparing IV therapy at a private event"
-                width="1228"
-                height="1108"
-                decoding="async"
-              />
-            </div>
-
             <EventPlanner />
 
-          </div>
-
-          <div className="nd-events-hero__visual nd-events-hero__visual--desktop">
-            <img
-              src="/images/avalon-events-hero.jpg"
-              alt="Avalon nurse preparing IV therapy at a private event"
-              width="1228"
-              height="1108"
-              fetchpriority="high"
-              decoding="async"
-            />
           </div>
         </section>
 

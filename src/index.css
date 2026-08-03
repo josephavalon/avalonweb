@@ -10032,15 +10032,20 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
   display: none;
 }
 
+/* Single column since the hero photo was removed. This was a 49.65/50.35 split
+   with the image in the right cell; left as a grid it would hold an empty half
+   the width of the page. */
 .nd-events-hero {
   display: grid;
   min-height: calc(100svh - (var(--events-header-height) * 2));
-  grid-template-columns: minmax(0, 49.65%) minmax(0, 50.35%);
+  grid-template-columns: minmax(0, 1fr);
   border-bottom: 1px solid var(--events-rule);
 }
 
 .nd-events-hero__content {
   display: flex;
+  width: 100%;
+  max-width: 54rem;
   min-width: 0;
   flex-direction: column;
   justify-content: flex-start;
@@ -10064,24 +10069,6 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
   font-size: clamp(1rem, 1.08vw, 1.65rem);
   font-weight: 430;
   line-height: 1.35;
-}
-
-.nd-events-hero__visual {
-  min-width: 0;
-  overflow: hidden;
-  background: #c1a58b;
-}
-
-.nd-events-hero__visual--mobile {
-  display: none;
-}
-
-.nd-events-hero__visual img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
 }
 
 .nd-events-quote {
@@ -10455,20 +10442,6 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
     margin-top: 0.75rem;
     font-size: 0.92rem;
     line-height: 1.45;
-  }
-
-  .nd-events-hero__visual--desktop {
-    display: none;
-  }
-
-  .nd-events-hero__visual--mobile {
-    display: block;
-    height: clamp(15rem, 62vw, 20rem);
-    margin-top: 1.15rem;
-  }
-
-  .nd-events-hero__visual--mobile img {
-    object-position: 53% 38%;
   }
 
   .nd-events-quote {
@@ -11155,52 +11128,22 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     letter-spacing: 0.28em;
   }
 
+  /* Fills its grid track instead of a hardcoded 52.75rem (844px). `width` is a
+     used value, not a cap, so the band stayed 844px at every viewport above
+     that and `justify-self: start` dumped all the leftover track on the right —
+     on a 2560px display it read as a small cluster hugging the left edge.
+     max-width keeps the logos from drifting absurdly far apart on ultrawides. */
   body:has(.nd-home) .nd-press .av-asa-compact {
-    width: 52.75rem;
-    max-width: 100%;
-    gap: clamp(0.65rem, 1.25vw, 1rem);
-    justify-self: start;
+    width: 100%;
+    gap: clamp(0.9rem, 2vw, 2.75rem);
+    justify-self: stretch;
   }
 
-  body:has(.nd-home) .nd-press .av-asa-compact > div {
-    width: auto;
-    height: 2.45rem;
-    padding: 0 clamp(0.35rem, 0.7vw, 0.65rem);
-  }
-
-  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(1) img {
-    width: 4.6rem;
-  }
-
-  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(2) img {
-    width: 4.7rem;
-    position: relative;
-    left: -1.1rem;
-  }
-
-  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(3) img {
-    width: 6.5rem;
-    position: relative;
-    left: -0.4rem;
-  }
-
-  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(4) img {
-    width: 5.35rem;
-    position: relative;
-    left: -0.25rem;
-  }
-
-  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(5) img {
-    width: 7rem;
-    position: relative;
-    left: 0.35rem;
-  }
-
-  body:has(.nd-home) .nd-press .av-asa-compact > div:nth-child(6) img {
-    width: 4.1rem;
-    position: relative;
-    left: 0.8rem;
-  }
+  /* The per-logo pixel widths that used to live here targeted
+     `.av-asa-compact > div` back when the compact branch wrapped each mark in a
+     cell div. It now renders bare <img> children normalised to a shared
+     cap-height, so those ~40 lines matched nothing. Removed rather than left as
+     dead weight — the sizing is the component's job now. */
 }
 
 @media (min-width: 901px) and (min-height: 760px) {
