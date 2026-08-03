@@ -700,8 +700,8 @@ export const publicStaticRoutes = [
   },
   {
     path: '/',
-    title: 'Avalon Vitality | Mobile IV Therapy in the SF Bay Area',
-    description: 'Avalon Vitality delivers mobile IV therapy to homes, hotels, offices, and events with registered nurse visits, clinical review, flat pricing, and fast SF Bay Area booking.',
+    title: 'Avalon Vitality — Wellness Delivered.',
+    description: 'IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area.',
     h1: 'Mobile IV Therapy',
     priority: '1.0',
     changefreq: 'weekly',
