@@ -23,7 +23,7 @@ const SESSIONS = [
 ];
 
 const IV_ADDONS = [
-  { label: 'Extra Fluid',         price: 25,  desc: 'Additional 500ml saline' },
+  { label: 'Extra Fluid',         price: 50,  desc: 'Additional 500ml saline' },
   { label: 'Extra Ingredients',   price: 30,  desc: 'B-complex, minerals, and amino support' },
   { label: 'High Dose Vitamin C', price: 45,  desc: '5,000mg IV push' },
   { label: 'CBD Review',          price: 250, desc: 'Approval-gated clinical review' },

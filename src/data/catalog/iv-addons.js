@@ -1,5 +1,5 @@
 export const IV_ADDONS = [
-  { label: 'Extra Fluid', price: 25, desc: 'Additional 500ml saline', img: '/addons/extra-fluid.png' },
+  { label: 'Extra Fluid', price: 50, desc: 'Additional 500ml saline', img: '/addons/extra-fluid.png' },
   { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals, and amino support', img: '/addons/extra-ingredients.png' },
   { label: 'Vitamin C IV Push · 5g', price: 45, desc: 'Entry high-dose antioxidant support', img: '/addons/vitamin-c-iv.png' },
   { label: 'Vitamin C IV Push · 10g', price: 85, desc: 'Higher-dose vitamin C support', img: '/addons/vitamin-c-iv.png' },
