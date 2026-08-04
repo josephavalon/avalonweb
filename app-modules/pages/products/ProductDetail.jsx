@@ -19,7 +19,7 @@ import {
 
 import Navbar from '@/components/landing/Navbar';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useCart } from '@/context/CartContext';
 import { getProduct, productsByCategory, slugify } from '@/data/products';
 import { useSeo } from '@/lib/seo';
@@ -136,7 +136,7 @@ export default function ProductDetail() {
             Browse Protocols
           </Link>
         </div>
-        <Footer />
+        <ConsumerFooter />
       </div>
     );
   }
@@ -336,7 +336,7 @@ export default function ProductDetail() {
         </button>
       </div>
 
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

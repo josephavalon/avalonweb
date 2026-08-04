@@ -4,7 +4,7 @@ import { Check, Home, Hotel, Building2, CalendarDays, Zap, CalendarCheck, Clock,
 import { Link } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 
 const LOCATION_TYPES = [
   { id: 'home',   label: 'Home',   icon: Home      },
@@ -165,7 +165,7 @@ export default function Apply() {
             </div>
           </motion.div>
         </section>
-        <Footer />
+        <ConsumerFooter />
       </div>
     );
   }
@@ -354,7 +354,7 @@ export default function Apply() {
           </form>
         </div>
       </section>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

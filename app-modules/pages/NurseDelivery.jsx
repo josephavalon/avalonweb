@@ -8,7 +8,7 @@ import {
   GlassWater, Moon, Plane,
   Layers,
 } from 'lucide-react';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
 import { IV_SESSIONS } from '@/config/verticals';
@@ -828,7 +828,7 @@ export default function NurseDelivery({ entry = null }) {
         </AnimatePresence>
       </main>
 
-      {!focusedBooking && <Footer />}
+      {!focusedBooking && <ConsumerFooter />}
     </div>
   );
 }

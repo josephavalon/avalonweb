@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { LifeBuoy, Mail, Phone, ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 import { Button } from '@/components/ui/button';
@@ -163,12 +163,6 @@ export default function Support() {
                       (415) 980-7708
                     </a>
                   </div>
-                  <div className="mt-5 flex items-start gap-3 rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] px-4 py-3">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-foreground/45" />
-                    <p className="font-body text-[13px] text-foreground/55 leading-relaxed">
-                      Please don’t include medical details in your message.
-                    </p>
-                  </div>
                 </div>
               ) : status === 'success' ? (
                 <div className="py-6 text-center">
@@ -320,18 +314,13 @@ export default function Support() {
                 </a>
                 <p className="mt-4 font-body text-[12px] text-foreground/40">8AM–8PM · SF Bay Area</p>
               </div>
-              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-5 md:p-6">
-                <p className="font-body text-[13px] text-foreground/55 leading-relaxed">
-                  Already a member? Manage bookings, billing, and messages from your account dashboard.
-                </p>
-              </div>
             </div>
 
           </div>
         </Reveal>
 
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

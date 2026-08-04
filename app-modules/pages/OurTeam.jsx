@@ -3,7 +3,7 @@ import { useSeo } from '@/lib/seo';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Shield, Home, Zap } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -375,7 +375,7 @@ export default function OurTeam() {
       </section>
       </main>
 
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

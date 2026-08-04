@@ -1,7 +1,7 @@
 import { Calendar, MapPin, Leaf, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 
@@ -107,7 +107,7 @@ export default function CannabisCeNight() {
         </p>
       </main>
 
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { money, subscriberPrice, slugify } from './slugify.js';
 import { IM_SHOTS } from './im-shots.js';
+import { IV_ADDONS } from './iv-addons.js';
 import {
   byKey,
   defaultFaq,
@@ -26,7 +27,38 @@ function shotTreatment(shot) {
   };
 }
 
+// IV add-ons follow the same one-row-per-SKU shape as the shots. NAD+ and CBD
+// add-ons are excluded: they already ship as their own IV categories at the
+// same prices, so listing them here would duplicate every row.
+export const MENU_IV_ADDONS = IV_ADDONS.filter((addon) => addon.group !== 'nad' && addon.group !== 'cbd');
+
+function addonTreatment(addon) {
+  const name = addon.label.replace(' · ', ' ');
+  return {
+    name,
+    addOnOnly: true,
+    price: money(addon.price),
+    desc: addon.desc,
+    benefitStatement: addon.desc,
+    seoDescription: `${name} IV add-on from Avalon Vitality, added to an IV visit. ${addon.desc}.`,
+    duration: 'Given during your visit',
+    image: addon.img,
+  };
+}
+
 export const productsByCategory = {
+  'iv-addons': {
+    title: 'IV Add-Ons',
+    subtitle: 'Added to any IV',
+    badge: 'Add-on only',
+    description:
+      'IV add-ons are given by your nurse during an IV visit. They are not available as a standalone appointment.',
+    heroImage: null,
+    categoryLabel: 'IV Add-Ons',
+    backTo: '/protocols',
+    backLabel: 'Back to the menu',
+    treatments: MENU_IV_ADDONS.map(addonTreatment),
+  },
   shots: {
     title: 'Shots',
     subtitle: 'Added to any IV',

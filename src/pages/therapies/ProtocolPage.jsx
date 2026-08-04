@@ -3,7 +3,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowLeft, ArrowRight, Check, Clock, DollarSign, FlaskConical, ShieldCheck, Sparkles } from 'lucide-react';
 import { EASE } from '@/lib/motion';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS } from '@/config/verticals';
 import GlassCard from '@/components/ui/GlassCard';
@@ -236,7 +236,7 @@ export default function ProtocolPage() {
         </div>
       </div>
 
-      <Footer />
+      <ConsumerFooter />
     </>
   );
 }

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight, BedDouble, Clock, ConciergeBell, MapPin, ShieldCheck } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 import GlassCard from '@/components/ui/GlassCard';
@@ -124,7 +124,7 @@ export default function Hotel() {
           </GlassCard>
         </Reveal>
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

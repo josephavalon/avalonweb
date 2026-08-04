@@ -4,10 +4,14 @@ import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { productsByCategory, slugify } from '@/data/products';
 import { useSeo } from '@/lib/seo';
 
-const CATEGORY_ORDER = ['iv-vitamins', 'nad', 'cbd', 'shots'];
+const CATEGORY_ORDER = ['iv-vitamins', 'nad', 'cbd', 'iv-addons', 'shots'];
 
-const SECTION_EYEBROWS = { shots: 'Added to any IV' };
+const SECTION_EYEBROWS = {
+  'iv-addons': 'Added to any IV',
+  shots: 'Added to any IV',
+};
 const SECTION_NOTES = {
+  'iv-addons': 'Add-ons are given during an IV visit. They aren’t available on their own.',
   shots: 'Shots are given during an IV visit. They aren’t available on their own.',
 };
 

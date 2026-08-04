@@ -3,7 +3,7 @@ import { useSeo } from '@/lib/seo';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Stethoscope } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { Reveal } from '@/components/ui/Reveal';
 
 // Editorial easing per non-negotiable #5.
@@ -25,31 +25,6 @@ export default function OurStory() {
     <div className="av-page-surface min-h-screen">
       <Navbar />
 
-      {/* Thesis */}
-      <Reveal as="section" className="px-6 md:px-16 pt-28 md:pt-36 py-section-sm md:py-section">
-        <div className="max-w-content mx-auto grid md:grid-cols-12 gap-rhythm-6">
-          <motion.div {...REVEAL} className="md:col-span-5">
-            <p className="text-eyebrow text-muted-foreground font-body uppercase mb-6">
-              The Thesis
-            </p>
-            <h2 className="font-heading text-h1 text-foreground tracking-wide">
-              California runs on ambition.
-            </h2>
-          </motion.div>
-          <motion.div
-            {...REVEAL}
-            transition={{ ...REVEAL.transition, delay: 0.15 }}
-            className="md:col-span-7 space-y-5 max-w-measure"
-          >
-            <p className="font-body text-body text-foreground leading-relaxed">
-              High performers engineer recovery.
-            </p>
-            <p className="font-body text-body text-muted-foreground leading-relaxed">
-              Avalon brings clinician-led care to the place you already are.
-            </p>
-          </motion.div>
-        </div>
-      </Reveal>
 
       {/* Clinical Leadership */}
       <section
@@ -111,7 +86,7 @@ export default function OurStory() {
         </div>
       </section>
 
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }
