@@ -3,7 +3,6 @@ export const IV_ADDONS = [
   { label: 'Extra Ingredients', price: 30, desc: 'B-complex, minerals, and amino support', img: '/addons/extra-ingredients.png' },
   { label: 'Vitamin C IV Push · 5g', price: 45, desc: 'Entry high-dose antioxidant support', img: '/addons/vitamin-c-iv.png' },
   { label: 'Vitamin C IV Push · 10g', price: 85, desc: 'Higher-dose vitamin C support', img: '/addons/vitamin-c-iv.png' },
-  { label: 'Vitamin C IV Push · 15g', price: 125, desc: 'Advanced high-dose vitamin C support', img: '/addons/vitamin-c-iv.png' },
   { label: 'CBD Review', price: 350, desc: 'Approval-gated clinical review', img: '/addons/cbd-iv.png', group: 'cbd' },
   { label: 'CBD Review Plus', price: 450, desc: 'Approval-gated clinical review', img: '/addons/cbd-iv.png', group: 'cbd' },
   { label: 'NAD+ (250mg)', price: 350, desc: 'NAD+ add-on · 1-4 hr infusion', img: '/addons/nad-iv.png', group: 'nad' },
