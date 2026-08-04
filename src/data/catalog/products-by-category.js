@@ -60,13 +60,13 @@ export const productsByCategory = {
     treatments: MENU_IV_ADDONS.map(addonTreatment),
   },
   shots: {
-    title: 'IM Shots',
+    title: 'IM Shot Add-Ons',
     subtitle: 'Added to any IV',
     badge: 'Add-on only',
     description:
       'IM shots are given by your nurse during an IV visit. They are not available as a standalone appointment.',
     heroImage: null,
-    categoryLabel: 'IM Shots',
+    categoryLabel: 'IM Shot Add-Ons',
     backTo: '/protocols',
     backLabel: 'Back to the menu',
     treatments: IM_SHOTS.map(shotTreatment),
