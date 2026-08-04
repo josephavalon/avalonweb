@@ -40,14 +40,14 @@ export const productsByCategory = {
     treatments: IM_SHOTS.map(shotTreatment),
   },
   cbd: {
-    title: 'CBD IV Therapy',
+    title: 'IV CBD',
     subtitle: 'Eligibility confirmed before treatment',
     description:
       'Avalon confirms eligibility, dose, and timing before treatment.',
     heroImage: null,
-    categoryLabel: 'CBD IV Therapy',
+    categoryLabel: 'IV CBD',
     backTo: '/services/cbd',
-    backLabel: 'Back to CBD IV Therapy',
+    backLabel: 'Back to IV CBD',
     treatments: byKey.cbd.doses.map((dose) => ({
       ...treatmentFromDose(byKey.cbd, dose),
       name: `CBD IV ${dose.label}`,
@@ -86,14 +86,14 @@ export const productsByCategory = {
     ],
   },
   'iv-vitamins': {
-    title: 'IV THERAPY',
+    title: 'IV Vitamins',
     subtitle: 'Medical-grade intravenous vitamin therapy',
     description:
       "Every IV starts with a 1000mL Lactated Ringer's bag and is dosed on-site by a registered nurse per your appointment protocol.",
     heroImage: null,
-    categoryLabel: 'IV Therapy',
+    categoryLabel: 'IV Vitamins',
     backTo: '/services/iv-vitamins',
-    backLabel: 'Back to IV Therapy',
+    backLabel: 'Back to IV Vitamins',
     treatments: [
       namedSession(byKey.hydration, 'Hydration IV', {
         benefitStatement: 'Fluid and electrolyte support at home, hotel, or office.',
