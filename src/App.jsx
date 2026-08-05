@@ -169,6 +169,7 @@ const Corporate = lazyRoute(() => import('./pages/Corporate'));
 const EventsPage = lazyRoute(() => import('./pages/Events'));
 const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
 const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
+const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
 const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
 const PageNotFound = lazyRoute(() => import('./lib/PageNotFound'));
@@ -253,7 +254,7 @@ const ScrollToTop = () => {
 // to localStorage BEFORE the consent gate, so excluding the route removes the
 // write entirely — stronger than sanitizing the payload. Attribution still runs:
 // it reads an allowlist of UTM/click-id keys only, so it carries no PII.
-const ANALYTICS_EXCLUDED_ROUTES = /^\/(start|nurse-delivery|support)(\/|$)/;
+const ANALYTICS_EXCLUDED_ROUTES = /^\/(start|nurse-delivery|support|vitalice)(\/|$)/;
 
 const AnalyticsRouteTracker = () => {
   const { pathname, search } = useLocation();
@@ -363,6 +364,9 @@ function AppRoutes() {
                 /nurse-delivery stays for existing links and the ?path=guided flow. */}
             <Route path="/start" element={<NurseDelivery entry="book" />} />
             <Route path="/nurse-delivery" element={<NurseDelivery />} />
+            {/* Vital Ice × Avalon co-branded intake for Outside Lands weekend.
+                Separate Cognito form; same PHI posture as /start. */}
+            <Route path="/vitalice" element={<Vitalice />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />

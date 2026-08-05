@@ -46,10 +46,15 @@ const DEFAULT_FORM_NUMBER = '1';
 
 export default function CognitoFormEmbed({
   formId = import.meta.env.VITE_COGNITO_INTAKE_FORM_ID || DEFAULT_FORM_NUMBER,
+  formNumber,
   accountKey = import.meta.env.VITE_COGNITO_ACCOUNT_KEY,
   compact = false,
   tight = false,
 }) {
+  // `formNumber` (when passed) is authoritative — no env fallback. Campaign
+  // mounts (e.g. /vitalice) use this so a missing env fails closed to the
+  // phone card instead of silently routing to Avalon Intake.
+  const resolvedFormId = formNumber !== undefined ? formNumber : formId;
   const mountRef = useRef(null);
   const trackedRef = useRef(false);
 
@@ -63,7 +68,7 @@ export default function CognitoFormEmbed({
   }, []);
 
   useEffect(() => {
-    if (!formId || !accountKey) return undefined;
+    if (!resolvedFormId || !accountKey) return undefined;
     const host = mountRef.current;
     if (!host) return undefined;
 
@@ -74,7 +79,7 @@ export default function CognitoFormEmbed({
     script.src = SEAMLESS_SRC;
     script.async = true;
     script.setAttribute('data-key', accountKey);
-    script.setAttribute('data-form', String(formId));
+    script.setAttribute('data-form', String(resolvedFormId));
     script.addEventListener('load', trackLoadedOnce);
     host.appendChild(script);
 
@@ -84,14 +89,14 @@ export default function CognitoFormEmbed({
       // client-side navigation in a detached node.
       host.replaceChildren();
     };
-  }, [formId, accountKey, trackLoadedOnce]);
+  }, [resolvedFormId, accountKey, trackLoadedOnce]);
 
   // Fail closed. A build with missing config shows a phone number, never a
   // "temporary" name/phone form of our own — that exact shortcut is how this
   // component ended up collecting PHI on Avalon's servers in the first place.
   // Only Cognito's script may create fields here. If you are here to make the
   // flow testable without provisioning: don't. Provision the form.
-  if (!formId || !accountKey) {
+  if (!resolvedFormId || !accountKey) {
     return (
       <div
         data-testid="cognito-unavailable"
