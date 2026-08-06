@@ -11811,3 +11811,13 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   display: inline-flex;
 }
 
+
+/* Cognito shows a spinning gear (.cog-loader) between script execution and the
+   form rendering. On a cream page under our own type it reads as the page being
+   broken rather than loading. Hidden — the surrounding layout already holds its
+   space, so the form simply appears. Paired with the preconnect/preload hints in
+   index.html, which start the script fetch during document parse instead of
+   after hydration. */
+.cognito .cog-loader {
+  display: none !important;
+}
