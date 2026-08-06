@@ -360,14 +360,14 @@ function LanePicker({ onPick }) {
   );
 }
 
-function StepShell({ children, onBack, wide = false }) {
+function StepShell({ children, onBack, wide = false, extraWide = false }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className={`mx-auto w-full ${wide ? 'max-w-6xl' : 'max-w-[30rem] lg:max-w-6xl'}`}
+      className={`mx-auto w-full ${extraWide ? 'max-w-7xl' : wide ? 'max-w-6xl' : 'max-w-[30rem] lg:max-w-6xl'}`}
     >
       {onBack && (
         <button
@@ -470,7 +470,7 @@ function RequestRail({ therapyName = '', duration = '' }) {
 
   return (
     <aside className="hidden lg:mt-0 lg:flex lg:h-full lg:flex-col" data-testid="landing-request-rail">
-      <div className="lg:mt-0 lg:flex lg:flex-1 lg:flex-col lg:justify-center">
+      <div className="lg:mt-0 lg:flex lg:flex-1 lg:flex-col lg:justify-start lg:pt-3">
         {/* The card hugs its rows — it must NOT stretch to eat the column's
             slack. It used to (`grow-[4]` + `justify-between` on the dl), which
             was tolerable at five rows but at four opened ~57px of dead air
@@ -483,14 +483,13 @@ function RequestRail({ therapyName = '', duration = '' }) {
           <p className="av-mono text-[11px] uppercase tracking-[0.12em] text-foreground/50">
             Your request
           </p>
-          {/* last:pb-0 — every row carries 12px of bottom padding, so on the
-              final row it stacked on top of the card's own 28px and left the
-              content sitting 13px high inside the card. */}
-          <dl className="mt-4">
+          {/* Full row padding is intentional here: the approved spacing pass
+              gives both facts the same calm 68–72px rhythm. */}
+          <dl className="mt-7">
             {rows.map((row) => (
               <div
                 key={row.label}
-                className="flex items-baseline justify-between gap-4 border-t border-foreground/[0.10] py-3 last:pb-0 lg:py-5 lg:last:pb-0"
+                className="flex items-baseline justify-between gap-4 border-t border-foreground/[0.10] py-3 lg:py-[1.375rem]"
               >
                 <dt className="av-mono text-[11px] uppercase tracking-[0.1em] text-foreground/50 md:text-[12px]">
                   {row.label}
@@ -508,31 +507,25 @@ function RequestRail({ therapyName = '', duration = '' }) {
             size the mono figures read as data rather than as a sequence, and
             the approved comp calls for weight. Columns are separated by hairline
             rules rather than each carrying a top border. */}
-        {/* Left edge lines up with the card's CONTENT, not its border: the
-            transparent 1px border plus the card's own padding scale reproduces
-            its 33px inset exactly, so "01" and "YOUR REQUEST" share a rail.
-            Only the left is inset — padding both sides cost 64px and wrapped the
-            titles. Column widths are uneven on purpose: "You get a deposit link"
-            is the long one and gets the extra. */}
-        {/* Padding must mirror the card's on BOTH sides. It carried pl only, so
-            the steps ran 32px past the card's right content edge — the labels
-            lined up on the left and drifted on the right. */}
-        <ol className="mt-5 lg:mt-8 grid grid-cols-[1fr_1.24fr_0.88fr] border-l border-transparent pl-6 pr-6 md:pl-8 md:pr-8">
+        {/* The steps use the card's full outer width in the approved reference.
+            The middle track stays widest for "You get a deposit link"; the
+            later tracks add their own inset after the separator. */}
+        <ol className="mt-5 lg:mt-[2.3125rem] grid grid-cols-[1fr_1.2fr_1.04fr] border-l border-transparent">
           {NEXT_STEPS.map((s, i) => (
             <li
               key={s.n}
-              className={i === 0 ? 'pr-3 lg:pr-2' : 'border-l border-foreground/[0.12] pl-3 lg:pl-2'}
+              className={i === 0 ? 'pr-3 lg:pr-2' : 'border-l border-foreground/[0.12] pl-3 lg:pl-6'}
             >
-              <span className="block font-body text-[2rem] font-bold leading-none tracking-[-0.02em] text-foreground">
+              <span className="block font-body text-[3rem] font-bold leading-none tracking-[-0.02em] text-foreground">
                 {s.n}
               </span>
               {/* One line each, as in the comp. This fits naturally now the
                   columns are near-even; it needed a tracking hack back when the
                   rail was the narrower 0.88fr. */}
-              <span className="mt-3 block font-body text-[13px] font-semibold leading-tight text-foreground">
+              <span className="mt-3 block font-body text-[15px] font-semibold leading-tight text-foreground">
                 {s.title}
               </span>
-              <span className="mt-1.5 block font-body text-[12px] font-medium leading-snug text-foreground/55">
+              <span className="mt-1.5 block font-body text-[13px] font-medium leading-snug text-foreground/55">
                 {s.hint}
               </span>
             </li>
@@ -555,16 +548,15 @@ function Landing({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className={`relative mx-auto w-full ${focused ? 'max-w-xl lg:max-w-5xl' : 'max-w-xl'}${focused ? ' nd-focused-booking' : ''}`}
+      className={`relative mx-auto w-full ${focused ? 'max-w-xl lg:mx-0 lg:max-w-[76rem]' : 'max-w-xl'}${focused ? ' nd-focused-booking' : ''}`}
     >
-      {/* items-stretch (not items-start) so the rail can fill the column and
-          bottom-align its step row with the left column's last line — otherwise
-          the right side ends ~110px short and reads as dead space. Column ratio
-          is near-even so the two halves carry comparable visual weight. */}
+      {/* The selected desktop reference uses near-even columns with a broad
+          editorial gutter. The rail stretches with the row, then positions its
+          card and steps from the top independently of the form rhythm. */}
       <div
-        className={`relative${focused ? ' lg:grid lg:grid-cols-[1.06fr_0.94fr] lg:items-stretch lg:gap-12 xl:gap-16' : ''}`}
+        className={`relative${focused ? ' lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-[8.6875rem] xl:grid-cols-[33.5625rem_33.75rem]' : ''}`}
       >
-        <div>
+        <div className={focused ? 'nd-focused-booking__form-column' : undefined}>
         {/* One h1, two labels. "START" is an instruction and reads as stale once
             the intake is in — the heading swaps to "RECEIVED" on Cognito's
             success class, same CSS-only mechanism as the microcopy below. Kept
@@ -752,10 +744,10 @@ export default function NurseDelivery({ entry = null }) {
 
   return (
     <div className={`nd-flow app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-background text-foreground${focusedBooking ? ' nd-flow--focused-booking' : ''}`}>
-      <main className={`mx-auto min-h-[calc(100svh-3.75rem)] w-full max-w-6xl px-5 md:px-8 ${focusedBooking ? 'pb-6 pt-3 sm:pt-5 md:pb-24 md:pt-20' : 'pb-24 pt-4 md:pt-[7rem] lg:pt-6'}`}>
+      <main className={`mx-auto min-h-[calc(100svh-3.75rem)] w-full px-5 md:px-8 ${focusedBooking ? 'max-w-[80.875rem] pb-6 pt-3 sm:pt-5 md:pb-24 md:pt-20' : 'max-w-6xl pb-24 pt-4 md:pt-[7rem] lg:pt-6'}`}>
         <AnimatePresence mode="wait">
           {step === 'landing' && (
-            <StepShell key="landing" wide>
+            <StepShell key="landing" wide extraWide={focusedBooking}>
               <Landing
                 focused={entryPath === 'book'}
                 therapyName={therapyName}

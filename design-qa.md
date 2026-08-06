@@ -452,6 +452,74 @@ final result: passed
 
 ---
 
+# Start Page Spacing Polish — 2026-08-06
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/CiGqyc/Screenshot 2026-08-06 at 3.46.17 PM.png`
+  (`1382 × 938` source pixels).
+- Browser-rendered implementation:
+  `.context/spacing-polish-qa/start-desktop-final.png` at a `1382 × 938` CSS
+  viewport and device pixel ratio 1.
+- Full-view comparison evidence:
+  `.context/spacing-polish-qa/compare-desktop-final.png` (source left,
+  implementation right).
+- Focused-region comparison was not required because both full-size captures
+  preserve readable header, form, card, map, and step-detail typography.
+- State: `/start`, cream theme, menu closed, Cognito form loaded.
+
+## Findings and comparison history
+
+- [P2 resolved] The shipping module was capped at `1024px`, producing inset
+  columns and compressed controls. The focused main, shell, and landing grid
+  now reproduce the reference's `1216px` content envelope with the exact
+  `537px / 139px / 540px` desktop column composition.
+- [P2 resolved] The previous desktop-height compression reduced the START
+  headline, input rhythm, request rows, and primary button at ordinary laptop
+  heights. Full editorial spacing now applies above `820px`; the compact mode
+  remains available only for genuinely short desktop windows.
+- [P2 resolved] The request card's map began below the coverage copy and its
+  step row was padded inward. The map now starts flush with the request rows,
+  the coverage panel matches the reference height, and the three steps use the
+  full card width.
+- [P2 resolved] Header actions were too small and clustered. The focused Start
+  header now matches the reference's logo placement, 54px circular controls,
+  and 20px control spacing without changing the already-tightened menu panel.
+- Post-fix evidence shows matching headline, field, request-row, card, map,
+  button, and step baselines. Remaining 1–5px optical differences are P3
+  antialiasing/content-rendering variance and require no action.
+
+## Required fidelity surfaces
+
+- Fonts and typography: shipping Bebas Neue, Inter, and IBM Plex Mono are
+  preserved; display, form, factual, and step scales match the source.
+- Spacing and layout rhythm: outer insets, two-column tracks, input heights,
+  consent/help spacing, request rows, coverage height, and step dividers match
+  the reference without horizontal overflow.
+- Colors and visual tokens: the existing cream canvas, espresso ink, warm
+  white inputs, muted text, and hairline borders are unchanged.
+- Image quality and asset fidelity: the existing 960 × 1166 Bay Area map is
+  retained at native quality with the source-matched crop and opacity.
+- Copy and content: all form, consent, request, service-area, and three-step
+  copy remains unchanged.
+
+## Implementation checklist
+
+- [x] Expand the focused desktop shell and equalize the two primary columns.
+- [x] Restore full desktop form spacing while preserving short-window mode.
+- [x] Match request-row, map, coverage-copy, and step geometry.
+- [x] Match focused-header control spacing without widening the menu panel.
+- [x] Preserve the subtle mobile coverage treatment.
+
+## Follow-up polish
+
+- No actionable P0, P1, or P2 visual mismatch remains.
+
+final result: passed
+
+---
+
 # Start Page Bay Area Coverage + Corner Menu Polish — 2026-08-06
 
 ## Visual truth and capture state
