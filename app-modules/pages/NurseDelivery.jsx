@@ -230,7 +230,7 @@ function getRecommendation(categoryId) {
 // No 'thanks' step: the Cognito iframe renders its own confirmation on its own
 // origin. The host page must not react to submission — knowing a submit
 // happened would mean listening to the frame that holds the PHI.
-const STEPS = ['landing', 'q1', 'q2', 'match', 'compare', 'form'];
+const STEPS = ['landing', 'choose', 'q1', 'q2', 'match', 'compare', 'form'];
 
 function Progress({ index, total }) {
   return (
@@ -278,6 +278,85 @@ function OptionTile({ option, onSelect, selected = false }) {
         <ArrowRight className="h-4 w-4 text-foreground/25 transition-all duration-200 group-hover:translate-x-1 group-hover:text-foreground" strokeWidth={2} />
       )}
     </button>
+  );
+}
+
+// "Help me choose" — one question, then out.
+//
+// This replaced a two-question funnel over nine categories, three of which
+// answered "not available for online recommendation yet". It narrowed to a
+// specific protocol the site cannot actually commit to, since eligibility is
+// decided at clinical review, not by a picker.
+//
+// These are the three standalone IV lanes the menu actually sells. Picking one
+// hands off to /start with ?therapy=, which the intake already renders as the
+// service pill and the "Service" row in the request rail — so the choice
+// carries through without asking for anything twice.
+const CHOOSE_LANES = [
+  {
+    label: 'IV Vitamins',
+    hint: 'Hydration, energy, recovery and everyday wellness.',
+    icon: Droplet,
+  },
+  {
+    label: 'IV NAD+',
+    hint: 'Cellular wellness and longevity support.',
+    icon: Layers,
+  },
+  {
+    label: 'IV CBD',
+    hint: 'Reviewed case by case before treatment.',
+    icon: ShieldCheck,
+  },
+];
+
+function LanePicker({ onPick }) {
+  return (
+    <div className="mx-auto w-full max-w-2xl">
+      <h1 className="font-heading text-[3rem] uppercase leading-none tracking-tight text-foreground md:text-[4.5rem]">
+        Help me choose
+      </h1>
+      <p className="mt-4 font-body text-base font-medium leading-relaxed text-foreground/65 md:text-lg">
+        Pick the closest fit. A nurse confirms what is appropriate for you before
+        any visit.
+      </p>
+
+      <div className="mt-8 grid gap-3">
+        {CHOOSE_LANES.map((lane) => (
+          <button
+            key={lane.label}
+            type="button"
+            onClick={() => onPick(lane.label)}
+            data-testid={`choose-lane-${lane.label.toLowerCase().replace(/[^a-z]+/g, '-')}`}
+            className="group flex items-center gap-4 rounded-[1.5rem] border border-foreground/[0.12] px-5 py-5 text-left transition-colors duration-base ease-editorial hover:border-foreground/35 md:px-6 md:py-6"
+          >
+            <lane.icon className="h-6 w-6 shrink-0 text-foreground/70" strokeWidth={1.7} />
+            <span className="min-w-0 flex-1">
+              <span className="block font-heading text-[1.5rem] uppercase leading-none tracking-tight text-foreground md:text-[1.75rem]">
+                {lane.label}
+              </span>
+              <span className="mt-1.5 block font-body text-sm font-medium leading-snug text-foreground/60">
+                {lane.hint}
+              </span>
+            </span>
+            <ArrowRight
+              className="h-5 w-5 shrink-0 text-foreground/40 transition-transform duration-base ease-editorial group-hover:translate-x-0.5"
+              strokeWidth={2}
+            />
+          </button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onPick('')}
+        data-testid="choose-lane-unsure"
+        className="mt-6 inline-flex items-center gap-2 border-b border-foreground/30 pb-1 font-body text-[15px] font-medium text-foreground/70 transition-colors hover:border-foreground hover:text-foreground"
+      >
+        Not sure yet — just start
+        <ArrowRight className="h-4 w-4" strokeWidth={2} />
+      </button>
+    </div>
   );
 }
 
@@ -516,15 +595,39 @@ function Landing({
               in place, so there is nothing left to click. Shown only once the
               form succeeds, via the same .is-success rule that hides the
               pre-submit copy above. */}
-          <Link
-            to="/"
+          {/* Secondary paths belong AFTER the capture, not beside it. Before the
+              form they compete with the one thing this screen exists to do;
+              here the request is already in, so browsing is the natural next
+              move. Revealed by the same .is-success rule as the copy above. */}
+          <div
             data-when="post-submit"
-            data-testid="landing-return-home"
-            className="group mt-1 w-fit items-center gap-2 border-b border-foreground/30 pb-1 font-body text-[1.0625rem] font-medium text-foreground transition-colors duration-base ease-editorial hover:border-foreground"
+            data-testid="landing-post-submit-paths"
+            className="mt-1 flex flex-wrap items-center gap-x-6 gap-y-3"
           >
-            Return home
-            <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2} />
-          </Link>
+            <Link
+              to="/nurse-delivery?path=guided"
+              data-testid="landing-help-me-choose"
+              className="group inline-flex items-center gap-2 border-b border-foreground/30 pb-1 font-body text-[1.0625rem] font-medium text-foreground transition-colors duration-base ease-editorial hover:border-foreground"
+            >
+              Help me choose
+              <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2} />
+            </Link>
+            <Link
+              to="/protocols"
+              data-testid="landing-browse-menu-post"
+              className="group inline-flex items-center gap-2 border-b border-foreground/30 pb-1 font-body text-[1.0625rem] font-medium text-foreground transition-colors duration-base ease-editorial hover:border-foreground"
+            >
+              Menu
+              <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-base ease-editorial group-hover:translate-x-0.5" strokeWidth={2} />
+            </Link>
+            <Link
+              to="/"
+              data-testid="landing-return-home"
+              className="group inline-flex items-center gap-2 font-body text-[1.0625rem] font-medium text-foreground/60 transition-colors duration-base ease-editorial hover:text-foreground"
+            >
+              Return home
+            </Link>
+          </div>
         </div>
 
         {!focused && (
@@ -594,7 +697,7 @@ export default function NurseDelivery({ entry = null }) {
     () => (protocolKey ? matchForKey(protocolKey).duration || '' : ''),
     [protocolKey],
   );
-  const [step, setStep] = useState(entryPath === 'guided' ? 'q1' : 'landing');
+  const [step, setStep] = useState(entryPath === 'guided' ? 'choose' : 'landing');
   const [answers, setAnswers] = useState({ goal: null, category: null, customize: null });
 
   useEffect(() => {
@@ -604,7 +707,7 @@ export default function NurseDelivery({ entry = null }) {
   }, [step]);
 
   useEffect(() => {
-    if (entryPath === 'guided') setStep('q1');
+    if (entryPath === 'guided') setStep('choose');
     if (entryPath === 'book') setStep('landing');
   }, [entryPath]);
 
@@ -634,6 +737,16 @@ export default function NurseDelivery({ entry = null }) {
                 therapyName={therapyName}
                 duration={protocolDuration}
                 onHelpMeDecide={() => setStep('q1')}
+              />
+            </StepShell>
+          )}
+
+          {step === 'choose' && (
+            <StepShell key="choose" wide>
+              <LanePicker
+                onPick={(lane) => {
+                  window.location.assign(lane ? `/start?therapy=${encodeURIComponent(lane)}` : '/start');
+                }}
               />
             </StepShell>
           )}

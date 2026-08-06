@@ -11807,8 +11807,8 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 
 /* `revert` resolves to `inline` for an anchor, which drops the flex gap between
    the label and its arrow. The return link needs inline-flex specifically. */
-.nd-flow:has(.cog-form.is-success) [data-testid='landing-return-home'] {
-  display: inline-flex;
+.nd-flow:has(.cog-form.is-success) [data-testid='landing-post-submit-paths'] {
+  display: flex;
 }
 
 

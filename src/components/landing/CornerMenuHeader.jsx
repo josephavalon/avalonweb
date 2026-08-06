@@ -7,7 +7,7 @@ import { DURATIONS, EASE } from '@/lib/motion';
 
 const ITEMS = [
   { label: 'Start', to: '/start' },
-  { label: 'Choose', to: '/nurse-delivery?path=guided' },
+  { label: 'Help me choose', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
 ];
