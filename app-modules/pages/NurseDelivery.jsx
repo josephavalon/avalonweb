@@ -431,7 +431,6 @@ function requestRows({ therapyName, duration }) {
   return [
     ...(therapyName ? [{ label: 'Service', value: therapyName }] : []),
     { label: 'Deposit', value: '$50' },
-    { label: 'Applied to', value: 'Your visit' },
     { label: 'Visit length', value: duration || '30–60 min' },
     { label: 'Area', value: 'SF Bay Area' },
   ];
@@ -469,7 +468,7 @@ function RequestRail({ therapyName = '', duration = '' }) {
             {rows.map((row) => (
               <div
                 key={row.label}
-                className="flex items-baseline justify-between gap-4 border-t border-foreground/[0.10] py-3 last:pb-0"
+                className="flex items-baseline justify-between gap-4 border-t border-foreground/[0.10] py-3 last:pb-0 lg:py-5 lg:last:pb-0"
               >
                 <dt className="av-mono text-[11px] uppercase tracking-[0.1em] text-foreground/50 md:text-[12px]">
                   {row.label}
