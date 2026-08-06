@@ -20,10 +20,9 @@ const OFFER_META = [
 ];
 
 const OFFER_ITEMS = [
-  { name: 'Event Recovery IV', note: 'anti-nausea, anti-inflammatory, B-12', price: '$195' },
-  { name: 'Myers Cocktail IV', note: 'full vitamin and mineral blend', price: '$225' },
-  { name: 'Energy IV', note: 'B-complex, B-12, amino blend', price: '$195' },
-  { name: 'Energy Shot (B-12)', note: 'solo · or $40 as an IV add-on', price: '$60' },
+  { name: 'Hydration IV', note: 'electrolytes', price: '$120' },
+  { name: 'Festival IV', note: 'anti-nausea, anti-inflammatory, B-12', price: '$160' },
+  { name: 'B-12 Shot', note: 'solo · or $40 as an IV add-on', price: '$60' },
 ];
 
 // Exact reproduction of the Vital Ice header monogram from vitalicesf.com
