@@ -136,11 +136,11 @@ export default function Hero() {
           <div className="nd-hero__mobile-panel">
             <div className="nd-hero__message">
               <h1 id="nd-hero-title">
-                <span className="nd-hero__headline-desktop">Wellness Delivered.</span>
+                <span className="nd-hero__headline-desktop">Wellness Delivered</span>
                 <span className="nd-hero__headline-mobile">
                   Wellness
                   <br />
-                  Delivered.
+                  Delivered
                 </span>
               </h1>
               <p className="nd-hero__tagline">

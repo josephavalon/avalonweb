@@ -43,7 +43,7 @@ const ADDONS = [
   { name: 'Toradol', price: '+$35' },
   { name: 'Zofran', price: '+$35' },
   { name: 'Biotin', price: '+$30' },
-  { name: 'Extra Fluids', price: '+$30' },
+  { name: 'Extra Fluids', price: '+$50' },
   { name: 'High-Dose Vitamin C', price: '+$45' },
 ];
 

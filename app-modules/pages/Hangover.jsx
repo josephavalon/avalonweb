@@ -26,7 +26,7 @@ const PROTOCOL_INGREDIENTS = [
 const ADD_ONS = [
   { name: 'Glutathione Push', description: 'Antioxidant wellness support when clinically appropriate', price: '+$40' },
   { name: 'Extra B12', description: 'Additional energy-supporting vitamin replenishment', price: '+$25' },
-  { name: 'Extra Fluids', description: 'Additional 500mL saline for deeper rehydration', price: '+$30' },
+  { name: 'Extra Fluids', description: 'Additional 500mL saline for deeper rehydration', price: '+$50' },
 ];
 
 export default function Hangover() {
