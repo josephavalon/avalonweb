@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight, ArrowLeft, Check, Lock,
-  Zap, MapPin, DollarSign,
+  Zap, Map as MapIcon, MapPin, DollarSign,
   Sparkles, Battery, Droplet, ShieldCheck,
   GlassWater, Moon, Plane,
   Layers,
@@ -432,8 +432,30 @@ function requestRows({ therapyName, duration }) {
     ...(therapyName ? [{ label: 'Service', value: therapyName }] : []),
     { label: 'Deposit', value: '$50' },
     { label: 'Visit length', value: duration || '30–60 min' },
-    { label: 'Area', value: 'SF Bay Area' },
   ];
+}
+
+const BAY_AREA_REGIONS = 'San Francisco · Marin · East Bay · Peninsula · South Bay';
+
+function MobileServiceCoverage() {
+  return (
+    <div className="nd-mobile-service-coverage" data-when="pre-submit" aria-label="Serving the entire Bay Area">
+      <MapIcon aria-hidden="true" strokeWidth={1.45} />
+      <span>Serving the entire Bay Area</span>
+    </div>
+  );
+}
+
+function DesktopServiceCoverage() {
+  return (
+    <div className="nd-desktop-service-coverage" aria-label={`The entire Bay Area, covered. ${BAY_AREA_REGIONS}`}>
+      <div className="nd-desktop-service-coverage__copy">
+        <p>The entire<br />Bay Area,<br />covered</p>
+        <span>{BAY_AREA_REGIONS}</span>
+      </div>
+      <img src="/images/bay-area-service-map.png" alt="" aria-hidden="true" />
+    </div>
+  );
 }
 
 // Context rail for the focused booking screen. Desktop only.
@@ -479,6 +501,7 @@ function RequestRail({ therapyName = '', duration = '' }) {
               </div>
             ))}
           </dl>
+          <DesktopServiceCoverage />
         </div>
 
         {/* Numerals are large and set in the body face, not av-mono: at this
@@ -561,6 +584,8 @@ function Landing({
           <br />
           It only takes a few seconds.
         </p>
+
+        {focused && <MobileServiceCoverage />}
 
         {therapyName && (
           <p className="mt-5 inline-flex rounded-full border border-foreground/15 px-4 py-2 font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/65">

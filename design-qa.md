@@ -452,6 +452,101 @@ final result: passed
 
 ---
 
+# Start Page Bay Area Coverage + Corner Menu Polish — 2026-08-06
+
+## Visual truth and capture state
+
+- Desktop source visual truth:
+  `.context/service-area-map-previews/entire-bay-area-desktop.png`
+  (`1586 × 992` source pixels).
+- Mobile source visual truth:
+  `.context/service-area-map-previews/entire-bay-area-mobile-subtle.png`
+  (`853 × 1844` source pixels).
+- Corner-menu density reference:
+  `.context/attachments/7cMX9F/Screenshot 2026-08-06 at 9.51.10 AM.png`
+  (`650 × 492` source pixels).
+- Browser-rendered desktop implementation:
+  `.context/polish-qa/start-desktop-final.png` at a `1440 × 1024` CSS viewport,
+  device pixel ratio 1.
+- Browser-rendered mobile implementation:
+  `.context/polish-qa/start-mobile-final.png` at a `390 × 844` CSS viewport,
+  device pixel ratio 1.
+- Browser-rendered menu implementation:
+  `.context/polish-qa/menu-mobile.png` at a `390 × 844` CSS viewport,
+  device pixel ratio 1.
+- Combined comparison evidence:
+  `.context/polish-qa/compare-desktop-final.png`,
+  `.context/polish-qa/compare-mobile-final.png`, and
+  `.context/polish-qa/compare-menu.png`.
+- State: `/start`, cream consumer theme, Cognito form loaded; menu closed for
+  coverage captures and open for the menu capture.
+
+## Findings and comparison history
+
+- [P2 resolved] The first mobile concept made service coverage a dominant
+  full-width section and pushed the booking task down. The implementation uses
+  a 28.8px-high mono trust line with a library map icon and the exact copy
+  `Serving the entire Bay Area`; the form begins immediately beneath it.
+- [P2 resolved] The corner navigation in the supplied screenshot occupied most
+  of the available width with oversized rows. The implementation measures
+  `228 × 194px` at 390px, with four consistent 48px touch rows. It is visibly
+  narrower and denser while preserving accessible tap targets.
+- [P2 resolved] The generated desktop concept used a stylized geographic fill.
+  The implementation replaces it with a real public-domain Bay Area map derived
+  from Census TIGER/Line geography, while preserving the approved headline and
+  five-region proof line. The map loads at `960 × 1166` natural pixels and is
+  rendered with the approved restrained monochrome treatment.
+- [P3 accepted] The mobile mock shows a bespoke geographic outline; production
+  uses the closest matching icon-library map glyph at small size. At this scale
+  the explicit coverage text carries meaning more reliably than detailed
+  coastline geometry.
+- [P3 accepted] The shipping global header retains the existing text/call
+  controls visible in the original site reference. Removing them was outside
+  the selected coverage and menu-polish scope.
+
+## Required fidelity surfaces
+
+- Fonts and typography: shipping Bebas Neue, Inter, and IBM Plex Mono voices are
+  preserved. Coverage follows LOUD headline + TRUE/mono fact hierarchy.
+- Spacing and layout rhythm: desktop coverage remains inside the existing
+  request card; mobile adds less than 29px and preserves the one-column booking
+  rhythm. No horizontal overflow at either verified viewport.
+- Colors and visual tokens: cream canvas, warm-black ink, muted fact text, and
+  hairline borders use existing consumer tokens; no new accent color or shadow
+  language was introduced.
+- Image quality and asset fidelity: desktop uses a real 960px map raster, not
+  CSS art or generated geography. It is fully loaded in the browser capture.
+- Copy and content: `The entire Bay Area, covered`, all five named regions, and
+  `Serving the entire Bay Area` render exactly. Existing form and consent copy
+  is unchanged.
+
+## Browser and interaction checks
+
+- Menu opens from the unique `Open menu` control, exposes all four navigation
+  links, and closes with Escape while returning the `Open menu` state.
+- Cognito name, mobile, and email fields plus consent and START controls are
+  present in the mobile DOM snapshot.
+- Desktop map asset reports complete with non-zero natural dimensions.
+- Chrome console error scan: clean on desktop and mobile captures.
+- Desktop document width: `1440 / 1440`; mobile: `390 / 390` (no overflow).
+
+## Implementation checklist
+
+- [x] Replace the desktop AREA row with the coverage composition.
+- [x] Add the subtle mobile coverage trust line.
+- [x] Tighten the corner menu width, row height, type size, and offset.
+- [x] Preserve 48px mobile tap targets and keyboard dismissal.
+- [x] Run build, lint, responsive browser checks, and console scan.
+
+## Follow-up polish
+
+- No actionable P0, P1, or P2 visual mismatch remains. Remaining P3 deviations
+  are intentional production adaptations noted above.
+
+final result: passed
+
+---
+
 # Snooches Homepage Headline, Spacing, and Privacy Controls
 
 ## Visual truth and capture state
