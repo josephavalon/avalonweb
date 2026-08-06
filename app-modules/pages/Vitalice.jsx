@@ -22,7 +22,7 @@ const OFFER_META = [
 const OFFER_ITEMS = [
   { name: 'Hydration IV', note: 'electrolytes', price: '$120' },
   { name: 'Festival IV', note: 'anti-nausea, anti-inflammatory, B-12', price: '$160' },
-  { name: 'B-12 Shot', note: 'member add-on', price: '$40' },
+  { name: 'B-12 Shot', note: 'solo · or $40 as an IV add-on', price: '$60' },
 ];
 
 // Exact reproduction of the Vital Ice header monogram from vitalicesf.com
