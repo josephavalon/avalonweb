@@ -452,6 +452,49 @@ final result: passed
 
 ---
 
+# Avalon Beta Events Supplied Hero Photograph
+
+## Visual truth and capture state
+
+- Supplied source photograph:
+  `.context/attachments/U29tC8/Screenshot 2026-08-07 at 2.41.56 PM.png`
+  (`1638 × 1050` source pixels).
+- Production asset:
+  `public/images/events/avalon-events-editorial-hero.jpg` (`1478 × 704`,
+  JPEG), cropped from the supplied source to the live hero's landscape ratio.
+- Browser-rendered implementation:
+  `.context/audits/events-polish/implementation-supplied-photo-desktop.jpg`
+  (`1842 × 1036`, Chrome CSS viewport `1842 × 1036`, device pixel ratio
+  1).
+- Focused browser hero evidence:
+  `.context/audits/events-polish/implementation-supplied-photo-hero.jpg`
+  (`823 × 308` rendered pixels at device pixel ratio 1).
+- Combined full-view and focused comparison:
+  `.context/audits/events-polish/supplied-photo-compare.html`.
+- State: `/events`, desktop cream theme, quote stage on Event details, editors
+  closed, entrance motion settled.
+
+## Findings and post-fix evidence
+
+- The Events hero now uses the user's exact supplied Avalon event photograph.
+  The left `160px` of the source was removed because it contained gallery UI
+  chrome and a carousel arrow rather than photographic content.
+- The normalized `1478 × 704` crop preserves the seated guest, Avalon window
+  mark, branded event signage, IV bags, attending nurse, and second guest. The
+  browser-rendered hero retains the same crop without stretching, softness, or
+  compression artifacts.
+- Fonts and typography, spacing/layout rhythm, cream/espresso colors and
+  tokens, icons, quote controls, event rows, and copy/content remain unchanged.
+- At `390 × 844`, the image remains sharp, the subjects stay recognizable,
+  and the page has no horizontal overflow.
+- Get a quote still advances to Your details. Chrome reported no console errors
+  or warnings.
+- No actionable P0, P1, or P2 issue remains.
+
+final result: passed
+
+---
+
 # Avalon Beta Events Editorial Polish
 
 ## Visual truth and capture state

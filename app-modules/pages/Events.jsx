@@ -414,7 +414,7 @@ export default function Events() {
             <img
               className="nd-events-hero__image"
               src="/images/events/avalon-events-editorial-hero.jpg"
-              alt="Elegant private event with an Avalon hydration setup"
+              alt="Guests receiving Avalon IV hydration at a wellness event"
             />
           </section>
 
