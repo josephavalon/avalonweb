@@ -215,6 +215,7 @@ export default function GuidedCommerce() {
       context: answers.context,
       timing: answers.timing,
       therapy_ids: recommendations.map((item) => item.therapyId),
+      screen: 'result',
       elapsed_ms: Math.max(0, recommendedAt - flow.startedAt),
     })) {
       timestampGuidedFlow(flow.id, 'resultViewedAt', guided.resultAt);

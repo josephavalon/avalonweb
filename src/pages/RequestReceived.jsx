@@ -20,7 +20,10 @@ export default function RequestReceived() {
     const flow = Number.isFinite(storedFlow?.selectedAt) ? storedFlow : null;
     if (flow?.submittedAt) return;
     if (!flow) {
-      try { if (Number.isFinite(Number(window.sessionStorage.getItem(DIRECT_RECEIPT_KEY)))) return; } catch { /* continue */ }
+      try {
+        const submittedAt = window.sessionStorage.getItem(DIRECT_RECEIPT_KEY);
+        if (submittedAt && Number.isFinite(Number(submittedAt))) return;
+      } catch { /* continue */ }
     }
 
     const tracked = flow
