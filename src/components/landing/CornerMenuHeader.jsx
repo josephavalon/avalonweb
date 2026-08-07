@@ -10,6 +10,7 @@ const ITEMS = [
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
+  { label: 'Login', to: '/login' },
 ];
 
 const PHONE_URL = 'tel:+14159807708';
