@@ -14,7 +14,7 @@ const VITALICE_FORM_NUMBER = import.meta.env.VITE_COGNITO_VITALICE_FORM_ID;
 
 const OFFER_META = [
   { label: 'Date', value: 'Saturday, August 8' },
-  { label: 'Time', value: '10 AM–2 PM' },
+  { label: 'Time', value: '11 AM–2 PM' },
   { label: 'Visit', value: '10–30 min' },
   { label: 'Payment', value: 'On site' },
 ];
@@ -157,7 +157,7 @@ export default function Vitalice() {
   useSeo({
     title: 'Vital Ice × Avalon — Outside Lands',
     description:
-      'Vital Ice members: reserve a mobile IV or shot for Outside Lands weekend, Saturday August 8, 10 AM–2 PM.',
+      'Vital Ice members: reserve a mobile IV or shot for Outside Lands weekend, Saturday August 8, 11 AM–2 PM.',
     path: '/vitalice',
   });
 
@@ -211,7 +211,7 @@ export default function Vitalice() {
                   Reserve Your Appointment
                 </h2>
                 <p className="mt-4 font-body text-[15px] leading-[1.55] text-foreground/75 md:text-base">
-                  Outside Lands appointments at Vital Ice are available Saturday, August 8 from 10:00 AM–2:00 PM.
+                  Outside Lands appointments at Vital Ice are available Saturday, August 8 from 11:00 AM–2:00 PM.
                 </p>
                 <div className="mt-5 flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-[#4FB3B8]" strokeWidth={1.75} />
