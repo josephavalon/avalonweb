@@ -115,7 +115,6 @@ const PORTAL_CHOICES = [
   { key: 'new', label: 'New' },
   { key: 'returning', label: 'Member' },
   { key: 'nurse', label: 'Nurse' },
-  { key: 'admin', label: 'Admin' },
   { key: 'organizer', label: 'Events' },
 ];
 
@@ -124,7 +123,7 @@ function PortalChooser({ value, onChange }) {
     <div
       role="tablist"
       aria-label="Choose your Avalon portal"
-      className="mb-6 grid grid-cols-5 rounded-full border border-[#d9d2c8] bg-[#f1ece4] p-1"
+      className="mb-6 grid grid-cols-4 rounded-full border border-[#d9d2c8] bg-[#f1ece4] p-1"
     >
       {PORTAL_CHOICES.map(({ key, label }) => {
         const selected = value === key;
@@ -144,6 +143,45 @@ function PortalChooser({ value, onChange }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+const STAFF_PORTALS = [
+  { key: 'nurse', label: 'Nurse' },
+  { key: 'admin', label: 'Admin' },
+];
+
+function StaffPortalChooser({ value, onChange }) {
+  return (
+    <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-[#ded6ca] bg-[#f7f3ec] p-1.5 pl-3">
+      <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-[#6e6258]">
+        Staff access
+      </p>
+      <div
+        role="tablist"
+        aria-label="Choose staff portal"
+        className="grid min-w-[176px] grid-cols-2 rounded-full border border-[#d9d2c8] bg-[#eee7de] p-1"
+      >
+        {STAFF_PORTALS.map(({ key, label }) => {
+          const selected = value === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => onChange(key)}
+              className={`min-h-[36px] rounded-full px-3 font-body text-[9px] font-bold uppercase tracking-[0.12em] transition-colors ${selected
+                ? 'bg-[#2b211b] text-[#f6f2eb] shadow-[0_4px_12px_rgba(43,33,27,0.14)]'
+                : 'text-[#6e6258] hover:bg-[#e4dbd0] hover:text-[#2b211b]'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -313,11 +351,9 @@ export default function Login({ defaultAudience = 'patient' }) {
     ? 'new'
     : isOrganizer
       ? 'organizer'
-      : isAdmin
-        ? 'admin'
-        : isNurse
-          ? 'nurse'
-          : 'returning';
+      : isStaff
+        ? 'nurse'
+        : 'returning';
 
   const switchPortal = (next) => {
     setView('methods');
@@ -335,7 +371,7 @@ export default function Login({ defaultAudience = 'patient' }) {
       setMode('returning');
     } else {
       setAudience('staff');
-      setStaffMode(next === 'admin' ? 'admin' : 'nurse');
+      setStaffMode('nurse');
       setMode('returning');
     }
     if (reviewAuthAvailable && next !== 'new') {
@@ -343,6 +379,21 @@ export default function Login({ defaultAudience = 'patient' }) {
       setPassword(reviewPassword);
     } else if (next === 'new') {
       setPassword('');
+    }
+  };
+
+  const switchStaffPortal = (next) => {
+    setStaffMode(next === 'admin' ? 'admin' : 'nurse');
+    setView('methods');
+    setFieldError('');
+    setLinkSent('');
+    setResetSent('');
+    setOtpSent(false);
+    setOtp('');
+    clearUnconfirmed();
+    if (reviewAuthAvailable) {
+      setIdentifier(reviewUsername);
+      setPassword(reviewPassword);
     }
   };
 
@@ -849,6 +900,7 @@ export default function Login({ defaultAudience = 'patient' }) {
             tab switch. */}
         <section className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6">
           <PortalChooser value={activePortalChoice} onChange={switchPortal} />
+          {isStaff ? <StaffPortalChooser value={staffMode} onChange={switchStaffPortal} /> : null}
 
           {/* Heading + body crossfade together on every tab/view switch; keyed
               only on audience/mode/view so it never remounts mid-form (no focus
