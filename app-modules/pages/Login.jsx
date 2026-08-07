@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle, ArrowLeft, ArrowRight, ArrowUpRight, Check, Eye, EyeOff, Fingerprint,
-  Link2, MailCheck, MessageCircle, RefreshCw, ShieldCheck, Smartphone, Stethoscope, Ticket,
-  UserPlus, UserRound,
+  AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, Fingerprint,
+  Link2, MailCheck, MessageCircle, RefreshCw, Smartphone,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -113,36 +112,35 @@ function SubmitButton({ loading, idle, busy }) {
 }
 
 const PORTAL_CHOICES = [
-  { key: 'new', label: 'New Client', detail: 'Start care', Icon: UserPlus },
-  { key: 'returning', label: 'Returning', detail: 'Member portal', Icon: UserRound },
-  { key: 'nurse', label: 'Nurse', detail: 'Clinical shifts', Icon: Stethoscope },
-  { key: 'admin', label: 'Admin', detail: 'Avalon OS', Icon: ShieldCheck },
-  { key: 'organizer', label: 'Organizer', detail: 'Event hub', Icon: Ticket },
+  { key: 'new', label: 'New' },
+  { key: 'returning', label: 'Member' },
+  { key: 'nurse', label: 'Nurse' },
+  { key: 'admin', label: 'Admin' },
+  { key: 'organizer', label: 'Events' },
 ];
 
 function PortalChooser({ value, onChange }) {
   return (
-    <div aria-label="Choose your Avalon portal" className="mb-3 grid grid-cols-2 gap-1.5">
-      {PORTAL_CHOICES.map(({ key, label, detail, Icon }, index) => {
+    <div
+      role="tablist"
+      aria-label="Choose your Avalon portal"
+      className="mb-6 grid grid-cols-5 rounded-full border border-[#d9d2c8] bg-[#f1ece4] p-1"
+    >
+      {PORTAL_CHOICES.map(({ key, label }) => {
         const selected = value === key;
         return (
           <button
             key={key}
             type="button"
-            aria-pressed={selected}
+            role="tab"
+            aria-selected={selected}
             onClick={() => onChange(key)}
-            className={`flex min-h-[54px] items-center gap-2 rounded-xl border px-3 text-left transition-colors ${
-              index === PORTAL_CHOICES.length - 1 ? 'col-span-2' : ''
-            } ${selected
-              ? 'border-foreground/70 bg-foreground text-background'
-              : 'border-foreground/[0.13] bg-foreground/[0.04] text-foreground hover:border-foreground/28 hover:bg-foreground/[0.07]'
+            className={`min-h-[42px] min-w-0 rounded-full px-1 font-body text-[9px] font-bold uppercase tracking-[0.08em] transition-colors sm:text-[10px] sm:tracking-[0.12em] ${selected
+              ? 'bg-[#2b211b] text-[#f6f2eb] shadow-[0_5px_16px_rgba(43,33,27,0.16)]'
+              : 'text-[#6e6258] hover:bg-[#e7dfd4] hover:text-[#2b211b]'
             }`}
           >
-            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-            <span className="min-w-0">
-              <span className="block font-body text-[10px] font-bold uppercase leading-tight tracking-[0.14em]">{label}</span>
-              <span className={`mt-0.5 block font-body text-[10px] leading-tight ${selected ? 'text-background/65' : 'text-foreground/42'}`}>{detail}</span>
-            </span>
+            {label}
           </button>
         );
       })}
@@ -309,33 +307,6 @@ export default function Login({ defaultAudience = 'patient' }) {
     if (localPath?.startsWith('/provider/') && sessionUser?.activePortal === 'nurse') return localPath;
     if (localPath?.startsWith('/organizer') && sessionUser?.activePortal === 'organizer') return localPath;
     return sessionUser?.redirect || '/members/dashboard';
-  };
-
-  // Reset transient state whenever the audience flips so the patient and admin
-  // panels never leak each other's input or errors.
-  const switchAudience = (next, nextStaffMode = 'nurse') => {
-    if (next === audience) return;
-    setAudience(next);
-    if (next === 'staff') setStaffMode(nextStaffMode);
-    setMode('returning');
-    setView('methods');
-    setFieldError('');
-    setLinkSent('');
-    setResetSent('');
-    setOtpSent(false);
-    setOtp('');
-    setResendOtpCooldown(0);
-    setResendOtpDone(false);
-    if (reviewAuthAvailable) {
-      setIdentifier(reviewUsername);
-      setPassword(reviewPassword);
-    } else if (next === 'organizer' && !supabaseMode && demoAuthAvailable) {
-      setIdentifier((current) => current.trim() || 'ORGANIZER001');
-      setPassword(import.meta.env.VITE_AVALON_DEMO_PASSWORD || '');
-    } else {
-      setPassword('');
-    }
-    clearUnconfirmed();
   };
 
   const activePortalChoice = isNew
@@ -674,12 +645,9 @@ export default function Login({ defaultAudience = 'patient' }) {
   const demoForm = (
     <form onSubmit={handleDemoSubmit} className="space-y-4 md:space-y-3" noValidate>
       {reviewAuthAvailable ? (
-        <div className="rounded-xl border border-amber-300/20 bg-amber-200/[0.07] px-3 py-2.5">
-          <p className="font-body text-[9px] font-bold uppercase tracking-[0.2em] text-amber-100/65">Beta review access</p>
-          <p className="mt-1 font-body text-[12px] font-semibold text-foreground/85">
-            Username <span className="font-mono">user</span> · Password <span className="font-mono">password</span>
-          </p>
-          <p className="mt-1 font-body text-[10px] leading-relaxed text-foreground/45">Synthetic data only. Choose a portal above, then use the same login.</p>
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ded6ca] bg-[#f1ece4] px-3 py-2.5 text-[#2b211b]">
+          <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-[#6e6258]">Beta login</p>
+          <p className="font-mono text-[11px] font-semibold">user / password</p>
         </div>
       ) : null}
       <Field
@@ -851,81 +819,35 @@ export default function Login({ defaultAudience = 'patient' }) {
     body = passwordForm;
   }
 
-  const footer = isPortalUser ? (
-    <div className="mt-4 grid gap-1.5 border-t border-foreground/[0.08] pt-3 md:mt-3 md:pt-3">
-      <button
-        type="button"
-        onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-        className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
-      >
-        Reset {isOrganizer ? 'organizer' : 'staff'} password
-      </button>
-      <button
-        type="button"
-        onClick={() => switchAudience('patient')}
-        className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
-      >
-        Customer login
-      </button>
-    </div>
-  ) : (
-    <div className="mt-4 grid gap-2 md:mt-6 md:gap-3">
-      {/* OR divider */}
-      <div className="hidden items-center gap-3 md:flex">
-        <span className="h-px flex-1 bg-foreground/16" />
-        <span className="font-body text-[10px] font-semibold uppercase tracking-[0.28em] text-foreground/45">or</span>
-        <span className="h-px flex-1 bg-foreground/16" />
-      </div>
-      <div className="grid grid-cols-2 items-center">
-        {!isNew ? (
+  const footer = (
+    <div className={`mt-5 grid items-center border-t border-[#ded6ca] pt-3 ${!isNew && !reviewAuthAvailable ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      {!isNew && !reviewAuthAvailable ? (
           <button
             type="button"
             onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-            className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-foreground"
+            className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] text-[#6e6258] transition-colors hover:text-[#2b211b]"
           >
             <Link2 className="h-3.5 w-3.5" strokeWidth={1.8} />
-            Forgot password?
+            {isPortalUser ? 'Reset password' : 'Forgot password?'}
           </button>
-        ) : <span aria-hidden="true" />}
-        <a
-          href="mailto:support@avalonvitality.co"
-          className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-foreground border-l border-foreground/12"
-        >
-          <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.8} />
-          Need help?
-        </a>
-      </div>
-      <button
-        type="button"
-        onClick={() => switchAudience('organizer')}
-        className="mt-1 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/28 hover:bg-foreground/[0.08]"
+      ) : null}
+      <a
+        href="mailto:support@avalonvitality.co"
+        className={`group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] text-[#6e6258] transition-colors hover:text-[#2b211b] ${!isNew && !reviewAuthAvailable ? 'border-l border-[#ded6ca]' : ''}`}
       >
-        <Ticket className="h-4 w-4" strokeWidth={1.8} />
-        <span>Event organizer hub</span>
-        <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
-      </button>
-      <button
-        type="button"
-        onClick={() => switchAudience('staff', 'nurse')}
-        className="mt-1 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/28 hover:bg-foreground/[0.08]"
-      >
-        <Stethoscope className="h-4 w-4" strokeWidth={1.8} />
-        <span>Avalon staff hub</span>
-        <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
-      </button>
+        <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.8} />
+        Need help?
+      </a>
     </div>
   );
 
   return (
-    // Mobile uses the small viewport unit so switching tabs cannot resize or
-    // jump the card. Short devices may scroll the card body without moving the
-    // background or page chrome.
-    <div className="relative h-screen h-dvh overflow-y-auto px-3 py-2 text-foreground md:px-6 md:py-3">
-      <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center md:pt-24">
+    <div className="relative min-h-screen min-h-dvh bg-[#f6f2eb] px-4 pb-10 pt-24 text-[#2b211b] md:px-6 md:pb-14 md:pt-28">
+      <main className="relative mx-auto grid min-h-[calc(100dvh-8.5rem)] w-full max-w-5xl place-items-center">
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="flex h-[calc(100svh-1rem)] min-h-[520px] max-h-[620px] w-full max-w-[340px] flex-col overflow-y-auto rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:h-auto md:max-w-[360px] md:overflow-visible md:p-4">
+        <section className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6">
           <PortalChooser value={activePortalChoice} onChange={switchPortal} />
 
           {/* Heading + body crossfade together on every tab/view switch; keyed

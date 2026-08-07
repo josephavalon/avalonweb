@@ -64,7 +64,7 @@ export default function NewCustomerPanel({ showCta = true, showHeading = true, b
         <motion.div whileTap={{ scale: 0.985 }}>
           <Link
             to="/signup"
-            className={`${embedded ? 'mt-4 min-h-[48px]' : 'mt-5 min-h-[54px]'} flex w-full items-center justify-between rounded-full border border-foreground/[0.12] bg-background/35 px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-foreground/72 transition-colors hover:border-foreground/26 hover:text-foreground`}
+            className={`${embedded ? 'mt-4 min-h-[48px] border-[#2b211b] bg-[#2b211b] text-[#f6f2eb] hover:bg-[#43352c]' : 'mt-5 min-h-[54px] border-foreground/[0.12] bg-background/35 text-foreground/72 hover:border-foreground/26 hover:text-foreground'} flex w-full items-center justify-between rounded-full border px-5 font-body text-xs font-bold uppercase tracking-[0.2em] transition-colors`}
           >
             <span>Register Now</span>
             <ArrowRight className="h-4 w-4" strokeWidth={2} />
