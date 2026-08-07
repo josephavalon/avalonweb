@@ -452,6 +452,61 @@ final result: passed
 
 ---
 
+# Avalon Beta Events Editorial Polish
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/zy4kBL/Screenshot 2026-08-07 at 2.04.56 PM.png`.
+- Browser-rendered implementation:
+  `.context/audits/events-polish/implementation-desktop-final.jpg`.
+- Full-view comparison:
+  `.context/audits/events-polish/compare.html` (source and implementation at
+  the same native size).
+- Source and implementation are both `1842 × 1036` CSS pixels at device pixel
+  ratio 1; no density normalization was required.
+- State: `/events`, desktop cream theme, event-detail quote stage, all editors
+  closed, entrance motion settled.
+- Focused-region comparison was not required because the headline, trust
+  points, hero, quote controls, event-card text, dividers, and status pills are
+  legible in the full-size views. Both full-size images were also inspected
+  separately at native resolution.
+
+## Findings, correction, and post-fix evidence
+
+- [P2 resolved] The first implementation pass used a `108rem` content shell,
+  making the hero, quote builder, and two-column event lists visibly narrower
+  than the reference. The shell now uses a responsive `120rem` ceiling and
+  matches the reference's outer margins and column proportions.
+- The implementation retains Avalon's existing global corner header above the
+  reference composition. This is an intentional integration difference: the
+  supplied visual is a page-only treatment, while the live beta requires the
+  established site navigation on every public route.
+- The hero photography and synthetic event names differ from the concept while
+  preserving its warm private-event art direction, landscape crop, information
+  density, and status hierarchy. The smaller cards use existing Avalon event
+  photography rather than fabricated logos or third-party event identities.
+- Fonts and typography, cream/espresso color tokens, editorial spacing,
+  bordered quote controls, icon weight, image quality, copy hierarchy, row
+  density, and responsive behavior were checked against the combined evidence.
+- No actionable P0, P1, or P2 mismatch remains.
+
+## Browser and interaction verification
+
+- Google Chrome rendered the desktop evidence at `1842 × 1036` and the
+  mobile state at `390 × 844`.
+- The Where editor opens and accepts `Palm Springs, CA`; opening Guests closes
+  the prior editor; selecting `26 – 50` updates the summary.
+- Get a quote advances to the `Your details` form and Event details returns to
+  the populated first stage.
+- The mobile document width equals the viewport width (`390px`), with no
+  horizontal overflow, and the quote builder remains present and operable.
+- Chrome reported no console errors or warnings.
+
+final result: passed
+
+---
+
 # Start Page Spacing Polish — 2026-08-06
 
 ## Visual truth and capture state
