@@ -53,3 +53,6 @@ export function timestampGuidedFlow(flowId, field, timestamp = Date.now()) {
   return next;
 }
 
+export function clearGuidedFlow() {
+  try { window.sessionStorage.removeItem(GUIDED_FLOW_STORAGE_KEY); } catch { /* best-effort */ }
+}

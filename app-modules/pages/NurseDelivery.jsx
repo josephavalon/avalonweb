@@ -18,7 +18,7 @@ import {
   getGuidedTiming,
 } from '@/data/guidedCommerce';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
-import { readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
+import { clearGuidedFlow, readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
 
 // Nurse Delivery owns the unrestricted entry surface and the single intake.
 // Guided commerce is route-state driven and hands its selection to /start.
@@ -396,6 +396,10 @@ export default function NurseDelivery({ entry = null }) {
       GuidedTiming: timing.label,
     };
   }, [guidedOffering, guidedSelection]);
+  useEffect(() => {
+    if (focusedBooking && !guidedSource) clearGuidedFlow();
+  }, [focusedBooking, guidedSource]);
+
   useEffect(() => {
     const flowId = guidedSelection?.flowId;
     if (!focusedBooking || !guidedSource || !flowId || !guidedOffering) return;

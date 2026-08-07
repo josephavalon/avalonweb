@@ -8,6 +8,11 @@ import {
 } from '../src/data/guidedCommerce.js';
 import { rankOfferings } from '../src/lib/recommendationEngine.js';
 import { sanitizeCognitoPrefill } from '../src/lib/cognitoPrefill.js';
+import {
+  readGuidedFlow,
+  startGuidedFlow,
+  timestampGuidedFlow,
+} from '../src/lib/guidedSession.js';
 
 const expectTop = (answers, expected) => {
   const result = rankOfferings(answers, GUIDED_OFFERINGS);
@@ -93,5 +98,20 @@ assert.deepEqual(sanitizeCognitoPrefill({
   GuidedContext: 'Workout',
   GuidedTiming: 'Today',
 });
+
+const sessionValues = new Map();
+global.window = {
+  crypto: { randomUUID: () => 'opaque-flow-id' },
+  sessionStorage: {
+    getItem: (key) => sessionValues.get(key) ?? null,
+    setItem: (key, value) => sessionValues.set(key, value),
+    removeItem: (key) => sessionValues.delete(key),
+  },
+};
+const flow = startGuidedFlow();
+timestampGuidedFlow(flow.id, 'recommendedAt', flow.startedAt + 100);
+timestampGuidedFlow(flow.id, 'answers', flow.startedAt + 200);
+assert.deepEqual(Object.keys(readGuidedFlow()).sort(), ['id', 'recommendedAt', 'startedAt']);
+assert.equal(JSON.stringify([...sessionValues.values()]).includes('answers'), false);
 
 console.log('Guided commerce QA passed.');

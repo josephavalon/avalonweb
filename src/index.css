@@ -2992,7 +2992,7 @@ body:has(.nd-product) .av-home-nav__mobile button {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgb(43 33 27 / 0.52);
+  color: rgb(43 33 27 / 0.72);
 }
 
 .guided-progress > div {
@@ -3076,7 +3076,7 @@ body:has(.nd-product) .av-home-nav__mobile button {
   font-weight: 750;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(43 33 27 / 0.6);
+  color: rgb(43 33 27 / 0.72);
 }
 
 .guided-back {
@@ -3128,11 +3128,11 @@ body:has(.nd-product) .av-home-nav__mobile button {
 .guided-best > p,
 .guided-alternatives > p {
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 750;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgb(43 33 27 / 0.5);
+  color: rgb(43 33 27 / 0.72);
 }
 
 .guided-best h1 {
@@ -3208,11 +3208,11 @@ body:has(.nd-product) .av-home-nav__mobile button {
 
 .guided-alternatives > button small {
   font-family: var(--font-body);
-  font-size: 0.58rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(43 33 27 / 0.45);
+  color: rgb(43 33 27 / 0.72);
 }
 
 .guided-alternatives > button strong {
@@ -3238,9 +3238,9 @@ body:has(.nd-product) .av-home-nav__mobile button {
   max-width: 42rem;
   margin-top: 0.2rem;
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 1.5;
-  color: rgb(43 33 27 / 0.45);
+  color: rgb(43 33 27 / 0.72);
 }
 
 @media (min-width: 800px) {
