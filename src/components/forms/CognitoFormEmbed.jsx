@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
+import { sanitizeCognitoPrefill } from '@/lib/cognitoPrefill';
 
 // Cognito Forms embed — SEAMLESS. This is PHI-handling code.
 //
@@ -43,13 +44,13 @@ const SEAMLESS_SRC = `${COGNITO_ORIGIN}/f/seamless.js`;
 // the Cognito Publish tab. `formId` is kept as the prop name for callsite
 // compatibility, but it is a form NUMBER, not the form's name or id.
 const DEFAULT_FORM_NUMBER = '1';
-
 export default function CognitoFormEmbed({
   formId = import.meta.env.VITE_COGNITO_INTAKE_FORM_ID || DEFAULT_FORM_NUMBER,
   formNumber,
   accountKey = import.meta.env.VITE_COGNITO_ACCOUNT_KEY,
   compact = false,
   tight = false,
+  prefill = null,
 }) {
   // `formNumber` (when passed) is authoritative — no env fallback. Campaign
   // mounts (e.g. /vitalice) use this so a missing env fails closed to the
@@ -57,6 +58,7 @@ export default function CognitoFormEmbed({
   const resolvedFormId = formNumber !== undefined ? formNumber : formId;
   const mountRef = useRef(null);
   const trackedRef = useRef(false);
+  const safePrefill = useMemo(() => sanitizeCognitoPrefill(prefill), [prefill]);
 
   // Anonymous, propertyless, fire-once. There is deliberately no submit event:
   // observing a submission means reading the form, and an unreliable funnel
@@ -80,16 +82,21 @@ export default function CognitoFormEmbed({
     script.async = true;
     script.setAttribute('data-key', accountKey);
     script.setAttribute('data-form', String(resolvedFormId));
-    script.addEventListener('load', trackLoadedOnce);
+    const handleLoad = () => {
+      trackLoadedOnce();
+      if (!Object.keys(safePrefill).length) return;
+      try { window.Cognito?.prefill?.(safePrefill); } catch { /* form stays usable without prefill */ }
+    };
+    script.addEventListener('load', handleLoad);
     host.appendChild(script);
 
     return () => {
-      script.removeEventListener('load', trackLoadedOnce);
+      script.removeEventListener('load', handleLoad);
       // Tear the form out on unmount so no patient-entered value survives a
       // client-side navigation in a detached node.
       host.replaceChildren();
     };
-  }, [resolvedFormId, accountKey, trackLoadedOnce]);
+  }, [resolvedFormId, accountKey, safePrefill, trackLoadedOnce]);
 
   // Fail closed. A build with missing config shows a phone number, never a
   // "temporary" name/phone form of our own — that exact shortcut is how this

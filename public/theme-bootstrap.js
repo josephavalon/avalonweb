@@ -6,6 +6,7 @@
   try {
     var stored = window.localStorage.getItem('avalon.theme');
     var path = String(window.location.pathname || '/');
+    var isAvalonOsBeta = String(window.location.hostname || '').toLowerCase() === 'beta.avalonvitality.co';
     var isPortal = /^\/(provider|admin|members|account)(\/|$)/.test(path)
       || /^\/(login|signup|forgot|forgot-password)(\/|$)/.test(path);
     if (isPortal) stored = 'dark';
@@ -21,8 +22,9 @@
     // Consumer cream theme (2026-07-29): every consumer page shares the new
     // snooches design. Set pre-paint so there's no dark flash before React
     // mounts; App.jsx keeps it in sync on client-side navigation.
-    // Portals + auth stay dark — not shipping yet.
-    if (!isPortal && !/^\/(organizer|kiosk)(\/|$)/.test(path)) cl.add('av-cream');
+    // Avalon OS beta carries the same cream/editorial language through every
+    // role surface. Existing production portals remain dark.
+    if (isAvalonOsBeta || (!isPortal && !/^\/(organizer|kiosk)(\/|$)/.test(path))) cl.add('av-cream');
     var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
     var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
     var skipOnce = window.sessionStorage.getItem('av.skipSplashOnce') === '1';

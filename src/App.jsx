@@ -170,6 +170,7 @@ const Corporate = lazyRoute(() => import('./pages/Corporate'));
 const EventsPage = lazyRoute(() => import('./pages/Events'));
 const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
 const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
+const RequestReceived = lazyRoute(() => import('./pages/RequestReceived'));
 const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
 const Gift = lazyRoute(() => import('./pages/Gift'));
@@ -201,7 +202,7 @@ const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
 const AdminKitControl = lazyRoute(() => import('./pages/admin/KitControl'));
 const AdminTrainingControl = lazyRoute(() => import('./pages/admin/TrainingControl'));
 const AdminInventory = lazyRoute(() => import('./pages/admin/Inventory'));
-const AdminComingSoon = lazyRoute(() => import('./pages/admin/ComingSoon'));
+const AdminOsCapability = lazyRoute(() => import('./pages/admin/OsCapability'));
 const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
 const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
@@ -271,14 +272,15 @@ const AnalyticsRouteTracker = () => {
 // Keeps html.av-cream in sync across client-side navigation. The initial value
 // is set pre-paint by public/theme-bootstrap.js (same predicate) so the first
 // render never flashes dark; this only handles route changes after mount.
-// Portals and auth keep the dark theme — they aren't shipping yet.
+// The dedicated Avalon OS beta uses the cream editorial theme everywhere.
+// Production portals and auth retain their current dark appearance.
 const PORTAL_PREFIX = /^\/(provider|admin|members|account|organizer|kiosk|login|signup|forgot|forgot-password)(\/|$)/;
 
 const ConsumerThemeSync = () => {
   const { pathname } = useLocation();
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    document.documentElement.classList.toggle('av-cream', !PORTAL_PREFIX.test(pathname));
+    document.documentElement.classList.toggle('av-cream', AVALON_OS_BETA_ENABLED || !PORTAL_PREFIX.test(pathname));
   }, [pathname]);
   return null;
 };
@@ -365,6 +367,7 @@ function AppRoutes() {
             {/* /start is the canonical short URL for the focused booking screen.
                 /nurse-delivery stays for existing links and the ?path=guided flow. */}
             <Route path="/start" element={<NurseDelivery entry="book" />} />
+            <Route path="/start/received" element={<RequestReceived />} />
             <Route path="/nurse-delivery" element={<NurseDelivery />} />
             {/* Vital Ice × Avalon co-branded intake for Outside Lands weekend.
                 Separate Cognito form; same PHI posture as /start. */}
@@ -527,7 +530,7 @@ function AppRoutes() {
             <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
             <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
-            <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
+            <Route path="/admin/os/:capability" element={AVALON_OS_BETA_ENABLED ? <RequireAuth allowedRoles={['admin', 'staff']}><AdminOsCapability /></RequireAuth> : <NotFound />} />
             <Route path="/admin/events/:slug/serve" element={<RequireAuth allowedRoles={['admin', 'staff', 'nurse', 'rn', 'np', 'physician', 'medical_director']}><AdminEventServe /></RequireAuth>} />
             <Route path="/admin/events/:slug/brand" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEventBrand /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />

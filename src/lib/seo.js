@@ -22,6 +22,7 @@ const jsonLdMatchesPath = (scriptEl, expectedUrl) => {
 const PRIVATE_BETA_ROBOTS = 'noindex, nofollow, noarchive';
 
 function isPrivateBetaHost() {
+  if (String(import.meta.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true') return true;
   if (typeof window === 'undefined') return false;
   const host = window.location.hostname;
   return host === 'snooches.avalonvitality.co' || host === 'beta.avalonvitality.co' || host === 'care.avalonvitality.co';

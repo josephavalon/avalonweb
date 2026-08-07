@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight, ArrowLeft, Check, Lock,
@@ -11,7 +11,15 @@ import {
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
+import GuidedCommerce from '@/components/guided/GuidedCommerce';
 import { IV_SESSIONS } from '@/config/verticals';
+import {
+  getGuidedContext,
+  getGuidedGoal,
+  getGuidedOffering,
+  getGuidedTiming,
+} from '@/data/guidedCommerce';
+import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
 
 // Nurse Delivery — lightweight mobile-first intake.
 // Landing → 2 goal selections → recommendation → Cognito form (which confirms
@@ -542,6 +550,7 @@ function Landing({
   focused = false,
   therapyName = '',
   duration = '',
+  prefill = null,
 }) {
   return (
     <motion.section
@@ -586,7 +595,7 @@ function Landing({
         )}
 
         <div className={`${focused ? 'mt-6 gap-3.5' : 'mt-10 gap-5'} grid`} data-testid="landing-form">
-          <CognitoFormEmbed compact tight={focused} />
+          <CognitoFormEmbed compact tight={focused} prefill={prefill} />
           {/* data-when="pre-submit": both lines speak to a form that hasn't been sent
               yet ("we'll text you", "by submitting"), so they read as stale once
               Cognito swaps in its confirmation. Hidden by a :has() rule in
@@ -694,6 +703,8 @@ function Landing({
 // so /start renders the focused booking form under its own canonical URL.
 export default function NurseDelivery({ entry = null }) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const entryPath = searchParams.get('path') || entry;
 
   useSeo({
@@ -704,7 +715,11 @@ export default function NurseDelivery({ entry = null }) {
     path: entry === 'book' ? '/start' : '/nurse-delivery',
   });
 
-  const therapyName = searchParams.get('therapy') || '';
+  const therapyParam = searchParams.get('therapy') || '';
+  const guidedSource = searchParams.get('source') === 'guided';
+  const guidedSelection = guidedSource ? location.state?.guided : null;
+  const guidedOffering = guidedSource ? getGuidedOffering(therapyParam) : null;
+  const therapyName = guidedOffering?.name || therapyParam;
   const protocolKey = searchParams.get('protocol') || '';
   const focusedBooking = entryPath === 'book';
   // ProtocolPage deep-links with &protocol=<key>; use its real duration in the
@@ -713,6 +728,20 @@ export default function NurseDelivery({ entry = null }) {
     () => (protocolKey ? matchForKey(protocolKey).duration || '' : ''),
     [protocolKey],
   );
+  const guidedPrefill = useMemo(() => {
+    const selectedAnswers = guidedSelection?.answers;
+    const goal = getGuidedGoal(selectedAnswers?.goal);
+    const context = getGuidedContext(selectedAnswers?.goal, selectedAnswers?.context);
+    const timing = getGuidedTiming(selectedAnswers?.timing);
+    if (!guidedOffering || !goal || !context || !timing) return null;
+    return {
+      GuidedSource: 'Guided commerce',
+      GuidedTherapy: guidedOffering.name,
+      GuidedGoal: goal.label,
+      GuidedContext: context.label,
+      GuidedTiming: timing.label,
+    };
+  }, [guidedOffering, guidedSelection]);
   const [step, setStep] = useState(entryPath === 'guided' ? 'choose' : 'landing');
   const [answers, setAnswers] = useState({ goal: null, category: null, customize: null });
 
@@ -726,6 +755,24 @@ export default function NurseDelivery({ entry = null }) {
     if (entryPath === 'guided') setStep('choose');
     if (entryPath === 'book') setStep('landing');
   }, [entryPath]);
+
+  useEffect(() => {
+    const flowId = guidedSelection?.flowId;
+    if (!focusedBooking || !guidedSource || !flowId || !guidedOffering) return;
+    const dedupeKey = `av.guided.start.${flowId}`;
+    try { if (window.sessionStorage.getItem(dedupeKey)) return; } catch { /* best effort */ }
+    const tracked = trackConsented(ANALYTICS_EVENTS.START_FLOW_OPENED, {
+      flow_id: flowId,
+      therapy_id: guidedOffering.id,
+      goal: guidedSelection.answers?.goal,
+      context: guidedSelection.answers?.context,
+      timing: guidedSelection.answers?.timing,
+      elapsed_ms: Math.max(0, Date.now() - Number(guidedSelection.startedAt || Date.now())),
+    });
+    if (tracked) {
+      try { window.sessionStorage.setItem(dedupeKey, '1'); } catch { /* best effort */ }
+    }
+  }, [focusedBooking, guidedOffering, guidedSelection, guidedSource]);
 
   const categoryOptions = Q2_BY_GOAL[answers.goal] || Q2_BY_GOAL.recovery;
   const selectedGoal = Q1.find((item) => item.id === answers.goal);
@@ -742,6 +789,8 @@ export default function NurseDelivery({ entry = null }) {
     setStep('match');
   };
 
+  if (entryPath === 'guided') return <GuidedCommerce />;
+
   return (
     <div className={`nd-flow app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden bg-background text-foreground${focusedBooking ? ' nd-flow--focused-booking' : ''}`}>
       <main className={`mx-auto min-h-[calc(100svh-3.75rem)] w-full px-5 md:px-8 ${focusedBooking ? 'max-w-[80.875rem] pb-6 pt-3 sm:pt-5 md:pb-24 md:pt-20' : 'max-w-6xl pb-24 pt-4 md:pt-[7rem] lg:pt-6'}`}>
@@ -752,7 +801,8 @@ export default function NurseDelivery({ entry = null }) {
                 focused={entryPath === 'book'}
                 therapyName={therapyName}
                 duration={protocolDuration}
-                onHelpMeDecide={() => setStep('q1')}
+                prefill={guidedPrefill}
+                onHelpMeDecide={() => navigate('/nurse-delivery?path=guided')}
               />
             </StepShell>
           )}

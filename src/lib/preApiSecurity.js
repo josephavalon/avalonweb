@@ -49,6 +49,7 @@ export function isLiveApiArmed() {
 export function demoAuthLockReason() {
   const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
   if (env.VITE_AVALON_DEMO_AUTH === 'false') return 'demo_auth_env_disabled';
+  if (env.VITE_AVALON_OS_BETA === 'true') return 'avalon_os_beta_requires_supabase_auth';
   // Vite's PROD flag is set during a production build. We require BOTH
   // build-time PROD and a non-simulation host before we'll fall open; a prod
   // build that ships to snooches (beta) must keep demo auth working.

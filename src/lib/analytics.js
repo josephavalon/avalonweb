@@ -39,6 +39,16 @@ export const ANALYTICS_EVENTS = Object.freeze({
   // Intake front door — anonymous only. No submit event: the form payload is PHI.
   START_CLICKED: 'start_clicked',
   COGNITO_FORM_LOADED: 'cognito_form_loaded',
+  GUIDED_FLOW_STARTED: 'guided_flow_started',
+  GOAL_SELECTED: 'goal_selected',
+  CONTEXT_SELECTED: 'context_selected',
+  TIMING_SELECTED: 'timing_selected',
+  RECOMMENDATION_VIEWED: 'recommendation_viewed',
+  RECOMMENDATION_SELECTED: 'recommendation_selected',
+  ALTERNATIVE_SELECTED: 'alternative_selected',
+  FULL_MENU_OPENED: 'full_menu_opened',
+  START_FLOW_OPENED: 'start_flow_opened',
+  REQUEST_SUBMITTED: 'request_submitted',
 
   // Member lifecycle — the ARPM spine.
   MEMBER_SIGNUP: 'member_signup',
@@ -123,6 +133,18 @@ let context = {};
 function hasAnalyticsConsent() {
   if (typeof window === 'undefined') return false;
   try { return window.localStorage.getItem(CONSENT_KEY) === 'allowed'; } catch { return false; }
+}
+
+/**
+ * Guided-commerce choices are controlled wellness taxonomy values. They are
+ * never persisted or queued before explicit analytics consent.
+ *
+ * @returns {boolean} Whether the event was dispatched.
+ */
+export function trackConsented(name, props = {}) {
+  if (!hasAnalyticsConsent()) return false;
+  track(name, props);
+  return true;
 }
 
 if (typeof window !== 'undefined') {
@@ -474,6 +496,7 @@ function sanitizeObject(props, depth = 0) {
 // Default export mirrors the named exports for ergonomics at callsites.
 const analytics = {
   track,
+  trackConsented,
   trackPageView,
   captureAttribution,
   getAttribution,
