@@ -4,7 +4,11 @@ import CornerMenuHeader from '@/components/landing/CornerMenuHeader';
 
 // Signage/kiosk surfaces are chrome-free: a Guided-Access iPad must not offer
 // nav escape routes, and the departures board is pure-black signage.
-const CHROME_FREE = /^\/events\/[^/]+\/(kiosk|board)\/?$/;
+// /vitalice is chrome-free too — it carries its own in-page co-brand ribbon
+// (Vital Ice × Avalon Vitality) and a full-bleed glacier hero, so the global
+// AVALON VITALITY header would double-brand and eat vertical space above the
+// ribbon.
+const CHROME_FREE = /^\/(?:vitalice|events\/[^/]+\/(kiosk|board))\/?$/;
 const INTERNAL_CHROME_FREE = /^\/(?:admin|provider|members|organizer)(?:\/|$)/;
 const CURRENT_CONSUMER_SURFACES = [
   /^\/$/,
