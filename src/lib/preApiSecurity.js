@@ -10,6 +10,7 @@ const PRIVATE_HOST_PATTERNS = [
 ];
 
 const BETA_HOST_PATTERNS = [
+  /^beta\.avalonvitality\.co$/i,
   /^snooches\.avalonvitality\.co$/i,
 ];
 
@@ -41,6 +42,18 @@ export function isProductionHost(host = currentHost()) {
 export function isLiveApiArmed() {
   const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
   return env.VITE_AVALON_ENABLE_LIVE_API === 'true';
+}
+
+// A separate, intentionally narrow gate for the public-by-link Avalon OS
+// review build. This is not production authentication: it exposes only
+// synthetic, tab-scoped data and is impossible on the apex/www hosts or when
+// live APIs are armed. Keeping it separate lets VITE_AVALON_DEMO_AUTH remain
+// false for the protected OS environment contract.
+export function isBetaReviewAuthAllowed() {
+  const env = /** @type {Record<string, string | undefined>} */ (import.meta.env || {});
+  if (env.VITE_AVALON_REVIEW_AUTH !== 'true') return false;
+  if (isLiveApiArmed() || isProductionHost()) return false;
+  return isLocalSimulationHost() || currentHost() === 'beta.avalonvitality.co';
 }
 
 // Single source of truth for the prod refusal. Used by both the demo gate AND
@@ -79,13 +92,16 @@ export function isDemoAuthAllowed() {
 }
 
 export const PRE_API_SECURITY_MODE = {
-  mode: isLiveApiArmed() ? 'live-api-armed' : 'pre-api-hard-wall',
+  mode: isLiveApiArmed() ? 'live-api-armed' : isBetaReviewAuthAllowed() ? 'beta-review-hard-wall' : 'pre-api-hard-wall',
   localSimulation: isLocalSimulationHost(),
   betaSimulation: isBetaSimulationHost(),
   liveApiArmed: isLiveApiArmed(),
   demoAuthAllowed: isDemoAuthAllowed(),
+  betaReviewAuthAllowed: isBetaReviewAuthAllowed(),
   label: isLiveApiArmed()
     ? 'Live API armed'
+    : isBetaReviewAuthAllowed()
+      ? 'Beta review — synthetic data only'
     : isBetaSimulationHost()
       ? 'Beta simulation only'
       : 'Local simulation only',

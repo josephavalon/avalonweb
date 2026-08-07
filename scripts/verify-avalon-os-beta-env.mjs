@@ -7,6 +7,8 @@ const requireValue = (name) => { if (!value(name)) errors.push(`${name} is requi
 
 for (const name of [
   'AVALON_OS_BETA', 'VITE_AVALON_OS_BETA', 'PUBLIC_SITE_URL', 'VITE_PUBLIC_SITE_URL',
+  'VITE_AVALON_REVIEW_AUTH', 'VITE_AVALON_REVIEW_USERNAME', 'VITE_AVALON_REVIEW_PASSWORD',
+  'VITE_AVALON_ENABLE_LIVE_API', 'VITE_ADMIN_PREVIEW',
   'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY',
   'AVALON_BETA_SUPABASE_PROJECT_REF', 'STRIPE_SECRET_KEY', 'VITE_STRIPE_PUBLISHABLE_KEY',
   'ACUITY_USER_ID', 'ACUITY_API_KEY', 'ACUITY_BETA_CALENDAR_ID',
@@ -15,6 +17,10 @@ for (const name of [
 
 if (value('AVALON_OS_BETA') !== 'true' || value('VITE_AVALON_OS_BETA') !== 'true') errors.push('both Avalon OS beta flags must equal true');
 if (value('VITE_AVALON_DEMO_AUTH') !== 'false') errors.push('VITE_AVALON_DEMO_AUTH must equal false');
+if (value('VITE_AVALON_REVIEW_AUTH') !== 'true') errors.push('VITE_AVALON_REVIEW_AUTH must equal true');
+if (value('VITE_AVALON_REVIEW_USERNAME') !== 'user' || value('VITE_AVALON_REVIEW_PASSWORD') !== 'password') errors.push('beta review credentials must be user / password');
+if (value('VITE_AVALON_ENABLE_LIVE_API') !== 'false') errors.push('VITE_AVALON_ENABLE_LIVE_API must equal false');
+if (value('VITE_ADMIN_PREVIEW') !== '1') errors.push('VITE_ADMIN_PREVIEW must equal 1 so shipped beta capabilities remain visible');
 for (const name of ['PUBLIC_SITE_URL', 'VITE_PUBLIC_SITE_URL']) {
   if (value(name) !== 'https://beta.avalonvitality.co') errors.push(`${name} must be the beta URL`);
 }

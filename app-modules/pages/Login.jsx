@@ -3,13 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle, ArrowLeft, ArrowRight, ArrowUpRight, Check, Eye, EyeOff, Fingerprint,
   Link2, MailCheck, MessageCircle, RefreshCw, ShieldCheck, Smartphone, Stethoscope, Ticket,
+  UserPlus, UserRound,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
-import { isDemoAuthAllowed } from '@/lib/preApiSecurity';
+import { isBetaReviewAuthAllowed, isDemoAuthAllowed } from '@/lib/preApiSecurity';
 import { authProviderConfig } from '@/lib/authProviderConfig';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -111,34 +112,40 @@ function SubmitButton({ loading, idle, busy }) {
   );
 }
 
-// Pill segmented control. Reused for the PATIENT/ADMIN audience switch.
-function SegmentedToggle({ options, value, onChange }) {
+const PORTAL_CHOICES = [
+  { key: 'new', label: 'New Client', detail: 'Start care', Icon: UserPlus },
+  { key: 'returning', label: 'Returning', detail: 'Member portal', Icon: UserRound },
+  { key: 'nurse', label: 'Nurse', detail: 'Clinical shifts', Icon: Stethoscope },
+  { key: 'admin', label: 'Admin', detail: 'Avalon OS', Icon: ShieldCheck },
+  { key: 'organizer', label: 'Organizer', detail: 'Event hub', Icon: Ticket },
+];
+
+function PortalChooser({ value, onChange }) {
   return (
-    <div
-      className="grid items-center gap-0 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] p-1"
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
-    >
-      {options.map(({ key, label, Icon }, i) => (
-        <button
-          key={key}
-          type="button"
-          onClick={() => onChange(key)}
-          className={`relative flex min-h-[44px] items-center justify-center gap-1.5 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.22em] transition-colors ${
-            value === key
-              ? 'bg-foreground text-background shadow-[0_1px_0_hsl(var(--background)/0.10)]'
-              : 'text-foreground/62 hover:text-foreground'
-          }`}
-        >
-          {Icon ? <Icon className="h-3.5 w-3.5" strokeWidth={2} /> : null}
-          {label}
-          {i > 0 && value !== key && value !== options[i - 1].key && (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-1/2 h-3 w-px -translate-y-1/2 bg-foreground/22"
-            />
-          )}
-        </button>
-      ))}
+    <div aria-label="Choose your Avalon portal" className="mb-3 grid grid-cols-2 gap-1.5">
+      {PORTAL_CHOICES.map(({ key, label, detail, Icon }, index) => {
+        const selected = value === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(key)}
+            className={`flex min-h-[54px] items-center gap-2 rounded-xl border px-3 text-left transition-colors ${
+              index === PORTAL_CHOICES.length - 1 ? 'col-span-2' : ''
+            } ${selected
+              ? 'border-foreground/70 bg-foreground text-background'
+              : 'border-foreground/[0.13] bg-foreground/[0.04] text-foreground hover:border-foreground/28 hover:bg-foreground/[0.07]'
+            }`}
+          >
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+            <span className="min-w-0">
+              <span className="block font-body text-[10px] font-bold uppercase leading-tight tracking-[0.14em]">{label}</span>
+              <span className={`mt-0.5 block font-body text-[10px] leading-tight ${selected ? 'text-background/65' : 'text-foreground/42'}`}>{detail}</span>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -220,6 +227,9 @@ export default function Login({ defaultAudience = 'patient' }) {
   } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
   const demoAuthAvailable = isDemoAuthAllowed();
+  const reviewAuthAvailable = isBetaReviewAuthAllowed();
+  const reviewUsername = import.meta.env.VITE_AVALON_REVIEW_USERNAME || 'user';
+  const reviewPassword = import.meta.env.VITE_AVALON_REVIEW_PASSWORD || 'password';
 
   const requestedNurse = searchParams.get('role') === 'nurse';
   const requestedOrganizer = searchParams.get('portal') === 'organizer';
@@ -239,9 +249,9 @@ export default function Login({ defaultAudience = 'patient' }) {
   // 'methods' is the passwordless launchpad; 'email'/'phone' are the expanded forms.
   const [view, setView] = useState('methods');
   const localOrganizerDemo = requestedOrganizer && !supabaseMode && demoAuthAvailable;
-  const [identifier, setIdentifier] = useState(localOrganizerDemo ? 'ORGANIZER001' : ''); // demo client ID / admin operator ID
+  const [identifier, setIdentifier] = useState(reviewAuthAvailable ? reviewUsername : localOrganizerDemo ? 'ORGANIZER001' : ''); // demo client ID / admin operator ID
   const [email, setEmail] = useState('');           // supabase magic-link address
-  const [password, setPassword] = useState(localOrganizerDemo ? (import.meta.env.VITE_AVALON_DEMO_PASSWORD || '') : '');
+  const [password, setPassword] = useState(reviewAuthAvailable ? reviewPassword : localOrganizerDemo ? (import.meta.env.VITE_AVALON_DEMO_PASSWORD || '') : '');
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -316,7 +326,10 @@ export default function Login({ defaultAudience = 'patient' }) {
     setOtp('');
     setResendOtpCooldown(0);
     setResendOtpDone(false);
-    if (next === 'organizer' && !supabaseMode && demoAuthAvailable) {
+    if (reviewAuthAvailable) {
+      setIdentifier(reviewUsername);
+      setPassword(reviewPassword);
+    } else if (next === 'organizer' && !supabaseMode && demoAuthAvailable) {
       setIdentifier((current) => current.trim() || 'ORGANIZER001');
       setPassword(import.meta.env.VITE_AVALON_DEMO_PASSWORD || '');
     } else {
@@ -325,33 +338,41 @@ export default function Login({ defaultAudience = 'patient' }) {
     clearUnconfirmed();
   };
 
-  const switchStaffMode = (next) => {
-    if (next === staffMode) return;
-    setStaffMode(next);
-    setView('methods');
-    setFieldError('');
-    setLinkSent('');
-    setResetSent('');
-    setPassword('');
-    clearUnconfirmed();
-  };
+  const activePortalChoice = isNew
+    ? 'new'
+    : isOrganizer
+      ? 'organizer'
+      : isAdmin
+        ? 'admin'
+        : isNurse
+          ? 'nurse'
+          : 'returning';
 
-  // Patient tab switch. Every tab — including 'nurse' (an in-card coming-soon
-  // panel) — swaps the card body in place and clears any in-flight sign-in state.
-  // Nothing navigates away, so the card never remounts/refreshes between tabs.
-  const switchMode = (next) => {
-    if (next === mode) return;
-    setMode(next);
+  const switchPortal = (next) => {
     setView('methods');
     setFieldError('');
     setLinkSent('');
     setResetSent('');
     setOtpSent(false);
     setOtp('');
-    setResendOtpCooldown(0);
-    setResendOtpDone(false);
-    setPassword('');
     clearUnconfirmed();
+    if (next === 'new' || next === 'returning') {
+      setAudience('patient');
+      setMode(next === 'new' ? 'new' : 'returning');
+    } else if (next === 'organizer') {
+      setAudience('organizer');
+      setMode('returning');
+    } else {
+      setAudience('staff');
+      setStaffMode(next === 'admin' ? 'admin' : 'nurse');
+      setMode('returning');
+    }
+    if (reviewAuthAvailable && next !== 'new') {
+      setIdentifier(reviewUsername);
+      setPassword(reviewPassword);
+    } else if (next === 'new') {
+      setPassword('');
+    }
   };
 
   // Reset the unconfirmed-email affordance (the resend button + its states).
@@ -652,15 +673,24 @@ export default function Login({ defaultAudience = 'patient' }) {
   // admin = Operator ID. Passwordless methods cannot reach a backend offline.
   const demoForm = (
     <form onSubmit={handleDemoSubmit} className="space-y-4 md:space-y-3" noValidate>
+      {reviewAuthAvailable ? (
+        <div className="rounded-xl border border-amber-300/20 bg-amber-200/[0.07] px-3 py-2.5">
+          <p className="font-body text-[9px] font-bold uppercase tracking-[0.2em] text-amber-100/65">Beta review access</p>
+          <p className="mt-1 font-body text-[12px] font-semibold text-foreground/85">
+            Username <span className="font-mono">user</span> · Password <span className="font-mono">password</span>
+          </p>
+          <p className="mt-1 font-body text-[10px] leading-relaxed text-foreground/45">Synthetic data only. Choose a portal above, then use the same login.</p>
+        </div>
+      ) : null}
       <Field
         id="login-identifier"
-        label={isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : isOrganizer ? 'Organizer ID or Email' : 'Client ID or Email'}
+        label={reviewAuthAvailable ? 'Username' : isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : isOrganizer ? 'Organizer ID or Email' : 'Client ID or Email'}
         type="text"
         value={identifier}
         onChange={(event) => { setIdentifier(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="username"
         autoCapitalize={isAdmin || isNurse || isOrganizer ? 'characters' : 'none'}
-        placeholder={isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : isOrganizer ? 'ORGANIZER001' : 'CLIENT0001'}
+        placeholder={reviewAuthAvailable ? 'user' : isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : isOrganizer ? 'ORGANIZER001' : 'CLIENT0001'}
       />
       <Field
         id="login-password"
@@ -669,7 +699,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         value={password}
         onChange={(event) => { setPassword(event.target.value); setFieldError(''); }}
         autoComplete="current-password"
-        placeholder={isAdmin ? '••••••••' : 'Password'}
+        placeholder={reviewAuthAvailable ? 'password' : isAdmin ? '••••••••' : 'Password'}
       >
         <button
           type="button"
@@ -799,15 +829,15 @@ export default function Login({ defaultAudience = 'patient' }) {
   } else if (isPortalUser) {
     // Staff entry is deliberately email + password only. The Nurse/Admin tabs
     // select a destination; they never change or duplicate the credential.
-    body = supabaseMode ? passwordForm : demoForm;
-  } else if (!supabaseMode) {
+    body = reviewAuthAvailable ? demoForm : supabaseMode ? passwordForm : demoForm;
+  } else if (!supabaseMode || reviewAuthAvailable) {
     // Offline beta keeps visible method choices while preserving the roster ID
     // sign-in as the working fallback.
     body = (
       <div className="space-y-3">
-        {patientMethodButtons}
+        {!reviewAuthAvailable ? patientMethodButtons : null}
         <ErrorBanner message={displayError} />
-        <Divider label={isNurse ? 'or nurse id' : 'or client id'} />
+        {!reviewAuthAvailable ? <Divider label={isNurse ? 'or nurse id' : 'or client id'} /> : null}
         {demoForm}
       </div>
     );
@@ -896,31 +926,7 @@ export default function Login({ defaultAudience = 'patient' }) {
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
         <section className="flex h-[calc(100svh-1rem)] min-h-[520px] max-h-[620px] w-full max-w-[340px] flex-col overflow-y-auto rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:h-auto md:max-w-[360px] md:overflow-visible md:p-4">
-          {!isPortalUser && (
-            <div className="mb-3">
-              <SegmentedToggle
-                options={[
-                  { key: 'returning', label: 'Returning' },
-                  { key: 'new', label: 'New' },
-                ]}
-                value={mode}
-                onChange={switchMode}
-              />
-            </div>
-          )}
-
-          {isStaff && (
-            <div className="mb-3">
-              <SegmentedToggle
-                options={[
-                  { key: 'nurse', label: 'Nurse', Icon: Stethoscope },
-                  { key: 'admin', label: 'Admin', Icon: ShieldCheck },
-                ]}
-                value={staffMode}
-                onChange={switchStaffMode}
-              />
-            </div>
-          )}
+          <PortalChooser value={activePortalChoice} onChange={switchPortal} />
 
           {/* Heading + body crossfade together on every tab/view switch; keyed
               only on audience/mode/view so it never remounts mid-form (no focus

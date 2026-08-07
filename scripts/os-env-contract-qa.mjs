@@ -6,6 +6,11 @@ const base = {
   AVALON_OS_BETA: 'true',
   VITE_AVALON_OS_BETA: 'true',
   VITE_AVALON_DEMO_AUTH: 'false',
+  VITE_AVALON_REVIEW_AUTH: 'true',
+  VITE_AVALON_REVIEW_USERNAME: 'user',
+  VITE_AVALON_REVIEW_PASSWORD: 'password',
+  VITE_AVALON_ENABLE_LIVE_API: 'false',
+  VITE_ADMIN_PREVIEW: '1',
   PUBLIC_SITE_URL: 'https://beta.avalonvitality.co',
   VITE_PUBLIC_SITE_URL: 'https://beta.avalonvitality.co',
   SUPABASE_URL: 'https://betaref.supabase.co',
@@ -38,5 +43,8 @@ assert.notEqual(verify({ SUPABASE_URL: 'https://wrong.supabase.co' }).status, 0,
 assert.notEqual(verify({ VERCEL_PROJECT_ID: 'prj_production' }).status, 0, 'wrong Vercel project must fail');
 assert.notEqual(verify({ VERCEL_ENV: 'production' }).status, 0, 'production deploy target must fail');
 assert.notEqual(verify({ VITE_AVALON_DEMO_AUTH: 'true' }).status, 0, 'demo auth must fail');
+assert.notEqual(verify({ VITE_AVALON_REVIEW_AUTH: 'false' }).status, 0, 'beta review auth must be explicit');
+assert.notEqual(verify({ VITE_AVALON_ENABLE_LIVE_API: 'true' }).status, 0, 'review auth with live APIs must fail');
+assert.notEqual(verify({ VITE_AVALON_REVIEW_PASSWORD: 'different' }).status, 0, 'unexpected review credentials must fail');
 
 console.log('Avalon OS environment QA passed isolated beta and refused production credentials, projects, targets, and demo auth.');

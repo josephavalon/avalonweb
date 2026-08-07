@@ -7,7 +7,7 @@
 import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import { appendActivity, clearAllAvLocal } from './localOs';
 import { seedDemoState } from './platformOps';
-import { isDemoAuthAllowed, demoAuthLockReason, PRE_API_SECURITY_MODE } from './preApiSecurity';
+import { isBetaReviewAuthAllowed, isDemoAuthAllowed, demoAuthLockReason, PRE_API_SECURITY_MODE } from './preApiSecurity';
 import { supabase, hasSupabase } from './supabase';
 import { authProviderConfig } from './authProviderConfig';
 import { clearPortalIntent, readPortalIntent, rememberPortalIntent, resolvePortalSession } from './portalAccess';
@@ -70,6 +70,14 @@ const DEMO_USERS = {
 // Beta/demo passcode. It must be supplied per environment and is still gated to
 // beta/local hosts by isDemoAuthAllowed().
 const DEMO_PASSWORD = import.meta.env.VITE_AVALON_DEMO_PASSWORD || '';
+const REVIEW_USERNAME = import.meta.env.VITE_AVALON_REVIEW_USERNAME || 'user';
+const REVIEW_PASSWORD = import.meta.env.VITE_AVALON_REVIEW_PASSWORD || 'password';
+const REVIEW_USERS_BY_PORTAL = {
+  customer:  { role: 'client',   name: 'Avalon Client',    redirect: '/members/dashboard', status: 'active', canonical: 'REVIEW-CLIENT' },
+  nurse:     { role: 'nurse',    name: 'Avalon Nurse',     redirect: '/provider/shift',    status: 'active', canonical: 'REVIEW-NURSE' },
+  admin:     { role: 'admin',    name: 'Avalon Admin',     redirect: '/admin',             status: 'active', canonical: 'REVIEW-ADMIN' },
+  organizer: { role: 'promoter', name: 'Avalon Organizer', redirect: '/organizer',         status: 'active', canonical: 'REVIEW-ORGANIZER' },
+};
 // ─────────────────────────────────────────────────────────────────────────
 
 const ROLE_REDIRECT = {
@@ -566,6 +574,7 @@ export function AuthStoreProvider({ children }) {
     // Anything that isn't a known roster ID falls through to Supabase magic-link.
     const identifier = normalizeLoginIdentifier(email);
     const matchesDemoRoster = Object.keys(DEMO_USERS).some((k) => normalizeLoginIdentifier(k) === identifier);
+    const matchesReviewAccount = identifier === normalizeLoginIdentifier(REVIEW_USERNAME);
     // If someone submits a demo roster ID where demo auth is disallowed (i.e.
     // production), short-circuit rather than letting it fall through to Supabase
     // signInWithEmail (which would treat "ADMIN001" as a malformed email).
@@ -580,16 +589,22 @@ export function AuthStoreProvider({ children }) {
       setError(msg);
       return { ok: false, error: msg, code: 'demo_auth_disabled' };
     }
+    if (matchesReviewAccount && !isBetaReviewAuthAllowed()) {
+      const msg = 'That account is not available in this environment.';
+      setError(msg);
+      return { ok: false, error: msg, code: 'review_auth_disabled' };
+    }
     const isDemoAccount = isDemoAuthAllowed() && matchesDemoRoster;
+    const isReviewAccount = isBetaReviewAuthAllowed() && matchesReviewAccount;
     // Staff with a password sign in directly; passwordless customers (no
     // password supplied) get a magic link as before.
-    if (hasSupabase && !isDemoAccount && String(password || '').length > 0) return signInWithPassword({ email, password, portal });
-    if (hasSupabase && !isDemoAccount) return signInWithEmail(email);
+    if (hasSupabase && !isDemoAccount && !isReviewAccount && String(password || '').length > 0) return signInWithPassword({ email, password, portal });
+    if (hasSupabase && !isDemoAccount && !isReviewAccount) return signInWithEmail(email);
 
     setLoading(true); setError(null);
     try {
       await new Promise((r) => setTimeout(r, 600));
-      if (!isDemoAuthAllowed()) {
+      if (!isDemoAuthAllowed() && !isBetaReviewAuthAllowed()) {
         // Structured warn so a prod attempt shows up in the browser console with
         // enough context to spot from a session recording / Sentry breadcrumb.
         // Fail-closed: refuse, never fall through to a Supabase password attempt.
@@ -602,11 +617,18 @@ export function AuthStoreProvider({ children }) {
         } catch { /* console may be locked down */ }
         throw new Error('Local demo auth is disabled outside Avalon simulation mode.');
       }
-      if (!DEMO_PASSWORD) throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
       const submittedUsername = normalizeLoginIdentifier(email);
-      const usernameKey = Object.keys(DEMO_USERS).find((k) => normalizeLoginIdentifier(k) === submittedUsername);
-      if (!usernameKey || String(password || '').trim() !== DEMO_PASSWORD) throw new Error('Invalid username or password.');
-      const profile = DEMO_USERS[usernameKey];
+      const reviewPortal = Object.hasOwn(REVIEW_USERS_BY_PORTAL, portal) ? portal : 'customer';
+      const reviewMatch = isBetaReviewAuthAllowed()
+        && submittedUsername === normalizeLoginIdentifier(REVIEW_USERNAME)
+        && String(password || '') === REVIEW_PASSWORD;
+      if (isReviewAccount && !reviewMatch) throw new Error('Invalid username or password.');
+      if (!reviewMatch && !DEMO_PASSWORD) throw new Error('Demo auth password is not configured. Set VITE_AVALON_DEMO_PASSWORD for local simulation.');
+      const usernameKey = reviewMatch
+        ? REVIEW_USERNAME
+        : Object.keys(DEMO_USERS).find((k) => normalizeLoginIdentifier(k) === submittedUsername);
+      if (!reviewMatch && (!usernameKey || String(password || '').trim() !== DEMO_PASSWORD)) throw new Error('Invalid username or password.');
+      const profile = reviewMatch ? REVIEW_USERS_BY_PORTAL[reviewPortal] : DEMO_USERS[usernameKey];
       if (profile.status === 'suspended') throw new Error('Account suspended. Contact support at hello@avalonvitality.co');
       if (profile.status === 'archived') throw new Error('This account is no longer active.');
       const sessionUser = {
@@ -619,7 +641,7 @@ export function AuthStoreProvider({ children }) {
         seededAt: new Date().toISOString(),
         lastActiveAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
-        authMode: PRE_API_SECURITY_MODE.mode,
+        authMode: reviewMatch ? 'beta-review-hard-wall' : PRE_API_SECURITY_MODE.mode,
         mfa: demoMfaState(),
         securityWall: 'pre-api-hard-wall',
       };

@@ -468,7 +468,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const mobileLinks = [
     { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
     ...mainLinks,
-    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
+    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Login' }]),
   ];
 
   // Sign-in / sign-up screens (customer + admin) intentionally DO show the
@@ -631,9 +631,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           {!compact && !focusMode && !care && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
-          {/* Audit finding K6/D7: hide Sign In on /login (redundant with the
+          {/* Audit finding K6/D7: hide Login on /login (redundant with the
               sign-in card); hide on /signup (users already in a signup flow). */}
-          {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
+          {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Login</Link>}
         </div>
       </div>
 
@@ -767,7 +767,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                 <div className="relative grid gap-1.5">
                   {mobileLinks.map((item, i) => {
                   const active = !item.external && isActiveLink(item.to);
-                  const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Sign In' || item.label === 'Dashboard');
+                  const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Login' || item.label === 'Dashboard');
                   const Trailing = isAuthRow ? ArrowUpRight : ChevronRight;
                   const rowClass = `av-glass-widget group relative flex min-h-[62px] items-center justify-between rounded-2xl border px-5 font-body text-[12px] uppercase tracking-[0.42em] text-foreground transition-all duration-300 ${
                     item.primary
