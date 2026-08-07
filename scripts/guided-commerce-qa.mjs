@@ -31,10 +31,41 @@ for (const goal of GUIDED_GOALS) {
       assert.equal(result.recommendations.length, 3);
       assert.equal(new Set(result.recommendations.map((item) => item.therapyId)).size, 3);
       assert.equal(JSON.stringify(answers), original, 'rankOfferings mutated answers');
-      assert.ok(result.recommendations.every((item) => item.offering.enabled && item.offering.recommendable));
+      assert.ok(result.recommendations.every((item) => (
+        item.offering.enabled
+        && item.offering.recommendable
+        && !item.offering.qualificationRequired
+      )));
     }
   }
 }
+
+const catalogBefore = JSON.stringify(GUIDED_OFFERINGS);
+const deterministicAnswers = { goal: 'recover', context: 'workout', timing: 'today' };
+const firstRanking = rankOfferings(deterministicAnswers, GUIDED_OFFERINGS);
+const secondRanking = rankOfferings(deterministicAnswers, GUIDED_OFFERINGS);
+assert.deepEqual(firstRanking, secondRanking, 'rankings must be deterministic');
+assert.equal(JSON.stringify(GUIDED_OFFERINGS), catalogBefore, 'rankOfferings mutated offerings');
+assert.deepEqual(firstRanking.recommendations[0].reasons, [
+  'goal:recover',
+  'context:workout',
+  'timing:today',
+]);
+
+const rule = {
+  primaryGoals: ['recover'], secondaryGoals: [],
+  exactContexts: ['workout'], relatedContexts: [],
+  timing: { today: 4 },
+};
+const tiedOfferings = [
+  { id: 'later', name: 'Later', protocolKey: 'later', priority: 2, enabled: true, recommendable: true, rules: rule },
+  { id: 'first', name: 'First', protocolKey: 'first', priority: 1, enabled: true, recommendable: true, rules: rule },
+  { id: 'disabled', name: 'Disabled', protocolKey: 'disabled', priority: 0, enabled: false, recommendable: true, rules: rule },
+  { id: 'gated', name: 'Gated', protocolKey: 'gated', priority: 0, enabled: true, recommendable: true, qualificationRequired: true, rules: rule },
+];
+const tied = rankOfferings(deterministicAnswers, tiedOfferings, 10);
+assert.deepEqual(tied.recommendations.map((item) => item.therapyId), ['first', 'later']);
+assert.ok(tied.recommendations.every((item) => item.score === 21), 'fixed score bands changed');
 
 const excluded = new Set(['cbd', 'food-poisoning', 'beauty', 'nad-500', 'nad-750', 'nad-vitality', 'nad-1000', 'nad-1250', 'nad-1500']);
 const sample = rankOfferings(

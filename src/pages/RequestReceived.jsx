@@ -2,17 +2,10 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
+import { readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
 import { useSeo } from '@/lib/seo';
 
-const FLOW_STORAGE_KEY = 'av.guided.flow.v1';
 const DIRECT_RECEIPT_KEY = 'av.request.receipt.v1';
-
-function readGuidedFlow() {
-  try {
-    const value = JSON.parse(window.sessionStorage.getItem(FLOW_STORAGE_KEY) || 'null');
-    return value?.id && Number.isFinite(value?.selectedAt) ? value : null;
-  } catch { return null; }
-}
 
 export default function RequestReceived() {
   useSeo({
@@ -23,11 +16,12 @@ export default function RequestReceived() {
   });
 
   useEffect(() => {
-    const flow = readGuidedFlow();
-    const dedupeKey = flow ? `av.guided.receipt.${flow.id}` : DIRECT_RECEIPT_KEY;
-    try {
-      if (window.sessionStorage.getItem(dedupeKey)) return;
-    } catch { /* continue with a best-effort event */ }
+    const storedFlow = readGuidedFlow();
+    const flow = Number.isFinite(storedFlow?.selectedAt) ? storedFlow : null;
+    if (flow?.submittedAt) return;
+    if (!flow) {
+      try { if (Number.isFinite(Number(window.sessionStorage.getItem(DIRECT_RECEIPT_KEY)))) return; } catch { /* continue */ }
+    }
 
     const tracked = flow
       ? trackConsented(ANALYTICS_EVENTS.REQUEST_SUBMITTED, {
@@ -36,8 +30,10 @@ export default function RequestReceived() {
         })
       : trackConsented(ANALYTICS_EVENTS.REQUEST_SUBMITTED);
 
-    if (tracked) {
-      try { window.sessionStorage.setItem(dedupeKey, '1'); } catch { /* best-effort dedupe */ }
+    if (!tracked) return;
+    if (flow) timestampGuidedFlow(flow.id, 'submittedAt');
+    else {
+      try { window.sessionStorage.setItem(DIRECT_RECEIPT_KEY, String(Date.now())); } catch { /* best-effort dedupe */ }
     }
   }, []);
 

@@ -18,6 +18,7 @@ import {
   getGuidedTiming,
 } from '@/data/guidedCommerce';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
+import { readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
 
 // Nurse Delivery owns the unrestricted entry surface and the single intake.
 // Guided commerce is route-state driven and hands its selection to /start.
@@ -398,19 +399,18 @@ export default function NurseDelivery({ entry = null }) {
   useEffect(() => {
     const flowId = guidedSelection?.flowId;
     if (!focusedBooking || !guidedSource || !flowId || !guidedOffering) return;
-    const dedupeKey = `av.guided.start.${flowId}`;
-    try { if (window.sessionStorage.getItem(dedupeKey)) return; } catch { /* best effort */ }
+    const flow = readGuidedFlow();
+    if (flow?.id !== flowId || flow.startOpenedAt) return;
     const tracked = trackConsented(ANALYTICS_EVENTS.START_FLOW_OPENED, {
       flow_id: flowId,
       therapy_id: guidedOffering.id,
       goal: guidedSelection.answers?.goal,
       context: guidedSelection.answers?.context,
       timing: guidedSelection.answers?.timing,
+      screen: 'start',
       elapsed_ms: Math.max(0, Date.now() - Number(guidedSelection.startedAt || Date.now())),
     });
-    if (tracked) {
-      try { window.sessionStorage.setItem(dedupeKey, '1'); } catch { /* best effort */ }
-    }
+    if (tracked) timestampGuidedFlow(flowId, 'startOpenedAt');
   }, [focusedBooking, guidedOffering, guidedSelection, guidedSource]);
 
   if (entryPath === 'guided') return <GuidedCommerce />;

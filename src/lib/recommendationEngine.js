@@ -23,8 +23,8 @@ const CONTEXT_RELATED_WEIGHT = 5;
  */
 
 function scoreDimension(value, primary, secondary, primaryWeight, secondaryWeight) {
-  if (primary.includes(value)) return { score: primaryWeight, matched: true };
-  if (secondary.includes(value)) return { score: secondaryWeight, matched: true };
+  if (Array.isArray(primary) && primary.includes(value)) return { score: primaryWeight, matched: true };
+  if (Array.isArray(secondary) && secondary.includes(value)) return { score: secondaryWeight, matched: true };
   return { score: 0, matched: false };
 }
 
@@ -43,7 +43,11 @@ export function rankOfferings(answers, offerings, limit = 3) {
   });
 
   const ranked = offerings
-    .filter((offering) => offering?.enabled !== false && offering?.recommendable !== false)
+    .filter((offering) => (
+      offering?.enabled !== false
+      && offering?.recommendable !== false
+      && offering?.qualificationRequired !== true
+    ))
     .map((offering) => {
       const goal = scoreDimension(
         safeAnswers.goal,
@@ -59,7 +63,7 @@ export function rankOfferings(answers, offerings, limit = 3) {
         CONTEXT_EXACT_WEIGHT,
         CONTEXT_RELATED_WEIGHT,
       );
-      const timingScore = Number(offering.rules.timing[safeAnswers.timing] || 0);
+      const timingScore = Number(offering.rules?.timing?.[safeAnswers.timing] || 0);
       const reasons = [];
       if (goal.matched) reasons.push(`goal:${safeAnswers.goal}`);
       if (context.matched) reasons.push(`context:${safeAnswers.context}`);

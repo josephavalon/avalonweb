@@ -23,6 +23,7 @@
  * @property {number} priority
  * @property {boolean} enabled
  * @property {boolean} recommendable
+ * @property {boolean} [qualificationRequired]
  * @property {RecommendationRule} rules
  */
 
@@ -125,16 +126,16 @@ export const GUIDED_OFFERINGS = Object.freeze([
     },
   },
   {
-    id: 'hydration', name: 'Hydration IV', protocolKey: 'hydration', priority: 1, enabled: true, recommendable: true,
+    id: 'hydration', name: 'Hydration IV', protocolKey: 'hydration', priority: 2, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['feel-better', 'recover', 'performance'], secondaryGoals: ['energy', 'immunity'],
-      exactContexts: ['dehydrated', 'hydration'],
-      relatedContexts: ['travel', 'travel-fatigue', 'travel-recovery', 'workout', 'night-out', 'jet-lag', 'general-recovery', 'workout-recovery'],
+      exactContexts: ['dehydrated', 'hydration', 'travel', 'travel-fatigue', 'travel-recovery'],
+      relatedContexts: ['workout', 'general-recovery', 'workout-recovery'],
       timing: RECOVERY,
     },
   },
   {
-    id: 'myers', name: "Myers' IV", protocolKey: 'myers', priority: 2, enabled: true, recommendable: true,
+    id: 'myers', name: "Myers' IV", protocolKey: 'myers', priority: 3, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['energy', 'feel-better', 'long-term-wellness'], secondaryGoals: ['recover', 'immunity', 'performance'],
       exactContexts: ['general-wellness', 'general-support', 'run-down'],
@@ -143,7 +144,7 @@ export const GUIDED_OFFERINGS = Object.freeze([
     },
   },
   {
-    id: 'energy', name: 'Energy IV', protocolKey: 'energy', priority: 3, enabled: true, recommendable: true,
+    id: 'energy', name: 'Energy IV', protocolKey: 'energy', priority: 4, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['energy', 'performance'], secondaryGoals: ['feel-better', 'long-term-wellness'],
       exactContexts: ['more-energy', 'energy', 'burnout-recovery'],
@@ -152,7 +153,7 @@ export const GUIDED_OFFERINGS = Object.freeze([
     },
   },
   {
-    id: 'immunity', name: 'Immunity IV', protocolKey: 'immunity', priority: 4, enabled: true, recommendable: true,
+    id: 'immunity', name: 'Immunity IV', protocolKey: 'immunity', priority: 5, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['immunity', 'feel-better'], secondaryGoals: ['recover', 'long-term-wellness'],
       exactContexts: ['illness', 'sick', 'feeling-sick', 'prevention'],
@@ -161,7 +162,7 @@ export const GUIDED_OFFERINGS = Object.freeze([
     },
   },
   {
-    id: 'performance', name: 'Performance IV', protocolKey: 'recovery', priority: 5, enabled: true, recommendable: true,
+    id: 'performance', name: 'Performance IV', protocolKey: 'recovery', priority: 6, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['performance', 'energy'], secondaryGoals: ['recover', 'long-term-wellness'],
       exactContexts: ['performance', 'workout-recovery', 'athletic-performance', 'general-performance'],
@@ -170,14 +171,14 @@ export const GUIDED_OFFERINGS = Object.freeze([
     },
   },
   {
-    id: 'night-out', name: 'Night Out IV', protocolKey: 'postnight', priority: 6, enabled: true, recommendable: true,
+    id: 'night-out', name: 'Night Out IV', protocolKey: 'postnight', priority: 7, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['recover'], secondaryGoals: ['feel-better'],
       exactContexts: ['night-out'], relatedContexts: ['dehydrated', 'general-recovery'], timing: ACUTE,
     },
   },
   {
-    id: 'jet-lag', name: 'Jet Lag IV', protocolKey: 'jetlag', priority: 7, enabled: true, recommendable: true,
+    id: 'jet-lag', name: 'Jet Lag IV', protocolKey: 'jetlag', priority: 1, enabled: true, recommendable: true,
     rules: {
       primaryGoals: ['recover', 'feel-better', 'energy'], secondaryGoals: ['immunity', 'performance'],
       exactContexts: ['jet-lag', 'travel-fatigue', 'travel-recovery'], relatedContexts: ['travel'], timing: ACUTE,
@@ -193,11 +194,11 @@ export const GUIDED_OFFERINGS = Object.freeze([
     },
   },
   {
-    id: 'food-poisoning', name: 'Food Poisoning IV', protocolKey: 'postnight', priority: 20, enabled: true, recommendable: false,
+    id: 'food-poisoning', name: 'Food Poisoning IV', protocolKey: 'postnight', priority: 20, enabled: true, recommendable: false, qualificationRequired: true,
     rules: { primaryGoals: [], secondaryGoals: [], exactContexts: [], relatedContexts: [], timing: ACUTE },
   },
   {
-    id: 'beauty', name: 'Beauty IV', protocolKey: 'beauty', priority: 21, enabled: true, recommendable: false,
+    id: 'beauty', name: 'Beauty IV', protocolKey: 'beauty', priority: 21, enabled: true, recommendable: false, qualificationRequired: true,
     rules: { primaryGoals: [], secondaryGoals: [], exactContexts: [], relatedContexts: [], timing: ROUTINE },
   },
   ...['nad-500', 'nad-750', 'nad-vitality', 'nad-1000', 'nad-1250', 'nad-1500'].map((id, index) => ({
@@ -208,6 +209,7 @@ export const GUIDED_OFFERINGS = Object.freeze([
     priority: 30 + index,
     enabled: true,
     recommendable: false,
+    qualificationRequired: true,
     rules: { primaryGoals: [], secondaryGoals: [], exactContexts: [], relatedContexts: [], timing: { today: 0, 'this-week': 0, ongoing: 0 } },
   })),
   {

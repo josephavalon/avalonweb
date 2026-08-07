@@ -60,9 +60,9 @@ export default function CognitoFormEmbed({
   const trackedRef = useRef(false);
   const safePrefill = useMemo(() => sanitizeCognitoPrefill(prefill), [prefill]);
 
-  // Anonymous, propertyless, fire-once. There is deliberately no submit event:
-  // observing a submission means reading the form, and an unreliable funnel
-  // number is not worth touching patient fields.
+  // Anonymous, propertyless, fire-once. This component deliberately does not
+  // observe submission or inspect fields; Cognito redirects successful requests
+  // to /start/received, where a separate propertyless receipt event is emitted.
   const trackLoadedOnce = useCallback(() => {
     if (trackedRef.current) return;
     trackedRef.current = true;

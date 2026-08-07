@@ -14,38 +14,29 @@ import {
   getGuidedTiming,
 } from '@/data/guidedCommerce';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
+import {
+  readGuidedFlow,
+  restoreGuidedFlow,
+  startGuidedFlow,
+  timestampGuidedFlow,
+} from '@/lib/guidedSession';
 import { rankOfferings } from '@/lib/recommendationEngine';
 import { useSeo } from '@/lib/seo';
 
-const FLOW_STORAGE_KEY = 'av.guided.flow.v1';
 const STEPS = Object.freeze(['goal', 'context', 'timing', 'result']);
 
-function createId() {
-  try { return window.crypto.randomUUID(); } catch { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
-}
-
-function readFlow() {
-  try {
-    const value = JSON.parse(window.sessionStorage.getItem(FLOW_STORAGE_KEY) || 'null');
-    if (value?.id && Number.isFinite(value?.startedAt)) return value;
-  } catch { /* start a new anonymous flow */ }
-  const next = { id: createId(), startedAt: Date.now() };
-  try { window.sessionStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(next)); } catch { /* memory-only fallback */ }
-  return next;
-}
-
-function writeFlow(patch) {
-  const next = { ...readFlow(), ...patch };
-  try { window.sessionStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(next)); } catch { /* memory-only fallback */ }
-  return next;
-}
-
 function validGuidedState(value) {
-  if (!value || !STEPS.includes(value.step)) return false;
+  if (!value || !STEPS.includes(value.step) || !value.id || !Number.isFinite(value.startedAt)) return false;
   if (value.step !== 'goal' && !getGuidedGoal(value.answers?.goal)) return false;
   if (['timing', 'result'].includes(value.step) && !getGuidedContext(value.answers?.goal, value.answers?.context)) return false;
-  if (value.step === 'result' && !getGuidedTiming(value.answers?.timing)) return false;
+  if (value.step === 'result' && (!getGuidedTiming(value.answers?.timing) || !Number.isFinite(value.resultAt))) return false;
   return true;
+}
+
+function useHeadingFocus() {
+  const headingRef = useRef(null);
+  useEffect(() => { headingRef.current?.focus({ preventScroll: true }); }, []);
+  return headingRef;
 }
 
 function Progress({ step }) {
@@ -62,11 +53,12 @@ function Progress({ step }) {
 }
 
 function SelectionScreen({ step, title, options, onSelect, onBack, onMenu }) {
+  const headingRef = useHeadingFocus();
   return (
     <div className="guided-question">
       <div className="guided-question__prompt">
         <Progress step={step} />
-        <h1 data-guided-heading tabIndex={-1}>{title}</h1>
+        <h1 ref={headingRef} data-guided-heading tabIndex={-1}>{title}</h1>
       </div>
       <div className="guided-question__choices">
         <div className="guided-options">
@@ -103,6 +95,7 @@ function reasonFor(answers) {
 
 function Results({ answers, recommendations, onSelect, onBack, onMenu }) {
   const [best, ...alternatives] = recommendations;
+  const headingRef = useHeadingFocus();
   return (
     <div className="guided-results">
       <button type="button" onClick={onBack} className="guided-back guided-back--result" aria-label="Back">
@@ -110,7 +103,7 @@ function Results({ answers, recommendations, onSelect, onBack, onMenu }) {
       </button>
       <section className="guided-best" aria-labelledby="guided-result-heading">
         <p>Best match</p>
-        <h1 id="guided-result-heading" data-guided-heading tabIndex={-1}>{best.offering.name}</h1>
+        <h1 ref={headingRef} id="guided-result-heading" data-guided-heading tabIndex={-1}>{best.offering.name}</h1>
         <span>{reasonFor(answers)}</span>
         <button type="button" data-testid="guided-best-match" onClick={() => onSelect(best, 0)}>
           Start with {best.offering.name.replace(/\s+IV(?:\s+250mg)?$/i, '')}
@@ -151,7 +144,12 @@ export default function GuidedCommerce() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const fallbackFlowRef = useRef(null);
-  if (!fallbackFlowRef.current) fallbackFlowRef.current = readFlow();
+  if (!fallbackFlowRef.current) {
+    const routeFlow = validGuidedState(location.state?.guided) ? location.state.guided : null;
+    fallbackFlowRef.current = routeFlow
+      ? restoreGuidedFlow(routeFlow.id, routeFlow.startedAt)
+      : startGuidedFlow();
+  }
 
   const guided = validGuidedState(location.state?.guided)
     ? location.state.guided
@@ -174,15 +172,14 @@ export default function GuidedCommerce() {
   }, [location.pathname, location.search, location.state, navigate]);
 
   useEffect(() => {
-    const heading = document.querySelector('[data-guided-heading]');
-    heading?.focus({ preventScroll: true });
-  }, [step]);
-
-  useEffect(() => {
-    const flow = readFlow();
-    if (flow.startedEventSent) return;
-    if (trackConsented(ANALYTICS_EVENTS.GUIDED_FLOW_STARTED, { flow_id: flow.id })) {
-      writeFlow({ startedEventSent: true });
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
+    if (flow.startedEventAt) return;
+    if (trackConsented(ANALYTICS_EVENTS.GUIDED_FLOW_STARTED, {
+      flow_id: flow.id,
+      screen: 'goal',
+      elapsed_ms: 0,
+    })) {
+      timestampGuidedFlow(flow.id, 'startedEventAt');
     }
   }, []);
 
@@ -193,9 +190,9 @@ export default function GuidedCommerce() {
   ), [answers, step]);
 
   useEffect(() => {
-    if (step !== 'result' || !guided.resultViewId || recommendations.length < 3) return;
-    const flow = readFlow();
-    if (flow.lastViewedResultId === guided.resultViewId) return;
+    if (step !== 'result' || !guided.resultAt || recommendations.length < 3) return;
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
+    if (flow.resultViewedAt === guided.resultAt) return;
     const recommendedAt = Date.now();
     if (trackConsented(ANALYTICS_EVENTS.RECOMMENDATION_VIEWED, {
       flow_id: flow.id,
@@ -205,14 +202,13 @@ export default function GuidedCommerce() {
       therapy_ids: recommendations.map((item) => item.therapyId),
       elapsed_ms: Math.max(0, recommendedAt - flow.startedAt),
     })) {
-      writeFlow({ lastViewedResultId: guided.resultViewId, recommendedAt });
-    } else {
-      writeFlow({ recommendedAt });
+      timestampGuidedFlow(flow.id, 'resultViewedAt', guided.resultAt);
     }
-  }, [answers, guided.resultViewId, recommendations, step]);
+    timestampGuidedFlow(flow.id, 'recommendedAt', recommendedAt);
+  }, [answers, guided.resultAt, recommendations, step]);
 
   const pushStep = (nextStep, nextAnswers, extra = {}) => {
-    const flow = readFlow();
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
     navigate(`${location.pathname}${location.search}`, {
       state: {
         guided: {
@@ -227,37 +223,54 @@ export default function GuidedCommerce() {
   };
 
   const selectGoal = (goal) => {
-    const flow = readFlow();
-    trackConsented(ANALYTICS_EVENTS.GOAL_SELECTED, { flow_id: flow.id, goal });
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
+    trackConsented(ANALYTICS_EVENTS.GOAL_SELECTED, {
+      flow_id: flow.id,
+      screen: 'goal',
+      goal,
+      elapsed_ms: Math.max(0, Date.now() - flow.startedAt),
+    });
     pushStep('context', { goal });
   };
 
   const selectContext = (context) => {
-    const flow = readFlow();
-    trackConsented(ANALYTICS_EVENTS.CONTEXT_SELECTED, { flow_id: flow.id, goal: answers.goal, context });
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
+    trackConsented(ANALYTICS_EVENTS.CONTEXT_SELECTED, {
+      flow_id: flow.id,
+      screen: 'context',
+      goal: answers.goal,
+      context,
+      elapsed_ms: Math.max(0, Date.now() - flow.startedAt),
+    });
     pushStep('timing', { goal: answers.goal, context });
   };
 
   const selectTiming = (timing) => {
-    const flow = readFlow();
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
     const nextAnswers = { ...answers, timing };
-    trackConsented(ANALYTICS_EVENTS.TIMING_SELECTED, { flow_id: flow.id, ...nextAnswers });
-    pushStep('result', nextAnswers, { resultViewId: createId() });
+    trackConsented(ANALYTICS_EVENTS.TIMING_SELECTED, {
+      flow_id: flow.id,
+      screen: 'timing',
+      ...nextAnswers,
+      elapsed_ms: Math.max(0, Date.now() - flow.startedAt),
+    });
+    pushStep('result', nextAnswers, { resultAt: Date.now() });
   };
 
   const openMenu = () => {
-    const flow = readFlow();
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
     trackConsented(ANALYTICS_EVENTS.FULL_MENU_OPENED, {
       flow_id: flow.id,
       screen: step,
       ...(answers.goal ? { goal: answers.goal } : {}),
       ...(answers.context ? { context: answers.context } : {}),
       ...(answers.timing ? { timing: answers.timing } : {}),
+      elapsed_ms: Math.max(0, Date.now() - flow.startedAt),
     });
   };
 
   const selectRecommendation = (item, rank) => {
-    const flow = readFlow();
+    const flow = readGuidedFlow() || fallbackFlowRef.current;
     const selectedAt = Date.now();
     const eventName = rank === 0
       ? ANALYTICS_EVENTS.RECOMMENDATION_SELECTED
@@ -266,9 +279,11 @@ export default function GuidedCommerce() {
       flow_id: flow.id,
       therapy_id: item.therapyId,
       rank: rank + 1,
+      screen: 'result',
       ...answers,
+      elapsed_ms: Math.max(0, selectedAt - flow.startedAt),
     });
-    writeFlow({ selectedAt });
+    timestampGuidedFlow(flow.id, 'selectedAt', selectedAt);
     navigate(buildGuidedStartPath(item.offering), {
       state: {
         guided: {
