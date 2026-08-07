@@ -216,7 +216,7 @@ export default function Vitalice() {
                 <div className="mt-5 flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-[#4FB3B8]" strokeWidth={1.75} />
                   <p className="font-body text-[14px] leading-[1.55] text-foreground/75 md:text-[15px]">
-                    Complete the form below and we&apos;ll text you to confirm your appointment.
+                    Complete the form below.
                   </p>
                 </div>
               </div>
