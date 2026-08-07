@@ -380,9 +380,6 @@ function EventPlanner() {
           </button>
         </>
       )}
-      <p className="nd-events-quote__privacy">
-        Transparent pricing. Nothing medical is asked here.
-      </p>
     </form>
   );
 }

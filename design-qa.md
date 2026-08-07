@@ -934,3 +934,44 @@ final result: passed
 - Post-deploy error scan: clean.
 
 final result: passed
+
+---
+
+# Avalon Beta Events Disclaimer Removal
+
+## Visual truth and capture state
+
+- User removal reference:
+  `.context/attachments/H2l362/Screenshot 2026-08-07 at 2.28.27 PM.png`
+  (`776 × 48` source pixels), identifying the exact sentence to remove.
+- Parent Events reference:
+  `.context/audits/events-polish/reference.png` (`1842 × 1036`).
+- Browser-rendered implementation:
+  `.context/audits/events-polish/implementation-disclaimer-removed-1842.jpg`
+  (`1842 × 1036`, Chrome CSS viewport `1842 × 1036`, device pixel ratio
+  1).
+- Full-view comparison:
+  `.context/audits/events-polish/disclaimer-removal-compare.html`.
+- State: `/events`, desktop cream theme, quote stage on Event details, editors
+  closed, entrance motion settled.
+- A separate focused-region comparison was not required because the user
+  supplied the exact text crop, and the sentence's absence plus the resulting
+  quote-card spacing are clearly readable in the same-size full-view
+  comparison.
+
+## Findings and post-fix evidence
+
+- The sentence `Transparent pricing. Nothing medical is asked here.` is absent
+  from the component, browser text tree, and rendered quote card.
+- Removing the sentence lets the quote card close immediately below the
+  controls without leaving an empty row, clipping the CTA, or disturbing the
+  two event columns.
+- Fonts and typography, spacing/layout rhythm, cream/espresso tokens, hero and
+  event-image quality, and all remaining copy/content were checked. They remain
+  unchanged apart from the requested removal.
+- At `390 × 844`, document width equals viewport width, the sentence remains
+  absent, and Get a quote still advances to Your details.
+- Chrome reported no console errors or warnings.
+- No actionable P0, P1, or P2 issue remains.
+
+final result: passed
