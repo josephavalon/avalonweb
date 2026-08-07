@@ -347,9 +347,12 @@ export default function Events() {
           </div>
         </section>
 
-        {/* Upcoming + Past listings hidden for now (2026-07-29). The EventList
-            component and the UPCOMING_EVENTS / PAST_EVENTS data stay in place so
-            this is a one-line restore when there's a calendar worth showing. */}
+        <div className="nd-events-main nd-events-main--listings">
+          <div className="nd-events-listings">
+            <EventList id="upcoming-events" title="Upcoming Events" events={UPCOMING_EVENTS} />
+            <EventList id="past-events" title="Past Events" events={PAST_EVENTS} past />
+          </div>
+        </div>
       </main>
 
       <ConsumerFooter />

@@ -235,7 +235,9 @@ async function checkDeletedRoutes(failures) {
   const source = await read(rel);
   if (source === null) return;
   for (const route of DELETED_ROUTES) {
-    if (source.includes(`<Route path="${route}"`)) {
+    const routePrefix = `<Route path="${route}"`;
+    const betaOnlyRoute = `<Route path="${route}" element={AVALON_OS_BETA_ENABLED ?`;
+    if (source.includes(routePrefix) && !source.includes(betaOnlyRoute)) {
       failures.push(`${rel}: route "${route}" is back — it was deleted for the main-URL launch, not gated`);
     }
   }

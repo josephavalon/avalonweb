@@ -25,6 +25,7 @@ import { requiresPrivilegedMfa } from '@/lib/portalAccess';
 // (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
 // or the gate would lock every admin out of /admin.
 const MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
+const AVALON_OS_BETA_ENABLED = String(import.meta.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 // Legacy /plans/checkout and /plan-checkout deep links carry ?price=&term=&sessions=
@@ -171,6 +172,7 @@ const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
 const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
 const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
+const Gift = lazyRoute(() => import('./pages/Gift'));
 const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
 const PageNotFound = lazyRoute(() => import('./lib/PageNotFound'));
 const NotFound = lazyRoute(() => import('./pages/NotFound'));
@@ -385,6 +387,7 @@ function AppRoutes() {
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/hotel" element={<Hotel />} />
+            <Route path="/gift" element={AVALON_OS_BETA_ENABLED ? <Gift /> : <NotFound />} />
             <Route path="/service-area" element={<ServiceArea />} />
             <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
