@@ -43,7 +43,7 @@ function Progress({ step }) {
   const index = STEPS.indexOf(step);
   const visibleIndex = Math.min(index, 2);
   return (
-    <div className="guided-progress" aria-label={`Step ${visibleIndex + 1} of 3`}>
+    <div id={`guided-progress-${step}`} className="guided-progress" aria-label={`Step ${visibleIndex + 1} of 3`}>
       <span>{visibleIndex + 1} / 3</span>
       <div aria-hidden="true">
         {[0, 1, 2].map((position) => <i key={position} data-active={position <= visibleIndex} />)}
@@ -58,7 +58,14 @@ function SelectionScreen({ step, title, options, onSelect, onBack, onMenu }) {
     <div className="guided-question">
       <div className="guided-question__prompt">
         <Progress step={step} />
-        <h1 ref={headingRef} data-guided-heading tabIndex={-1}>{title}</h1>
+        <h1
+          ref={headingRef}
+          data-guided-heading
+          tabIndex={-1}
+          aria-describedby={`guided-progress-${step}`}
+        >
+          {title}
+        </h1>
       </div>
       <div className="guided-question__choices">
         <div className="guided-options">
@@ -102,9 +109,17 @@ function Results({ answers, recommendations, onSelect, onBack, onMenu }) {
         <ArrowLeft aria-hidden="true" />
       </button>
       <section className="guided-best" aria-labelledby="guided-result-heading">
-        <p>Best match</p>
-        <h1 ref={headingRef} id="guided-result-heading" data-guided-heading tabIndex={-1}>{best.offering.name}</h1>
-        <span>{reasonFor(answers)}</span>
+        <p id="guided-result-label">Best match</p>
+        <h1
+          ref={headingRef}
+          id="guided-result-heading"
+          data-guided-heading
+          tabIndex={-1}
+          aria-describedby="guided-result-label guided-result-reason"
+        >
+          {best.offering.name}
+        </h1>
+        <span id="guided-result-reason">{reasonFor(answers)}</span>
         <button type="button" data-testid="guided-best-match" onClick={() => onSelect(best, 0)}>
           Start with {best.offering.name.replace(/\s+IV(?:\s+250mg)?$/i, '')}
           <ArrowRight aria-hidden="true" />

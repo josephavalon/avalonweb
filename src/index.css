@@ -3084,8 +3084,8 @@ body:has(.nd-product) .av-home-nav__mobile button {
   top: 0;
   left: 0;
   display: inline-flex;
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.75rem;
+  height: 2.75rem;
   align-items: center;
   justify-content: center;
   border: 1px solid rgb(43 33 27 / 0.16);
@@ -3096,6 +3096,15 @@ body:has(.nd-product) .av-home-nav__mobile button {
 .guided-back svg {
   width: 1rem;
   height: 1rem;
+}
+
+.guided-options button:focus-visible,
+.guided-menu-link:focus-visible,
+.guided-back:focus-visible,
+.guided-best > button:focus-visible,
+.guided-alternatives > button:focus-visible {
+  outline: 3px solid #2b211b;
+  outline-offset: 3px;
 }
 
 .guided-results {
