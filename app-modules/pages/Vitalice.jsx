@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Lock } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
 import { useSeo } from '@/lib/seo';
@@ -207,13 +207,18 @@ export default function Vitalice() {
               />
 
               <div data-when="pre-submit">
-                <p className="mt-6 font-body text-[17px] font-semibold text-foreground md:text-lg">
-                  Welcome, Vital Ice members.
+                <h2 className="mt-7 font-body text-[1.6rem] font-semibold leading-tight text-foreground md:text-[1.85rem]">
+                  Reserve Your Appointment
+                </h2>
+                <p className="mt-4 font-body text-[15px] leading-[1.55] text-foreground/75 md:text-base">
+                  Outside Lands appointments at Vital Ice are available Saturday, August 8 from 10:00 AM–2:00 PM.
                 </p>
-                <p className="mt-3 font-body text-[15px] leading-[1.5] text-foreground/70 md:text-base">
-                  Outside Lands weekend appointments are available Saturday,
-                  August 8 from 10 AM–2 PM.
-                </p>
+                <div className="mt-5 flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-[#4FB3B8]" strokeWidth={1.75} />
+                  <p className="font-body text-[14px] leading-[1.55] text-foreground/75 md:text-[15px]">
+                    Complete the form below. We&apos;ll confirm your appointment and text you your payment link.
+                  </p>
+                </div>
               </div>
 
               <div className="mt-8 grid gap-4" data-testid="vitalice-form">
