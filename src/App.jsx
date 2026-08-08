@@ -11,6 +11,7 @@ import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
 import CareAcuityForward from '@/components/CareAcuityForward';
 import FrontDoorRedirect from '@/components/FrontDoorRedirect';
+import { isFrontDoorHost } from '@/lib/frontDoor';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -42,6 +43,12 @@ function RequireAuth({ children, allowedRoles }) {
   const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
   if (!user) {
+    // The front door has no sign-in surface, so there is nowhere to send an
+    // unauthenticated visitor except back to /start. This must be a DIRECT
+    // bounce: routing them to /login instead would chain into the gate on that
+    // route, and two <Navigate replace> in a row leaves the visitor stranded on
+    // a blank page — React Router does not act on the second one.
+    if (isFrontDoorHost()) return <Navigate to="/start" replace />;
     if (pathname.startsWith('/provider/')) {
       return <Navigate to={{ pathname: '/login', search: `?role=nurse&redirect=${encodeURIComponent(pathname)}` }} replace />;
     }
@@ -421,18 +428,22 @@ function AppRoutes() {
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
             {/* Common URL guesses → canonical routes. Captures muscle memory
                 and competitor patterns that would otherwise hit the 404. */}
-            <Route path="/signin" element={<Navigate to="/login" replace />} />
-            <Route path="/sign-in" element={<Navigate to="/login" replace />} />
+            {/* Sign-in aliases are gated HERE rather than relying on the gate on
+                /login. Chaining two <Navigate replace> in one commit does not
+                work — React Router swallows the second, and the visitor is left
+                on a blank /login. Each alias must resolve in ONE navigation. */}
+            <Route path="/signin" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
+            <Route path="/sign-in" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/services" element={<Navigate to="/protocols" replace />} />
             <Route path="/providers" element={<Navigate to="/nurses" replace />} />
-            <Route path="/provider/login" element={<Navigate to="/login" replace />} />
+            <Route path="/provider/login" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             {/* Deep-link recovery — audit findings N2-N5. Nurse SMS invites,
                 marketing-cadence /iv-therapy links, muscle-memory /dashboard
                 and /kiosk should route somewhere useful, not 404. */}
-            <Route path="/nurse" element={<Navigate to="/login?role=nurse" replace />} />
+            <Route path="/nurse" element={<FrontDoorRedirect><Navigate to="/login?role=nurse" replace /></FrontDoorRedirect>} />
             <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
-            <Route path="/dashboard" element={<Navigate to="/members/dashboard" replace />} />
-            <Route path="/kiosk" element={<Navigate to="/login?next=/kiosk" replace />} />
+            <Route path="/dashboard" element={<FrontDoorRedirect><Navigate to="/members/dashboard" replace /></FrontDoorRedirect>} />
+            <Route path="/kiosk" element={<FrontDoorRedirect><Navigate to="/login?next=/kiosk" replace /></FrontDoorRedirect>} />
             <Route path="/plans" element={<Navigate to="/start" replace />} />
             <Route path="/plans/checkout" element={<Navigate to="/start" replace />} />
             <Route path="/plan-checkout" element={<Navigate to="/start" replace />} />
@@ -446,17 +457,22 @@ function AppRoutes() {
             <Route path="/booking/confirmation" element={<CareAcuityForward><FrontDoorRedirect><BookingConfirmation /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/checkout" element={<CareAcuityForward><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/checkout/success" element={<CareAcuityForward><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareAcuityForward>} />
-            <Route path="/login" element={<Login />} />
+            {/* Login is Avalon OS, which lives on beta only — on the front-door
+                host the sign-in door must not exist. Gating this route does NOT
+                close the aliases that point at it: each of those is gated at its
+                own route, because a redirect INTO this one would chain two
+                <Navigate replace> calls and strand the visitor on a blank page. */}
+            <Route path="/login" element={<FrontDoorRedirect><Login /></FrontDoorRedirect>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
             <Route path="/order" element={<FrontDoorRedirect><ManageOrder /></FrontDoorRedirect>} />
             <Route path="/redeem" element={<Navigate to="/order" replace />} />
-            <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/forgot" element={<FrontDoorRedirect><ForgotPassword /></FrontDoorRedirect>} />
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/invite/accept" element={<InviteAccept />} />
             <Route path="/account/new-password" element={<NewPassword />} />
-            <Route path="/members" element={<Navigate to="/login" replace />} />
+            <Route path="/members" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/organizer/login" element={<Navigate to="/login?portal=organizer" replace />} />
             <Route path="/organizer" element={<RequireAuth allowedRoles={['promoter', 'admin']}><OrganizerEventHub /></RequireAuth>} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
@@ -476,7 +492,7 @@ function AppRoutes() {
             <Route path="/members/billing" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBilling /></RequireAuth>} />
             <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
             <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
-            <Route path="/provider" element={<Navigate to="/login" replace />} />
+            <Route path="/provider" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shift" replace /></RequireAuth>} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'admin']}><NurseDashboard /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderAppointments /></RequireAuth>} />

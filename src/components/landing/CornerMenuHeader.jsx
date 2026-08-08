@@ -4,8 +4,13 @@ import { Menu, MessageCircle, Phone, X } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import { AnimatePresence, motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { DURATIONS, EASE } from '@/lib/motion';
+import { isFrontDoorHost } from '@/lib/frontDoor';
 
-const ITEMS = [
+// This header is global — it renders on the front door AND on beta, so the two
+// surfaces get two item lists rather than one edited list. Beta carries the full
+// Avalon OS, including Login. The front door has no sign-in door (see
+// src/lib/frontDoor.js), so Login is omitted there and Vital Ice takes its slot.
+const OS_ITEMS = [
   { label: 'Start', to: '/start' },
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
@@ -13,11 +18,22 @@ const ITEMS = [
   { label: 'Login', to: '/login' },
 ];
 
+const FRONT_DOOR_ITEMS = [
+  { label: 'Start', to: '/start' },
+  { label: 'Help', to: '/nurse-delivery?path=guided' },
+  { label: 'Menu', to: '/protocols' },
+  { label: 'Events', to: '/events' },
+  { label: 'Vital Ice', to: '/vitalice' },
+];
+
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
 
 export default function CornerMenuHeader() {
   const [open, setOpen] = useState(false);
+  // Host read taken once via the useState initializer, same technique as
+  // FrontDoorRedirect, so the first render already shows the right menu.
+  const [items] = useState(() => (isFrontDoorHost() ? FRONT_DOOR_ITEMS : OS_ITEMS));
   const { pathname } = useLocation();
   const menuId = useId();
   const menuRef = useRef(null);
@@ -138,7 +154,7 @@ export default function CornerMenuHeader() {
                 exit="exit"
                 variants={panelMotion}
               >
-                {ITEMS.map((item) => (
+                {items.map((item) => (
                   <motion.div key={item.label} {...itemMotion}>
                     <Link to={item.to} onClick={() => setOpen(false)}>
                       {item.label}

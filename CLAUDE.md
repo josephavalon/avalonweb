@@ -6,8 +6,16 @@ This file is loaded into agent context for every session in this workspace. Keep
 
 - **Page routing** uses a re-export shim pattern: every `src/pages/*.jsx` file is a 2-13 line shim that re-exports the real implementation from `app-modules/pages/*.jsx`. See [`docs/ROUTING_CONVENTION.md`](docs/ROUTING_CONVENTION.md) before "consolidating" what looks like duplication.
 - **Launch readiness** is tracked in [`docs/GO_LIVE_STATUS.md`](docs/GO_LIVE_STATUS.md) (GL-001..018). Read it before answering questions about whether something is "ready to ship."
-- **Deploy rule**: never `vercel deploy --prod` from this repo — including from `.context/coming-soon-main/` (same Vercel project id `prj_YHh0a9k...`, so `--prod` there clobbers prod too). The apex `avalonvitality.co` + `www` now serve the LIVE app (main-URL swap has been executed — see `docs/MAIN_URL_SWAP_RUNBOOK.md`), so a stray `--prod` will replace the live site with whatever prebuilt output is in the cwd. Deploy via preview alias: push branch → Vercel Preview → `vercel alias set <preview-url> beta.avalonvitality.co`. `snooches.avalonvitality.co` is retained as a legacy alias.
-- **Never push to main.** Only push feature branches.
+- **Two separate builds.** The main URL and beta are *different Vercel projects*, not two aliases on one:
+
+  | Surface | Vercel project | Git | Contents |
+  |---|---|---|---|
+  | `avalonvitality.co` + `www` | `avalonweb` (`prj_YHh0a9k...`) | connected to `josephavalon/avalonweb`, production branch `main` | basic front door **only** |
+  | `beta.avalonvitality.co` | `avalonweb-beta` (`prj_smizqQY...`) | **not** git-connected — CLI deploy only | full Avalon OS |
+
+  The main URL is deliberately thin: no login, no expanded event page. That absence is the design — do not "fix" it. Ship new work to beta.
+- **Deploy rule**: `.vercel/project.json` in this repo links to **`avalonweb`, the LIVE production project** — so `vercel deploy --prod` from the repo root replaces the live site. Never run it. Same for `.context/coming-soon-main/` (same project id; its link file is disabled). Pushing a *feature* branch is safe (production branch is `main`, so it only builds a Preview). To ship beta: deploy explicitly to the `avalonweb-beta` project, then `vercel alias set <url> beta.avalonvitality.co`. Apex history: `docs/MAIN_URL_SWAP_RUNBOOK.md`. `snooches.avalonvitality.co` is a retained legacy alias.
+- **Never push to main.** Only push feature branches. Never deploy, alias, or promote the apex without the user asking in that same session.
 
 ## Verify scripts
 
