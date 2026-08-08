@@ -1,5 +1,4 @@
 import { useLayoutEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, Calendar, ChevronDown, MapPin, Users,
 } from 'lucide-react';
@@ -8,23 +7,6 @@ import { useSeo } from '@/lib/seo';
 
 const GUEST_RANGES = ['4 – 10', '11 – 25', '26 – 50', '51 – 100', '100+'];
 
-const UPCOMING_EVENTS = [
-  {
-    name: 'Cannabis CE Night',
-    date: '2026-08-28T19:00:00-07:00',
-    status: 'Details coming soon',
-    href: '/events/cannabis-ce',
-  },
-];
-
-const PAST_EVENTS = [
-  {
-    name: 'Maxim Superbowl Party',
-    date: '2026-02-07T19:00:00-08:00',
-    status: 'Event complete',
-  },
-];
-
 function formatEventDate(iso) {
   if (!iso) return 'Any date';
   return new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', {
@@ -32,57 +14,6 @@ function formatEventDate(iso) {
     day: 'numeric',
     year: 'numeric',
   });
-}
-
-function formatListingDate(iso) {
-  if (!iso) return 'Date TBA';
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function EventList({ id, title, events, past = false }) {
-  return (
-    <section id={id} className="nd-events-list" aria-labelledby={`${id}-title`}>
-      <div className="nd-events-list__heading">
-        <h2 id={`${id}-title`} className="nd-events-list__title">{title}</h2>
-        <span className="nd-events-list__count">{events.length} event</span>
-      </div>
-      <div className="nd-events-list__cards">
-        {events.map((event) => {
-          const className = `nd-events-list__card${past ? ' nd-events-list__card--past' : ''}${event.href ? ' nd-events-list__card--link' : ''}`;
-          const content = (
-            <>
-              <div>
-                <p className="nd-events-list__date">{formatListingDate(event.date)}</p>
-                <h3 className="nd-events-list__name">{event.name}</h3>
-              </div>
-              <p className="nd-events-list__status">
-                {event.status}{event.href ? ' →' : ''}
-              </p>
-            </>
-          );
-
-          return event.href ? (
-            <Link
-              key={`${event.name}-${event.date}`}
-              to={event.href}
-              className={className}
-              aria-label={`${event.name} — event details`}
-            >
-              {content}
-            </Link>
-          ) : (
-            <article key={`${event.name}-${event.date}`} className={className}>
-              {content}
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
 }
 
 function EventPlanner() {
@@ -344,12 +275,6 @@ export default function Events() {
           </div>
         </section>
 
-        <div className="nd-events-main nd-events-main--listings">
-          <div className="nd-events-listings">
-            <EventList id="upcoming-events" title="Upcoming Events" events={UPCOMING_EVENTS} />
-            <EventList id="past-events" title="Past Events" events={PAST_EVENTS} past />
-          </div>
-        </div>
       </main>
 
       <ConsumerFooter />
