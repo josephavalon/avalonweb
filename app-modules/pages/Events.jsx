@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  ArrowLeft, ArrowRight, BriefcaseMedical, Calendar, ChevronDown, MapPin,
-  ShieldCheck, Users, UsersRound,
+  ArrowLeft, ArrowRight, Calendar, ChevronDown, MapPin, Users,
 } from 'lucide-react';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
@@ -10,61 +10,18 @@ const GUEST_RANGES = ['4 – 10', '11 – 25', '26 – 50', '51 – 100', '100+'
 
 const UPCOMING_EVENTS = [
   {
-    name: 'Private Birthday Celebration',
-    date: '2026-09-12T18:00:00-07:00',
-    location: 'Los Angeles, CA',
-    guests: 40,
-    status: 'Confirmed',
-    image: '/social/ig-5.jpg',
-    imageAlt: 'Avalon nurse preparing a guest for wellness care at a private event',
-  },
-  {
-    name: 'Brand Activation Event',
-    date: '2026-09-26T17:00:00-07:00',
-    location: 'Miami, FL',
-    guests: 75,
-    status: 'Pending',
-    image: '/images/avalon-events-hero.jpg',
-    imageAlt: 'Avalon nurse setting up IV hydration at an event',
-  },
-  {
-    name: 'Film Production Shoot',
-    date: '2026-10-10T08:00:00-07:00',
-    location: 'Santa Barbara, CA',
-    guests: 25,
-    status: 'Confirmed',
-    image: '/social/ig-3.jpg',
-    imageAlt: 'Wellness production activation above a city',
+    name: 'Cannabis CE Night',
+    date: '2026-08-28T19:00:00-07:00',
+    status: 'Details coming soon',
+    href: '/events/cannabis-ce',
   },
 ];
 
 const PAST_EVENTS = [
   {
-    name: 'Corporate Retreat',
-    date: '2026-07-18T10:00:00-07:00',
-    location: 'Napa, CA',
-    guests: 60,
-    status: 'Completed',
-    image: '/social/ig-4.jpg',
-    imageAlt: 'Avalon recovery lounge at an evening event',
-  },
-  {
-    name: 'Product Launch Party',
-    date: '2026-06-26T18:00:00-07:00',
-    location: 'San Francisco, CA',
-    guests: 120,
-    status: 'Completed',
-    image: '/social/ig-6.jpg',
-    imageAlt: 'Avalon nurse welcoming guests at a waterfront event',
-  },
-  {
-    name: 'Maxim Super Bowl Party',
+    name: 'Maxim Superbowl Party',
     date: '2026-02-07T19:00:00-08:00',
-    location: 'Santa Clara, CA',
-    guests: 90,
-    status: 'Completed',
-    image: '/social/ig-5.jpg',
-    imageAlt: 'Avalon nurse delivering wellness care at a private event',
+    status: 'Event complete',
   },
 ];
 
@@ -77,13 +34,13 @@ function formatEventDate(iso) {
   });
 }
 
-function listingDateParts(iso) {
-  const date = new Date(iso);
-  return {
-    month: date.toLocaleDateString('en-US', { month: 'short' }),
-    day: date.toLocaleDateString('en-US', { day: '2-digit' }),
-    weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
-  };
+function formatListingDate(iso) {
+  if (!iso) return 'Date TBA';
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function EventList({ id, title, events, past = false }) {
@@ -91,64 +48,40 @@ function EventList({ id, title, events, past = false }) {
     <section id={id} className="nd-events-list" aria-labelledby={`${id}-title`}>
       <div className="nd-events-list__heading">
         <h2 id={`${id}-title`} className="nd-events-list__title">{title}</h2>
-        <a className="nd-events-list__view" href={`#${id}-items`}>
-          View all <ArrowRight aria-hidden="true" />
-        </a>
+        <span className="nd-events-list__count">{events.length} event</span>
       </div>
-      <div id={`${id}-items`} className="nd-events-list__cards">
+      <div className="nd-events-list__cards">
         {events.map((event) => {
-          const date = listingDateParts(event.date);
-          return (
-            <article key={`${event.name}-${event.date}`} className={`nd-events-list__card${past ? ' nd-events-list__card--past' : ''}`}>
-              <img className="nd-events-list__image" src={event.image} alt={event.imageAlt} loading="lazy" />
-              <time className="nd-events-list__date" dateTime={event.date}>
-                <span>{date.month}</span>
-                <strong>{date.day}</strong>
-                <small>{date.weekday}</small>
-              </time>
-              <div className="nd-events-list__details">
+          const className = `nd-events-list__card${past ? ' nd-events-list__card--past' : ''}${event.href ? ' nd-events-list__card--link' : ''}`;
+          const content = (
+            <>
+              <div>
+                <p className="nd-events-list__date">{formatListingDate(event.date)}</p>
                 <h3 className="nd-events-list__name">{event.name}</h3>
-                <p><MapPin aria-hidden="true" /> {event.location}</p>
-                <p><Users aria-hidden="true" /> {event.guests} guests</p>
               </div>
-              <span className={`nd-events-list__status nd-events-list__status--${event.status.toLowerCase()}`}>
-                {event.status}
-              </span>
+              <p className="nd-events-list__status">
+                {event.status}{event.href ? ' →' : ''}
+              </p>
+            </>
+          );
+
+          return event.href ? (
+            <Link
+              key={`${event.name}-${event.date}`}
+              to={event.href}
+              className={className}
+              aria-label={`${event.name} — event details`}
+            >
+              {content}
+            </Link>
+          ) : (
+            <article key={`${event.name}-${event.date}`} className={className}>
+              {content}
             </article>
           );
         })}
       </div>
     </section>
-  );
-}
-
-const EVENT_PROMISES = [
-  {
-    title: 'Experienced team',
-    copy: 'Licensed professionals at your service.',
-    icon: UsersRound,
-  },
-  {
-    title: 'Customized care',
-    copy: 'Tailored IV menus for your guests.',
-    icon: BriefcaseMedical,
-  },
-  {
-    title: 'Safe & reliable',
-    copy: 'Hospital-grade supplies and protocols.',
-    icon: ShieldCheck,
-  },
-];
-
-function EventPromise({ title, copy, icon: Icon }) {
-  return (
-    <div className="nd-events-promise">
-      <Icon aria-hidden="true" />
-      <div>
-        <h2>{title}</h2>
-        <p>{copy}</p>
-      </div>
-    </div>
   );
 }
 
@@ -287,7 +220,6 @@ function EventPlanner() {
 
   return (
     <form
-      id="event-quote"
       className={`nd-events-quote${stage === 'contact' ? ' nd-events-quote--contact' : ''}`}
       onSubmit={(event) => {
         event.preventDefault();
@@ -400,26 +332,19 @@ export default function Events() {
   return (
     <div className="nd-events-page nd-events-page--editorial">
       <main>
-        <div className="nd-events-shell">
-          <section className="nd-events-hero" aria-labelledby="events-title">
-            <div className="nd-events-hero__content">
+        <section className="nd-events-hero" aria-labelledby="events-title">
+          <div className="nd-events-hero__content">
             <div className="nd-events-hero__intro">
               <h1 id="events-title">Build your event</h1>
               <p>On-site IV therapy for parties, productions and private events.</p>
             </div>
-              <div className="nd-events-promises">
-                {EVENT_PROMISES.map((promise) => <EventPromise key={promise.title} {...promise} />)}
-              </div>
-            </div>
-            <img
-              className="nd-events-hero__image"
-              src="/images/events/avalon-events-editorial-hero.jpg"
-              alt="Guests receiving Avalon IV hydration at a wellness event"
-            />
-          </section>
 
-          <EventPlanner />
+            <EventPlanner />
 
+          </div>
+        </section>
+
+        <div className="nd-events-main nd-events-main--listings">
           <div className="nd-events-listings">
             <EventList id="upcoming-events" title="Upcoming Events" events={UPCOMING_EVENTS} />
             <EventList id="past-events" title="Past Events" events={PAST_EVENTS} past />

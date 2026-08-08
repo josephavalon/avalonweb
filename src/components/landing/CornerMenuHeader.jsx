@@ -23,7 +23,6 @@ const FRONT_DOOR_ITEMS = [
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
-  { label: 'Vital Ice', to: '/vitalice' },
 ];
 
 const PHONE_URL = 'tel:+14159807708';
