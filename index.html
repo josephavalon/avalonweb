@@ -6,12 +6,18 @@
          start until ~760ms and the form landed around 3s, showing Cognito's gear
          spinner in between. preconnect warms DNS+TLS during document parse and
          the preload starts the script fetch in parallel with the app bundle, so
-         it is usually cached by the time the component mounts. -->
+         it is usually cached by the time the component mounts.
+
+         These tags can only fire once the HTML has arrived (~275ms), so the
+         SAME hints are also sent as a `Link:` response header for /start and
+         /vitalice — see vercel.json. The header lets the browser open the
+         cognitoforms TLS connection while this document is still in flight,
+         which is where the remaining win is. Keep the two in sync. -->
     <link rel="preconnect" href="https://www.cognitoforms.com" crossorigin>
     <link rel="preconnect" href="https://static.cognitoforms.com" crossorigin>
     <link rel="dns-prefetch" href="https://www.cognitoforms.com">
     <link rel="dns-prefetch" href="https://static.cognitoforms.com">
-    <link rel="preload" as="script" href="https://www.cognitoforms.com/f/seamless.js">
+    <link rel="preload" as="script" fetchpriority="high" href="https://www.cognitoforms.com/f/seamless.js">
     <meta charset="UTF-8" />
     <script src="/scroll-restore.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />

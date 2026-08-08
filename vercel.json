@@ -39,6 +39,15 @@
   ],
   "headers": [
     {
+      "source": "/(start|vitalice)",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "<https://www.cognitoforms.com>; rel=preconnect, <https://static.cognitoforms.com>; rel=preconnect, <https://www.cognitoforms.com/f/seamless.js>; rel=preload; as=script"
+        }
+      ]
+    },
+    {
       "source": "/bags/(.*)",
       "headers": [
         {
