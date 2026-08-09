@@ -16,6 +16,8 @@ const API_ROUTES = {
   '/api/integrations/hubspot/upsert-contact': './api/integrations/hubspot/upsert-contact.js',
   '/api/integrations/stripe/test': './api/integrations/stripe/test.js',
   '/api/admin/guest-profile': './api/admin/guest-profile.js',
+  '/api/invoice/unlock': './api/invoice/unlock.js',
+  '/api/invoice/submit': './api/invoice/submit.js',
 };
 
 async function readJsonBody(req) {

@@ -51,6 +51,7 @@
     "verify:plan-billing": "node scripts/verify-plan-billing.mjs",
     "verify:password-reset": "node scripts/verify-password-reset.mjs",
     "verify:welcome-email": "node scripts/verify-welcome-email.mjs",
+    "verify:invoice-math": "node scripts/verify-invoice-math.mjs",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:hosted-admin-endpoints": "node scripts/verify-hosted-admin-endpoints.mjs",
     "verify:events-rls": "node scripts/verify-events-rls.mjs",

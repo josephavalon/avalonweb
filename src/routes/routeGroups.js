@@ -53,6 +53,7 @@ export const legalRoutes = [
 ];
 
 export const appRoutes = [
+  '/invoice',
   '/login',
   '/organizer/login',
   '/organizer',

@@ -179,6 +179,7 @@ const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
 const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
 const RequestReceived = lazyRoute(() => import('./pages/RequestReceived'));
 const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
+const NurseInvoice = lazyRoute(() => import('./pages/NurseInvoice'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
 const Gift = lazyRoute(() => import('./pages/Gift'));
 const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
@@ -379,6 +380,10 @@ function AppRoutes() {
             {/* Vital Ice × Avalon co-branded intake for Outside Lands weekend.
                 Separate Cognito form; same PHI posture as /start. */}
             <Route path="/vitalice" element={<Vitalice />} />
+            {/* Contractor pay form. Deliberately NOT wrapped in FrontDoorRedirect:
+                it carries no PHI and has to run on the apex, which is a front-door
+                host. Its own password gate is server-side (api/invoice/unlock). */}
+            <Route path="/invoice" element={<NurseInvoice />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />

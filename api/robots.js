@@ -8,6 +8,7 @@ Disallow: /provider
 Disallow: /provider/
 Disallow: /members
 Disallow: /members/
+Disallow: /invoice
 
 Sitemap: https://www.avalonvitality.co/sitemap.xml
 `;

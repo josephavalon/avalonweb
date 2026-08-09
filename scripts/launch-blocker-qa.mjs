@@ -64,6 +64,21 @@ function scanDist() {
       value: 'AVALON_INTERNAL_API_SECRET',
       label: 'internal API secret env name',
     },
+    // These three are server-only. Seeing the NAME in the bundle means someone
+    // renamed it to VITE_AVALON_INVOICE_* — which would inline the actual
+    // password into public JS.
+    {
+      value: 'AVALON_INVOICE_USER',
+      label: 'invoice username env name',
+    },
+    {
+      value: 'AVALON_INVOICE_PASSWORD',
+      label: 'invoice password env name',
+    },
+    {
+      value: 'AVALON_INVOICE_TOKEN_SECRET',
+      label: 'invoice token signing secret env name',
+    },
     {
       value: 'STRIPE_SECRET_KEY',
       label: 'Stripe secret env name',

@@ -427,8 +427,59 @@ async function checkServerGateCoverage(failures) {
   }
 }
 
+// 9. /invoice is the one page that runs ON the front door while collecting a
+//    form submission, so it earns its place by carrying no PHI at all: hours,
+//    counts and dollar amounts only.
+//
+//    It is deliberately absent from GATED_ROUTES (FrontDoorRedirect would send
+//    it to /start on the apex, where it must work) and from PHI_WRITING_HANDLERS
+//    (blockFrontDoorPhiRoute would 409 it on the apex). This check asserts the
+//    invariant that actually earns those two exemptions.
+const INVOICE_PAGE_FILES = [
+  'app-modules/pages/NurseInvoice.jsx',
+  'app-modules/pages/invoice/InvoiceRows.jsx',
+  'src/pages/NurseInvoice.jsx',
+];
+const INVOICE_FORBIDDEN_TOKENS = [/patient/i, /\bclient\b/i, /\bdob\b/i, /diagnos/i, /medication/i];
+
+async function checkInvoicePageIsPhiFree(failures) {
+  for (const rel of INVOICE_PAGE_FILES) {
+    let source = '';
+    try {
+      source = await fs.readFile(path.join(ROOT, rel), 'utf8');
+    } catch {
+      failures.push(`${rel}: missing — the invoice page must not be deleted without removing /invoice from vercel.json and src/App.jsx`);
+      continue;
+    }
+    for (const pattern of INVOICE_FORBIDDEN_TOKENS) {
+      if (pattern.test(source)) {
+        failures.push(`${rel}: contains ${pattern} — /invoice must stay pay-data-only, never patient-facing`);
+      }
+    }
+    if (/<textarea/i.test(source)) {
+      failures.push(`${rel}: has a <textarea> — free-text on this page is how clinical detail gets in. Use a server-side enum instead.`);
+    }
+  }
+
+  const rel = 'api/invoice/submit.js';
+  let handler = '';
+  try {
+    handler = await fs.readFile(path.join(ROOT, rel), 'utf8');
+  } catch {
+    failures.push(`${rel}: missing — /invoice has no submit handler`);
+    return;
+  }
+  if (!handler.includes('bodyContainsPhi')) {
+    failures.push(`${rel}: no bodyContainsPhi() call — expense descriptions are the only free text on /invoice and must be PHI-screened on input`);
+  }
+  if (!handler.includes("from '../../src/data/nurseInvoiceRates.js'")) {
+    failures.push(`${rel}: must recompute totals from src/data/nurseInvoiceRates.js — never trust a client-sent total`);
+  }
+}
+
 export async function runFrontDoorChecks() {
   const failures = [];
+  await checkInvoicePageIsPhiFree(failures);
   await checkSeamlessEmbed(failures);
   await checkHostListScope(failures);
   await checkDeletedRoutes(failures);

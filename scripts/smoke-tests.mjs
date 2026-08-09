@@ -140,6 +140,15 @@ for (const route of ['/waiver', '/liability-waiver']) {
   assert(previewServerSource.includes(slug), `Waiver route missing from preview server: ${route}`);
 }
 
+// /invoice has to clear three separate allowlists — the edge rewrite, the dev
+// API proxy and the preview server — and missing any one of them looks like a
+// router bug rather than a config gap.
+assert(allKnownRoutes.includes('/invoice'), 'Invoice route missing from route registry');
+assert(publicSpaRewrite?.source.includes('invoice'), 'Invoice route missing from Vercel rewrite');
+assert(previewServerSource.includes('/invoice'), 'Invoice route missing from preview server');
+assert(viteConfigSource.includes("'/api/invoice/unlock'"), 'Invoice unlock API missing from vite dev API_ROUTES');
+assert(viteConfigSource.includes("'/api/invoice/submit'"), 'Invoice submit API missing from vite dev API_ROUTES');
+
 assert(IV_SESSIONS.length >= 10, 'Expected full IV session catalog');
 assert(IV_ADDONS.length >= 10, 'Expected tiered IV add-ons');
 assert(IM_SHOTS.length >= 6, 'Expected IM shot catalog');
