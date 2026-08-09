@@ -120,10 +120,33 @@ export default function CognitoFormEmbed({
   // own rules are authored at :root:root:root:root:root specificity, so that
   // block is where the design is enforced, not here.
   return (
-    <div
-      ref={mountRef}
-      data-testid="cognito-embed"
-      className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}`}
-    />
+    <div className="cognito-wrap">
+      <div
+        ref={mountRef}
+        data-testid="cognito-embed"
+        className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}`}
+      />
+      {/* Placeholder for the ~1.3s Cognito spends loading its own chunks and
+          making its new-session / form-def round trips. Without it /start paints
+          its heading and SMS consent copy above an empty gap, which reads as
+          broken rather than loading.
+
+          It is a SIBLING of the mount node, not a child: the effect above calls
+          host.replaceChildren(), which would wipe anything rendered inside.
+
+          It creates NO fields — only decorative boxes, aria-hidden and
+          pointer-events:none. It is dismissed by a pure CSS :has() rule the
+          moment Cognito's <form> lands (see src/index.css), so no JavaScript
+          here observes, reads, or mutates the PHI DOM. Keep it that way. */}
+      <div className="cognito-skeleton" aria-hidden="true">
+        <span className="cognito-skeleton__label" />
+        <span className="cognito-skeleton__field" />
+        <span className="cognito-skeleton__label" />
+        <span className="cognito-skeleton__field" />
+        <span className="cognito-skeleton__label" />
+        <span className="cognito-skeleton__field" />
+        <span className="cognito-skeleton__button" />
+      </div>
+    </div>
   );
 }

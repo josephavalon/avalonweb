@@ -12475,3 +12475,74 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 .cognito .cog-loader {
   display: none !important;
 }
+
+/* Cognito embed loading placeholder.
+   --------------------------------------------------------------------------
+   Cognito's seamless embed needs ~1.3s on a warm connection: its own chunk
+   loads, then the new-session round trip, then form-def. Measured on the live
+   apex, fields become visible ~1.8-2.2s after navigation. None of that is
+   reachable from our code — the only part we own is the HTML and the
+   seamless.js fetch, which are already preconnected and preloaded (index.html
+   plus the Link: response header in vercel.json).
+
+   So instead of a blank gap under the heading, hold the space with boxes that
+   match the real field metrics below (#fffdf8 / 1px #d9d2c8 / 0.875rem radius
+   / 1.125rem 1.25rem padding). The moment Cognito's <form> lands, :has() drops
+   the placeholder. Pure CSS — deliberately no MutationObserver, because this is
+   PHI-handling markup and nothing of ours may observe that subtree. */
+.cognito-wrap {
+  display: block;
+}
+
+.cognito-skeleton {
+  display: grid;
+  gap: 0.5rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cognito-wrap:has(.cognito form) .cognito-skeleton {
+  display: none;
+}
+
+.cognito-skeleton__label {
+  width: 7.5rem;
+  height: 0.6875rem;
+  margin-bottom: 0.125rem;
+  border-radius: 0.25rem;
+  background: #e6ded2;
+}
+
+.cognito-skeleton__field {
+  height: 3.55rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #d9d2c8;
+  border-radius: 0.875rem;
+  background: #fffdf8;
+}
+
+.cognito-skeleton__button {
+  height: 3.5rem;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: #e6ded2;
+}
+
+.cognito-skeleton__label,
+.cognito-skeleton__field,
+.cognito-skeleton__button {
+  animation: cognito-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes cognito-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.62; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cognito-skeleton__label,
+  .cognito-skeleton__field,
+  .cognito-skeleton__button {
+    animation: none;
+  }
+}
