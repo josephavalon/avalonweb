@@ -5,6 +5,10 @@ node_modules.broken.*
 .context
 .codex-audit
 .gstack
+.cog*.mjs
+.netlify
+.playwright-mcp
+homepage-compact-1996*.png
 .vercel
 dist
 dist-ssr

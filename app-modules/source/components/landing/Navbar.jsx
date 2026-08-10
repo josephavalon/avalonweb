@@ -8,7 +8,6 @@ import { cycleTheme } from '@/lib/theme';
 import { useIsMobile } from '@/hooks/use-mobile';
 import useNavHiddenOnScrollDown from '@/hooks/useNavHiddenOnScrollDown';
 import { useAuthStore } from '@/lib/useAuthStore';
-import PremiumButton from '@/components/ui/PremiumButton';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
@@ -292,7 +291,10 @@ function IVTherapyHover({ link, linkClassName }) {
   );
 }
 
-const BOOK_URL = '/book';
+// Top nav "Book" now routes marketing visitors into the /nurse-delivery
+// guided intake. Care-host visitors (logged-in customer domain) still fall
+// through to ACUITY_URL via the `care ? ACUITY_URL : BOOK_URL` branch below.
+const BOOK_URL = '/nurse-delivery';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
@@ -455,20 +457,22 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   // (navVisible is computed below from scroll direction on mobile.)
   const care = isCareHost();
+  const isHomeRoute = location.pathname === '/';
   const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
   const bookHref = care ? ACUITY_URL : BOOK_URL;
   const bookIsExternal = care;
-  const centeredLinks = care
-    ? [{ to: bookHref, label: 'Book', external: true }, ...mainLinks]
-    : mainLinks;
+  const centeredLinks = [
+    { to: bookHref, label: 'Book', external: bookIsExternal },
+    ...mainLinks,
+  ];
   const mobileLinks = [
     { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
     ...mainLinks,
-    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Sign In' }]),
+    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Login' }]),
   ];
 
   // Sign-in / sign-up screens (customer + admin) intentionally DO show the
-  // marketing bar — users mid-funnel need to get back to Plans / Book Now
+  // marketing bar — users mid-funnel need to get back to Plans / Book
   // without having to navigate out of the auth card first.
   const loginRoute = location.pathname === '/login'
     || location.pathname === '/admin/login'
@@ -520,7 +524,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       initial={false}
       animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -120 }}
       transition={{ duration: suppressNavTransitionRef.current ? 0 : 0.32, ease: EASE }}
-      className={`av-home-nav av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${
+      className={`av-motion-rail fixed z-40 transition-all duration-700 ease-editorial ${isHomeRoute ? 'av-home-nav' : ''} ${
       mobileOpen && !focusMode
         ? 'left-3 right-3 top-2 md:top-4'
         : compact ? 'left-3 right-3 top-2 rounded-2xl md:top-4' : 'left-4 right-4 top-2 rounded-3xl md:top-4'
@@ -528,13 +532,13 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       {/* Desktop — compact left column + flexible nav + right actions keeps the
           primary menu aligned beside the logo instead of centered on the page.
           Gated at lg (not md): at the 768-1023 tablet band the desktop links and the
-          right cluster (contact icons + Sign In + Book Now) collide, so tablet keeps the
+          right cluster (contact icons + Sign In + Book) collide, so tablet keeps the
           compact hamburger bar below. Matches the hero's lg side-by-side breakpoint. */}
       <div
-        className={`av-home-nav__desktop av-glass-menu hidden rounded-3xl border items-center px-8 transition-all duration-500 ease-editorial ${
+        className={`av-home-nav__desktop av-glass-menu hidden rounded-3xl border lg:grid items-center px-8 transition-all duration-500 ease-editorial ${
         compact ? 'h-12 px-4' : 'h-16'
         }`}
-        style={{ gridTemplateColumns: 'var(--av-home-nav-columns)' }}
+        style={{ gridTemplateColumns: isHomeRoute ? 'var(--av-home-nav-columns)' : 'auto minmax(0, 1fr) auto' }}
       >
 
         {/* Col 1 — logo, left-aligned */}
@@ -554,9 +558,9 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             to="/"
             onClick={handleMarkTap}
             aria-label="Avalon Vitality — home"
-            className={`${logoClass} av-home-nav__brand md:min-w-[9.5rem] md:items-start md:text-left`}
+            className={`${logoClass} md:min-w-[9.5rem] md:items-start md:text-left ${isHomeRoute ? 'av-home-nav__brand' : ''}`}
           >
-            <AvalonMark className="av-home-nav__brand-mark h-[30px] w-[19px] text-foreground md:h-[42px] md:w-[28px]" />
+            <AvalonMark className={`h-[30px] w-[19px] text-foreground md:h-[42px] md:w-[28px] ${isHomeRoute ? 'av-home-nav__brand-mark' : ''}`} />
             <span className="sr-only">Avalon Vitality home</span>
           </Link>
         </div>
@@ -566,15 +570,22 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           <div className="flex items-center justify-start gap-7">
             {centeredLinks.map((link) => {
               const active = !link.external && isActiveLink(link.to);
+              const homeHighlighted = isHomeRoute && link.label === 'Book';
+              // Audit finding D8: active-page nav link gets a 1px accent
+              // underline so users can tell which section they're in.
               const baseClassName = 'relative inline-flex min-h-10 items-center justify-center px-1 pb-0.5 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] transition-colors';
-              const linkClassName = `${baseClassName} text-foreground hover:text-foreground/82`;
+              const linkClassName = `${baseClassName} ${
+                active || homeHighlighted
+                  ? 'text-foreground border-b border-foreground/70'
+                  : 'text-foreground hover:text-foreground/82'
+              }`;
               // IV Therapy gets a desktop-only hover mega-menu with 3 category tiles.
               if (link.to === '/protocols') {
                 return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
               }
               if (link.external) {
                 return (
-                  <a key={link.to} href={link.to} className={linkClassName}>
+                  <a key={link.to} href={link.to} className={linkClassName} data-home-highlighted={homeHighlighted ? '' : undefined}>
                     <span className="relative z-10">{link.label}</span>
                   </a>
                 );
@@ -593,7 +604,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           </div>
         )}
 
-        {/* Col 3 — account link + booking CTA, right-aligned */}
+        {/* Col 3 — contact/account actions, right-aligned. Booking now lives in
+            the centered navigation so the right edge stays visually quiet. */}
         <div className="flex h-full items-center justify-end gap-3">
           {/* Quick-dial icons are for prospects; hiding them when signed in keeps
               the logged-in nav (Sign Out + Dashboard + Book) from overflowing into
@@ -619,25 +631,14 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             </button>
           )}
           {!compact && !focusMode && !care && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
-          {/* Audit finding K6/D7: hide Sign In on /login (redundant with the
+          {/* Audit finding K6/D7: hide Login on /login (redundant with the
               sign-in card); hide on /signup (users already in a signup flow). */}
-          {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Sign In</Link>}
-          {!compact && !focusMode && !care && (
-            <PremiumButton
-              as={Link}
-              to={bookHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-foreground bg-foreground px-6 py-2 text-center font-heading text-lg uppercase leading-none tracking-[0.06em] text-background shadow-[0_18px_52px_hsl(var(--foreground)/0.16)] transition-colors hover:bg-foreground/90 hover:text-background"
-            >
-              Book
-              <ArrowLeft className="h-4 w-4 rotate-180" strokeWidth={2.2} />
-            </PremiumButton>
-          )}
+          {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Login</Link>}
         </div>
       </div>
 
-      {/* One compact navigation bar at every breakpoint: brand left, contact
-          actions and the menu trigger right. */}
-      <div className={`av-home-nav__mobile av-glass-menu relative flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
+      {/* Mobile + tablet bar (shown below lg; desktop grid above takes over at lg) */}
+      <div className={`av-home-nav__mobile av-glass-menu relative lg:hidden flex w-full min-w-0 items-center justify-between overflow-hidden rounded-[1.35rem] border px-3 transition-all duration-500 ease-editorial ${
         compact ? 'h-12' : 'h-14'
       }`}>
         <div className="flex h-full min-w-0 flex-1 items-center gap-3 pr-[8rem]">
@@ -655,7 +656,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
             to="/"
             onClick={handleMarkTap}
             aria-label="Avalon Vitality — home"
-            className={`${logoClass} av-home-nav__mobile-brand`}
+            className={`${logoClass} ${isHomeRoute ? 'av-home-nav__mobile-brand' : ''}`}
           >
             <AvalonMark className="h-[28px] w-[18px] text-foreground" />
             <span className="sr-only">Avalon Vitality home</span>
@@ -706,7 +707,8 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
       </div>
 
       {/* Dimmed backdrop — blocks clicks to the page beneath while the menu is
-          open, and clicking it closes the menu. */}
+          open, and clicking it closes the menu. The mobile menu is below lg,
+          so we hide the backdrop above lg too. */}
       {!focusMode && (
         <AnimatePresence>
           {mobileOpen && (
@@ -720,21 +722,21 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE }}
-              className="fixed inset-0 z-30 bg-black/55 backdrop-blur-sm"
+              className="fixed inset-0 z-30 bg-black/55 backdrop-blur-sm lg:hidden"
             />
           )}
         </AnimatePresence>
       )}
 
-      {/* Full-width on phones; right-aligned half-width sheet on larger screens. */}
-      {!focusMode && <div className="overflow-hidden px-2 sm:ml-auto sm:w-1/2">
+      {/* Mobile + tablet dropdown (below lg) */}
+      {!focusMode && <div className="lg:hidden overflow-hidden px-2">
         <SmoothDisclosure open={mobileOpen} snapClosed className="pb-2" innerClassName="pb-0">
               <motion.div
                 id="mobile-nav-panel"
                 ref={mobilePanelRef}
                 role="dialog"
                 aria-modal="true"
-                aria-label="Site navigation"
+                aria-label="Mobile navigation"
                 initial={false}
                 animate={mobileOpen ? 'visible' : 'hidden'}
                 variants={{
@@ -765,7 +767,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                 <div className="relative grid gap-1.5">
                   {mobileLinks.map((item, i) => {
                   const active = !item.external && isActiveLink(item.to);
-                  const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Sign In' || item.label === 'Dashboard');
+                  const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Login' || item.label === 'Dashboard');
                   const Trailing = isAuthRow ? ArrowUpRight : ChevronRight;
                   const rowClass = `av-glass-widget group relative flex min-h-[62px] items-center justify-between rounded-2xl border px-5 font-body text-[12px] uppercase tracking-[0.42em] text-foreground transition-all duration-300 ${
                     item.primary

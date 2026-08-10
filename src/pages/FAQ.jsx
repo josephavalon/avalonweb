@@ -2,7 +2,7 @@ import React from 'react';
 import { useSeo } from '@/lib/seo';
 import Navbar from '../components/landing/Navbar';
 import FAQ from '../components/landing/FAQ';
-import Footer from '../components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 
 export default function FAQPage() {
   useSeo({
@@ -38,7 +38,7 @@ export default function FAQPage() {
       <main className="pt-24 md:pt-28">
         <FAQ />
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

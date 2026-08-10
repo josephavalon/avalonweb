@@ -90,7 +90,8 @@ export async function authedFetch(path, options = {}, _retried = false) {
   try { body = text ? JSON.parse(text) : null; } catch { body = { error: text }; }
 
   if (!res.ok) {
-    const err = new Error(body?.error || `Request failed (${res.status})`);
+    const message = typeof body?.error === 'string' ? body.error : body?.error?.message;
+    const err = new Error(message || `Request failed (${res.status})`);
     err.status = res.status;
     err.body = body;
     throw err;

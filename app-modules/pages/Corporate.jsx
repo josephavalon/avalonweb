@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight, Building2, CalendarCheck, Check, ShieldCheck, Users } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 import GlassCard from '@/components/ui/GlassCard';
@@ -171,7 +171,7 @@ export default function Corporate() {
           </GlassCard>
         </Reveal>
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

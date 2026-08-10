@@ -32,12 +32,13 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
 import { apiGet } from '@/lib/apiClient';
 import { cycleTheme, getThemeLabel, readStoredTheme } from '@/lib/theme';
+import { osCapabilityPath } from '@/data/osCapabilities';
 
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
 const ACUITY_URL = 'https://avalonvitality.as.me';
 
-// Roadmap leaves that aren't built yet route to the shared coming-soon stub.
-const soon = (feature) => `/admin/soon?feature=${encodeURIComponent(feature)}`;
+// Persisted Avalon OS workspaces use one canonical capability route.
+const soon = osCapabilityPath;
 
 // 8 top-level items with detail nested beneath. Keeps the sidebar shallow at
 // the top level (Stripe/Shopify/Linear pattern) — every existing route is still
@@ -59,8 +60,8 @@ const NAV_LIVE = [
       { label: 'Email templates', to: '/admin/email-templates' },
       { label: 'Reviews', to: '/admin/reviews' },
       { label: 'Support tickets', to: '/admin/support-tickets' },
-      { label: 'Broadcasts', to: '/admin/soon?feature=Broadcasts' },
-      { label: 'SMS templates', to: '/admin/soon?feature=SMS%20Templates' },
+      { label: 'Broadcasts', to: soon('Broadcasts') },
+      { label: 'SMS templates', to: soon('SMS Templates') },
     ],
   },
   {
@@ -180,38 +181,38 @@ const NAV_LIVE = [
         label: 'Clinical', children: [
           {
             label: 'Staff', children: [
-              { label: 'Clinical Staff', to: '/admin/soon?feature=Clinical%20Staff' },
-              { label: 'Nurse Records', to: '/admin/soon?feature=Nurse%20Records' },
-              { label: 'Credentialing', to: '/admin/soon?feature=Credentialing' },
-              { label: 'Contracts', to: '/admin/soon?feature=Contracts' },
-              { label: 'Insurance', to: '/admin/soon?feature=Insurance' },
+              { label: 'Clinical Staff', to: soon('Clinical Staff') },
+              { label: 'Nurse Records', to: soon('Nurse Records') },
+              { label: 'Credentialing', to: soon('Credentialing') },
+              { label: 'Contracts', to: soon('Contracts') },
+              { label: 'Insurance', to: soon('Insurance') },
             ],
           },
           {
             label: 'Documentation', children: [
-              { label: 'Nursing Manual', to: '/admin/soon?feature=Nursing%20Manual' },
-              { label: 'SOPs', to: '/admin/soon?feature=SOPs' },
-              { label: 'Standing Orders', to: '/admin/soon?feature=Standing%20Orders' },
-              { label: 'Policies', to: '/admin/soon?feature=Policies' },
-              { label: 'Forms & Templates', to: '/admin/soon?feature=Forms%20%26%20Templates' },
+              { label: 'Nursing Manual', to: soon('Nursing Manual') },
+              { label: 'SOPs', to: soon('SOPs') },
+              { label: 'Standing Orders', to: soon('Standing Orders') },
+              { label: 'Policies', to: soon('Policies') },
+              { label: 'Forms & Templates', to: soon('Forms & Templates') },
             ],
           },
           {
             label: 'Quality', children: [
-              { label: 'Quality Assurance', to: '/admin/soon?feature=Quality%20Assurance' },
-              { label: 'Incident Reports', to: '/admin/soon?feature=Incident%20Reports' },
-              { label: 'Audits', to: '/admin/soon?feature=Audits' },
-              { label: 'Training', to: '/admin/soon?feature=Training' },
+              { label: 'Quality Assurance', to: soon('Quality Assurance') },
+              { label: 'Incident Reports', to: soon('Incident Reports') },
+              { label: 'Audits', to: soon('Audits') },
+              { label: 'Training', to: soon('Training') },
             ],
           },
-          { label: 'Clinical Inventory', to: '/admin/soon?feature=Clinical%20Inventory' },
+          { label: 'Clinical Inventory', to: soon('Clinical Inventory') },
         ],
       },
       { label: 'GFE', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
       // Shift marketplace removed from the admin sidebar per launch punch-list.
-      { label: 'Inventory', to: '/admin/soon?feature=Inventory' },
-      { label: 'Tools', to: '/admin/soon?feature=Tools' },
+      { label: 'Inventory', to: '/admin/inventory' },
+      { label: 'Tools', to: soon('Tools') },
     ],
   },
   {
@@ -224,7 +225,7 @@ const NAV_LIVE = [
       { label: 'Past', to: soon('Past Events') },
     ],
   },
-  { label: 'Settings', icon: Settings, to: '/admin/soon?feature=Settings' },
+  { label: 'Settings', icon: Settings, to: soon('Settings') },
 ];
 
 const NAV_PREVIEW = [
@@ -243,11 +244,6 @@ const NAV = [
   ...(import.meta.env.VITE_ADMIN_PREVIEW === '1' ? NAV_PREVIEW : []),
 ];
 
-// Any leaf pointing at the shared coming-soon stub is unshipped — hide it from
-// the sidebar entirely so snooches.avalonvitality.co doesn't advertise pages
-// that don't exist yet. Re-enable by pointing the leaf's `to` at a real route.
-const isComingSoonLeaf = (item) => typeof item.to === 'string' && item.to.startsWith('/admin/soon');
-
 // Filter the nav to what the signed-in role may open. Staff see only the
 // customer / scheduling / billing sections; external links (Acuity) stay
 // visible to everyone on the team. Source of truth: src/lib/adminAccess.js.
@@ -261,7 +257,6 @@ function filterNav(nav, role) {
         return children.length ? { ...item, children } : null;
       }
       if (item.external) return item;
-      if (isComingSoonLeaf(item)) return null;
       if (item.to) return canAccessAdminRoute(role, item.to) ? item : null;
       return item;
     })
@@ -572,7 +567,7 @@ function AdminProfileMenu({ user, onSignOut }) {
                 ? <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-foreground px-1 font-body text-[9px] font-bold text-background">{unreadCount > 99 ? '99+' : unreadCount}</span>
                 : <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-foreground/35" strokeWidth={2} />}
             />
-            <MenuRow icon={User} label="Profile" to="/admin/soon?feature=Profile" onClick={close} />
+            <MenuRow icon={User} label="Profile" to={soon('Profile')} onClick={close} />
             <MenuRow
               icon={Palette}
               label="Appearance"
@@ -580,7 +575,7 @@ function AdminProfileMenu({ user, onSignOut }) {
               right={<span className="font-body text-[11px] text-foreground/45">{themeLabel}</span>}
             />
             {isAdmin ? <MenuRow icon={Users} label="Team & access" to="/admin/team" onClick={close} /> : null}
-            <MenuRow icon={Activity} label="Activity" to="/admin/soon?feature=Activity" onClick={close} />
+            <MenuRow icon={Activity} label="Activity" to={soon('Activity')} onClick={close} />
           </div>
 
           <div className="border-b border-foreground/[0.06] px-2 py-2">

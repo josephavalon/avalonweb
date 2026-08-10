@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import crypto from 'crypto';
 import { sanitizeCheckoutItems, sanitizeCheckoutMembership } from './_lib/catalog-pricing.js';
-import { isLiveApiEnabled } from './_lib/pre-api-guard.js';
+import { blockFrontDoorPhiRoute, isLiveApiEnabled } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 import { resolveAppointmentTypeId, resolveAppointmentTypeIdFromLive } from './_acuity.js';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
@@ -439,6 +439,9 @@ function publicCheckoutError(err = {}) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Checkout session creation')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

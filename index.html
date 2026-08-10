@@ -1,14 +1,31 @@
 <!doctype html>
 <html lang="en" class="dark">
   <head>
+    <!-- Cognito hosts the only intake form on the site. The embed script is
+         appended by React after hydration, so without these the request did not
+         start until ~760ms and the form landed around 3s, showing Cognito's gear
+         spinner in between. preconnect warms DNS+TLS during document parse and
+         the preload starts the script fetch in parallel with the app bundle, so
+         it is usually cached by the time the component mounts.
+
+         These tags can only fire once the HTML has arrived (~275ms), so the
+         SAME hints are also sent as a `Link:` response header for /start and
+         /vitalice — see vercel.json. The header lets the browser open the
+         cognitoforms TLS connection while this document is still in flight,
+         which is where the remaining win is. Keep the two in sync. -->
+    <link rel="preconnect" href="https://www.cognitoforms.com" crossorigin>
+    <link rel="preconnect" href="https://static.cognitoforms.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.cognitoforms.com">
+    <link rel="dns-prefetch" href="https://static.cognitoforms.com">
+    <link rel="preload" as="script" fetchpriority="high" href="https://www.cognitoforms.com/f/seamless.js">
     <meta charset="UTF-8" />
     <script src="/scroll-restore.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#F6F2EB" />
 
     <!-- Primary -->
-    <title>Avalon Vitality — Mobile IV Therapy in the SF Bay Area</title>
-    <meta name="description" content="Mobile IV therapy delivered to your home, hotel, office, or event by registered nurses with clinical review and fast SF Bay Area booking." />
+    <title>Mobile Wellness Therapy</title>
+    <meta name="description" content="IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area." />
     <meta name="keywords" content="mobile IV therapy San Francisco, NAD+ IV Bay Area, at-home IV drip, vitamin IV, IV hydration SF, luxury wellness Bay Area" />
     <meta name="author" content="Avalon Vitality" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -25,10 +42,10 @@
     <link rel="canonical" href="https://www.avalonvitality.co/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Avalon Vitality" />
-    <meta property="og:title" content="Avalon Vitality — Mobile IV Therapy in the SF Bay Area" />
-    <meta property="og:description" content="Mobile IV therapy delivered to your home, hotel, office, or event by registered nurses with clinical review and fast SF Bay Area booking." />
+    <meta property="og:title" content="Mobile Wellness Therapy" />
+    <meta property="og:description" content="IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area." />
     <meta property="og:url" content="https://www.avalonvitality.co/" />
-    <meta property="og:image" content="https://www.avalonvitality.co/og-homepage.jpg?v=20260527" />
+    <meta property="og:image" content="https://www.avalonvitality.co/og-homepage.jpg?v=20260803" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Avalon Vitality — Mobile IV Therapy" />
@@ -36,9 +53,9 @@
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Avalon Vitality — Mobile IV Therapy in the SF Bay Area" />
-    <meta name="twitter:description" content="Mobile IV therapy delivered to your home, hotel, office, or event by registered nurses with clinical review and fast SF Bay Area booking." />
-    <meta name="twitter:image" content="https://www.avalonvitality.co/og-homepage.jpg?v=20260527" />
+    <meta name="twitter:title" content="Mobile Wellness Therapy" />
+    <meta name="twitter:description" content="IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area." />
+    <meta name="twitter:image" content="https://www.avalonvitality.co/og-homepage.jpg?v=20260803" />
     <meta name="twitter:image:alt" content="Avalon Vitality — Mobile IV Therapy" />
 
     <!-- Fonts — self-hosted, subset WOFF2 (see scripts/optimize-fonts.mjs).
@@ -68,7 +85,7 @@
       "telephone": "+14159807708",
       "email": "support@avalonvitality.co",
       "priceRange": "$$$",
-      "image": "https://www.avalonvitality.co/og-homepage.jpg?v=20260527",
+      "image": "https://www.avalonvitality.co/og-homepage.jpg?v=20260803",
       "areaServed": [
         { "@type": "AdministrativeArea", "name": "San Francisco Bay Area" },
         { "@type": "City", "name": "San Francisco" },
@@ -97,13 +114,10 @@
     <!-- PWA iOS -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Avalon" />
-    <!-- The site forces dark theme regardless of OS preference (html class="dark"),
-         so both media queries paint black. Prior light variant #F5F5F3 was
-         causing gray Safari safe-area shading on iOS devices set to Light OS mode. -->
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#F6F2EB" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F6F2EB" media="(prefers-color-scheme: light)" />
 
     <!-- Theme + boot bootstrap: blocking on purpose so `av-js`, theme, and
          splash-skip classes exist before first paint. -->
@@ -113,17 +127,14 @@
          These rules apply the correct background immediately from the theme class that
          the script above already wrote to <html>, before a single pixel paints. -->
     <style>
-      /* Pre-boot fallback — pure black. Was hsl(0,0%,96%) (near-white) which
-         painted for the microsecond between theme-bootstrap.js's class remove
-         and re-add. iOS Safari samples the top-of-page bg for its URL bar +
-         safe-area tint; catching that gray flash produced persistent gray
-         bands at top + bottom even though meta[theme-color] said #000000. */
-      html, body { background-color: #000000; }
-      html.dark, html.dark body { background-color: #000000; }
-      html.giants, html.giants body { background-color: #000000; }
-      html.golden, html.golden body { background-color: hsl(28,35%,16%); }
+      /* The pre-boot canvas and every loader use Avalon's consumer palette.
+         This is intentionally independent of stored or legacy theme classes. */
+      html, body,
+      html.dark, html.dark body,
+      html.giants, html.giants body,
+      html.golden, html.golden body,
       html.warriors, html.warriors body,
-      html.dubs, html.dubs body { background-color: hsl(218,60%,16%); }
+      html.dubs, html.dubs body { background-color: #F6F2EB; }
       #root { min-height: 100dvh; background: transparent; }
       #root:empty { min-height: 100dvh; background: transparent; }
       html.av-js #seo-prerender {
@@ -138,8 +149,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: #000000;
-        color: #f4f4f1;
+        background-color: #F6F2EB !important;
+        color: #2B211B !important;
         opacity: 1;
         transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1), visibility 160ms cubic-bezier(0.16, 1, 0.3, 1);
         visibility: visible;
@@ -169,7 +180,7 @@
         display: block;
         height: clamp(6.5rem, 21vw, 12.5rem);
         width: auto;
-        color: #f4f4f1;
+        color: #2B211B !important;
         user-select: none;
       }
       .av-boot-wordmark {
@@ -178,7 +189,7 @@
         font-size: 10px;
         letter-spacing: 0.42em;
         text-transform: uppercase;
-        color: #ffffff;
+        color: #2B211B !important;
         user-select: none;
       }
       .av-boot-progress {
@@ -188,58 +199,16 @@
         right: 0;
         bottom: 0;
         height: 2px;
-        background: rgba(255, 255, 255, 0.06);
+        background: #D9D2C8;
         overflow: hidden;
       }
       .av-boot-progress span {
         display: block;
         height: 100%;
-        background: #f4f4f1;
+        background: #2B211B !important;
         transform-origin: 0 50%;
         animation: avBootProgress 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
-      /* Theme-aware boot splash. theme-bootstrap.js sets the theme class on
-         <html> before this paints, so the loading screen matches the active
-         theme (Giants orange, Warriors blue+gold, light themes) instead of a
-         black-and-white flash. Colors mirror the theme tokens in src/index.css. */
-      html.giants .av-boot-splash { background-color: #000000; color: hsl(16, 98%, 55%); }
-      html.giants .av-boot-logo,
-      html.giants .av-boot-wordmark { color: hsl(16, 98%, 55%); }
-      html.giants .av-boot-progress { background: hsla(16, 98%, 55%, 0.10); }
-      html.giants .av-boot-progress span { background: hsl(16, 98%, 55%); }
-
-      html.warriors .av-boot-splash,
-      html.dubs .av-boot-splash { background-color: hsl(218, 60%, 16%); color: hsl(45, 100%, 58%); }
-      html.warriors .av-boot-logo,
-      html.warriors .av-boot-wordmark,
-      html.dubs .av-boot-logo,
-      html.dubs .av-boot-wordmark { color: hsl(45, 100%, 58%); }
-      html.warriors .av-boot-progress,
-      html.dubs .av-boot-progress { background: hsla(45, 100%, 58%, 0.12); }
-      html.warriors .av-boot-progress span,
-      html.dubs .av-boot-progress span { background: hsl(45, 100%, 58%); }
-
-      html.daytime .av-boot-splash,
-      html.light .av-boot-splash { background-color: hsl(0, 0%, 99%); color: hsl(24, 10%, 14%); }
-      html.daytime .av-boot-logo,
-      html.daytime .av-boot-wordmark,
-      html.light .av-boot-logo,
-      html.light .av-boot-wordmark { color: hsl(24, 10%, 14%); }
-      html.daytime .av-boot-progress,
-      html.light .av-boot-progress { background: hsla(24, 10%, 14%, 0.10); }
-      html.daytime .av-boot-progress span,
-      html.light .av-boot-progress span { background: hsl(24, 10%, 14%); }
-
-      html.golden-hour .av-boot-splash,
-      html.golden .av-boot-splash { background-color: hsl(36, 60%, 88%); color: hsl(25, 42%, 13%); }
-      html.golden-hour .av-boot-logo,
-      html.golden-hour .av-boot-wordmark,
-      html.golden .av-boot-logo,
-      html.golden .av-boot-wordmark { color: hsl(25, 42%, 13%); }
-      html.golden-hour .av-boot-progress,
-      html.golden .av-boot-progress { background: hsla(32, 88%, 47%, 0.16); }
-      html.golden-hour .av-boot-progress span,
-      html.golden .av-boot-progress span { background: hsl(32, 88%, 47%); }
       @keyframes avBootPulse {
         0%, 100% { opacity: 0.78; transform: scale(0.985); filter: blur(0); }
         50% { opacity: 1; transform: scale(1.015); filter: blur(0); }

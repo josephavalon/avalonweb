@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSeo } from '@/lib/seo';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 
 export default function CBD() {
   useSeo({
@@ -41,7 +41,7 @@ export default function CBD() {
           </div>
         </div>
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

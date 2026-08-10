@@ -163,7 +163,9 @@ export async function gfeSyncAndAssign({ db, appt, appointmentRow, tenantId, bas
   }
 
   const dob = payload.contact?.dob || null;
-  if (!dob) { console.warn('[gfe] skip auto-assign: no dob on file', { email }); return; }
+  // Log the internal appointment id, never the patient email — function logs are
+  // not a PHI-safe sink. Same reasoning as safeLogContext() in ./safe-error.js.
+  if (!dob) { console.warn('[gfe] skip auto-assign: no dob on file', { appointmentId: appointmentRow?.id || null }); return; }
   const examIds = Array.isArray(settings.qualiphy_exam_ids) && settings.qualiphy_exam_ids.length ? settings.qualiphy_exam_ids : [4106];
   const teleState = (String(payload.appointment?.state || '').slice(0, 2) || 'CA').toUpperCase();
   const secret = process.env.QUALIPHY_WEBHOOK_SECRET;

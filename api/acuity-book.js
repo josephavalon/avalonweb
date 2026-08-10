@@ -16,10 +16,13 @@
 
 import { acuityFetch } from './_acuity.js';
 import { upsertHubspotContact } from './_hubspot.js';
-import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
+import { blockFrontDoorPhiRoute, blockLiveVendorAction } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Acuity appointment creation')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

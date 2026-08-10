@@ -59,7 +59,7 @@ export const PACKAGES = [
       { cartKey: 'pkg-reset-iv', label: "Myers' Cocktail IV", price: 250, type: 'iv' },
       { cartKey: 'pkg-reset-nad', label: 'NAD+ Add-On (250mg)', price: 350, type: 'addon' },
       { cartKey: 'pkg-reset-b12', label: 'IM · B12', price: 40, type: 'im' },
-      { cartKey: 'pkg-reset-extra', label: 'Extra Fluid', price: 25, type: 'addon' },
+      { cartKey: 'pkg-reset-extra', label: 'Extra Fluid', price: 50, type: 'addon' },
     ],
   },
 ];

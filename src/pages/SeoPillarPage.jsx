@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, CheckCircle, MapPin, ShieldCheck, Sparkles } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import MedicalReviewNote from '@/components/seo/MedicalReviewNote';
 import { useSeo } from '@/lib/seo';
 import NotFound from '@/pages/NotFound';
@@ -204,7 +204,7 @@ export default function SeoPillarPage() {
           </div>
         </section>
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

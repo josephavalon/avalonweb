@@ -35,6 +35,18 @@ jobs:
       - name: Stripe PHI guard
         run: npm run test:no-phi-in-stripe
 
+      - name: Avalon OS capability inventory
+        run: npm run test:avalon-os
+
+      - name: Avalon OS adapter contracts
+        run: npm run test:os-adapters
+
+      - name: Avalon OS tenant and role RLS contracts
+        run: npm run test:os-rls
+
+      - name: Avalon OS environment isolation contract
+        run: npm run test:os-env
+
       - name: Build
         run: npm run build
         env:

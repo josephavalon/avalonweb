@@ -7,7 +7,7 @@
 
 import { upsertHubspotContact } from './_hubspot.js';
 import { createSchedulingAppointmentWithFallback } from './_checkout-fulfillment.js';
-import { blockLiveVendorAction } from './_lib/pre-api-guard.js';
+import { blockFrontDoorPhiRoute, blockLiveVendorAction } from './_lib/pre-api-guard.js';
 import { safeErrorCode, safeLogContext } from './_lib/safe-error.js';
 import { requireStaff } from './_lib/supabase-auth.js';
 import { checkRateLimit } from './_lib/rate-limit.js';
@@ -48,6 +48,9 @@ function validatePayload({ contact = {}, appointment = {}, items = [] } = {}) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Manual Acuity booking')) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

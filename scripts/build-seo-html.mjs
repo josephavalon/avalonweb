@@ -25,6 +25,8 @@ const repoRoot = path.resolve(__dirname, '..');
 const dist = path.join(repoRoot, 'dist');
 const indexPath = path.join(dist, 'index.html');
 const TODAY = new Date().toISOString().slice(0, 10);
+const IS_AVALON_OS_BETA_BUILD = String(process.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
+const PRIVATE_BETA_ROBOTS = 'noindex, nofollow, noarchive';
 
 function removeFinderSuffixArtifacts(dir) {
   for (const name of fs.readdirSync(dir)) {
@@ -246,7 +248,9 @@ function fallbackHtml(page) {
 }
 
 function renderRouteHtml(page, kind = 'page') {
-  const robots = page.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
+  const robots = IS_AVALON_OS_BETA_BUILD
+    ? PRIVATE_BETA_ROBOTS
+    : page.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
   const canonical = routeUrl(page.path);
   const title = page.title || `${page.h1} | Avalon Vitality`;
   const description = page.description || 'Avalon Vitality mobile recovery and IV therapy in the San Francisco Bay Area.';

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle, ArrowLeft, ArrowRight, ArrowUpRight, Check, Eye, EyeOff, Fingerprint,
-  Link2, MailCheck, MessageCircle, RefreshCw, ShieldCheck, Smartphone, Stethoscope, Ticket,
+  AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, Fingerprint,
+  Link2, MailCheck, MessageCircle, RefreshCw, Smartphone,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 import { applyTheme } from '@/lib/theme';
 import NewCustomerPanel from '@/components/auth/NewCustomerPanel';
-import { isDemoAuthAllowed } from '@/lib/preApiSecurity';
+import { isBetaReviewAuthAllowed, isDemoAuthAllowed } from '@/lib/preApiSecurity';
 import { authProviderConfig } from '@/lib/authProviderConfig';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -111,34 +111,77 @@ function SubmitButton({ loading, idle, busy }) {
   );
 }
 
-// Pill segmented control. Reused for the PATIENT/ADMIN audience switch.
-function SegmentedToggle({ options, value, onChange }) {
+const PORTAL_CHOICES = [
+  { key: 'new', label: 'New' },
+  { key: 'returning', label: 'Member' },
+  { key: 'nurse', label: 'Nurse' },
+  { key: 'organizer', label: 'Events' },
+];
+
+function PortalChooser({ value, onChange }) {
   return (
     <div
-      className="grid items-center gap-0 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] p-1"
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      role="tablist"
+      aria-label="Choose your Avalon portal"
+      className="mb-6 grid grid-cols-4 rounded-full border border-[#d9d2c8] bg-[#f1ece4] p-1"
     >
-      {options.map(({ key, label, Icon }, i) => (
-        <button
-          key={key}
-          type="button"
-          onClick={() => onChange(key)}
-          className={`relative flex min-h-[44px] items-center justify-center gap-1.5 rounded-full font-body text-[11px] font-bold uppercase tracking-[0.22em] transition-colors ${
-            value === key
-              ? 'bg-foreground text-background shadow-[0_1px_0_hsl(var(--background)/0.10)]'
-              : 'text-foreground/62 hover:text-foreground'
-          }`}
-        >
-          {Icon ? <Icon className="h-3.5 w-3.5" strokeWidth={2} /> : null}
-          {label}
-          {i > 0 && value !== key && value !== options[i - 1].key && (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-1/2 h-3 w-px -translate-y-1/2 bg-foreground/22"
-            />
-          )}
-        </button>
-      ))}
+      {PORTAL_CHOICES.map(({ key, label }) => {
+        const selected = value === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={() => onChange(key)}
+            className={`min-h-[42px] min-w-0 rounded-full px-1 font-body text-[9px] font-bold uppercase tracking-[0.08em] transition-colors sm:text-[10px] sm:tracking-[0.12em] ${selected
+              ? 'bg-[#2b211b] text-[#f6f2eb] shadow-[0_5px_16px_rgba(43,33,27,0.16)]'
+              : 'text-[#6e6258] hover:bg-[#e7dfd4] hover:text-[#2b211b]'
+            }`}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const STAFF_PORTALS = [
+  { key: 'nurse', label: 'Nurse' },
+  { key: 'admin', label: 'Admin' },
+];
+
+function StaffPortalChooser({ value, onChange }) {
+  return (
+    <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-[#ded6ca] bg-[#f7f3ec] p-1.5 pl-3">
+      <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-[#6e6258]">
+        Staff access
+      </p>
+      <div
+        role="tablist"
+        aria-label="Choose staff portal"
+        className="grid min-w-[176px] grid-cols-2 rounded-full border border-[#d9d2c8] bg-[#eee7de] p-1"
+      >
+        {STAFF_PORTALS.map(({ key, label }) => {
+          const selected = value === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => onChange(key)}
+              className={`min-h-[36px] rounded-full px-3 font-body text-[9px] font-bold uppercase tracking-[0.12em] transition-colors ${selected
+                ? 'bg-[#2b211b] text-[#f6f2eb] shadow-[0_4px_12px_rgba(43,33,27,0.14)]'
+                : 'text-[#6e6258] hover:bg-[#e4dbd0] hover:text-[#2b211b]'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -220,6 +263,9 @@ export default function Login({ defaultAudience = 'patient' }) {
   } = useAuthStore();
   const supabaseMode = authBackend === 'supabase';
   const demoAuthAvailable = isDemoAuthAllowed();
+  const reviewAuthAvailable = isBetaReviewAuthAllowed();
+  const reviewUsername = import.meta.env.VITE_AVALON_REVIEW_USERNAME || 'user';
+  const reviewPassword = import.meta.env.VITE_AVALON_REVIEW_PASSWORD || 'password';
 
   const requestedNurse = searchParams.get('role') === 'nurse';
   const requestedOrganizer = searchParams.get('portal') === 'organizer';
@@ -239,9 +285,9 @@ export default function Login({ defaultAudience = 'patient' }) {
   // 'methods' is the passwordless launchpad; 'email'/'phone' are the expanded forms.
   const [view, setView] = useState('methods');
   const localOrganizerDemo = requestedOrganizer && !supabaseMode && demoAuthAvailable;
-  const [identifier, setIdentifier] = useState(localOrganizerDemo ? 'ORGANIZER001' : ''); // demo client ID / admin operator ID
+  const [identifier, setIdentifier] = useState(reviewAuthAvailable ? reviewUsername : localOrganizerDemo ? 'ORGANIZER001' : ''); // demo client ID / admin operator ID
   const [email, setEmail] = useState('');           // supabase magic-link address
-  const [password, setPassword] = useState(localOrganizerDemo ? (import.meta.env.VITE_AVALON_DEMO_PASSWORD || '') : '');
+  const [password, setPassword] = useState(reviewAuthAvailable ? reviewPassword : localOrganizerDemo ? (import.meta.env.VITE_AVALON_DEMO_PASSWORD || '') : '');
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -301,57 +347,54 @@ export default function Login({ defaultAudience = 'patient' }) {
     return sessionUser?.redirect || '/members/dashboard';
   };
 
-  // Reset transient state whenever the audience flips so the patient and admin
-  // panels never leak each other's input or errors.
-  const switchAudience = (next, nextStaffMode = 'nurse') => {
-    if (next === audience) return;
-    setAudience(next);
-    if (next === 'staff') setStaffMode(nextStaffMode);
-    setMode('returning');
+  const activePortalChoice = isNew
+    ? 'new'
+    : isOrganizer
+      ? 'organizer'
+      : isStaff
+        ? 'nurse'
+        : 'returning';
+
+  const switchPortal = (next) => {
     setView('methods');
     setFieldError('');
     setLinkSent('');
     setResetSent('');
     setOtpSent(false);
     setOtp('');
-    setResendOtpCooldown(0);
-    setResendOtpDone(false);
-    if (next === 'organizer' && !supabaseMode && demoAuthAvailable) {
-      setIdentifier((current) => current.trim() || 'ORGANIZER001');
-      setPassword(import.meta.env.VITE_AVALON_DEMO_PASSWORD || '');
+    clearUnconfirmed();
+    if (next === 'new' || next === 'returning') {
+      setAudience('patient');
+      setMode(next === 'new' ? 'new' : 'returning');
+    } else if (next === 'organizer') {
+      setAudience('organizer');
+      setMode('returning');
     } else {
+      setAudience('staff');
+      setStaffMode('nurse');
+      setMode('returning');
+    }
+    if (reviewAuthAvailable && next !== 'new') {
+      setIdentifier(reviewUsername);
+      setPassword(reviewPassword);
+    } else if (next === 'new') {
       setPassword('');
     }
-    clearUnconfirmed();
   };
 
-  const switchStaffMode = (next) => {
-    if (next === staffMode) return;
-    setStaffMode(next);
-    setView('methods');
-    setFieldError('');
-    setLinkSent('');
-    setResetSent('');
-    setPassword('');
-    clearUnconfirmed();
-  };
-
-  // Patient tab switch. Every tab — including 'nurse' (an in-card coming-soon
-  // panel) — swaps the card body in place and clears any in-flight sign-in state.
-  // Nothing navigates away, so the card never remounts/refreshes between tabs.
-  const switchMode = (next) => {
-    if (next === mode) return;
-    setMode(next);
+  const switchStaffPortal = (next) => {
+    setStaffMode(next === 'admin' ? 'admin' : 'nurse');
     setView('methods');
     setFieldError('');
     setLinkSent('');
     setResetSent('');
     setOtpSent(false);
     setOtp('');
-    setResendOtpCooldown(0);
-    setResendOtpDone(false);
-    setPassword('');
     clearUnconfirmed();
+    if (reviewAuthAvailable) {
+      setIdentifier(reviewUsername);
+      setPassword(reviewPassword);
+    }
   };
 
   // Reset the unconfirmed-email affordance (the resend button + its states).
@@ -652,15 +695,21 @@ export default function Login({ defaultAudience = 'patient' }) {
   // admin = Operator ID. Passwordless methods cannot reach a backend offline.
   const demoForm = (
     <form onSubmit={handleDemoSubmit} className="space-y-4 md:space-y-3" noValidate>
+      {reviewAuthAvailable ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-[#ded6ca] bg-[#f1ece4] px-3 py-2.5 text-[#2b211b]">
+          <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-[#6e6258]">Beta login</p>
+          <p className="font-mono text-[11px] font-semibold">user / password</p>
+        </div>
+      ) : null}
       <Field
         id="login-identifier"
-        label={isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : isOrganizer ? 'Organizer ID or Email' : 'Client ID or Email'}
+        label={reviewAuthAvailable ? 'Username' : isAdmin ? 'Operator ID' : isNurse ? 'Nurse ID or Email' : isOrganizer ? 'Organizer ID or Email' : 'Client ID or Email'}
         type="text"
         value={identifier}
         onChange={(event) => { setIdentifier(event.target.value); setFieldError(''); clearUnconfirmed(); }}
         autoComplete="username"
         autoCapitalize={isAdmin || isNurse || isOrganizer ? 'characters' : 'none'}
-        placeholder={isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : isOrganizer ? 'ORGANIZER001' : 'CLIENT0001'}
+        placeholder={reviewAuthAvailable ? 'user' : isAdmin ? 'ADMIN001' : isNurse ? 'NURSE001' : isOrganizer ? 'ORGANIZER001' : 'CLIENT0001'}
       />
       <Field
         id="login-password"
@@ -669,7 +718,7 @@ export default function Login({ defaultAudience = 'patient' }) {
         value={password}
         onChange={(event) => { setPassword(event.target.value); setFieldError(''); }}
         autoComplete="current-password"
-        placeholder={isAdmin ? '••••••••' : 'Password'}
+        placeholder={reviewAuthAvailable ? 'password' : isAdmin ? '••••••••' : 'Password'}
       >
         <button
           type="button"
@@ -799,15 +848,15 @@ export default function Login({ defaultAudience = 'patient' }) {
   } else if (isPortalUser) {
     // Staff entry is deliberately email + password only. The Nurse/Admin tabs
     // select a destination; they never change or duplicate the credential.
-    body = supabaseMode ? passwordForm : demoForm;
-  } else if (!supabaseMode) {
+    body = reviewAuthAvailable ? demoForm : supabaseMode ? passwordForm : demoForm;
+  } else if (!supabaseMode || reviewAuthAvailable) {
     // Offline beta keeps visible method choices while preserving the roster ID
     // sign-in as the working fallback.
     body = (
       <div className="space-y-3">
-        {patientMethodButtons}
+        {!reviewAuthAvailable ? patientMethodButtons : null}
         <ErrorBanner message={displayError} />
-        <Divider label={isNurse ? 'or nurse id' : 'or client id'} />
+        {!reviewAuthAvailable ? <Divider label={isNurse ? 'or nurse id' : 'or client id'} /> : null}
         {demoForm}
       </div>
     );
@@ -821,106 +870,37 @@ export default function Login({ defaultAudience = 'patient' }) {
     body = passwordForm;
   }
 
-  const footer = isPortalUser ? (
-    <div className="mt-4 grid gap-1.5 border-t border-foreground/[0.08] pt-3 md:mt-3 md:pt-3">
-      <button
-        type="button"
-        onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-        className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
-      >
-        Reset {isOrganizer ? 'organizer' : 'staff'} password
-      </button>
-      <button
-        type="button"
-        onClick={() => switchAudience('patient')}
-        className="inline-flex min-h-[32px] items-center justify-center rounded-full font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-foreground/42 transition-colors hover:text-foreground/72"
-      >
-        Customer login
-      </button>
-    </div>
-  ) : (
-    <div className="mt-4 grid gap-2 md:mt-6 md:gap-3">
-      {/* OR divider */}
-      <div className="hidden items-center gap-3 md:flex">
-        <span className="h-px flex-1 bg-foreground/16" />
-        <span className="font-body text-[10px] font-semibold uppercase tracking-[0.28em] text-foreground/45">or</span>
-        <span className="h-px flex-1 bg-foreground/16" />
-      </div>
-      <div className="grid grid-cols-2 items-center">
-        {!isNew ? (
+  const footer = (
+    <div className={`mt-5 grid items-center border-t border-[#ded6ca] pt-3 ${!isNew && !reviewAuthAvailable ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      {!isNew && !reviewAuthAvailable ? (
           <button
             type="button"
             onClick={() => { setView('reset'); setFieldError(''); setResetSent(''); }}
-            className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-foreground"
+            className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] text-[#6e6258] transition-colors hover:text-[#2b211b]"
           >
             <Link2 className="h-3.5 w-3.5" strokeWidth={1.8} />
-            Forgot password?
+            {isPortalUser ? 'Reset password' : 'Forgot password?'}
           </button>
-        ) : <span aria-hidden="true" />}
-        <a
-          href="mailto:support@avalonvitality.co"
-          className="group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-foreground border-l border-foreground/12"
-        >
-          <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.8} />
-          Need help?
-        </a>
-      </div>
-      <button
-        type="button"
-        onClick={() => switchAudience('organizer')}
-        className="mt-1 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/28 hover:bg-foreground/[0.08]"
+      ) : null}
+      <a
+        href="mailto:support@avalonvitality.co"
+        className={`group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] text-[#6e6258] transition-colors hover:text-[#2b211b] ${!isNew && !reviewAuthAvailable ? 'border-l border-[#ded6ca]' : ''}`}
       >
-        <Ticket className="h-4 w-4" strokeWidth={1.8} />
-        <span>Event organizer hub</span>
-        <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
-      </button>
-      <button
-        type="button"
-        onClick={() => switchAudience('staff', 'nurse')}
-        className="mt-1 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-foreground/[0.14] bg-foreground/[0.045] px-4 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-foreground transition-colors hover:border-foreground/28 hover:bg-foreground/[0.08]"
-      >
-        <Stethoscope className="h-4 w-4" strokeWidth={1.8} />
-        <span>Avalon staff hub</span>
-        <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
-      </button>
+        <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.8} />
+        Need help?
+      </a>
     </div>
   );
 
   return (
-    // Mobile uses the small viewport unit so switching tabs cannot resize or
-    // jump the card. Short devices may scroll the card body without moving the
-    // background or page chrome.
-    <div className="relative h-screen h-dvh overflow-y-auto px-3 py-2 text-foreground md:px-6 md:py-3">
-      <main className="relative mx-auto grid min-h-full w-full max-w-5xl place-items-center md:pt-24">
+    <div className="relative min-h-screen min-h-dvh bg-[#f6f2eb] px-4 pb-10 pt-24 text-[#2b211b] md:px-6 md:pb-14 md:pt-28">
+      <main className="relative mx-auto grid min-h-[calc(100dvh-8.5rem)] w-full max-w-5xl place-items-center">
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="flex h-[calc(100svh-1rem)] min-h-[520px] max-h-[620px] w-full max-w-[340px] flex-col overflow-y-auto rounded-[1.5rem] border border-foreground/[0.12] bg-[rgba(13,13,13,0.94)] p-4 shadow-[0_22px_90px_hsl(var(--foreground)/0.10)] sm:max-w-[360px] md:h-auto md:max-w-[360px] md:overflow-visible md:p-4">
-          {!isPortalUser && (
-            <div className="mb-3">
-              <SegmentedToggle
-                options={[
-                  { key: 'returning', label: 'Returning' },
-                  { key: 'new', label: 'New' },
-                ]}
-                value={mode}
-                onChange={switchMode}
-              />
-            </div>
-          )}
-
-          {isStaff && (
-            <div className="mb-3">
-              <SegmentedToggle
-                options={[
-                  { key: 'nurse', label: 'Nurse', Icon: Stethoscope },
-                  { key: 'admin', label: 'Admin', Icon: ShieldCheck },
-                ]}
-                value={staffMode}
-                onChange={switchStaffMode}
-              />
-            </div>
-          )}
+        <section className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6">
+          <PortalChooser value={activePortalChoice} onChange={switchPortal} />
+          {isStaff ? <StaffPortalChooser value={staffMode} onChange={switchStaffPortal} /> : null}
 
           {/* Heading + body crossfade together on every tab/view switch; keyed
               only on audience/mode/view so it never remounts mid-form (no focus

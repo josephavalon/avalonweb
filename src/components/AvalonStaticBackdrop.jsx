@@ -38,8 +38,8 @@ export default function AvalonStaticBackdrop() {
         maskImage: 'url(/avalon-logo.svg)',
         WebkitMaskRepeat: 'no-repeat',
         maskRepeat: 'no-repeat',
-        WebkitMaskPosition: '72.5% 50%',
-        maskPosition: '72.5% 50%',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
         WebkitMaskSize: 'contain',
         maskSize: 'contain',
       }}

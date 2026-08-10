@@ -6441,7 +6441,7 @@ export default function BookNow() {
   ]);
 
   return (
-    <div data-av-booking-shell="true" className="app-shell !fixed inset-x-0 top-0 isolate h-[100dvh] w-full overflow-x-hidden bg-background text-foreground md:!relative md:inset-auto md:h-auto md:min-h-screen md:bg-transparent">
+    <div data-av-booking-shell="true" className="nd-booking app-shell !fixed inset-x-0 top-0 isolate h-[100dvh] w-full overflow-x-hidden bg-background text-foreground md:!relative md:inset-auto md:h-auto md:min-h-screen md:bg-background">
       <BookingMobileHeader />
       {/* Do NOT add `relative z-10` here: it traps the fixed Navbar's z-40 inside
           a z-10 stacking context, and the booking <main> below (also z-10, later

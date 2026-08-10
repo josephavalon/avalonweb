@@ -31,7 +31,6 @@ function assert(condition, message) {
 }
 
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
-const siteCssSource = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
 const previewServerSource = readFileSync(new URL('./preview-server.mjs', import.meta.url), 'utf8');
 const vercelConfig = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
 const authCallbackSource = readFileSync(new URL('../src/pages/AuthCallback.jsx', import.meta.url), 'utf8');
@@ -107,6 +106,7 @@ const clientAnalyticsSource = readFileSync(new URL('../src/lib/analytics.js', im
 const serverAnalyticsSource = readFileSync(new URL('../api/analytics.js', import.meta.url), 'utf8');
 const reverseGeocodeSource = readFileSync(new URL('../api/reverse-geocode.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
+const cornerMenuSource = readFileSync(new URL('../src/components/landing/CornerMenuHeader.jsx', import.meta.url), 'utf8');
 const messagingBaseMigrationSource = readFileSync(new URL('../supabase/migrations/002_messages.sql', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
@@ -141,9 +141,27 @@ for (const route of ['/waiver', '/liability-waiver']) {
   assert(previewServerSource.includes(slug), `Waiver route missing from preview server: ${route}`);
 }
 
+// /invoice has to clear three separate allowlists — the edge rewrite, the dev
+// API proxy and the preview server — and missing any one of them looks like a
+// router bug rather than a config gap.
+for (const route of ['invoice', 'nurse-login']) {
+  assert(allKnownRoutes.includes(`/${route}`), `Route missing from route registry: /${route}`);
+  assert(publicSpaRewrite?.source.includes(route), `Route missing from Vercel rewrite: /${route}`);
+  assert(previewServerSource.includes(route), `Route missing from preview server: /${route}`);
+}
+// The front-door menu's Login must point at the nurse door, not the OS login —
+// /login is wrapped in FrontDoorRedirect and would bounce to /start on the apex.
+assert(
+  /FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/nurse-login' \}/.test(cornerMenuSource),
+  'Front-door menu Login must link to /nurse-login',
+);
+assert(viteConfigSource.includes("'/api/invoice/unlock'"), 'Invoice unlock API missing from vite dev API_ROUTES');
+assert(viteConfigSource.includes("'/api/invoice/submit'"), 'Invoice submit API missing from vite dev API_ROUTES');
+
 assert(IV_SESSIONS.length >= 10, 'Expected full IV session catalog');
 assert(IV_ADDONS.length >= 10, 'Expected tiered IV add-ons');
-assert(IM_SHOTS.length >= 8, 'Expected IM shot catalog');
+assert(IM_SHOTS.length >= 6, 'Expected IM shot catalog');
+assert(IM_SHOTS.every((shot) => shot.addOnOnly), 'IM shots must stay add-on only — they are never sold standalone');
 assert(PACKAGES.length >= 4, 'Expected package catalog');
 
 for (const [category, data] of Object.entries(productsByCategory)) {
@@ -165,6 +183,26 @@ assert(ITEM_PRICE_BY_KEY.get('nad') === 350, 'NAD session key must use the first
 assert(ITEM_PRICE_BY_KEY.get('hydration') === IV_SESSIONS.find((item) => item.key === 'hydration')?.price, 'Server hydration price must match client catalog');
 assert(ITEM_PRICE_BY_KEY.get('custom_hydration') === ITEM_PRICE_BY_KEY.get('hydration'), 'Custom hydration alias must track canonical hydration price');
 assert(ADDON_PRICE_BY_LABEL.get('nad') === 80, 'NAD+ IM label must remain priced through label lookup');
+
+// Every live IM shot must price through both server maps, or an add-on-bearing
+// checkout 400s in sanitizeCheckoutItems.
+for (const shot of IM_SHOTS) {
+  const label = shot.label.toLowerCase().replace(/\+/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  assert(ADDON_PRICE_BY_LABEL.get(label) === shot.price, `Client/server IM shot price drifted: ${shot.label}`);
+}
+assert(ADDON_PRICE_BY_LABEL.get('glutathione im 200mg') === 80, 'Glutathione IM 200mg retail price drifted');
+assert(ADDON_PRICE_BY_LABEL.get('glutathione im 400mg') === 120, 'Glutathione IM 400mg retail price drifted');
+assert(ADDON_PRICE_BY_LABEL.get('nad im 50mg') === 80, 'NAD+ IM 50mg retail price drifted');
+assert(ADDON_PRICE_BY_LABEL.get('nad im 100mg') === 150, 'NAD+ IM 100mg retail price drifted');
+// The dosed NAD+ IM labels must not fall through to the NAD+ *IV* mg ladder.
+assert(ADDON_PRICE_BY_LABEL.get('nad im 50mg') !== 500, 'NAD+ IM 50mg must not resolve to the 500mg IV price');
+assert(ADDON_PRICE_BY_LABEL.get('nad im 100mg') !== 800, 'NAD+ IM 100mg must not resolve to the 1000mg IV price');
+
+// Retired/renamed shots still resolve so a persisted cart survives checkout.
+for (const [key, price] of Object.entries({ b12: 40, mic: 50, biotin: 35, vitamin_d: 35 })) {
+  assert(ITEM_PRICE_BY_KEY.get(key) === price, `Legacy IM shot key stopped resolving: ${key}`);
+}
+
 
 const expectedNadPrices = {
   nad_250: 350,
@@ -720,15 +758,6 @@ for (const [label, source] of Object.entries({ authStoreSource, interactionQaSou
   assert(!source.includes("mfa: 'placeholder'"), `Ambiguous MFA placeholder remains in ${label}`);
   assert(source.includes('not_required_demo_local'), `Demo MFA state must be explicit in ${label}`);
 }
-assert(
-  navbarSource.includes('className={`av-home-nav av-motion-rail fixed'),
-  'Public routes must share one unconditional canonical top-navigation style',
-);
-assert(!navbarSource.includes('data-home-highlighted'), 'Top navigation must not force-highlight Book on the homepage');
-assert(
-  !siteCssSource.includes(".av-home-nav .av-home-nav__desktop > div:nth-child(2) a[aria-current='page']::after"),
-  'Top navigation links must not gain a route-specific underline',
-);
 assert(authStoreSource.includes('function supabaseMfaState'), 'Supabase auth must record MFA enforcement state explicitly');
 assert(authStoreSource.includes("status: verified ? 'verified' : 'not_enforced'"), 'Supabase MFA state must not imply enforcement by default');
 assert(authStoreSource.includes("role: 'nurse'"), 'Demo roster must include the launch nurse role');

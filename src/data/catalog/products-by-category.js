@@ -1,4 +1,6 @@
 import { money, subscriberPrice, slugify } from './slugify.js';
+import { IM_SHOTS } from './im-shots.js';
+import { IV_ADDONS } from './iv-addons.js';
 import {
   byKey,
   defaultFaq,
@@ -7,29 +9,88 @@ import {
   treatmentFromDose,
 } from './treatment-builders.js';
 
+// One row and one product page per shot dose, exactly like the NAD+ IV and
+// CBD IV ladders — a dose is the thing you buy, so it gets its own price.
+// `addOnOnly` tells the product page to swap the standalone Book CTA for the
+// menu, since a shot can't be ordered by itself.
+function shotTreatment(shot) {
+  const name = shot.label.replace(' · ', ' ');
+  return {
+    name,
+    addOnOnly: true,
+    price: money(shot.price),
+    desc: shot.desc,
+    benefitStatement: shot.desc,
+    seoDescription: `${name} IM shot from Avalon Vitality, added to an IV visit. ${shot.desc}.`,
+    duration: 'Given during your visit',
+    image: shot.img,
+  };
+}
+
+// IV add-ons follow the same one-row-per-SKU shape as the shots. NAD+ and CBD
+// add-ons are excluded: they already ship as their own IV categories at the
+// same prices, so listing them here would duplicate every row.
+export const MENU_IV_ADDONS = IV_ADDONS.filter((addon) => addon.group !== 'nad' && addon.group !== 'cbd');
+
+function addonTreatment(addon) {
+  const name = addon.label.replace(' · ', ' ');
+  return {
+    name,
+    addOnOnly: true,
+    price: money(addon.price),
+    desc: addon.desc,
+    benefitStatement: addon.desc,
+    seoDescription: `${name} IV add-on from Avalon Vitality, added to an IV visit. ${addon.desc}.`,
+    duration: 'Given during your visit',
+    image: addon.img,
+  };
+}
+
 export const productsByCategory = {
-  cbd: {
-    title: 'CBD IV Therapy',
-    subtitle: 'Clinical review',
-    badge: 'Eligibility confirmed before treatment',
+  'iv-addons': {
+    title: 'IV Add-Ons',
+    subtitle: 'Added to any IV',
+    badge: 'Add-on only',
     description:
-      'CBD IV appointments are clinician-reviewed wellness visits. Avalon confirms eligibility, dose, and timing before treatment.',
+      'IV add-ons are given by your nurse during an IV visit. They are not available as a standalone appointment.',
     heroImage: null,
-    categoryLabel: 'CBD IV Therapy',
+    categoryLabel: 'IV Add-Ons',
+    backTo: '/protocols',
+    backLabel: 'Back to the menu',
+    treatments: MENU_IV_ADDONS.map(addonTreatment),
+  },
+  shots: {
+    title: 'IM Shot Add-Ons',
+    subtitle: 'Added to any IV',
+    badge: 'Add-on only',
+    description:
+      'IM shots are given by your nurse during an IV visit. They are not available as a standalone appointment.',
+    heroImage: null,
+    categoryLabel: 'IM Shot Add-Ons',
+    backTo: '/protocols',
+    backLabel: 'Back to the menu',
+    treatments: IM_SHOTS.map(shotTreatment),
+  },
+  cbd: {
+    title: 'IV CBD',
+    subtitle: 'Eligibility confirmed before treatment',
+    description:
+      'Avalon confirms eligibility, dose, and timing before treatment.',
+    heroImage: null,
+    categoryLabel: 'IV CBD',
     backTo: '/services/cbd',
-    backLabel: 'Back to CBD IV Therapy',
+    backLabel: 'Back to IV CBD',
     treatments: byKey.cbd.doses.map((dose) => ({
       ...treatmentFromDose(byKey.cbd, dose),
       name: `CBD IV ${dose.label}`,
-      desc: 'Clinician-reviewed CBD IV wellness appointment. Eligibility and dosing are confirmed before treatment.',
+      desc: 'CBD IV wellness appointment. Eligibility and dosing are confirmed before treatment.',
     })),
   },
   nad: {
     title: 'IV NAD+',
     subtitle: 'The longevity molecule',
-    badge: 'Clinician Reviewed',
     description:
-      'NAD+ is a coenzyme involved in energy metabolism. Your clinician confirms whether IV NAD+ is appropriate before treatment.',
+      'NAD+ is a coenzyme involved in energy metabolism. Eligibility and dosing are confirmed before treatment.',
     heroImage: null,
     categoryLabel: 'IV NAD+',
     backTo: '/services/nad',
@@ -57,14 +118,14 @@ export const productsByCategory = {
     ],
   },
   'iv-vitamins': {
-    title: 'IV THERAPY',
+    title: 'IV Vitamins',
     subtitle: 'Medical-grade intravenous vitamin therapy',
     description:
       "Every IV starts with a 1000mL Lactated Ringer's bag and is dosed on-site by a registered nurse per your appointment protocol.",
     heroImage: null,
-    categoryLabel: 'IV Therapy',
+    categoryLabel: 'IV Vitamins',
     backTo: '/services/iv-vitamins',
-    backLabel: 'Back to IV Therapy',
+    backLabel: 'Back to IV Vitamins',
     treatments: [
       namedSession(byKey.hydration, 'Hydration IV', {
         benefitStatement: 'Fluid and electrolyte support at home, hotel, or office.',
@@ -140,6 +201,11 @@ const PRODUCT_SLUG_ALIASES = {
     'nad-1250mg': 'nad-iv-1250mg',
     'nad-1500mg': 'nad-iv-1500mg',
     'nad-vitality': 'nad-iv-vitality',
+  },
+  // The family-level shot slugs were briefly live and are in the sitemap.
+  shots: {
+    glutathione: 'glutathione-im-200mg',
+    nad: 'nad-im-50mg',
   },
   cbd: {
     'cbd-33mg': 'cbd-iv-33mg',

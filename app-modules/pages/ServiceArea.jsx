@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { Search, CheckCircle, XCircle, ChevronDown, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { COVERED_ZIPS } from '@/lib/serviceArea';
 import { matchServiceArea } from '@/lib/osRules';
@@ -422,7 +422,7 @@ export default function ServiceArea() {
         </section>
 
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

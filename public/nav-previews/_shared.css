@@ -67,7 +67,7 @@ body { min-height: 220vh; overflow-x: hidden; }
 }
 .nav-link:hover, .nav-link.active { color: var(--av-fg); }
 
-/* White pill CTA — matches current BOOK NOW */
+/* White pill CTA — matches current BOOK */
 .cta-pill {
   background: #fff;
   color: #000;

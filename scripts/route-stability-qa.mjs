@@ -35,6 +35,8 @@ const DEFAULT_ROUTES = [
   '/booking/confirmation',
   '/protocols',
   '/menu',
+  '/invoice',
+  '/nurse-login',
   '/launches',
   '/launches/festival-recovery-presale',
   '/events',

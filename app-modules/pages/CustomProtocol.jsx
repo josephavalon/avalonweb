@@ -7,7 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { Droplets, Zap, Syringe, ChevronDown, ArrowRight, Check, Plus } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -625,7 +625,7 @@ export default function CustomProtocol() {
         </div>
       </div>, document.body)}
 
-      <Footer />
+      <ConsumerFooter />
     </>
   );
 }

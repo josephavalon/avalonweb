@@ -1,9 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Reuse the RUNTIME block-list rather than maintaining a second one here. This
+// scanner and the outbound send-email/send-sms guards must never drift apart.
+import { PHI_BODY_PATTERNS, bodyContainsPhi } from '../api/_lib/phi-guard.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SCAN_DIRS = ['src', 'scripts'];
+const SCAN_DIRS = ['src', 'scripts', 'app-modules', 'api'];
 const EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs']);
 
 const BLOCKED_SOURCE_PATTERNS = [
@@ -27,6 +30,48 @@ async function walk(dir) {
 
 function lineForIndex(text, index) {
   return text.slice(0, index).split(/\r?\n/).length;
+}
+
+// Return the raw source of a call's argument list, given the index of its "(".
+// Paren-balanced and quote-aware so JSON.stringify({ ... }) does not truncate.
+function argSource(text, openParenIndex) {
+  let depth = 0;
+  let quote = null;
+  for (let i = openParenIndex; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === '\\') i += 1;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '(' || ch === '[' || ch === '{') depth += 1;
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      depth -= 1;
+      if (depth === 0) return text.slice(openParenIndex + 1, i);
+    }
+  }
+  return text.slice(openParenIndex + 1, openParenIndex + 2000);
+}
+
+// Everything after the first top-level comma — i.e. the VALUE being stored,
+// with the key argument removed (keys are covered by the patterns above).
+function valueArgSource(args) {
+  let depth = 0;
+  let quote = null;
+  for (let i = 0; i < args.length; i += 1) {
+    const ch = args[i];
+    if (quote) {
+      if (ch === '\\') i += 1;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '(' || ch === '[' || ch === '{') depth += 1;
+    else if (ch === ')' || ch === ']' || ch === '}') depth -= 1;
+    else if (ch === ',' && depth === 0) return args.slice(i + 1);
+  }
+  return '';
 }
 
 const failures = [];
@@ -67,11 +112,22 @@ for (const dir of SCAN_DIRS) {
       storageKeys.add(match[1]);
     }
 
+    // Every violation, not just the first per pattern per file.
     for (const check of BLOCKED_SOURCE_PATTERNS) {
-      const match = check.pattern.exec(text);
-      if (match) {
+      const global = new RegExp(check.pattern.source, `${check.pattern.flags.replace(/g/g, '')}g`);
+      for (const match of text.matchAll(global)) {
         failures.push(`${rel}:${lineForIndex(text, match.index)} ${check.label}`);
       }
+    }
+
+    // Key names are not enough: setItem('draft', JSON.stringify({ note }))
+    // hides PHI in the VALUE. Scan the stored value with the runtime block-list.
+    for (const match of text.matchAll(/\b(?:localStorage|sessionStorage)\.setItem\s*\(/g)) {
+      const openParen = match.index + match[0].length - 1;
+      const value = valueArgSource(argSource(text, openParen));
+      if (!value.trim() || !bodyContainsPhi(value)) continue;
+      const hits = PHI_BODY_PATTERNS.filter((re) => re.test(value)).map((re) => re.source).join(', ');
+      failures.push(`${rel}:${lineForIndex(text, match.index)} PHI-shaped value in browser storage (${hits})`);
     }
   }
 }

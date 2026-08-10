@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from '@/components/ui/PageTransitionMotion';
-import { Instagram } from 'lucide-react';
+import { motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
+import { ArrowRight, Instagram } from 'lucide-react';
+import { EASE, premiumHover, premiumTap } from '@/lib/motion';
 import ScrollParallax from '@/components/ui/ScrollParallax';
-import { PLACEHOLDER_POSTS } from './InstagramFeed.data.js';
+import { PLACEHOLDER_POSTS, IG_HANDLE_URL } from './InstagramFeed.data.js';
 
 const IG_HANDLE = 'avalon_vitality';
 const IG_EMBED_URL = `https://www.instagram.com/${IG_HANDLE}/embed/`;
@@ -66,7 +67,7 @@ function RibbonTile({ post }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Open Instagram post: ${post.caption}`}
-      className="group relative isolate block h-[180px] w-[180px] shrink-0 overflow-hidden rounded-[1.25rem] border border-white/[0.12] [contain:paint] transition-colors duration-500 ease-editorial hover:border-white/[0.24]"
+      className="group relative block h-[180px] w-[180px] shrink-0 overflow-hidden rounded-[1.25rem] border border-white/[0.12] transition-colors duration-500 ease-editorial hover:border-white/[0.24]"
     >
       <img
         src={post.imageUrl}
@@ -86,14 +87,11 @@ function RibbonTile({ post }) {
   );
 }
 
-export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS }) {
+export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS, handleUrl = IG_HANDLE_URL }) {
   const [hoverPaused, setHoverPaused] = useState(false);
   const [mobileDragging, setMobileDragging] = useState(false);
   const [mobileHovered, setMobileHovered] = useState(false);
-  const mobileTrackRef = useRef(null);
-  const mobilePositionRef = useRef(0);
-  const mobileRenderedPositionRef = useRef(-1);
-  const mobileDragRef = useRef({ pointerId: null, startX: 0, startPosition: 0, moved: false });
+  const mobileScrollerRef = useRef(null);
   const resumeTimerRef = useRef(null);
   const reduce = useReducedMotion();
   const posts = useLiveInstagramFeed(initialPosts);
@@ -104,9 +102,6 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
   const seed = posts.length ? posts : PLACEHOLDER_POSTS;
   const source = Array.from({ length: IG_LIMIT }, (_, i) => seed[i % seed.length]).slice(0, IG_LIMIT);
   const loop = [...source, ...source];
-  // A shorter mobile loop avoids the oversized image texture Safari creates
-  // for very long moving tracks. Twelve posts still provide a seamless rail.
-  const mobileSource = source.slice(0, 12);
 
   const isRunning = !hoverPaused && !reduce;
   const mobileInteractionPaused = mobileDragging || mobileHovered;
@@ -114,30 +109,28 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
   useEffect(() => {
     if (reduce || mobileInteractionPaused || typeof window === 'undefined') return undefined;
 
-    const track = mobileTrackRef.current;
+    const scroller = mobileScrollerRef.current;
     const mobileQuery = window.matchMedia('(max-width: 767px)');
-    if (!track || !mobileQuery.matches) return undefined;
+    if (!scroller || !mobileQuery.matches) return undefined;
 
     let frameId;
     let previousTime = window.performance.now();
+    let position = scroller.scrollLeft;
     const pixelsPerSecond = 14;
 
     const move = (time) => {
       // Clamp elapsed time so returning to a backgrounded tab never causes a jump.
       const elapsed = Math.min(time - previousTime, 64);
       previousTime = time;
-      const loopWidth = track.scrollWidth / 2;
+      const loopWidth = scroller.scrollWidth / 2;
 
       if (loopWidth > 0) {
-        mobilePositionRef.current = (mobilePositionRef.current + ((pixelsPerSecond * elapsed) / 1000)) % loopWidth;
-        // Move in whole pixels through layout positioning. Transform-based
-        // animation makes Safari cache the entire image strip as one large
-        // texture, which can blur or replace the transparent page backdrop.
-        const renderedPosition = Math.round(mobilePositionRef.current);
-        if (renderedPosition !== mobileRenderedPositionRef.current) {
-          track.style.left = `${-renderedPosition}px`;
-          mobileRenderedPositionRef.current = renderedPosition;
-        }
+        // Keep the fractional position in JavaScript. Some mobile engines
+        // round scrollLeft assignments to whole pixels; adding ~0.23px to the
+        // DOM value every frame would otherwise round almost all movement away.
+        position += (pixelsPerSecond * elapsed) / 1000;
+        if (position >= loopWidth) position -= loopWidth;
+        scroller.scrollLeft = position;
       }
 
       frameId = window.requestAnimationFrame(move);
@@ -149,50 +142,15 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
 
   useEffect(() => () => window.clearTimeout(resumeTimerRef.current), []);
 
-  const pauseForDrag = (event) => {
+  const pauseForDrag = () => {
     window.clearTimeout(resumeTimerRef.current);
-    mobileDragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startPosition: mobilePositionRef.current,
-      moved: false,
-    };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
     setMobileDragging(true);
   };
 
-  const moveDrag = (event) => {
-    const drag = mobileDragRef.current;
-    const track = mobileTrackRef.current;
-    if (!track || drag.pointerId !== event.pointerId) return;
-
-    const loopWidth = track.scrollWidth / 2;
-    if (loopWidth <= 0) return;
-
-    const delta = event.clientX - drag.startX;
-    if (Math.abs(delta) > 4) drag.moved = true;
-    mobilePositionRef.current = ((drag.startPosition - delta) % loopWidth + loopWidth) % loopWidth;
-    const renderedPosition = Math.round(mobilePositionRef.current);
-    track.style.left = `${-renderedPosition}px`;
-    mobileRenderedPositionRef.current = renderedPosition;
-  };
-
-  const resumeAfterDrag = (event) => {
-    if (mobileDragRef.current.pointerId !== event.pointerId) return;
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    mobileDragRef.current.pointerId = null;
+  const resumeAfterDrag = () => {
     window.clearTimeout(resumeTimerRef.current);
-    // Leave a short beat after a swipe before the automatic movement resumes.
+    // Let native touch momentum finish before the automatic movement resumes.
     resumeTimerRef.current = window.setTimeout(() => setMobileDragging(false), 1000);
-  };
-
-  const suppressDraggedClick = (event) => {
-    if (!mobileDragRef.current.moved) return;
-    event.preventDefault();
-    event.stopPropagation();
-    mobileDragRef.current.moved = false;
   };
 
   return (
@@ -219,7 +177,8 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
             opacity at 0 on some IntersectionObserver races).
           - No CSS mask — WebKit software-renders masked subtrees.
           - Extra layer-promoting wrapper (translateZ(0) + will-change) so the
-            animation lives on its own compositor layer. */}
+            animation lives on its own compositor layer.
+          - Edge fades are gradient overlays outside the animated pipeline. */}
       <div
         className="av-ig-marquee relative hidden w-full overflow-hidden md:block"
         onMouseEnter={() => setHoverPaused(true)}
@@ -248,6 +207,10 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
           </div>
         </div>
 
+        {/* Edge fades — gradient overlays instead of CSS mask. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-24 bg-gradient-to-r from-black to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-24 bg-gradient-to-l from-black to-transparent" />
+
         <style>{`
           @keyframes av-ig-marquee {
             0%   { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
@@ -260,18 +223,16 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
         `}</style>
       </div>
 
-      {/* Mobile uses a transparent, integer-positioned draggable track. There
-          is no native scroll layer or moving transform texture for iOS to
-          blend into the static Avalon background. */}
-      <div className="relative w-full bg-transparent md:hidden">
+      {/* Mobile uses a native scroll surface so the ribbon can be swiped. The
+          two identical groups make the slow automatic scroll loop seamlessly. */}
+      <div className="relative w-full md:hidden">
         <div
-          className="av-ig-mobile-scroller overflow-hidden bg-transparent"
+          ref={mobileScrollerRef}
+          className="av-ig-mobile-scroller overflow-x-auto"
           aria-label="Avalon Vitality Instagram posts"
           onPointerDown={pauseForDrag}
-          onPointerMove={moveDrag}
           onPointerUp={resumeAfterDrag}
           onPointerCancel={resumeAfterDrag}
-          onClickCapture={suppressDraggedClick}
           onPointerEnter={(event) => {
             if (event.pointerType === 'mouse') setMobileHovered(true);
           }}
@@ -279,28 +240,48 @@ export default function InstagramFeed({ posts: initialPosts = PLACEHOLDER_POSTS 
             if (event.pointerType === 'mouse') setMobileHovered(false);
           }}
           style={{
-            // The viewport stays a normal transparent paint surface; only the
-            // child track moves, while vertical page scrolling remains native.
-            backgroundColor: 'transparent',
-            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorX: 'contain',
+            scrollbarWidth: 'none',
           }}
         >
-          <div
-            ref={mobileTrackRef}
-            className="relative left-0 flex w-max select-none bg-transparent"
-            style={{ transform: 'none', willChange: 'auto' }}
-          >
+          <div className="flex w-max select-none">
             {[0, 1].map((group) => (
-              <div key={group} className="flex gap-2 bg-transparent pr-2" aria-hidden={group === 1 ? 'true' : undefined}>
-                {mobileSource.map((post, i) => (
+              <div key={group} className="flex gap-2 pr-2" aria-hidden={group === 1 ? 'true' : undefined}>
+                {source.map((post, i) => (
                   <RibbonTile key={`${group}-${post.id}-${i}`} post={post} />
                 ))}
               </div>
             ))}
           </div>
         </div>
+
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black to-transparent" />
+
+        <style>{`
+          .av-ig-mobile-scroller::-webkit-scrollbar { display: none; }
+        `}</style>
       </div>
 
+      {/* Hairline separator + FOLLOW pill */}
+      <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-10">
+        <div className="border-t border-white/[0.12]" />
+        <div className="mt-6">
+          <motion.a
+            href={handleUrl}
+            onClick={openInstagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={premiumHover}
+            whileTap={premiumTap}
+            className="group inline-flex items-center gap-2 rounded-full border border-white/[0.18] bg-white/[0.04] px-5 py-2.5 font-body text-[11px] uppercase tracking-[0.22em] text-foreground/85 transition-colors duration-base ease-editorial hover:border-white/[0.32] hover:text-foreground"
+          >
+            Follow
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-base ease-editorial group-hover:translate-x-1" strokeWidth={2} />
+          </motion.a>
+        </div>
+      </div>
     </section>
   );
 }

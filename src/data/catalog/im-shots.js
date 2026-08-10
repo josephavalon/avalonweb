@@ -1,13 +1,14 @@
-import { FlaskConical, Flame, Shield, Sparkles, Zap } from 'lucide-react';
+import { FlaskConical, Sparkles, Zap } from 'lucide-react';
 
+// IM shots are add-ons only. They attach to an IV visit and are never sold on
+// their own — `addOnOnly` states that in data so a future surface can't render
+// them as a standalone product by accident.
 export const IM_SHOTS = [
-  { label: 'B12', price: 40, max: 5, icon: Zap, desc: 'Energy + metabolism support', img: '/addons/b12.png' },
-  { label: 'MIC', price: 50, icon: Flame, desc: 'Metabolism support', img: '/addons/mic.png' },
-  { label: 'NAD+', price: 80, icon: FlaskConical, desc: 'Clinician-reviewed NAD+ support', img: '/addons/nad.png' },
-  { label: 'Glutathione IM · 200mg', price: 50, max: 5, icon: Sparkles, desc: 'Antioxidant + skin clarity', img: '/addons/glutathione.png' },
-  { label: 'Glutathione IM · 400mg', price: 80, max: 5, icon: Sparkles, desc: 'Higher-dose antioxidant support', img: '/addons/glutathione.png' },
-  { label: 'Vitamin C IM · 500mg', price: 30, icon: Shield, desc: 'Immune + antioxidant support', img: '/addons/vitamin-c.png' },
-  { label: 'Vitamin C IM · 1000mg', price: 45, icon: Shield, desc: 'Higher-dose vitamin C support', img: '/addons/vitamin-c.png' },
-  { label: 'Vitamin D', price: 35, icon: Zap, desc: 'Vitamin D support', img: '/addons/vitamin-d.png' },
-  { label: 'Biotin', price: 35, icon: Sparkles, desc: 'Hair, skin & nail support', img: '/addons/biotin.png' },
+  { label: 'B-12', price: 40, max: 5, icon: Zap, addOnOnly: true, desc: 'Energy + metabolism support', img: '/addons/b12.png' },
+  { label: 'B-Complex', price: 40, max: 5, icon: Zap, addOnOnly: true, desc: 'Full-spectrum B vitamin support', img: '/addons/b-complex.png' },
+  { label: 'Glutathione IM · 200mg', price: 80, max: 5, icon: Sparkles, addOnOnly: true, desc: 'Antioxidant + skin clarity', img: '/addons/glutathione.png' },
+  { label: 'Glutathione IM · 400mg', price: 120, max: 5, icon: Sparkles, addOnOnly: true, desc: 'Higher-dose antioxidant support', img: '/addons/glutathione.png' },
+  { label: 'NAD+ IM · 50mg', price: 80, icon: FlaskConical, addOnOnly: true, desc: 'NAD+ support', img: '/addons/nad.png' },
+  { label: 'NAD+ IM · 100mg', price: 150, icon: FlaskConical, addOnOnly: true, desc: 'Higher-dose NAD+ support', img: '/addons/nad.png' },
 ];
+

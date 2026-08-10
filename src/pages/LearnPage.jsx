@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, BookOpen, CheckCircle, Search, ShieldCheck } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import MedicalReviewNote from '@/components/seo/MedicalReviewNote';
 import { useSeo } from '@/lib/seo';
 import NotFound from '@/pages/NotFound';
@@ -190,7 +190,7 @@ export function LearnHub() {
           )}
         </div>
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }
@@ -343,7 +343,7 @@ export default function LearnPage() {
           </section>
         </article>
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

@@ -586,7 +586,7 @@ export default function BookingConfirmation() {
           )}
 
           <a
-            href={rescheduleUrl || 'sms:+14157070818'}
+            href={rescheduleUrl || 'sms:+14159807708'}
             target={rescheduleUrl ? '_blank' : undefined}
             rel={rescheduleUrl ? 'noopener noreferrer' : undefined}
             className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-foreground/[0.12] bg-foreground/[0.03] px-5 font-body text-xs font-bold uppercase tracking-[0.14em] text-foreground/64 transition-colors hover:border-foreground/30 hover:text-foreground"

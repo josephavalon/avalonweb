@@ -26,7 +26,36 @@ Approved preview: `~/.gstack/projects/josephavalon-avalonweb/designs/design-syst
 - **Rule:** if it sells the night → LOUD; if it explains → CALM; if it is true → MONO. No fourth voice in v1.
 - **Loading:** self-hosted woff2, inlined @font-face, preload above-the-fold faces (existing index.html pattern). No Google Fonts `<link>` in production.
 
-## Color — monochrome chrome, photography carries the warmth
+## Consumer surfaces are CREAM — 2026-07-29 (supersedes the dark canvas below)
+
+**snooches.avalonvitality.co is the new design, and every consumer page shares it.**
+The dark canvas described in the next section now applies **only** to the role-gated
+portals (`/admin`, `/provider`, `/members`, `/account`, `/organizer`, `/kiosk`) and the
+auth screens — none of which are shipping yet.
+
+| Token | Value |
+|---|---|
+| Canvas | `#f6f2eb` |
+| Ink | `#2b211b` |
+| Muted ink | `#6e6258` |
+| Hairline border | `#d9d2c8` |
+| Input / warm white | `#fffdf8` |
+
+Applied site-wide as `html.av-cream` — set pre-paint by `public/theme-bootstrap.js` so
+there is no dark flash, and kept in sync across client-side navigation by
+`ConsumerThemeSync` in `src/App.jsx`. Pages do **not** need their own `nd-` class.
+
+Two things that are easy to break:
+- The night-theme override (`.dark :where([class*="text-foreground/"]…) { color:#fff }`)
+  paints translucent foreground tokens solid white — invisible on cream. The
+  `html.av-cream` block re-overrides it at higher specificity. Don't delete it.
+- Filled dark CTAs (`bg-foreground` / `bg-accent` / `bg-primary`) keep **light** text on
+  cream. Their descendants are re-inverted explicitly; without that you get dark ink on
+  a dark pill (this shipped broken once on /corporate and /gift).
+
+Typography, motion, spacing, voice, and the clinical/privacy rules are unchanged.
+
+## Color — monochrome chrome, photography carries the warmth (PORTALS ONLY as of 2026-07-29)
 - **Approach:** restrained. White is the accent (the shipping `.dark` theme already declares `--accent: 0 0% 100%`).
 - **Canvas:** `#000000`. **Surface:** `rgba(13,13,13,.94)` (`--glass-bg`, flat, opaque). **Warm card:** `hsl(28 12% 16%)` ≈ `#2E2822`.
 - **Ink:** `#FFFFFF` primary text AND primary CTA fill; grey tiers `#CCCCCC` / `#8F8F8F` (existing AA-safe tiers).

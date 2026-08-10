@@ -16,12 +16,16 @@ import Stripe from 'stripe';
 import { getAuthedUser } from '../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 function emailFromPayload(payload = {}) {
   return String(payload?.contact?.email || '').trim().toLowerCase();
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Balance payment')) return;
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });

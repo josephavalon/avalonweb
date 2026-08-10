@@ -6,6 +6,7 @@ import {
   buildStripeCheckoutMetadata,
   isLegacyStripeMetadataPayload,
 } from '../api/_checkout-fulfillment.js';
+import { runFrontDoorChecks } from './front-door-qa.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -62,6 +63,21 @@ function scanDist() {
     {
       value: 'AVALON_INTERNAL_API_SECRET',
       label: 'internal API secret env name',
+    },
+    // These three are server-only. Seeing the NAME in the bundle means someone
+    // renamed it to VITE_AVALON_INVOICE_* — which would inline the actual
+    // password into public JS.
+    {
+      value: 'AVALON_INVOICE_USER',
+      label: 'invoice username env name',
+    },
+    {
+      value: 'AVALON_INVOICE_PASSWORD',
+      label: 'invoice password env name',
+    },
+    {
+      value: 'AVALON_INVOICE_TOKEN_SECRET',
+      label: 'invoice token signing secret env name',
     },
     {
       value: 'STRIPE_SECRET_KEY',
@@ -677,6 +693,17 @@ function checkAdminApiFunctionsAreDeployable() {
   }
 }
 
+// The PHI-free front door (snooches.avalonvitality.co) is a launch blocker in
+// its own right: if the sealed iframe, the host-scoped route gates, or the
+// split CSP regress, patient identity lands back in Avalon's DOM and Supabase.
+// Imported rather than shelled out to so a failure is a real launch-blocker
+// failure, not a subprocess exit code someone can miss.
+async function checkFrontDoorLockdown() {
+  for (const failure of await runFrontDoorChecks()) {
+    fail(`front-door lockdown: ${failure}`);
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
@@ -693,6 +720,7 @@ checkGoLiveStatusLedger();
 checkServiceWorkerKillSwitch();
 checkNoProdDeployAutomation();
 checkAdminApiFunctionsAreDeployable();
+await checkFrontDoorLockdown();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');

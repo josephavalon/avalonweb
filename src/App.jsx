@@ -10,6 +10,8 @@ import AppLoader from '@/components/AppLoader';
 import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
 import CareAcuityForward from '@/components/CareAcuityForward';
+import FrontDoorRedirect from '@/components/FrontDoorRedirect';
+import { isFrontDoorHost } from '@/lib/frontDoor';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -24,6 +26,7 @@ import { requiresPrivilegedMfa } from '@/lib/portalAccess';
 // (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
 // or the gate would lock every admin out of /admin.
 const MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
+const AVALON_OS_BETA_ENABLED = String(import.meta.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
 
 // Guard — redirects to /login if no active session; enforces role-based access
 // Legacy /plans/checkout and /plan-checkout deep links carry ?price=&term=&sessions=
@@ -40,6 +43,12 @@ function RequireAuth({ children, allowedRoles }) {
   const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
   if (!user) {
+    // The front door has no sign-in surface, so there is nowhere to send an
+    // unauthenticated visitor except back to /start. This must be a DIRECT
+    // bounce: routing them to /login instead would chain into the gate on that
+    // route, and two <Navigate replace> in a row leaves the visitor stranded on
+    // a blank page — React Router does not act on the second one.
+    if (isFrontDoorHost()) return <Navigate to="/start" replace />;
     if (pathname.startsWith('/provider/')) {
       return <Navigate to={{ pathname: '/login', search: `?role=nurse&redirect=${encodeURIComponent(pathname)}` }} replace />;
     }
@@ -99,7 +108,6 @@ const Checkout = lazyRoute(() => import('./pages/Checkout'));
 const BookNow = lazyRoute(() => import('./pages/BookNow'));
 const CheckoutSuccess = lazyRoute(() => import('./pages/CheckoutSuccess'));
 const Login = lazyRoute(() => import('./pages/Login'));
-const Signup = lazyRoute(() => import('./pages/Signup'));
 const ForgotPassword = lazyRoute(() => import('./pages/ForgotPassword'));
 const AuthCallback = lazyRoute(() => import('./pages/AuthCallback'));
 const Nurses = lazyRoute(() => import('./pages/Nurses'));
@@ -160,14 +168,21 @@ const B2BThankYou = lazyRoute(() => import('./pages/B2BThankYou'));
 const CustomProtocol = lazyRoute(() => import('./pages/CustomProtocol'));
 const CookiePolicy = lazyRoute(() => import('./pages/CookiePolicy'));
 const ProtocolPage = lazyRoute(() => import('./pages/therapies/ProtocolPage'));
-const ProductDetail = lazyRoute(() => import('./pages/products/ProductDetail'));
-const Menu = lazyRoute(() => import('./pages/Menu'));
+const ProductDetail = lazyRoute(() => import('./pages/ConsumerProduct'));
+const Menu = lazyRoute(() => import('./pages/ConsumerMenu'));
 const BookingConfirmation = lazyRoute(() => import('./pages/BookingConfirmation'));
-const Subscription = lazyRoute(() => import('./pages/Membership'));
+const Subscription = lazyRoute(() => import('./pages/PlanInterest'));
 const PlanCheckout = lazyRoute(() => import('./pages/PlanCheckout'));
 const Corporate = lazyRoute(() => import('./pages/Corporate'));
 const EventsPage = lazyRoute(() => import('./pages/Events'));
+const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
+const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
+const RequestReceived = lazyRoute(() => import('./pages/RequestReceived'));
+const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
+const NurseInvoice = lazyRoute(() => import('./pages/NurseInvoice'));
+const NurseLogin = lazyRoute(() => import('./pages/NurseLogin'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
+const Gift = lazyRoute(() => import('./pages/Gift'));
 const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
 const PageNotFound = lazyRoute(() => import('./lib/PageNotFound'));
 const NotFound = lazyRoute(() => import('./pages/NotFound'));
@@ -175,7 +190,6 @@ const Safety = lazyRoute(() => import('./pages/Safety'));
 const Support = lazyRoute(() => import('./pages/Support'));
 const Ingredients = lazyRoute(() => import('./pages/Ingredients'));
 const MedicalDirection = lazyRoute(() => import('./pages/MedicalDirection'));
-const Gift = lazyRoute(() => import('./pages/Gift'));
 const Athlete = lazyRoute(() => import('./pages/Athlete'));
 const Hangover = lazyRoute(() => import('./pages/Hangover'));
 const JetLag = lazyRoute(() => import('./pages/JetLag'));
@@ -197,7 +211,7 @@ const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
 const AdminKitControl = lazyRoute(() => import('./pages/admin/KitControl'));
 const AdminTrainingControl = lazyRoute(() => import('./pages/admin/TrainingControl'));
 const AdminInventory = lazyRoute(() => import('./pages/admin/Inventory'));
-const AdminComingSoon = lazyRoute(() => import('./pages/admin/ComingSoon'));
+const AdminOsCapability = lazyRoute(() => import('./pages/admin/OsCapability'));
 const AdminBookings = lazyRoute(() => import('./pages/admin/Bookings'));
 const AdminEventsBackend = lazyRoute(() => import('./pages/admin/EventsBackend'));
 const AdminClientHeatMap = lazyRoute(() => import('./pages/admin/ClientHeatMap'));
@@ -248,12 +262,35 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Intake routes never emit a page view. localAnalyticsProvider writes the event
+// to localStorage BEFORE the consent gate, so excluding the route removes the
+// write entirely — stronger than sanitizing the payload. Attribution still runs:
+// it reads an allowlist of UTM/click-id keys only, so it carries no PII.
+const ANALYTICS_EXCLUDED_ROUTES = /^\/(start|nurse-delivery|support|vitalice)(\/|$)/;
+
 const AnalyticsRouteTracker = () => {
   const { pathname, search } = useLocation();
   useEffect(() => {
     captureAttribution(search);
-    trackPageView({ path: `${pathname}${search}` });
+    if (ANALYTICS_EXCLUDED_ROUTES.test(pathname)) return;
+    trackPageView({ path: pathname });
   }, [pathname, search]);
+  return null;
+};
+
+// Keeps html.av-cream in sync across client-side navigation. The initial value
+// is set pre-paint by public/theme-bootstrap.js (same predicate) so the first
+// render never flashes dark; this only handles route changes after mount.
+// The dedicated Avalon OS beta uses the cream editorial theme everywhere.
+// Production portals and auth retain their current dark appearance.
+const PORTAL_PREFIX = /^\/(provider|admin|members|account|organizer|kiosk|login|signup|forgot|forgot-password)(\/|$)/;
+
+const ConsumerThemeSync = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('av-cream', AVALON_OS_BETA_ENABLED || !PORTAL_PREFIX.test(pathname));
+  }, [pathname]);
   return null;
 };
 
@@ -335,6 +372,20 @@ function AppRoutes() {
             <Route path="/launches/:slug" element={<EventPage />} />
             <Route path="/events/:slug/kiosk" element={<EventKiosk />} />
             <Route path="/events/:slug/board" element={<EventBoard />} />
+            <Route path="/events/cannabis-ce" element={<CannabisCeNight />} />
+            {/* /start is the canonical short URL for the focused booking screen.
+                /nurse-delivery stays for existing links and the ?path=guided flow. */}
+            <Route path="/start" element={<NurseDelivery entry="book" />} />
+            <Route path="/start/received" element={<RequestReceived />} />
+            <Route path="/nurse-delivery" element={<NurseDelivery />} />
+            {/* Vital Ice × Avalon co-branded intake for Outside Lands weekend.
+                Separate Cognito form; same PHI posture as /start. */}
+            <Route path="/vitalice" element={<Vitalice />} />
+            {/* Contractor pay form. Deliberately NOT wrapped in FrontDoorRedirect:
+                it carries no PHI and has to run on the apex, which is a front-door
+                host. Its own password gate is server-side (api/invoice/unlock). */}
+            <Route path="/invoice" element={<NurseInvoice />} />
+            <Route path="/nurse-login" element={<NurseLogin />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />
@@ -342,13 +393,18 @@ function AppRoutes() {
             <Route path="/trips/:visitId" element={<TripPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
-            <Route path="/membership" element={<Navigate to="/subscription" replace />} />
-            <Route path="/subscription" element={<CareAcuityForward><Subscription /></CareAcuityForward>} />
-            <Route path="/plan" element={<CareAcuityForward><PlanCheckout /></CareAcuityForward>} />
+            {/* Plans + plan checkout are pulled for now (2026-07-29). Redirected
+                rather than 404'd: ~18 internal links and any live inbound link
+                still land somewhere useful. Subscription/PlanCheckout stay
+                imported and unreachable — restore by swapping these back. */}
+            <Route path="/membership" element={<Navigate to="/start" replace />} />
+            <Route path="/subscription" element={<Navigate to="/start" replace />} />
+            <Route path="/plan" element={<Navigate to="/start" replace />} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/hotel" element={<Hotel />} />
+            <Route path="/gift" element={AVALON_OS_BETA_ENABLED ? <Gift /> : <NotFound />} />
             <Route path="/service-area" element={<ServiceArea />} />
             <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -367,28 +423,37 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
-            <Route path="/custom" element={<CareAcuityForward><CustomProtocol /></CareAcuityForward>} />
-            <Route path="/book" element={<CareAcuityForward><BookNow /></CareAcuityForward>} />
+            {/* PHI-collecting routes. CareAcuityForward stays OUTERMOST so apex/
+                www/care behavior is bit-for-bit unchanged (it returns null and
+                hard-navigates to Acuity before FrontDoorRedirect ever mounts).
+                FrontDoorRedirect only fires on the front-door host, where these
+                funnels must be unreachable — see src/lib/frontDoor.js. */}
+            <Route path="/custom" element={<CareAcuityForward><FrontDoorRedirect><CustomProtocol /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/book" element={<CareAcuityForward><FrontDoorRedirect><BookNow /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/booking" element={<Navigate to="/book" replace />} />
             <Route path="/book-now" element={<Navigate to="/book" replace />} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
             {/* Common URL guesses → canonical routes. Captures muscle memory
                 and competitor patterns that would otherwise hit the 404. */}
-            <Route path="/signin" element={<Navigate to="/login" replace />} />
-            <Route path="/sign-in" element={<Navigate to="/login" replace />} />
+            {/* Sign-in aliases are gated HERE rather than relying on the gate on
+                /login. Chaining two <Navigate replace> in one commit does not
+                work — React Router swallows the second, and the visitor is left
+                on a blank /login. Each alias must resolve in ONE navigation. */}
+            <Route path="/signin" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
+            <Route path="/sign-in" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/services" element={<Navigate to="/protocols" replace />} />
             <Route path="/providers" element={<Navigate to="/nurses" replace />} />
-            <Route path="/provider/login" element={<Navigate to="/login" replace />} />
+            <Route path="/provider/login" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             {/* Deep-link recovery — audit findings N2-N5. Nurse SMS invites,
                 marketing-cadence /iv-therapy links, muscle-memory /dashboard
                 and /kiosk should route somewhere useful, not 404. */}
-            <Route path="/nurse" element={<Navigate to="/login?role=nurse" replace />} />
+            <Route path="/nurse" element={<FrontDoorRedirect><Navigate to="/login?role=nurse" replace /></FrontDoorRedirect>} />
             <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
-            <Route path="/dashboard" element={<Navigate to="/members/dashboard" replace />} />
-            <Route path="/kiosk" element={<Navigate to="/login?next=/kiosk" replace />} />
-            <Route path="/plans" element={<Navigate to="/subscription" replace />} />
-            <Route path="/plans/checkout" element={<PreserveSearchNavigate to="/plan" />} />
-            <Route path="/plan-checkout" element={<PreserveSearchNavigate to="/plan" />} />
+            <Route path="/dashboard" element={<FrontDoorRedirect><Navigate to="/members/dashboard" replace /></FrontDoorRedirect>} />
+            <Route path="/kiosk" element={<FrontDoorRedirect><Navigate to="/login?next=/kiosk" replace /></FrontDoorRedirect>} />
+            <Route path="/plans" element={<Navigate to="/start" replace />} />
+            <Route path="/plans/checkout" element={<Navigate to="/start" replace />} />
+            <Route path="/plan-checkout" element={<Navigate to="/start" replace />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
             {/* /menu canonicalized to /protocols — both surfaces served the
@@ -396,33 +461,45 @@ function AppRoutes() {
             <Route path="/menu" element={<Navigate to="/protocols" replace />} />
             <Route path="/store" element={<Navigate to="/protocols" replace />} />
             <Route path="/store/confirmation" element={<Navigate to="/protocols" replace />} />
-            <Route path="/booking/confirmation" element={<CareAcuityForward><BookingConfirmation /></CareAcuityForward>} />
-            <Route path="/checkout" element={<CareAcuityForward><Checkout /></CareAcuityForward>} />
-            <Route path="/checkout/success" element={<CareAcuityForward><CheckoutSuccess /></CareAcuityForward>} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/booking/confirmation" element={<CareAcuityForward><FrontDoorRedirect><BookingConfirmation /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/checkout" element={<CareAcuityForward><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/checkout/success" element={<CareAcuityForward><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareAcuityForward>} />
+            {/* Login is Avalon OS, which lives on beta only — on the front-door
+                host the sign-in door must not exist. Gating this route does NOT
+                close the aliases that point at it: each of those is gated at its
+                own route, because a redirect INTO this one would chain two
+                <Navigate replace> calls and strand the visitor on a blank page. */}
+            <Route path="/login" element={<FrontDoorRedirect><Login /></FrontDoorRedirect>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
-            <Route path="/order" element={<ManageOrder />} />
+            <Route path="/order" element={<FrontDoorRedirect><ManageOrder /></FrontDoorRedirect>} />
             <Route path="/redeem" element={<Navigate to="/order" replace />} />
-            <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/forgot" element={<FrontDoorRedirect><ForgotPassword /></FrontDoorRedirect>} />
             <Route path="/forgot-password" element={<Navigate to="/forgot" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/invite/accept" element={<InviteAccept />} />
             <Route path="/account/new-password" element={<NewPassword />} />
-            <Route path="/members" element={<Navigate to="/login" replace />} />
+            <Route path="/members" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/organizer/login" element={<Navigate to="/login?portal=organizer" replace />} />
             <Route path="/organizer" element={<RequireAuth allowedRoles={['promoter', 'admin']}><OrganizerEventHub /></RequireAuth>} />
             <Route path="/members/dashboard" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDashboard /></RequireAuth>} />
             <Route path="/members/book" element={<RequireAuth allowedRoles={['client', 'admin', 'staff']}><MemberBook /></RequireAuth>} />
-            <Route path="/members/account" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth>} />
+            {/* The account surface is the one member page whose every panel
+                calls a now-server-gated api/me/* route (profile, payment
+                methods, password, unlink, delete-request). Without this a
+                logged-in user on the front door would mount the page and see
+                raw 409s. FrontDoorRedirect goes OUTSIDE RequireAuth so the
+                bounce to /start happens before the auth check.
+                NOTE: the canonical path is /members/account — there is no
+                top-level /account route (only /account/new-password). */}
+            <Route path="/members/account" element={<FrontDoorRedirect><RequireAuth allowedRoles={['client', 'admin']}><MemberAccount /></RequireAuth></FrontDoorRedirect>} />
             <Route path="/members/messages" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMessages /></RequireAuth>} />
             <Route path="/members/bookings" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBookings /></RequireAuth>} />
             <Route path="/members/memberships" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberMemberships /></RequireAuth>} />
             <Route path="/members/billing" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBilling /></RequireAuth>} />
             <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
             <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
-            <Route path="/provider" element={<Navigate to="/login" replace />} />
+            <Route path="/provider" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shift" replace /></RequireAuth>} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'admin']}><NurseDashboard /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderAppointments /></RequireAuth>} />
@@ -476,7 +553,7 @@ function AppRoutes() {
             <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
             <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
-            <Route path="/admin/soon" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminComingSoon /></RequireAuth>} />
+            <Route path="/admin/os/:capability" element={AVALON_OS_BETA_ENABLED ? <RequireAuth allowedRoles={['admin', 'staff']}><AdminOsCapability /></RequireAuth> : <NotFound />} />
             <Route path="/admin/events/:slug/serve" element={<RequireAuth allowedRoles={['admin', 'staff', 'nurse', 'rn', 'np', 'physician', 'medical_director']}><AdminEventServe /></RequireAuth>} />
             <Route path="/admin/events/:slug/brand" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEventBrand /></RequireAuth>} />
             <Route path="/admin/events" element={<RequireAuth allowedRoles={['admin']}><AdminEventsBackend /></RequireAuth>} />
@@ -485,8 +562,7 @@ function AppRoutes() {
             <Route path="/safety" element={<Safety />} />
             <Route path="/support" element={<Support />} />
             <Route path="/ingredients" element={<Ingredients />} />
-            <Route path="/gift" element={<Gift />} />
-            <Route path="/review" element={<Review />} />
+            <Route path="/review" element={<FrontDoorRedirect><Review /></FrontDoorRedirect>} />
             <Route path="/members/redeem" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberRedeemGift /></RequireAuth>} />
             <Route path="/athlete" element={<Athlete />} />
             <Route path="/hangover" element={<Hangover />} />
@@ -514,6 +590,7 @@ function App() {
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <AnalyticsRouteTracker />
+          <ConsumerThemeSync />
           <GlobalZoomState />
           <ScrollProgress />
           <MobileShell />

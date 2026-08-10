@@ -15,8 +15,7 @@ export const THEME_CLASSES = [
 ];
 
 export const THEME_ALIASES = {
-  // All light / seasonal / legacy themes now collapse to dark. The only real
-  // aliases we keep are `dubs` → `warriors` (legacy toggle name).
+  // All seasonal and legacy themes collapse to dark.
   light: 'dark',
   daytime: 'dark',
   golden: 'dark',
@@ -24,14 +23,11 @@ export const THEME_ALIASES = {
   giants: 'dark',
   pride: 'dark',
   july: 'dark',
-  dubs: 'warriors',
+  warriors: 'dark',
+  dubs: 'dark',
 };
 
-// Only two themes are exposed to visitors on the marketing site: Night (dark)
-// and Warriors. All other keys (daytime / golden-hour / giants / pride / july /
-// light / golden / dubs) are treated as aliases that fall back to dark, so a
-// stale localStorage value or a bad deep link can't flash a light theme.
-export const VALID_THEMES = ['dark', 'warriors'];
+export const VALID_THEMES = ['dark'];
 export const THEME_LABELS = {
   dark: 'Night',
   giants: 'Giants',
@@ -52,12 +48,7 @@ const THEME_COLOR_SCHEMES = {
   july: 'dark',
 };
 
-// Hidden easter egg (double-click/tap the chevron on any breakpoint): cycles
-// Night ↔ Warriors. Narrowed from the previous 4-theme rotation per user
-// directive to keep only the two active themes in the toggle. Other themes
-// remain reachable via applyTheme() directly for anyone who wants to hit them
-// by key.
-export const THEME_CYCLE = ['dark', 'warriors'];
+export const THEME_CYCLE = ['dark'];
 
 export function normalizeTheme(theme) {
   const value = String(theme || '').trim();

@@ -27,7 +27,7 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/reviews', // post-visit NPS + review moderation
   '/admin/support-tickets', // public support queue (store-then-notify)
   '/admin/reconciliation', // renewals / acuity sync / payment failures
-  '/admin/soon', // coming-soon placeholders (Inventory/Events/Clinical/GFE/Tools/Settings)
+  '/admin/os', // persisted Avalon OS beta capability workspaces
 ]);
 
 export const ALL_TEAM_ROLES = Object.freeze(['admin', 'staff']);
@@ -52,7 +52,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/reviews', // post-visit NPS + review moderation
   '/admin/support-tickets', // public support queue
   '/admin/reconciliation', // renewals / acuity sync / payment failures
-  '/admin/soon', // coming-soon placeholders
+  '/admin/os', // persisted Avalon OS beta capability workspaces
 ]);
 
 function normalizeAdminPath(path = '') {
@@ -62,6 +62,10 @@ function normalizeAdminPath(path = '') {
 
 function adminPreviewEnabled() {
   return import.meta.env?.VITE_ADMIN_PREVIEW === '1';
+}
+
+function avalonOsBetaEnabled() {
+  return String(import.meta.env?.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
 }
 
 // Match a path against an allow-list. A path counts as allowed if it equals an
@@ -75,6 +79,7 @@ function matchesAllowList(path, allowList) {
 /** Can a given role open a given admin path? */
 export function canAccessAdminRoute(role, path) {
   const normalized = normalizeAdminPath(path);
+  if (matchesAllowList(normalized, ['/admin/os']) && !avalonOsBetaEnabled()) return false;
   if (!adminPreviewEnabled() && !matchesAllowList(normalized, LIVE_ADMIN_ROUTES)) return false;
   if (role === 'admin') return true;
   if (role === 'staff') return matchesAllowList(normalized, STAFF_ROUTES);

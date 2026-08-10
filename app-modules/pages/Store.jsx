@@ -120,16 +120,11 @@ export default function Store() {
     });
   };
 
-  const saveDraft = (payload) => {
-    try {
-      window.localStorage.setItem('avalon.clientStoreDraft', JSON.stringify({
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      }));
-    } catch (err) {
-      if (import.meta.env?.DEV) console.warn('[store-draft]', err);
-    }
-  };
+  // NOTE: there is deliberately no localStorage draft here. The custom flow
+  // collects health goals and a free-text note whose placeholder invites
+  // clinical narrative; persisting either to the device is a PHI leak with no
+  // expiry and no logout clear. Nothing read the draft back, so it is gone.
+  // If a draft is ever needed, persist only non-clinical fields (mode, people).
 
   const scrollStoreTop = () => {
     if (typeof window === 'undefined') return;
@@ -174,14 +169,6 @@ export default function Store() {
         type: item.type === 'im' ? 'im' : 'addon',
       });
     });
-    saveDraft({
-      mode: 'guided',
-      goal: goal.label,
-      protocol: recommended.key,
-      quantity,
-      addOns: addonItems.map((item) => item.label),
-      total,
-    });
     resetBaseStep();
   };
 
@@ -198,12 +185,6 @@ export default function Store() {
   };
 
   const continueCustom = () => {
-    saveDraft({
-      mode: 'custom',
-      goals: Array.from(customGoals),
-      people,
-      note: customNote,
-    });
     navigate('/book');
   };
 

@@ -3,7 +3,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import { Link } from 'react-router-dom';
 import { Zap, RotateCcw, Activity, Users, Clock, MapPin, ArrowRight, Check } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { Reveal } from '@/components/ui/Reveal';
 
@@ -377,7 +377,7 @@ export default function Athlete() {
         </Reveal>
 
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

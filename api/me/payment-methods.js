@@ -15,6 +15,7 @@
 import Stripe from 'stripe';
 import { getAuthedUser } from '../_lib/supabase-auth.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 function likeLiteral(value) {
   return String(value).replace(/([\\%_])/g, '\\$1');
@@ -62,6 +63,9 @@ async function findCustomerIdFromAppointments(db, email, tenantId) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Payment method management')) return;
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });

@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
-import Footer from '../components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import B2BSection from '../components/landing/B2BSection';
 import { useSeo } from '@/lib/seo';
 
@@ -16,7 +16,7 @@ export default function Partners() {
       <main className="flex-1 pt-24 md:pt-28">
         <B2BSection />
       </main>
-      <Footer />
+      <ConsumerFooter />
     </div>
   );
 }

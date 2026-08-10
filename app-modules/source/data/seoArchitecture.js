@@ -691,9 +691,17 @@ export const indexedSeoPaths = [
 
 export const publicStaticRoutes = [
   {
+    path: '/start',
+    title: 'Start — Avalon Vitality',
+    description: 'Start a mobile wellness visit. Leave your name and mobile — a registered nurse comes to you in the SF Bay Area. $50 deposit applies to your visit.',
+    h1: 'Start',
+    priority: '0.9',
+    changefreq: 'monthly',
+  },
+  {
     path: '/',
-    title: 'Avalon Vitality | Mobile IV Therapy in the SF Bay Area',
-    description: 'Avalon Vitality delivers mobile IV therapy to homes, hotels, offices, and events with registered nurse visits, clinical review, flat pricing, and fast SF Bay Area booking.',
+    title: 'Mobile Wellness Therapy',
+    description: 'IV therapies and more. Delivered to your home, hotel, or office by registered nurses across the SF Bay Area.',
     h1: 'Mobile IV Therapy',
     priority: '1.0',
     changefreq: 'weekly',
@@ -821,14 +829,8 @@ export const publicStaticRoutes = [
   // /menu canonicalized to /protocols at the router level (App.jsx).
   // Intentionally excluded from the sitemap / SEO architecture so crawlers
   // don't index the redirect.
-  {
-    path: '/subscription',
-    title: 'Subscriptions — Avalon Vitality',
-    description: 'Avalon subscriptions for recurring mobile recovery support, credits, appointment planning, and clinician-reviewed service.',
-    h1: 'Subscriptions',
-    priority: '0.8',
-    changefreq: 'weekly',
-  },
+  // /subscription pulled from the sitemap 2026-07-29 — the route now redirects
+  // to /start, so prerendering it would publish a page that no longer exists.
   {
     path: '/pricing',
     title: 'Transparent Pricing — Avalon Vitality',
@@ -923,14 +925,6 @@ export const publicStaticRoutes = [
     description: 'Mobile hydration and recovery support after events, travel, or long nights, subject to intake and clinical approval.',
     h1: 'After-Event Hydration Support',
     priority: '0.6',
-    changefreq: 'monthly',
-  },
-  {
-    path: '/gift',
-    title: 'Gift Avalon Recovery — Avalon Vitality',
-    description: 'Gift Avalon Vitality mobile recovery credit for eligible Bay Area appointments subject to clinical review.',
-    h1: 'Gift Avalon Recovery',
-    priority: '0.5',
     changefreq: 'monthly',
   },
   {

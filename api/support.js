@@ -12,6 +12,7 @@
  * email entirely (and send no acknowledgment, since we have nowhere to reply).
  */
 import { Resend } from 'resend';
+import { blockFrontDoorPhiRoute } from './_lib/pre-api-guard.js';
 import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
 import { getServiceClient } from './_lib/supabase-auth.js';
 import { writeAuditEvent } from './_lib/audit-events.js';
@@ -103,6 +104,15 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Front-door hosts collect zero PHI. A ticket carries name + email + a
+  // free-text `message` that may contain health detail, and this handler
+  // INSERTs all of it into Supabase `support_tickets` — which would drag
+  // Supabase back into HIPAA BAA scope for a host whose whole purpose is
+  // being out of it. app-modules/pages/Support.jsx already hides the form
+  // there, but the endpoint stays callable directly, so the gate must be
+  // server side too. Front-door users get the PHI-free contact card.
+  if (blockFrontDoorPhiRoute(req, res, 'Support ticket submission')) return;
 
   // Rate limit first — cheapest check.
   const ip = clientIp(req);

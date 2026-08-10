@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumHover, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
@@ -359,7 +359,7 @@ export default function Menu() {
 
       </main>
 
-      <Footer />
+      <ConsumerFooter />
 
       <ExitStoreDialog
         open={exitConfirm.open}

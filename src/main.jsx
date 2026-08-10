@@ -6,6 +6,7 @@ import '@/index.css'
 import { captureAttribution, getExperimentVariant } from '@/lib/analytics'
 import { initErrorTelemetry } from '@/lib/errorTelemetry'
 import { applyTheme } from '@/lib/theme'
+import { armFrontDoorPreview } from '@/lib/frontDoor'
 
 function applyStoredTheme() {
   try {
@@ -17,6 +18,7 @@ function applyStoredTheme() {
 }
 
 applyStoredTheme();
+armFrontDoorPreview();
 initErrorTelemetry();
 captureAttribution();
 getExperimentVariant('booking_entry_v1', ['protocol-first', 'fast-hold']);

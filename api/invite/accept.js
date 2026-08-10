@@ -13,6 +13,7 @@ import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode } from '../_lib/safe-error.js';
 import { resolveInvite } from './validate.js';
+import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
 
 const INVALID = { error: 'This invite is invalid or has expired.', code: 'invite_invalid' };
 
@@ -26,6 +27,9 @@ async function findExistingProfileByEmail(db, email) {
 }
 
 export default async function handler(req, res) {
+  // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
+  if (blockFrontDoorPhiRoute(req, res, 'Invite acceptance')) return;
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const limit = await checkRateLimit({ key: `invite-accept:${clientIp(req)}`, windowMs: 60 * 1000, max: 15 });
