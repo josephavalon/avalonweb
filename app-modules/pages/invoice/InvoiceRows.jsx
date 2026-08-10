@@ -7,7 +7,10 @@ import { RECEIPT_ACCEPT_ATTR, formatBytes } from './receiptFile';
 // avalonFieldClass is text-sm (14px); anything under 16px makes iOS zoom the
 // viewport on focus, and this form is filled on a phone. cn() runs twMerge so
 // the later size wins instead of both classes fighting.
-export const invoiceFieldClass = cn(avalonFieldClass, 'text-base');
+// min-w-0 is not cosmetic: a grid or flex child defaults to min-width:auto, so an
+// input with an intrinsic minimum — date fields especially — refuses to shrink
+// and pushes straight out through the side of the card on a narrow phone.
+export const invoiceFieldClass = cn(avalonFieldClass, 'text-base min-w-0 max-w-full');
 
 // Body font at full contrast, not 10px mono at 55% opacity. Mono is for numbers
 // at rest; a field label is something a nurse has to read in a car at night, and
@@ -156,8 +159,8 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors
         <RemoveButton onClick={onRemove} label={`Remove shift ${index + 1}`} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <div className="min-w-0">
           <label className={invoiceLabelClass} htmlFor={`shift-date-${row.id}`}>
             Date
           </label>
@@ -171,7 +174,7 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors
           />
           <FieldError>{errors.date}</FieldError>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className={invoiceLabelClass} htmlFor={`shift-hours-${row.id}`}>
             Hours
           </label>
@@ -201,7 +204,7 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors
       ) : null}
       <FieldError>{errors.typeKey}</FieldError>
 
-      <div className="mt-4 grid gap-3 border-t border-foreground/10 pt-4 sm:grid-cols-3">
+      <div className="mt-4 grid min-w-0 gap-3 border-t border-foreground/10 pt-4 sm:grid-cols-3">
         {hasAdders ? (
           <>
             <CountField
@@ -260,8 +263,8 @@ export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachErr
         <RemoveButton onClick={onRemove} label={`Remove expense ${index + 1}`} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
-        <div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+        <div className="min-w-0">
           <label className={invoiceLabelClass} htmlFor={`expense-desc-${row.id}`}>
             Description
           </label>
@@ -277,7 +280,7 @@ export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachErr
           />
           <FieldError>{errors.description}</FieldError>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className={invoiceLabelClass} htmlFor={`expense-amount-${row.id}`}>
             Amount
           </label>

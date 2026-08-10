@@ -169,11 +169,14 @@ export default async function handler(req, res) {
       });
     }
 
-    // Optional: the nurse's own copy. Validated for shape, then simply added to
-    // the recipients — it is their invoice, and the internal addresses are not a
+    // The nurse's own copy, required. Added to the recipients rather than sent
+    // separately — it is their invoice, and the internal addresses are hardly a
     // secret from the person being paid.
     const nurseEmail = String(body.nurseEmail || '').trim().toLowerCase();
-    if (nurseEmail && (!EMAIL_RE.test(nurseEmail) || nurseEmail.length > 120)) {
+    if (!nurseEmail) {
+      return res.status(400).json({ error: 'Enter the email address your copy should go to.' });
+    }
+    if (!EMAIL_RE.test(nurseEmail) || nurseEmail.length > 120) {
       return res.status(400).json({ error: 'That email address does not look right.' });
     }
 
@@ -223,7 +226,7 @@ export default async function handler(req, res) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
       from: fromAddress(),
-      to: nurseEmail ? [...RECIPIENTS, nurseEmail] : RECIPIENTS,
+      to: [...RECIPIENTS, nurseEmail],
       ...(attachments.length ? { attachments } : {}),
       subject: `Invoice ${invoiceNumber} — ${nurse.name} — ${formatCents(computed.grandTotalCents)}`,
       html: buildInvoiceDocumentHtml({
@@ -247,7 +250,7 @@ export default async function handler(req, res) {
       invoiceNumber,
       knownContractor,
       receiptCount: attachments.length,
-      copiedTo: nurseEmail || null,
+      copiedTo: nurseEmail,
       submittedAt,
       // The whole computation, so the copy a nurse saves is rendered from the
       // SAME numbers that went to the approvers rather than from the client's
