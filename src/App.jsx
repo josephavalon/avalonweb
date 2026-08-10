@@ -180,6 +180,7 @@ const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
 const RequestReceived = lazyRoute(() => import('./pages/RequestReceived'));
 const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
 const NurseInvoice = lazyRoute(() => import('./pages/NurseInvoice'));
+const NurseLogin = lazyRoute(() => import('./pages/NurseLogin'));
 const Hotel = lazyRoute(() => import('./pages/Hotel'));
 const Gift = lazyRoute(() => import('./pages/Gift'));
 const ServiceArea = lazyRoute(() => import('./pages/ServiceArea'));
@@ -384,6 +385,7 @@ function AppRoutes() {
                 it carries no PHI and has to run on the apex, which is a front-door
                 host. Its own password gate is server-side (api/invoice/unlock). */}
             <Route path="/invoice" element={<NurseInvoice />} />
+            <Route path="/nurse-login" element={<NurseLogin />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/presale" element={<EventPresale />} />
             <Route path="/presale/:eventId" element={<EventPresale />} />

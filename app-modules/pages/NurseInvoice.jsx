@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useReducer } from 'react';
 import { motion } from 'motion/react';
-import { Check, CheckCircle2, Loader2, Lock, Plus } from 'lucide-react';
-import AvalonMark from '@/components/AvalonMark';
+import { Check, CheckCircle2, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
@@ -13,12 +12,8 @@ import {
   computeInvoice,
   formatCents,
 } from '@/data/nurseInvoiceRates';
-import {
-  ExpenseRow,
-  ShiftRow,
-  invoiceFieldClass,
-  invoiceLabelClass,
-} from './invoice/InvoiceRows';
+import { ExpenseRow, ShiftRow, invoiceFieldClass, invoiceLabelClass } from './invoice/InvoiceRows';
+import InvoiceUnlock, { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
 
 /**
  * /invoice — the contractor pay form.
@@ -40,7 +35,6 @@ import {
 const CARD_CLASS =
   'rounded-[2rem] border border-foreground/[0.10] bg-background px-5 py-6 shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)] md:px-8 md:py-8';
 
-const TOKEN_KEY = 'av.invoice.token';
 const DRAFT_KEY = 'av.invoice.draft';
 
 const ERROR_CLASS = 'font-body text-[13px] text-red-600 mt-1';
@@ -182,97 +176,6 @@ function toComputeInput(state, role) {
   };
 }
 
-function UnlockCard({ onUnlock, status, error }) {
-  return (
-    <form
-      noValidate
-      className={CARD_CLASS}
-      onSubmit={(event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        onUnlock({
-          username: String(data.get('username') || ''),
-          password: String(data.get('password') || ''),
-          website: String(data.get('website') || ''),
-        });
-      }}
-    >
-      <div className="flex items-center gap-2 text-foreground">
-        <AvalonMark className="h-7 w-7" />
-        <span className="font-heading uppercase tracking-tight text-[1.15rem]">
-          Avalon Vitality
-        </span>
-      </div>
-
-      <h1 className="mt-6 font-heading uppercase tracking-tight text-foreground text-[3.5rem] leading-[0.88] md:text-[4.5rem]">
-        Invoice
-      </h1>
-      <div className="mt-4 h-[3px] w-14 rounded-full bg-foreground/25" aria-hidden="true" />
-      <p className="mt-5 font-body text-[15px] leading-[1.55] text-foreground/70">
-        Submit your shifts and expenses for the pay period.
-      </p>
-
-      <div className="mt-7">
-        <label className={invoiceLabelClass} htmlFor="invoice-username">
-          Username
-        </label>
-        <input
-          id="invoice-username"
-          name="username"
-          type="text"
-          autoComplete="username"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck="false"
-          required
-          className={invoiceFieldClass}
-        />
-      </div>
-
-      <div className="mt-4">
-        <label className={invoiceLabelClass} htmlFor="invoice-password">
-          Password
-        </label>
-        <input
-          id="invoice-password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck="false"
-          required
-          className={invoiceFieldClass}
-        />
-      </div>
-
-      {/* Honeypot — hidden from people, irresistible to bots. */}
-      <input
-        type="text"
-        name="website"
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        className="absolute left-[-9999px] h-px w-px opacity-0"
-      />
-
-      {error ? <p className={ERROR_CLASS}>{error}</p> : null}
-
-      <Button type="submit" size="lg" disabled={status === 'submitting'} className="mt-6 w-full gap-2">
-        {status === 'submitting' ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" /> Unlocking…
-          </>
-        ) : (
-          <>
-            <Lock className="h-4 w-4" /> Unlock
-          </>
-        )}
-      </Button>
-    </form>
-  );
-}
-
 function StepSummary({ label, value, onEdit }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl border border-foreground/[0.10] bg-background px-5 py-3.5">
@@ -311,7 +214,7 @@ export default function NurseInvoice() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const token = window.sessionStorage.getItem(TOKEN_KEY) || '';
+      const token = window.sessionStorage.getItem(INVOICE_TOKEN_KEY) || '';
       const draftRaw = window.sessionStorage.getItem(DRAFT_KEY);
       const draft = draftRaw ? JSON.parse(draftRaw) : null;
       if (!token) return;
@@ -355,34 +258,6 @@ export default function NurseInvoice() {
     [state, nurse],
   );
 
-  async function handleUnlock(credentials) {
-    dispatch({ type: 'status', status: 'submitting' });
-    try {
-      const response = await fetch('/api/invoice/unlock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.token) {
-        dispatch({
-          type: 'status',
-          status: 'idle',
-          error: data?.error || 'Incorrect username or password.',
-        });
-        return;
-      }
-      try {
-        window.sessionStorage.setItem(TOKEN_KEY, data.token);
-      } catch {
-        /* ignore */
-      }
-      dispatch({ type: 'unlocked', token: data.token });
-    } catch {
-      dispatch({ type: 'status', status: 'idle', error: 'Network error. Please try again.' });
-    }
-  }
-
   function handleReview() {
     if (!state.periodStart || !state.periodEnd) {
       dispatch({ type: 'status', status: 'idle', error: 'Please enter the pay period.' });
@@ -420,7 +295,7 @@ export default function NurseInvoice() {
 
       if (response.status === 401) {
         try {
-          window.sessionStorage.removeItem(TOKEN_KEY);
+          window.sessionStorage.removeItem(INVOICE_TOKEN_KEY);
         } catch {
           /* ignore */
         }
@@ -456,7 +331,7 @@ export default function NurseInvoice() {
           className="grid gap-4"
         >
           {state.step === 'locked' ? (
-            <UnlockCard onUnlock={handleUnlock} status={state.status} error={state.error} />
+            <InvoiceUnlock onUnlocked={(token) => dispatch({ type: 'unlocked', token })} />
           ) : null}
 
           {state.step === 'roster' ? (

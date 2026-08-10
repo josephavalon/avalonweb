@@ -106,6 +106,7 @@ const clientAnalyticsSource = readFileSync(new URL('../src/lib/analytics.js', im
 const serverAnalyticsSource = readFileSync(new URL('../api/analytics.js', import.meta.url), 'utf8');
 const reverseGeocodeSource = readFileSync(new URL('../api/reverse-geocode.js', import.meta.url), 'utf8');
 const viteConfigSource = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
+const cornerMenuSource = readFileSync(new URL('../src/components/landing/CornerMenuHeader.jsx', import.meta.url), 'utf8');
 const messagingBaseMigrationSource = readFileSync(new URL('../supabase/migrations/002_messages.sql', import.meta.url), 'utf8');
 const privateAuthTriggerMigrationSource = readFileSync(new URL('../supabase/migrations/009_private_auth_profile_trigger.sql', import.meta.url), 'utf8');
 const clinicalRlsMigrationSource = readFileSync(new URL('../supabase/migrations/010_tighten_clinical_rls_and_reconciliation_cases.sql', import.meta.url), 'utf8');
@@ -143,9 +144,17 @@ for (const route of ['/waiver', '/liability-waiver']) {
 // /invoice has to clear three separate allowlists — the edge rewrite, the dev
 // API proxy and the preview server — and missing any one of them looks like a
 // router bug rather than a config gap.
-assert(allKnownRoutes.includes('/invoice'), 'Invoice route missing from route registry');
-assert(publicSpaRewrite?.source.includes('invoice'), 'Invoice route missing from Vercel rewrite');
-assert(previewServerSource.includes('/invoice'), 'Invoice route missing from preview server');
+for (const route of ['invoice', 'nurse-login']) {
+  assert(allKnownRoutes.includes(`/${route}`), `Route missing from route registry: /${route}`);
+  assert(publicSpaRewrite?.source.includes(route), `Route missing from Vercel rewrite: /${route}`);
+  assert(previewServerSource.includes(route), `Route missing from preview server: /${route}`);
+}
+// The front-door menu's Login must point at the nurse door, not the OS login —
+// /login is wrapped in FrontDoorRedirect and would bounce to /start on the apex.
+assert(
+  /FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/nurse-login' \}/.test(cornerMenuSource),
+  'Front-door menu Login must link to /nurse-login',
+);
 assert(viteConfigSource.includes("'/api/invoice/unlock'"), 'Invoice unlock API missing from vite dev API_ROUTES');
 assert(viteConfigSource.includes("'/api/invoice/submit'"), 'Invoice submit API missing from vite dev API_ROUTES');
 

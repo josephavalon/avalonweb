@@ -8,8 +8,13 @@ import { isFrontDoorHost } from '@/lib/frontDoor';
 
 // This header is global — it renders on the front door AND on beta, so the two
 // surfaces get two item lists rather than one edited list. Beta carries the full
-// Avalon OS, including Login. The front door has no sign-in door (see
-// src/lib/frontDoor.js), so Login is omitted there and Vital Ice takes its slot.
+// Avalon OS, so its Login goes to /login.
+//
+// The front door still has no *client* sign-in (see src/lib/frontDoor.js, and
+// /login is wrapped in FrontDoorRedirect so it bounces to /start there). Its
+// Login is the nurse door instead: /nurse-login → /invoice, the contractor pay
+// form. Different destination, same label, and it sits last on purpose — it is
+// staff-facing, not part of the customer path above it.
 const OS_ITEMS = [
   { label: 'Start', to: '/start' },
   { label: 'Help', to: '/nurse-delivery?path=guided' },
@@ -23,6 +28,7 @@ const FRONT_DOOR_ITEMS = [
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
+  { label: 'Login', to: '/nurse-login' },
 ];
 
 const PHONE_URL = 'tel:+14159807708';

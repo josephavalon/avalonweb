@@ -437,8 +437,11 @@ async function checkServerGateCoverage(failures) {
 //    invariant that actually earns those two exemptions.
 const INVOICE_PAGE_FILES = [
   'app-modules/pages/NurseInvoice.jsx',
+  'app-modules/pages/NurseLogin.jsx',
   'app-modules/pages/invoice/InvoiceRows.jsx',
+  'app-modules/pages/invoice/InvoiceUnlock.jsx',
   'src/pages/NurseInvoice.jsx',
+  'src/pages/NurseLogin.jsx',
 ];
 const INVOICE_FORBIDDEN_TOKENS = [/patient/i, /\bclient\b/i, /\bdob\b/i, /diagnos/i, /medication/i];
 
