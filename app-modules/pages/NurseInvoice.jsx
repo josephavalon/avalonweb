@@ -12,7 +12,14 @@ import {
   computeInvoice,
   formatCents,
 } from '@/data/nurseInvoiceRates';
-import { ExpenseRow, ShiftRow, invoiceFieldClass, invoiceLabelClass } from './invoice/InvoiceRows';
+import {
+  ExpenseRow,
+  FieldError,
+  ShiftRow,
+  fieldErrorClass,
+  invoiceFieldClass,
+  invoiceLabelClass,
+} from './invoice/InvoiceRows';
 import {
   MAX_TOTAL_RECEIPT_BYTES,
   formatBytes,
@@ -52,6 +59,35 @@ const CARD_CLASS =
 
 const ERROR_CLASS = 'font-body text-[13px] text-red-600 mt-1';
 
+// computeInvoice reports codes, not prose. Anything unmapped falls back to a
+// plain instruction rather than leaking an identifier at a nurse.
+const ERROR_MESSAGES = {
+  invalid_date: 'Pick a date.',
+  invalid_hours: 'Hours must be between 0 and 24, in quarter hours (7, 7.25, 7.5).',
+  invalid_count: 'Use a whole number from 0 to 99.',
+  adders_not_permitted: 'This shift type does not pay per IV or shot.',
+  unknown_shift_type: 'Choose a shift type.',
+  missing_description: 'Say what the expense was for.',
+  description_too_long: 'Keep the description under 80 characters.',
+  invalid_amount: 'Enter an amount above $0.00.',
+};
+
+const messageFor = (code) => ERROR_MESSAGES[code] || 'Check this field.';
+
+/** computeInvoice errors -> { shifts: { [index]: {field: msg} }, expenses: {...}, form: [...] } */
+function groupErrors(errors) {
+  const grouped = { shifts: {}, expenses: {}, form: [] };
+  for (const item of errors) {
+    if (item.index < 0) {
+      grouped.form.push(item.code);
+      continue;
+    }
+    const bucket = item.scope === 'expense' ? grouped.expenses : grouped.shifts;
+    bucket[item.index] = { ...bucket[item.index], [item.field]: messageFor(item.code) };
+  }
+  return grouped;
+}
+
 function rowId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -85,6 +121,9 @@ const initialState = {
   error: '',
   result: null,
   attachErrors: {},
+  // Errors stay hidden until the first attempt to move on — nobody wants to be
+  // corrected while still typing the first character.
+  showErrors: false,
 };
 
 function reducer(state, action) {
@@ -149,6 +188,9 @@ function reducer(state, action) {
 
     case 'goto':
       return { ...state, step: action.step, error: '' };
+
+    case 'showErrors':
+      return { ...state, showErrors: true, error: action.error || '' };
 
     case 'status':
       return { ...state, status: action.status, error: action.error || '' };
@@ -286,21 +328,51 @@ export default function NurseInvoice() {
     [state],
   );
 
+  // Errors are computed continuously but only rendered once the nurse has tried
+  // to move on, so corrections appear live from then on without anyone being
+  // scolded mid-keystroke.
+  const fieldErrors = useMemo(
+    () => (state.showErrors ? groupErrors(computed.errors) : { shifts: {}, expenses: {}, form: [] }),
+    [state.showErrors, computed.errors],
+  );
+
+  const nameError = state.showErrors && state.nurseName.trim().length < 2 ? 'Enter your name.' : '';
+  const periodStartError = state.showErrors && !state.periodStart ? 'Pick a start date.' : '';
+  const periodEndError = state.showErrors && !state.periodEnd ? 'Pick an end date.' : '';
+
   function handleReview() {
-    if (state.nurseName.trim().length < 2) {
-      dispatch({ type: 'status', status: 'idle', error: 'Please enter your name.' });
-      return;
+    const problems = [];
+    if (state.nurseName.trim().length < 2) problems.push('invoice-nurse');
+    if (!state.periodStart) problems.push('period-start');
+    if (!state.periodEnd) problems.push('period-end');
+
+    // Field-level messages are already rendered from `computed.errors`; this only
+    // decides whether to reveal them and where to send the cursor.
+    for (const item of computed.errors) {
+      if (item.index < 0) continue;
+      const row = item.scope === 'expense' ? state.expenses[item.index] : state.shifts[item.index];
+      if (!row) continue;
+      const prefix = item.scope === 'expense'
+        ? { description: 'expense-desc', amountCents: 'expense-amount' }[item.field]
+        : { date: 'shift-date', hours: 'shift-hours', ivCount: 'shift-iv', shotCount: 'shift-shot', gfeCount: 'shift-gfe' }[item.field];
+      if (prefix) problems.push(`${prefix}-${row.id}`);
     }
-    if (!state.periodStart || !state.periodEnd) {
-      dispatch({ type: 'status', status: 'idle', error: 'Please enter the pay period.' });
-      return;
-    }
-    if (computed.errors.length) {
+
+    if (problems.length || computed.errors.length) {
+      const count = problems.length;
       dispatch({
-        type: 'status',
-        status: 'idle',
-        error: 'Some rows need attention — check the dates, hours and amounts above.',
+        type: 'showErrors',
+        error: count === 1
+          ? 'One field needs attention — it is marked in red below.'
+          : `${count || 'Some'} fields need attention — they are marked in red below.`,
       });
+      // Put the cursor on the first thing that is wrong rather than leaving
+      // someone to hunt for the red on a forty-row invoice.
+      const target = document.getElementById(problems[0]);
+      if (target) {
+        target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        target.focus({ preventScroll: true });
+      }
       return;
     }
     dispatch({ type: 'goto', step: 'review' });
@@ -453,11 +525,13 @@ export default function NurseInvoice() {
                     maxLength={60}
                     placeholder="First and last name"
                     value={state.nurseName}
+                    aria-invalid={nameError ? 'true' : undefined}
                     onChange={(event) =>
                       dispatch({ type: 'setNurseName', value: event.target.value })
                     }
-                    className={invoiceFieldClass}
+                    className={cn(invoiceFieldClass, nameError && fieldErrorClass)}
                   />
+                  <FieldError>{nameError}</FieldError>
                 </div>
                 <div className="mt-4">
                   <label className={invoiceLabelClass} htmlFor="invoice-email">
@@ -498,11 +572,13 @@ export default function NurseInvoice() {
                       id="period-start"
                       type="date"
                       value={state.periodStart}
+                      aria-invalid={periodStartError ? 'true' : undefined}
                       onChange={(event) =>
                         dispatch({ type: 'setField', field: 'periodStart', value: event.target.value })
                       }
-                      className={cn(invoiceFieldClass, 'av-mono')}
+                      className={cn(invoiceFieldClass, 'av-mono', periodStartError && fieldErrorClass)}
                     />
+                    <FieldError>{periodStartError}</FieldError>
                   </div>
                   <div>
                     <label className={invoiceLabelClass} htmlFor="period-end">
@@ -512,11 +588,13 @@ export default function NurseInvoice() {
                       id="period-end"
                       type="date"
                       value={state.periodEnd}
+                      aria-invalid={periodEndError ? 'true' : undefined}
                       onChange={(event) =>
                         dispatch({ type: 'setField', field: 'periodEnd', value: event.target.value })
                       }
-                      className={cn(invoiceFieldClass, 'av-mono')}
+                      className={cn(invoiceFieldClass, 'av-mono', periodEndError && fieldErrorClass)}
                     />
+                    <FieldError>{periodEndError}</FieldError>
                   </div>
                 </div>
               </div>
@@ -532,6 +610,7 @@ export default function NurseInvoice() {
                       row={row}
                       index={index}
                       subtotalCents={computed.shiftLines[index]?.subtotalCents || 0}
+                      errors={fieldErrors.shifts[index] || {}}
                       onChange={(patch) => dispatch({ type: 'updateShift', id: row.id, patch })}
                       onRemove={
                         state.shifts.length > 1
@@ -574,6 +653,7 @@ export default function NurseInvoice() {
                         onRemove={() => dispatch({ type: 'removeExpense', id: row.id })}
                         onAttach={(file) => handleAttach(row.id, file)}
                         attachError={state.attachErrors[row.id] || ''}
+                        errors={fieldErrors.expenses[index] || {}}
                       />
                     ))}
                   </div>
@@ -591,7 +671,14 @@ export default function NurseInvoice() {
                 ) : null}
               </div>
 
-              {state.error ? <p className={ERROR_CLASS}>{state.error}</p> : null}
+              {fieldErrors.form.includes('no_shifts') ? (
+                <p className={ERROR_CLASS}>Add at least one shift before reviewing.</p>
+              ) : null}
+              {state.error ? (
+                <p role="alert" className={ERROR_CLASS}>
+                  {state.error}
+                </p>
+              ) : null}
 
               <Button type="button" size="lg" className="w-full" onClick={handleReview}>
                 Review invoice

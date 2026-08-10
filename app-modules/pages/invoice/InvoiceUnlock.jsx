@@ -36,6 +36,22 @@ const FEATURES = [
   },
 ];
 
+// Rendered twice — once above the form on mobile, once inside the left column on
+// desktop — rather than duplicated, so the two can never drift apart.
+function LoginHeading({ className }) {
+  return (
+    <div className={className}>
+      <h1 className="font-heading uppercase tracking-tight text-foreground text-[3.25rem] leading-[0.86] md:text-[4.5rem]">
+        Nurse Login
+      </h1>
+      <div className="mt-6 h-[4px] w-24 rounded-full bg-foreground" aria-hidden="true" />
+      <p className="mt-7 font-body text-[17px] leading-[1.5] text-foreground/75 md:text-[18px]">
+        Sign in to submit your shifts and expenses for the pay period.
+      </p>
+    </div>
+  );
+}
+
 function FieldIcon({ icon: Icon }) {
   return (
     <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40">
@@ -84,18 +100,17 @@ export default function InvoiceUnlock({ onUnlocked }) {
   return (
     <div className="overflow-hidden rounded-[2rem] border border-foreground/[0.10] bg-background shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)]">
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        {/* Left: what this is for. Ordered second on mobile so the fields are
-            reachable without scrolling past three explanatory rows. */}
-        <div className="order-2 flex flex-col justify-center px-6 py-9 md:px-12 md:py-14 lg:order-1">
-          <h1 className="font-heading uppercase tracking-tight text-foreground text-[3.25rem] leading-[0.86] md:text-[4.5rem]">
-            Nurse Login
-          </h1>
-          <div className="mt-6 h-[4px] w-24 rounded-full bg-foreground" aria-hidden="true" />
-          <p className="mt-7 font-body text-[17px] leading-[1.5] text-foreground/75 md:text-[18px]">
-            Sign in to submit your shifts and expenses for the pay period.
-          </p>
+        {/* Mobile only: the title leads, so someone landing here knows what this
+            is before they meet two credential fields. The desktop copy lives
+            inside the left column below. */}
+        <LoginHeading className="order-1 px-6 pt-9 md:px-12 md:pt-12 lg:hidden" />
 
-          <ul className="mt-10 grid gap-7">
+        {/* Left column on desktop; the explanatory rows drop below the form on
+            mobile so the fields stay reachable without scrolling past them. */}
+        <div className="order-3 flex flex-col justify-center px-6 pb-9 pt-8 md:px-12 md:pb-14 lg:order-1 lg:py-14 lg:pt-14">
+          <LoginHeading className="hidden lg:block" />
+
+          <ul className="grid gap-7 lg:mt-10">
             {FEATURES.map(({ icon: Icon, title, body }) => (
               <li key={title} className="flex items-start gap-4">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground">
@@ -118,7 +133,7 @@ export default function InvoiceUnlock({ onUnlocked }) {
         <form
           noValidate
           onSubmit={handleSubmit}
-          className="order-1 flex flex-col justify-center border-foreground/[0.10] px-6 py-9 md:px-12 md:py-14 lg:order-2 lg:border-l"
+          className="order-2 flex flex-col justify-center border-foreground/[0.10] px-6 pb-9 pt-7 md:px-12 md:pb-14 md:pt-9 lg:order-2 lg:border-l lg:py-14"
         >
           <div>
             <label

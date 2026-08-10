@@ -12,6 +12,28 @@ export const invoiceFieldClass = cn(avalonFieldClass, 'text-base');
 export const invoiceLabelClass =
   'av-mono text-[10px] tracking-[0.16em] uppercase text-foreground/55 mb-1.5 block';
 
+// A red ring as well as a red border: the ring reads louder, and the border
+// keeps its weight so nothing shifts by a pixel when an error appears.
+//
+// focus:border-red-500 is the load-bearing part. avalonFieldClass carries
+// focus:border-foreground/40, which would otherwise repaint the border grey the
+// moment the field takes focus — and the first invalid field is exactly the one
+// that gets focused, so the highlight would vanish from the field it matters on.
+// The ! matters. avalonFieldClass sets its border with an arbitrary value
+// (border-foreground/[0.10]) which twMerge does not recognise as a border-colour
+// utility, so it never drops it and CSS order decides — grey wins. It also
+// carries focus:border-foreground/40, and the first invalid field is exactly the
+// one that gets focused, so without this the highlight vanishes where it matters
+// most.
+export const fieldErrorClass = '!border-red-500 focus:!border-red-500 ring-1 ring-red-500';
+
+export const fieldErrorTextClass = 'mt-1.5 font-body text-[13px] text-red-600';
+
+export function FieldError({ children }) {
+  if (!children) return null;
+  return <p className={fieldErrorTextClass}>{children}</p>;
+}
+
 export const subCardClass =
   'rounded-2xl border border-foreground/[0.10] bg-[#fffdf8] px-4 py-4 md:px-5 md:py-5';
 
@@ -50,7 +72,7 @@ export function SegmentedControl({ label, options, value, onChange, className })
 }
 
 /** Stepper + numeric input. Steppers exist because thumbs beat tiny keyboards. */
-export function CountField({ label, value, onChange, max = 99 }) {
+export function CountField({ label, value, onChange, max = 99, id, error }) {
   const clamp = (next) => Math.max(0, Math.min(max, next));
   const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
 
@@ -67,13 +89,19 @@ export function CountField({ label, value, onChange, max = 99 }) {
           <Minus className="h-4 w-4" strokeWidth={2} />
         </button>
         <input
+          id={id}
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
           aria-label={label}
+          aria-invalid={error ? 'true' : undefined}
           value={value}
           onChange={(event) => onChange(event.target.value.replace(/[^0-9]/g, ''))}
-          className={cn(invoiceFieldClass, 'av-mono h-11 px-2 py-0 text-center tabular-nums')}
+          className={cn(
+            invoiceFieldClass,
+            'av-mono h-11 px-2 py-0 text-center tabular-nums',
+            error && fieldErrorClass,
+          )}
         />
         <button
           type="button"
@@ -84,6 +112,7 @@ export function CountField({ label, value, onChange, max = 99 }) {
           <Plus className="h-4 w-4" strokeWidth={2} />
         </button>
       </div>
+      <FieldError>{error}</FieldError>
     </div>
   );
 }
@@ -103,16 +132,22 @@ function RemoveButton({ onClick, label }) {
   );
 }
 
-export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
+export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors = {} }) {
   const type = findShiftType(row.typeKey);
   // Adder fields render only where the tier actually pays them, so a nurse
   // literally cannot enter an IV count on a small event.
   const hasAdders = Boolean(type && (type.perIvCents > 0 || type.perShotCents > 0));
+  const hasError = Object.values(errors).some(Boolean);
 
   return (
-    <div className={subCardClass}>
+    <div className={cn(subCardClass, hasError && 'border-red-400')}>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="av-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+        <p
+          className={cn(
+            'av-mono text-[10px] uppercase tracking-[0.18em]',
+            hasError ? 'text-red-600' : 'text-foreground/50',
+          )}
+        >
           Shift {index + 1}
         </p>
         <RemoveButton onClick={onRemove} label={`Remove shift ${index + 1}`} />
@@ -126,10 +161,12 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
           <input
             id={`shift-date-${row.id}`}
             type="date"
+            aria-invalid={errors.date ? 'true' : undefined}
             value={row.date}
             onChange={(event) => onChange({ date: event.target.value })}
-            className={cn(invoiceFieldClass, 'av-mono')}
+            className={cn(invoiceFieldClass, 'av-mono', errors.date && fieldErrorClass)}
           />
+          <FieldError>{errors.date}</FieldError>
         </div>
         <div>
           <label className={invoiceLabelClass} htmlFor={`shift-hours-${row.id}`}>
@@ -141,9 +178,11 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
             inputMode="decimal"
             placeholder="7.5"
             value={row.hours}
+            aria-invalid={errors.hours ? 'true' : undefined}
             onChange={(event) => onChange({ hours: event.target.value.replace(/[^0-9.]/g, '') })}
-            className={cn(invoiceFieldClass, 'av-mono tabular-nums')}
+            className={cn(invoiceFieldClass, 'av-mono tabular-nums', errors.hours && fieldErrorClass)}
           />
+          <FieldError>{errors.hours}</FieldError>
         </div>
       </div>
 
@@ -157,18 +196,23 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
       {type ? (
         <p className="mt-1.5 av-mono text-[11px] text-foreground/45">{type.hint}</p>
       ) : null}
+      <FieldError>{errors.typeKey}</FieldError>
 
       <div className="mt-4 grid gap-3 border-t border-foreground/10 pt-4 sm:grid-cols-3">
         {hasAdders ? (
           <>
             <CountField
+              id={`shift-iv-${row.id}`}
               label="IVs"
               value={row.ivCount}
+              error={errors.ivCount}
               onChange={(ivCount) => onChange({ ivCount })}
             />
             <CountField
+              id={`shift-shot-${row.id}`}
               label="Shots"
               value={row.shotCount}
+              error={errors.shotCount}
               onChange={(shotCount) => onChange({ shotCount })}
             />
           </>
@@ -177,8 +221,10 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
             2026-08-10; anyone may now claim it, and approval before payment is
             where it gets checked. */}
         <CountField
+          id={`shift-gfe-${row.id}`}
           label="GFE"
           value={row.gfeCount}
+          error={errors.gfeCount}
           onChange={(gfeCount) => onChange({ gfeCount })}
         />
       </div>
@@ -195,11 +241,17 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
   );
 }
 
-export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachError }) {
+export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachError, errors = {} }) {
+  const hasError = Object.values(errors).some(Boolean);
   return (
-    <div className={subCardClass}>
+    <div className={cn(subCardClass, hasError && 'border-red-400')}>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="av-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+        <p
+          className={cn(
+            'av-mono text-[10px] uppercase tracking-[0.18em]',
+            hasError ? 'text-red-600' : 'text-foreground/50',
+          )}
+        >
           Expense {index + 1}
         </p>
         <RemoveButton onClick={onRemove} label={`Remove expense ${index + 1}`} />
@@ -216,9 +268,11 @@ export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachErr
             maxLength={80}
             placeholder="Parking at the venue"
             value={row.description}
+            aria-invalid={errors.description ? 'true' : undefined}
             onChange={(event) => onChange({ description: event.target.value })}
-            className={invoiceFieldClass}
+            className={cn(invoiceFieldClass, errors.description && fieldErrorClass)}
           />
+          <FieldError>{errors.description}</FieldError>
         </div>
         <div>
           <label className={invoiceLabelClass} htmlFor={`expense-amount-${row.id}`}>
@@ -230,9 +284,11 @@ export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachErr
             inputMode="decimal"
             placeholder="42.00"
             value={row.amount}
+            aria-invalid={errors.amountCents ? 'true' : undefined}
             onChange={(event) => onChange({ amount: event.target.value.replace(/[^0-9.]/g, '') })}
-            className={cn(invoiceFieldClass, 'av-mono tabular-nums')}
+            className={cn(invoiceFieldClass, 'av-mono tabular-nums', errors.amountCents && fieldErrorClass)}
           />
+          <FieldError>{errors.amountCents}</FieldError>
         </div>
       </div>
 
