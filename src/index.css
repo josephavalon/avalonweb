@@ -12546,3 +12546,31 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Invoice copy — print / Save-as-PDF for the /invoice confirmation screen.
+
+   The printable invoice is the SAME markup the approvers were emailed, rendered
+   into the page and hidden until print. No popup window to be blocked, and no
+   iframe to trip the CSP's frame-src, which does not grant 'self'.
+--------------------------------------------------------------------------- */
+@media print {
+  .nd-corner-header,
+  .av-print-hide {
+    display: none !important;
+  }
+
+  .av-print-only {
+    display: block !important;
+  }
+
+  html.av-cream,
+  html.av-cream body,
+  html.av-cream .app-shell {
+    background: #ffffff !important;
+  }
+
+  .app-shell main {
+    padding: 0 !important;
+  }
+}

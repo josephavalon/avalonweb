@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Check, CheckCircle2, ChevronDown, Loader2, Plus } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Download, Loader2, Plus, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
@@ -15,6 +15,7 @@ import {
 } from '@/data/nurseInvoiceRates';
 import { ExpenseRow, ShiftRow, invoiceFieldClass, invoiceLabelClass } from './invoice/InvoiceRows';
 import { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
+import { buildInvoiceDocumentHtml, buildInvoiceFileHtml } from '@/data/invoiceDocument';
 
 /**
  * /invoice — the contractor pay form.
@@ -283,6 +284,45 @@ export default function NurseInvoice() {
     dispatch({ type: 'goto', step: 'review' });
   }
 
+  // Built from the server's computation, not this page's preview, so the saved
+  // copy and the approvers' email can never show different money.
+  const documentParams = useMemo(() => {
+    if (!state.result?.invoiceNumber || !state.result?.computed || !nurse) return null;
+    return {
+      nurse,
+      invoiceNumber: state.result.invoiceNumber,
+      periodStart: state.periodStart,
+      periodEnd: state.periodEnd,
+      computed: state.result.computed,
+      submittedAt: state.result.submittedAt || '',
+    };
+  }, [state.result, state.periodStart, state.periodEnd, nurse]);
+
+  const invoiceDocument = useMemo(
+    () => (documentParams ? buildInvoiceDocumentHtml(documentParams) : ''),
+    [documentParams],
+  );
+
+  function handlePrint() {
+    window.print();
+  }
+
+  function handleDownloadDoc() {
+    if (!documentParams) return;
+    const html = buildInvoiceFileHtml(documentParams);
+    // Word opens HTML served as msword; this avoids pulling a document-writing
+    // dependency into a bundle that ships to every nurse's phone.
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `avalon-invoice-${state.result.invoiceNumber}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleSubmit() {
     dispatch({ type: 'status', status: 'submitting' });
     const payload = toComputeInput(state, nurse?.role || 'RN');
@@ -337,7 +377,7 @@ export default function NurseInvoice() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="grid gap-4"
+          className="grid gap-4 av-print-hide"
         >
           {state.step === 'form' ? (
             <>
@@ -616,14 +656,31 @@ export default function NurseInvoice() {
                 {formatCents(state.result?.grandTotalCents || 0)}
               </p>
               <p className="mt-4 font-body text-[14px] leading-[1.55] text-foreground/70">
-                A copy went to Corey, Joseph and support. You'll be paid through Gusto once it's
-                approved.
+                A copy went to Aaron, Corey, Joseph and support. You'll be paid through Gusto once
+                it's approved.
               </p>
+
+              <p className="mt-7 av-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                Keep a copy
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handlePrint}>
+                  <Printer className="h-4 w-4" /> Save as PDF
+                </Button>
+                <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handleDownloadDoc}>
+                  <Download className="h-4 w-4" /> Download (Word)
+                </Button>
+              </div>
+              <p className="mt-2 font-body text-[12px] leading-[1.5] text-foreground/50">
+                Save as PDF opens your browser's print dialog — choose "Save as PDF" as the
+                destination.
+              </p>
+
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
-                className="mt-6 w-full"
+                className="mt-7 w-full"
                 onClick={() => dispatch({ type: 'reset' })}
               >
                 Submit another invoice
@@ -631,6 +688,14 @@ export default function NurseInvoice() {
             </div>
           ) : null}
         </motion.div>
+
+        {state.step === 'sent' && invoiceDocument ? (
+          <div
+            className="hidden av-print-only"
+            aria-hidden="true"
+            dangerouslySetInnerHTML={{ __html: invoiceDocument }}
+          />
+        ) : null}
       </main>
 
       {/* On a 40-row invoice the total is otherwise four screens away, and

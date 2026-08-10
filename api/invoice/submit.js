@@ -29,12 +29,13 @@ import { findNurse, nurseInitials } from '../../src/data/nurseRoster.js';
 import {
   computeInvoice,
   formatCents,
-  formatCentsPlain,
   MAX_EXPENSE_ROWS,
   MAX_SHIFT_ROWS,
 } from '../../src/data/nurseInvoiceRates.js';
+import { buildInvoiceDocumentHtml } from '../../src/data/invoiceDocument.js';
 
 const RECIPIENTS = [
+  'aaron@avalonvitality.co',
   'corey@avalonvitality.co',
   'joseph@avalonvitality.co',
   'support@avalonvitality.co',
@@ -61,15 +62,6 @@ function fromAddress() {
   return 'Avalon Invoices <onboarding@resend.dev>';
 }
 
-function escapeHtml(str = '') {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 function daysBetween(startIso, endIso) {
   const start = Date.parse(`${startIso}T00:00:00Z`);
   const end = Date.parse(`${endIso}T00:00:00Z`);
@@ -84,97 +76,6 @@ function buildInvoiceNumber(nurse, periodEnd) {
     .map((byte) => alphabet[byte % alphabet.length])
     .join('');
   return `AV-${periodEnd.replace(/-/g, '')}-${nurseInitials(nurse.name)}-${suffix}`;
-}
-
-// Exported so the invoice email can be rendered to a file and eyeballed without
-// burning a Resend send — the layout is the thing Corey actually reads.
-export function buildEmailHtml({ nurse, invoiceNumber, periodStart, periodEnd, computed, submittedAt }) {
-  const mono = "font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;";
-  const cell = 'padding: 6px 10px; border-bottom: 1px solid #e6e0d6; font-size: 13px;';
-  const num = `${cell} ${mono} text-align: right; white-space: nowrap;`;
-
-  const shiftRows = computed.shiftLines
-    .map(
-      (line) => `
-        <tr>
-          <td style="${cell} ${mono}">${escapeHtml(line.date)}</td>
-          <td style="${cell}">${escapeHtml(line.typeLabel)}</td>
-          <td style="${num}">${line.hours.toFixed(2)}h</td>
-          <td style="${num}">${line.ivCount || '—'}</td>
-          <td style="${num}">${line.shotCount || '—'}</td>
-          <td style="${num}">${line.gfeCount || '—'}</td>
-          <td style="${num}"><strong>${formatCents(line.subtotalCents)}</strong></td>
-        </tr>`,
-    )
-    .join('');
-
-  const expenseRows = computed.expenseLines.length
-    ? computed.expenseLines
-        .map(
-          (line) => `
-        <tr>
-          <td style="${cell}" colspan="6">${escapeHtml(line.description)}</td>
-          <td style="${num}"><strong>${formatCents(line.amountCents)}</strong></td>
-        </tr>`,
-        )
-        .join('')
-    : `<tr><td style="${cell} color:#6e6258;" colspan="7"><em>No expenses</em></td></tr>`;
-
-  return `
-  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 680px; margin: 0 auto; padding: 24px; color: #2b211b; background: #f6f2eb;">
-
-    <p style="${mono} font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #6e6258; margin: 0 0 6px;">Avalon Vitality</p>
-    <h1 style="font-size: 22px; margin: 0 0 4px;">Contractor invoice — ${escapeHtml(nurse.name)}</h1>
-    <p style="${mono} font-size: 13px; color: #6e6258; margin: 0 0 20px;">
-      ${escapeHtml(periodStart)} → ${escapeHtml(periodEnd)} &nbsp;·&nbsp; ${escapeHtml(nurse.role)}
-    </p>
-
-    <!-- Paste-ready block: Gusto → Pay → US contractors → New Payment -->
-    <div style="border: 2px solid #2b211b; border-radius: 12px; padding: 16px 18px; background: #fffdf8; margin-bottom: 24px;">
-      <p style="${mono} font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #6e6258; margin: 0 0 12px;">
-        Gusto → Pay → US contractors → New payment
-      </p>
-      <table style="width: 100%; border-collapse: collapse; ${mono} font-size: 14px;">
-        <tr><td style="padding: 3px 0; color: #6e6258;">Contractor</td><td style="padding: 3px 0; text-align: right;"><strong>${escapeHtml(nurse.name)}</strong></td></tr>
-        <tr><td style="padding: 3px 0; color: #6e6258;">Invoice</td><td style="padding: 3px 0; text-align: right;"><strong>${escapeHtml(invoiceNumber)}</strong></td></tr>
-        <tr><td style="padding: 3px 0; color: #6e6258;">Wage</td><td style="padding: 3px 0; text-align: right;"><strong>${formatCentsPlain(computed.wagesCents)}</strong></td></tr>
-        <tr><td style="padding: 3px 0; color: #6e6258;">Reimbursement</td><td style="padding: 3px 0; text-align: right;"><strong>${formatCentsPlain(computed.reimbursementsCents)}</strong></td></tr>
-        <tr><td style="padding: 8px 0 0; border-top: 1px solid #d9d2c8; font-size: 15px;">Total</td><td style="padding: 8px 0 0; border-top: 1px solid #d9d2c8; text-align: right; font-size: 15px;"><strong>${formatCentsPlain(computed.grandTotalCents)}</strong></td></tr>
-      </table>
-    </div>
-
-    <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: .14em; color: #6e6258; margin: 0 0 8px;">Shifts</h2>
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-      <thead>
-        <tr style="${mono} font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6e6258;">
-          <th style="${cell} text-align: left;">Date</th>
-          <th style="${cell} text-align: left;">Type</th>
-          <th style="${cell} text-align: right;">Hours</th>
-          <th style="${cell} text-align: right;">IV</th>
-          <th style="${cell} text-align: right;">Shot</th>
-          <th style="${cell} text-align: right;">GFE</th>
-          <th style="${cell} text-align: right;">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>${shiftRows}</tbody>
-    </table>
-
-    <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: .14em; color: #6e6258; margin: 0 0 8px;">Expenses</h2>
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-      <tbody>${expenseRows}</tbody>
-    </table>
-
-    <table style="width: 100%; border-collapse: collapse; ${mono} font-size: 14px;">
-      <tr><td style="padding: 4px 10px; color: #6e6258;">Wages</td><td style="padding: 4px 10px; text-align: right;">${formatCents(computed.wagesCents)}</td></tr>
-      <tr><td style="padding: 4px 10px; color: #6e6258;">Reimbursements</td><td style="padding: 4px 10px; text-align: right;">${formatCents(computed.reimbursementsCents)}</td></tr>
-      <tr><td style="padding: 8px 10px; border-top: 2px solid #2b211b; font-size: 17px;"><strong>Total</strong></td><td style="padding: 8px 10px; border-top: 2px solid #2b211b; text-align: right; font-size: 17px;"><strong>${formatCents(computed.grandTotalCents)}</strong></td></tr>
-    </table>
-
-    <p style="font-size: 11px; color: #6e6258; line-height: 1.6; margin-top: 24px; border-top: 1px solid #d9d2c8; padding-top: 12px;">
-      Submitted ${escapeHtml(submittedAt)} and confirmed accurate by the contractor at submission.<br />
-      Totals are calculated server-side from the entered shifts — the submitting device cannot set them.
-    </p>
-  </div>`;
 }
 
 export default async function handler(req, res) {
@@ -264,7 +165,7 @@ export default async function handler(req, res) {
       from: fromAddress(),
       to: RECIPIENTS,
       subject: `Invoice ${invoiceNumber} — ${nurse.name} — ${formatCents(computed.grandTotalCents)}`,
-      html: buildEmailHtml({
+      html: buildInvoiceDocumentHtml({
         nurse,
         invoiceNumber,
         periodStart,
@@ -282,6 +183,11 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       invoiceNumber,
+      submittedAt,
+      // The whole computation, so the copy a nurse saves is rendered from the
+      // SAME numbers that went to the approvers rather than from the client's
+      // own preview. Pay data only — no PHI leaves here.
+      computed,
       wagesCents: computed.wagesCents,
       reimbursementsCents: computed.reimbursementsCents,
       grandTotalCents: computed.grandTotalCents,
