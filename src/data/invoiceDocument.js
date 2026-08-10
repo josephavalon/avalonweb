@@ -129,3 +129,71 @@ export function buildInvoiceFileHtml(params) {
 ${buildInvoiceDocumentHtml(params)}
 </body></html>`;
 }
+
+/**
+ * CSV of the same invoice, for a nurse who keeps records in a spreadsheet.
+ *
+ * Not a Gusto import — Gusto's contractor payments have no bulk upload, they are
+ * a per-contractor entry grid. This is for the nurse's own books.
+ */
+function csvCell(value) {
+  let cell = String(value ?? '');
+  // A cell opening with any of these is executed as a formula by Excel and
+  // Sheets. Prefixing an apostrophe neutralises it without changing what a
+  // person reads.
+  if (/^[=+\-@\t\r]/.test(cell)) cell = `'${cell}`;
+  if (/[",\r\n]/.test(cell)) cell = `"${cell.replace(/"/g, '""')}"`;
+  return cell;
+}
+
+const csvRow = (cells) => cells.map(csvCell).join(',');
+
+export function buildInvoiceCsv({
+  nurse,
+  invoiceNumber,
+  periodStart,
+  periodEnd,
+  computed,
+  submittedAt,
+}) {
+  const lines = [
+    csvRow(['Avalon Vitality — contractor invoice']),
+    csvRow(['Invoice', invoiceNumber]),
+    csvRow(['Contractor', nurse.name]),
+    csvRow(['Role', nurse.role]),
+    csvRow(['Period start', periodStart]),
+    csvRow(['Period end', periodEnd]),
+    csvRow(['Submitted', submittedAt]),
+    '',
+    csvRow(['Type', 'Date', 'Description', 'Hours', 'IVs', 'Shots', 'GFE', 'Amount']),
+  ];
+
+  for (const line of computed.shiftLines) {
+    lines.push(
+      csvRow([
+        'Shift',
+        line.date,
+        line.typeLabel,
+        line.hours.toFixed(2),
+        line.ivCount,
+        line.shotCount,
+        line.gfeCount,
+        formatCentsPlain(line.subtotalCents),
+      ]),
+    );
+  }
+
+  for (const line of computed.expenseLines) {
+    lines.push(csvRow(['Expense', '', line.description, '', '', '', '', formatCentsPlain(line.amountCents)]));
+  }
+
+  lines.push(
+    '',
+    csvRow(['Wages', '', '', '', '', '', '', formatCentsPlain(computed.wagesCents)]),
+    csvRow(['Reimbursements', '', '', '', '', '', '', formatCentsPlain(computed.reimbursementsCents)]),
+    csvRow(['Total', '', '', '', '', '', '', formatCentsPlain(computed.grandTotalCents)]),
+  );
+
+  // CRLF and a BOM so Excel on Windows opens it without mangling anything.
+  return `﻿${lines.join('\r\n')}\r\n`;
+}

@@ -15,7 +15,11 @@ import {
 } from '@/data/nurseInvoiceRates';
 import { ExpenseRow, ShiftRow, invoiceFieldClass, invoiceLabelClass } from './invoice/InvoiceRows';
 import { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
-import { buildInvoiceDocumentHtml, buildInvoiceFileHtml } from '@/data/invoiceDocument';
+import {
+  buildInvoiceCsv,
+  buildInvoiceDocumentHtml,
+  buildInvoiceFileHtml,
+} from '@/data/invoiceDocument';
 
 /**
  * /invoice — the contractor pay form.
@@ -321,20 +325,29 @@ export default function NurseInvoice() {
     window.print();
   }
 
+  function saveBlob(contents, mime, extension) {
+    const blob = new Blob([contents], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `avalon-invoice-${state.result.invoiceNumber}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleDownloadCsv() {
+    if (!documentParams) return;
+    saveBlob(buildInvoiceCsv(documentParams), 'text/csv;charset=utf-8', 'csv');
+  }
+
   function handleDownloadDoc() {
     if (!documentParams) return;
     const html = buildInvoiceFileHtml(documentParams);
     // Word opens HTML served as msword; this avoids pulling a document-writing
     // dependency into a bundle that ships to every nurse's phone.
-    const blob = new Blob([html], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `avalon-invoice-${state.result.invoiceNumber}.doc`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    saveBlob(html, 'application/msword', 'doc');
   }
 
   async function handleSubmit() {
@@ -668,12 +681,15 @@ export default function NurseInvoice() {
               <p className="mt-7 av-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
                 Keep a copy
               </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
                 <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handlePrint}>
-                  <Printer className="h-4 w-4" /> Save as PDF
+                  <Printer className="h-4 w-4" /> PDF
                 </Button>
                 <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handleDownloadDoc}>
-                  <Download className="h-4 w-4" /> Download (Word)
+                  <Download className="h-4 w-4" /> Word
+                </Button>
+                <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handleDownloadCsv}>
+                  <Download className="h-4 w-4" /> CSV
                 </Button>
               </div>
               <p className="mt-2 font-body text-[12px] leading-[1.5] text-foreground/50">
