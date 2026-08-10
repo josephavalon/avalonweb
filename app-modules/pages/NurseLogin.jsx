@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useSeo } from '@/lib/seo';
-import InvoiceUnlock, { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
+import InvoiceUnlock from './invoice/InvoiceUnlock';
+import { isInvoiceSignedIn } from '@/lib/invoiceSession';
 
 /**
  * /nurse-login — the "Login" item at the bottom of the front-door menu.
@@ -30,11 +31,7 @@ export default function NurseLogin() {
   // Already signed in? Don't make them do it twice.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      if (window.sessionStorage.getItem(INVOICE_TOKEN_KEY)) navigate('/invoice', { replace: true });
-    } catch {
-      /* private mode — just show the form */
-    }
+    if (isInvoiceSignedIn()) navigate('/invoice', { replace: true });
   }, [navigate]);
 
   return (

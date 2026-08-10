@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Eye, EyeOff, FileText, Headset, Loader2, Lock
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { invoiceFieldClass } from './InvoiceRows';
+import { storeInvoiceToken } from '@/lib/invoiceSession';
 
 /**
  * The nurse login card — the single gate to /invoice.
@@ -12,8 +13,6 @@ import { invoiceFieldClass } from './InvoiceRows';
  * sessionStorage — not localStorage, so a shared phone or iPad doesn't stay
  * unlocked after the tab closes. That is also why there is no "remember me".
  */
-export const INVOICE_TOKEN_KEY = 'av.invoice.token';
-
 const SUPPORT_TEL = '+14159807708';
 const SUPPORT_DISPLAY = '(415) 980-7708';
 
@@ -74,11 +73,7 @@ export default function InvoiceUnlock({ onUnlocked }) {
         return;
       }
 
-      try {
-        window.sessionStorage.setItem(INVOICE_TOKEN_KEY, payload.token);
-      } catch {
-        /* private mode — the token still lives in memory for this session */
-      }
+      storeInvoiceToken(payload.token);
       onUnlocked(payload.token);
     } catch {
       setStatus('idle');
