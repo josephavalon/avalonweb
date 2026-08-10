@@ -91,16 +91,16 @@ export default function InvoiceUnlock({ onUnlocked }) {
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         {/* Left: what this is for. Ordered second on mobile so the fields are
             reachable without scrolling past three explanatory rows. */}
-        <div className="order-2 px-6 py-8 md:px-10 md:py-12 lg:order-1">
+        <div className="order-2 flex flex-col justify-center px-6 py-9 md:px-12 md:py-14 lg:order-1">
           <h1 className="font-heading uppercase tracking-tight text-foreground text-[3.25rem] leading-[0.86] md:text-[4.5rem]">
             Nurse Login
           </h1>
-          <div className="mt-5 h-[4px] w-24 rounded-full bg-foreground" aria-hidden="true" />
-          <p className="mt-6 font-body text-[17px] leading-[1.5] text-foreground/75 md:text-[18px]">
+          <div className="mt-6 h-[4px] w-24 rounded-full bg-foreground" aria-hidden="true" />
+          <p className="mt-7 font-body text-[17px] leading-[1.5] text-foreground/75 md:text-[18px]">
             Sign in to submit your shifts and expenses for the pay period.
           </p>
 
-          <ul className="mt-9 grid gap-6">
+          <ul className="mt-10 grid gap-7">
             {FEATURES.map(({ icon: Icon, title, body }) => (
               <li key={title} className="flex items-start gap-4">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground">
@@ -123,7 +123,7 @@ export default function InvoiceUnlock({ onUnlocked }) {
         <form
           noValidate
           onSubmit={handleSubmit}
-          className="order-1 border-foreground/[0.10] px-6 py-8 md:px-10 md:py-12 lg:order-2 lg:border-l"
+          className="order-1 flex flex-col justify-center border-foreground/[0.10] px-6 py-9 md:px-12 md:py-14 lg:order-2 lg:border-l"
         >
           <div>
             <label

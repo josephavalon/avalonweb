@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Check, CheckCircle2, Loader2, Plus } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
@@ -79,7 +79,7 @@ function reducer(state, action) {
       return { ...state, ...action.value };
 
     case 'unlocked':
-      return { ...state, token: action.token, step: 'roster', status: 'idle', error: '' };
+      return { ...state, token: action.token, step: 'form', status: 'idle', error: '' };
 
     case 'selectNurse': {
       const nurse = findNurse(action.nurseId);
@@ -89,7 +89,7 @@ function reducer(state, action) {
       const shifts = canBillGfe(nurse?.role)
         ? state.shifts
         : state.shifts.map((row) => ({ ...row, gfeCount: '0' }));
-      return { ...state, nurseId: action.nurseId, shifts, step: 'form', error: '' };
+      return { ...state, nurseId: action.nurseId, shifts, error: '' };
     }
 
     case 'setField':
@@ -151,7 +151,7 @@ function reducer(state, action) {
       return { ...state, token: '', step: 'locked', status: 'idle', error: action.error || '' };
 
     case 'reset':
-      return { ...initialState, shifts: [emptyShift()], token: state.token, step: 'roster' };
+      return { ...initialState, shifts: [emptyShift()], token: state.token, step: 'form' };
 
     default:
       return state;
@@ -227,7 +227,7 @@ export default function NurseInvoice() {
         type: 'restore',
         value: {
           token,
-          step: draft?.nurseId ? 'form' : 'roster',
+          step: 'form',
           nurseId: draft?.nurseId || '',
           periodStart: draft?.periodStart || '',
           periodEnd: draft?.periodEnd || '',
@@ -264,6 +264,10 @@ export default function NurseInvoice() {
   );
 
   function handleReview() {
+    if (!state.nurseId) {
+      dispatch({ type: 'status', status: 'idle', error: 'Please select your name.' });
+      return;
+    }
     if (!state.periodStart || !state.periodEnd) {
       dispatch({ type: 'status', status: 'idle', error: 'Please enter the pay period.' });
       return;
@@ -335,42 +339,45 @@ export default function NurseInvoice() {
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           className="grid gap-4"
         >
-          {state.step === 'roster' ? (
-            <div className={CARD_CLASS}>
-              <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
-                Step 1
-              </p>
-              <div className="mt-3 h-[3px] w-14 rounded-full bg-foreground/25" aria-hidden="true" />
-              <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[2.5rem] leading-[0.9]">
-                Who is invoicing?
-              </h2>
-              <div className="mt-6 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-                {NURSE_ROSTER.map((person) => (
-                  <button
-                    key={person.id}
-                    type="button"
-                    onClick={() => dispatch({ type: 'selectNurse', nurseId: person.id })}
-                    className="flex items-center justify-between gap-2 rounded-2xl border border-foreground/[0.10] bg-[#fffdf8] px-4 py-3.5 text-left transition-colors hover:border-foreground/40"
-                  >
-                    <span className="font-body text-[15px] font-medium text-foreground">
-                      {person.name}
-                    </span>
-                    <span className="av-mono text-[10px] uppercase tracking-[0.12em] text-foreground/45">
-                      {person.role}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
           {state.step === 'form' ? (
             <>
-              <StepSummary
-                label="Invoicing as"
-                value={`${nurse?.name} · ${nurse?.role}`}
-                onEdit={() => dispatch({ type: 'goto', step: 'roster' })}
-              />
+              <div className={CARD_CLASS}>
+                <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                  Who is invoicing?
+                </p>
+                <div className="mt-4">
+                  <label className={invoiceLabelClass} htmlFor="invoice-nurse">
+                    Name
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="invoice-nurse"
+                      value={state.nurseId}
+                      onChange={(event) =>
+                        dispatch({ type: 'selectNurse', nurseId: event.target.value })
+                      }
+                      className={cn(invoiceFieldClass, 'appearance-none pr-11')}
+                    >
+                      <option value="">Select your name…</option>
+                      {NURSE_ROSTER.map((person) => (
+                        <option key={person.id} value={person.id}>
+                          {person.name} · {person.role}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/45"
+                      strokeWidth={2}
+                    />
+                  </div>
+                  {gfeAllowed ? (
+                    <p className="mt-2 font-body text-[13px] text-foreground/55">
+                      GFE is billable on your shifts.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
 
               <div className={CARD_CLASS}>
                 <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
