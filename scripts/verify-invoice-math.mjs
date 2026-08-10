@@ -25,7 +25,11 @@ import {
   nurseInitials,
   roleForName,
 } from '../src/data/nurseRoster.js';
-import { buildInvoiceDocumentHtml, buildInvoiceFileHtml } from '../src/data/invoiceDocument.js';
+import {
+  buildInvoiceCsv,
+  buildInvoiceDocumentHtml,
+  buildInvoiceFileHtml,
+} from '../src/data/invoiceDocument.js';
 
 let passed = 0;
 const failures = [];
@@ -372,6 +376,36 @@ check('the downloadable file is a complete standalone document', () => {
   assert.ok(file.startsWith('<!DOCTYPE html>'), 'download must be a full document, not a fragment');
   assert.ok(file.includes('charset="utf-8"'), 'download needs an explicit charset for Word');
   assert.ok(file.includes('AV-20260815-AH-TEST'));
+});
+
+check('CSV itemises the invoice and neutralises formula injection', () => {
+  const nurse = findNurse('tiffany-ward');
+  const computed = computeInvoice({
+    role: nurse.role,
+    shifts: [{ date: '2026-08-02', typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 }],
+    // A description opening with '=' is executed as a formula by Excel and
+    // Sheets when the file is opened.
+    expenses: [{ description: '=cmd|calc', amountCents: 4200 }],
+  });
+  assert.deepEqual(computed.errors, []);
+
+  const csv = buildInvoiceCsv({
+    nurse,
+    invoiceNumber: 'AV-20260815-TW-4K2P',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-15',
+    computed,
+    submittedAt: '2026-08-10T18:30:00.000Z',
+  });
+
+  assert.ok(csv.startsWith('\uFEFF'), 'needs a BOM so Excel on Windows reads UTF-8');
+  assert.ok(csv.includes('\r\n'), 'needs CRLF line endings');
+  assert.ok(csv.includes('AV-20260815-TW-4K2P'));
+  assert.ok(csv.includes('Tiffany Ward'));
+  assert.ok(csv.includes('Large event'), 'shift rows missing');
+  assert.ok(csv.includes(formatCentsPlain(computed.grandTotalCents)), 'total missing');
+  assert.ok(!/(^|,)=cmd/m.test(csv), 'formula injection was not neutralised');
+  assert.ok(csv.includes("'=cmd|calc"), 'expected the apostrophe-prefixed form');
 });
 
 // --- Report ------------------------------------------------------------------
