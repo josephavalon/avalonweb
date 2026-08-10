@@ -72,6 +72,9 @@ const ERROR_MESSAGES = {
   invalid_amount: 'Enter an amount above $0.00.',
 };
 
+// Deliberately loose: it exists to catch a typo, not to adjudicate RFC 5322.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const messageFor = (code) => ERROR_MESSAGES[code] || 'Check this field.';
 
 /** computeInvoice errors -> { shifts: { [index]: {field: msg} }, expenses: {...}, form: [...] } */
@@ -337,12 +340,16 @@ export default function NurseInvoice() {
   );
 
   const nameError = state.showErrors && state.nurseName.trim().length < 2 ? 'Enter your name.' : '';
+  const emailError = state.showErrors && !EMAIL_RE.test(state.nurseEmail.trim())
+    ? 'Enter the email address your copy should go to.'
+    : '';
   const periodStartError = state.showErrors && !state.periodStart ? 'Pick a start date.' : '';
   const periodEndError = state.showErrors && !state.periodEnd ? 'Pick an end date.' : '';
 
   function handleReview() {
     const problems = [];
     if (state.nurseName.trim().length < 2) problems.push('invoice-nurse');
+    if (!EMAIL_RE.test(state.nurseEmail.trim())) problems.push('invoice-email');
     if (!state.periodStart) problems.push('period-start');
     if (!state.periodEnd) problems.push('period-end');
 
@@ -535,7 +542,7 @@ export default function NurseInvoice() {
                 </div>
                 <div className="mt-4">
                   <label className={invoiceLabelClass} htmlFor="invoice-email">
-                    Your email (optional)
+                    Your email
                   </label>
                   <input
                     id="invoice-email"
@@ -547,14 +554,17 @@ export default function NurseInvoice() {
                     spellCheck="false"
                     maxLength={120}
                     placeholder="you@example.com"
+                    required
                     value={state.nurseEmail}
+                    aria-invalid={emailError ? 'true' : undefined}
                     onChange={(event) =>
                       dispatch({ type: 'setField', field: 'nurseEmail', value: event.target.value })
                     }
-                    className={invoiceFieldClass}
+                    className={cn(invoiceFieldClass, emailError && fieldErrorClass)}
                   />
+                  <FieldError>{emailError}</FieldError>
                   <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
-                    We'll send you a copy of the invoice.
+                    Your copy of the invoice goes here.
                   </p>
                 </div>
               </div>
@@ -563,8 +573,8 @@ export default function NurseInvoice() {
                 <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                   Pay period
                 </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div>
+                <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
+                  <div className="min-w-0">
                     <label className={invoiceLabelClass} htmlFor="period-start">
                       Start
                     </label>
@@ -580,7 +590,7 @@ export default function NurseInvoice() {
                     />
                     <FieldError>{periodStartError}</FieldError>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className={invoiceLabelClass} htmlFor="period-end">
                       End
                     </label>
@@ -811,8 +821,8 @@ export default function NurseInvoice() {
                 {formatCents(state.result?.grandTotalCents || 0)}
               </p>
               <p className="mt-4 font-body text-[14px] leading-[1.55] text-foreground/70">
-                A copy went to Aaron, Corey, Joseph and support. You'll be paid through Gusto once
-                it's approved.
+                A copy went to you, Aaron, Corey, Joseph and support. You'll be paid through Gusto
+                once it's approved.
               </p>
 
               <p className="mt-7 font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">

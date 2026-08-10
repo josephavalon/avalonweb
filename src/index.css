@@ -12587,3 +12587,13 @@ html.av-cream input[type='date']::-webkit-datetime-edit-year-field,
 html.av-cream input[type='date']::-webkit-datetime-edit-text {
   color: hsl(var(--foreground));
 }
+
+/* Date inputs carry an intrinsic minimum width that ignores the container and
+   pushes out through the side of a card on a narrow phone. Strip the native
+   appearance and let them shrink. */
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}
