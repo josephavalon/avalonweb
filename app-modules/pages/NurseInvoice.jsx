@@ -232,7 +232,7 @@ function StepSummary({ label, value, onEdit }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl border border-foreground/[0.10] bg-background px-5 py-3.5">
       <div className="min-w-0">
-        <p className="av-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+        <p className="font-body text-[12px] font-semibold uppercase tracking-[0.12em] text-foreground/70">
           {label}
         </p>
         <p className="truncate font-body text-[15px] font-medium text-foreground">{value}</p>
@@ -510,7 +510,7 @@ export default function NurseInvoice() {
           {state.step === 'form' ? (
             <>
               <div className={CARD_CLASS}>
-                <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                   Who is invoicing?
                 </p>
                 <div className="mt-4">
@@ -553,14 +553,14 @@ export default function NurseInvoice() {
                     }
                     className={invoiceFieldClass}
                   />
-                  <p className="mt-2 font-body text-[13px] text-foreground/55">
+                  <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
                     We'll send you a copy of the invoice.
                   </p>
                 </div>
               </div>
 
               <div className={CARD_CLASS}>
-                <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                   Pay period
                 </p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -600,7 +600,7 @@ export default function NurseInvoice() {
               </div>
 
               <div className={CARD_CLASS}>
-                <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                   Shifts
                 </p>
                 <div className="mt-4 grid gap-3">
@@ -634,10 +634,10 @@ export default function NurseInvoice() {
               </div>
 
               <div className={CARD_CLASS}>
-                <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                   Expenses
                 </p>
-                <p className="mt-2 font-body text-[13px] text-foreground/55">
+                <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
                   Reimbursed separately from your shift pay. Attach a receipt where you have one.
                   Descriptions and receipts should show the purchase only — no names or health
                   details.
@@ -695,7 +695,7 @@ export default function NurseInvoice() {
               />
 
               <div className={CARD_CLASS}>
-                <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                   Review
                 </p>
                 <div className="mt-3 h-[3px] w-14 rounded-full bg-foreground/25" aria-hidden="true" />
@@ -815,7 +815,7 @@ export default function NurseInvoice() {
                 it's approved.
               </p>
 
-              <p className="mt-7 av-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+              <p className="mt-7 font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
                 Keep a copy
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -829,7 +829,7 @@ export default function NurseInvoice() {
                   <Download className="h-4 w-4" /> CSV
                 </Button>
               </div>
-              <p className="mt-2 font-body text-[12px] leading-[1.5] text-foreground/50">
+              <p className="mt-2 font-body text-[13px] leading-[1.5] text-foreground/70">
                 Save as PDF opens your browser's print dialog — choose "Save as PDF" as the
                 destination.
               </p>
@@ -851,7 +851,7 @@ export default function NurseInvoice() {
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 font-body text-[13px] text-foreground/55 transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 font-body text-[14px] text-foreground/70 transition-colors hover:text-foreground"
           >
             <LogOut className="h-4 w-4" strokeWidth={1.75} />
             Log out
@@ -872,7 +872,7 @@ export default function NurseInvoice() {
       {state.step === 'form' ? (
         <div className="sticky bottom-0 z-10 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex max-w-3xl items-baseline justify-between gap-4 px-4 py-3">
-            <span className="av-mono text-[11px] uppercase tracking-[0.14em] text-foreground/55">
+            <span className="av-mono text-[12px] text-foreground/75">
               {formatCents(computed.wagesCents)} + {formatCents(computed.reimbursementsCents)} exp
             </span>
             <span className="av-price text-[19px] font-semibold tabular-nums text-foreground">

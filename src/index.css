@@ -12574,3 +12574,16 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     padding: 0 !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Date inputs on cream. Chrome renders the segments of a FILLED date input in
+   its own muted colour, which on this palette reads as washed-out brown and is
+   hard to tell apart from the empty mm/dd/yyyy placeholder. Force the filled
+   segments to the body colour; Chrome keeps the empty state muted on its own.
+--------------------------------------------------------------------------- */
+html.av-cream input[type='date']::-webkit-datetime-edit-month-field,
+html.av-cream input[type='date']::-webkit-datetime-edit-day-field,
+html.av-cream input[type='date']::-webkit-datetime-edit-year-field,
+html.av-cream input[type='date']::-webkit-datetime-edit-text {
+  color: hsl(var(--foreground));
+}
