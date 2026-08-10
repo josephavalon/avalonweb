@@ -9,8 +9,11 @@ import { RECEIPT_ACCEPT_ATTR, formatBytes } from './receiptFile';
 // the later size wins instead of both classes fighting.
 export const invoiceFieldClass = cn(avalonFieldClass, 'text-base');
 
+// Body font at full contrast, not 10px mono at 55% opacity. Mono is for numbers
+// at rest; a field label is something a nurse has to read in a car at night, and
+// on cream a faded uppercase mono simply is not legible.
 export const invoiceLabelClass =
-  'av-mono text-[10px] tracking-[0.16em] uppercase text-foreground/55 mb-1.5 block';
+  'font-body text-[13px] font-semibold tracking-[0.08em] uppercase text-foreground mb-2 block';
 
 // A red ring as well as a red border: the ring reads louder, and the border
 // keeps its weight so nothing shifts by a pixel when an error appears.
@@ -124,7 +127,7 @@ function RemoveButton({ onClick, label }) {
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="inline-flex items-center gap-1 rounded-full px-2 py-1 font-body text-[12px] text-foreground/45 transition-colors hover:text-foreground"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-1 font-body text-[13px] text-foreground/60 transition-colors hover:text-foreground"
     >
       <X className="h-3.5 w-3.5" strokeWidth={2} />
       Remove
@@ -144,8 +147,8 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors
       <div className="mb-3 flex items-center justify-between gap-3">
         <p
           className={cn(
-            'av-mono text-[10px] uppercase tracking-[0.18em]',
-            hasError ? 'text-red-600' : 'text-foreground/50',
+            'font-body text-[12px] font-semibold uppercase tracking-[0.12em]',
+            hasError ? 'text-red-600' : 'text-foreground/70',
           )}
         >
           Shift {index + 1}
@@ -194,7 +197,7 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors
         options={SHIFT_TYPES.map((option) => ({ value: option.key, label: option.label }))}
       />
       {type ? (
-        <p className="mt-1.5 av-mono text-[11px] text-foreground/45">{type.hint}</p>
+        <p className="mt-2 font-body text-[13px] text-foreground/70">{type.hint}</p>
       ) : null}
       <FieldError>{errors.typeKey}</FieldError>
 
@@ -230,7 +233,7 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove, errors
       </div>
 
       <div className="mt-4 flex items-baseline justify-between border-t border-foreground/10 pt-3">
-        <span className="av-mono text-[10px] uppercase tracking-[0.16em] text-foreground/50">
+        <span className="font-body text-[12px] font-semibold uppercase tracking-[0.12em] text-foreground/70">
           Shift total
         </span>
         <span className="av-price text-[17px] font-semibold tabular-nums text-foreground">
@@ -248,8 +251,8 @@ export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachErr
       <div className="mb-3 flex items-center justify-between gap-3">
         <p
           className={cn(
-            'av-mono text-[10px] uppercase tracking-[0.18em]',
-            hasError ? 'text-red-600' : 'text-foreground/50',
+            'font-body text-[12px] font-semibold uppercase tracking-[0.12em]',
+            hasError ? 'text-red-600' : 'text-foreground/70',
           )}
         >
           Expense {index + 1}
@@ -298,7 +301,7 @@ export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachErr
             <span className="flex min-w-0 items-center gap-2 text-foreground">
               <Paperclip className="h-4 w-4 shrink-0 text-foreground/50" strokeWidth={1.75} />
               <span className="truncate font-body text-[14px]">{row.receipt.fileName}</span>
-              <span className="av-mono shrink-0 text-[11px] text-foreground/45">
+              <span className="av-mono shrink-0 text-[12px] text-foreground/70">
                 {formatBytes(row.receipt.bytes)}
               </span>
             </span>
