@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Check, CheckCircle2, ChevronDown, Download, Loader2, Plus, Printer } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Download, Loader2, LogOut, Plus, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
@@ -302,6 +302,18 @@ export default function NurseInvoice() {
     () => (documentParams ? buildInvoiceDocumentHtml(documentParams) : ''),
     [documentParams],
   );
+
+  function handleLogout() {
+    // Clear the draft too — on a shared phone the next person must not inherit
+    // a half-filled invoice with someone else's shifts in it.
+    try {
+      window.sessionStorage.removeItem(INVOICE_TOKEN_KEY);
+      window.sessionStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* private mode — nothing was persisted to clear */
+    }
+    navigate('/nurse-login', { replace: true });
+  }
 
   function handlePrint() {
     window.print();
@@ -688,6 +700,17 @@ export default function NurseInvoice() {
             </div>
           ) : null}
         </motion.div>
+
+        <div className="mt-8 flex justify-end av-print-hide">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 font-body text-[13px] text-foreground/55 transition-colors hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.75} />
+            Log out
+          </button>
+        </div>
 
         {state.step === 'sent' && invoiceDocument ? (
           <div
