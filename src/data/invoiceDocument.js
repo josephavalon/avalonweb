@@ -35,6 +35,7 @@ export function buildInvoiceDocumentHtml({
   periodEnd,
   computed,
   submittedAt,
+  receiptCount = 0,
 }) {
   const shiftRows = computed.shiftLines
     .map(
@@ -112,6 +113,10 @@ export function buildInvoiceDocumentHtml({
       <tr><td style="padding: 4px 10px; color: #6e6258;">Reimbursements</td><td style="padding: 4px 10px; text-align: right;">${formatCents(computed.reimbursementsCents)}</td></tr>
       <tr><td style="padding: 8px 10px; border-top: 2px solid #2b211b; font-size: 17px;"><strong>Total</strong></td><td style="padding: 8px 10px; border-top: 2px solid #2b211b; text-align: right; font-size: 17px;"><strong>${formatCents(computed.grandTotalCents)}</strong></td></tr>
     </table>
+
+    ${receiptCount ? `<p style="${MONO} font-size: 12px; color: #2b211b; margin: 0 0 16px;">
+      ${receiptCount} receipt${receiptCount === 1 ? '' : 's'} attached to this email.
+    </p>` : ''}
 
     <p style="font-size: 11px; color: #6e6258; line-height: 1.6; margin-top: 24px; border-top: 1px solid #d9d2c8; padding-top: 12px;">
       Submitted ${escapeHtml(submittedAt)} and confirmed accurate by the contractor at submission.<br />

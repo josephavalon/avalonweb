@@ -13,7 +13,17 @@ import {
   formatCents,
 } from '@/data/nurseInvoiceRates';
 import { ExpenseRow, ShiftRow, invoiceFieldClass, invoiceLabelClass } from './invoice/InvoiceRows';
-import { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
+import {
+  MAX_TOTAL_RECEIPT_BYTES,
+  formatBytes,
+  prepareReceipt,
+  totalReceiptBytes,
+} from './invoice/receiptFile';
+import {
+  INVOICE_DRAFT_KEY,
+  clearInvoiceSession,
+  readInvoiceToken,
+} from '@/lib/invoiceSession';
 import {
   buildInvoiceCsv,
   buildInvoiceDocumentHtml,
@@ -40,8 +50,6 @@ import {
 const CARD_CLASS =
   'rounded-[2rem] border border-foreground/[0.10] bg-background px-5 py-6 shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)] md:px-8 md:py-8';
 
-const DRAFT_KEY = 'av.invoice.draft';
-
 const ERROR_CLASS = 'font-body text-[13px] text-red-600 mt-1';
 
 function rowId() {
@@ -61,12 +69,13 @@ const emptyShift = () => ({
   gfeCount: '0',
 });
 
-const emptyExpense = () => ({ id: rowId(), description: '', amount: '' });
+const emptyExpense = () => ({ id: rowId(), description: '', amount: '', receipt: null });
 
 const initialState = {
   step: 'locked',
   token: '',
   nurseName: '',
+  nurseEmail: '',
   periodStart: '',
   periodEnd: '',
   shifts: [emptyShift()],
@@ -75,6 +84,7 @@ const initialState = {
   status: 'idle',
   error: '',
   result: null,
+  attachErrors: {},
 };
 
 function reducer(state, action) {
@@ -125,6 +135,7 @@ function reducer(state, action) {
       return {
         ...state,
         error: '',
+        attachErrors: { ...state.attachErrors, [action.id]: '' },
         expenses: state.expenses.map((row) =>
           row.id === action.id ? { ...row, ...action.patch } : row,
         ),
@@ -132,6 +143,9 @@ function reducer(state, action) {
 
     case 'removeExpense':
       return { ...state, expenses: state.expenses.filter((row) => row.id !== action.id) };
+
+    case 'attachError':
+      return { ...state, attachErrors: { ...state.attachErrors, [action.id]: action.message } };
 
     case 'goto':
       return { ...state, step: action.step, error: '' };
@@ -213,8 +227,8 @@ export default function NurseInvoice() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const token = window.sessionStorage.getItem(INVOICE_TOKEN_KEY) || '';
-      const draftRaw = window.sessionStorage.getItem(DRAFT_KEY);
+      const token = readInvoiceToken();
+      const draftRaw = window.sessionStorage.getItem(INVOICE_DRAFT_KEY);
       const draft = draftRaw ? JSON.parse(draftRaw) : null;
       if (!token) {
         navigate('/nurse-login', { replace: true });
@@ -229,7 +243,10 @@ export default function NurseInvoice() {
           periodStart: draft?.periodStart || '',
           periodEnd: draft?.periodEnd || '',
           shifts: Array.isArray(draft?.shifts) && draft.shifts.length ? draft.shifts : [emptyShift()],
-          expenses: Array.isArray(draft?.expenses) ? draft.expenses : [],
+          nurseEmail: draft?.nurseEmail || '',
+          expenses: Array.isArray(draft?.expenses)
+            ? draft.expenses.map((row) => ({ ...row, receipt: null }))
+            : [],
         },
       });
     } catch {
@@ -241,19 +258,28 @@ export default function NurseInvoice() {
     if (typeof window === 'undefined' || !state.token) return;
     try {
       window.sessionStorage.setItem(
-        DRAFT_KEY,
+        INVOICE_DRAFT_KEY,
         JSON.stringify({
           nurseName: state.nurseName,
           periodStart: state.periodStart,
           periodEnd: state.periodEnd,
           shifts: state.shifts,
-          expenses: state.expenses,
+          expenses: state.expenses.map(({ receipt, ...rest }) => rest),
+          nurseEmail: state.nurseEmail,
         }),
       );
     } catch {
       /* storage full or blocked — the form still works */
     }
-  }, [state.token, state.nurseName, state.periodStart, state.periodEnd, state.shifts, state.expenses]);
+  }, [
+    state.token,
+    state.nurseName,
+    state.nurseEmail,
+    state.periodStart,
+    state.periodEnd,
+    state.shifts,
+    state.expenses,
+  ]);
 
   const computed = useMemo(
     () => computeInvoice(toComputeInput(state)),
@@ -299,15 +325,28 @@ export default function NurseInvoice() {
     [documentParams],
   );
 
+  async function handleAttach(rowId, file) {
+    try {
+      const receipt = await prepareReceipt(file);
+      const others = state.expenses.filter((row) => row.id !== rowId);
+      if (totalReceiptBytes(others) + receipt.bytes > MAX_TOTAL_RECEIPT_BYTES) {
+        dispatch({
+          type: 'attachError',
+          id: rowId,
+          message: `Receipts total more than ${formatBytes(MAX_TOTAL_RECEIPT_BYTES)}. Remove one first.`,
+        });
+        return;
+      }
+      dispatch({ type: 'updateExpense', id: rowId, patch: { receipt } });
+    } catch (error) {
+      dispatch({ type: 'attachError', id: rowId, message: error.message });
+    }
+  }
+
   function handleLogout() {
     // Clear the draft too — on a shared phone the next person must not inherit
     // a half-filled invoice with someone else's shifts in it.
-    try {
-      window.sessionStorage.removeItem(INVOICE_TOKEN_KEY);
-      window.sessionStorage.removeItem(DRAFT_KEY);
-    } catch {
-      /* private mode — nothing was persisted to clear */
-    }
+    clearInvoiceSession();
     navigate('/nurse-login', { replace: true });
   }
 
@@ -354,17 +393,17 @@ export default function NurseInvoice() {
           periodEnd: state.periodEnd,
           shifts: payload.shifts,
           expenses: payload.expenses,
+          nurseEmail: state.nurseEmail.trim(),
+          receipts: state.expenses
+            .map((row, index) => (row.receipt ? { index, ...row.receipt } : null))
+            .filter(Boolean),
           confirmed: true,
         }),
       });
       const data = await response.json().catch(() => ({}));
 
       if (response.status === 401) {
-        try {
-          window.sessionStorage.removeItem(INVOICE_TOKEN_KEY);
-        } catch {
-          /* ignore */
-        }
+        clearInvoiceSession();
         navigate('/nurse-login', { replace: true });
         return;
       }
@@ -377,7 +416,7 @@ export default function NurseInvoice() {
         return;
       }
       try {
-        window.sessionStorage.removeItem(DRAFT_KEY);
+        window.sessionStorage.removeItem(INVOICE_DRAFT_KEY);
       } catch {
         /* ignore */
       }
@@ -389,7 +428,7 @@ export default function NurseInvoice() {
 
   return (
     <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden text-foreground">
-      <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-16 md:px-6 md:pt-20">
+      <main className="mx-auto w-full max-w-3xl px-4 pb-8 pt-28 md:px-6 md:pb-10 md:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -419,6 +458,30 @@ export default function NurseInvoice() {
                     }
                     className={invoiceFieldClass}
                   />
+                </div>
+                <div className="mt-4">
+                  <label className={invoiceLabelClass} htmlFor="invoice-email">
+                    Your email (optional)
+                  </label>
+                  <input
+                    id="invoice-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    maxLength={120}
+                    placeholder="you@example.com"
+                    value={state.nurseEmail}
+                    onChange={(event) =>
+                      dispatch({ type: 'setField', field: 'nurseEmail', value: event.target.value })
+                    }
+                    className={invoiceFieldClass}
+                  />
+                  <p className="mt-2 font-body text-[13px] text-foreground/55">
+                    We'll send you a copy of the invoice.
+                  </p>
                 </div>
               </div>
 
@@ -496,7 +559,8 @@ export default function NurseInvoice() {
                   Expenses
                 </p>
                 <p className="mt-2 font-body text-[13px] text-foreground/55">
-                  Reimbursed separately from your shift pay. Description only — no names or health
+                  Reimbursed separately from your shift pay. Attach a receipt where you have one.
+                  Descriptions and receipts should show the purchase only — no names or health
                   details.
                 </p>
                 {state.expenses.length ? (
@@ -508,6 +572,8 @@ export default function NurseInvoice() {
                         index={index}
                         onChange={(patch) => dispatch({ type: 'updateExpense', id: row.id, patch })}
                         onRemove={() => dispatch({ type: 'removeExpense', id: row.id })}
+                        onAttach={(file) => handleAttach(row.id, file)}
+                        attachError={state.attachErrors[row.id] || ''}
                       />
                     ))}
                   </div>
@@ -694,7 +760,7 @@ export default function NurseInvoice() {
           ) : null}
         </motion.div>
 
-        <div className="mt-8 flex justify-end av-print-hide">
+        <div className="mt-6 flex justify-end av-print-hide">
           <button
             type="button"
             onClick={handleLogout}

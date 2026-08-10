@@ -42,6 +42,16 @@ const RECIPIENTS = [
 ];
 
 const RATE_LIMIT = { windowMs: 60 * 60 * 1000, max: 10 };
+
+// Receipts ride inside the request body — there is no blob storage on the front
+// door — so these caps are what stops a request exceeding Vercel's 4.5 MB limit
+// once base64 has inflated it by a third. The client downscales before sending;
+// this is the backstop for anything that does not come from the client.
+const ACCEPTED_RECEIPT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const MAX_RECEIPT_BYTES = 1_400_000;
+const MAX_TOTAL_RECEIPT_BYTES = 2_800_000;
+const MAX_RECEIPTS = 20;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_PERIOD_DAYS = 31;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -159,6 +169,47 @@ export default async function handler(req, res) {
       });
     }
 
+    // Optional: the nurse's own copy. Validated for shape, then simply added to
+    // the recipients — it is their invoice, and the internal addresses are not a
+    // secret from the person being paid.
+    const nurseEmail = String(body.nurseEmail || '').trim().toLowerCase();
+    if (nurseEmail && (!EMAIL_RE.test(nurseEmail) || nurseEmail.length > 120)) {
+      return res.status(400).json({ error: 'That email address does not look right.' });
+    }
+
+    const rawReceipts = Array.isArray(body.receipts) ? body.receipts.slice(0, MAX_RECEIPTS) : [];
+    const attachments = [];
+    let receiptBytes = 0;
+    for (const raw of rawReceipts) {
+      const contentType = String(raw?.contentType || '');
+      const base64 = String(raw?.base64 || '');
+      if (!ACCEPTED_RECEIPT_TYPES.has(contentType)) {
+        return res.status(400).json({ error: 'Receipts must be a photo or a PDF.' });
+      }
+      if (!/^[A-Za-z0-9+/]+=*$/.test(base64)) {
+        return res.status(400).json({ error: 'That receipt could not be read. Please attach it again.' });
+      }
+      const bytes = Buffer.byteLength(base64, 'base64');
+      if (bytes <= 0 || bytes > MAX_RECEIPT_BYTES) {
+        return res.status(400).json({ error: 'One of those receipts is too large.' });
+      }
+      receiptBytes += bytes;
+      if (receiptBytes > MAX_TOTAL_RECEIPT_BYTES) {
+        return res.status(400).json({ error: 'Those receipts are too large altogether.' });
+      }
+      // Rebuilt from scratch rather than echoing a client filename into a header.
+      const index = Number(raw?.index);
+      const label = Number.isInteger(index) && index >= 0 ? index + 1 : attachments.length + 1;
+      const extension = contentType === 'application/pdf' ? 'pdf'
+        : contentType === 'image/png' ? 'png'
+        : contentType === 'image/webp' ? 'webp' : 'jpg';
+      attachments.push({
+        filename: `receipt-${label}.${extension}`,
+        content: base64,
+        contentType,
+      });
+    }
+
     const invoiceNumber = buildInvoiceNumber(nurse, periodEnd);
     const submittedAt = new Date().toISOString();
 
@@ -172,7 +223,8 @@ export default async function handler(req, res) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
       from: fromAddress(),
-      to: RECIPIENTS,
+      to: nurseEmail ? [...RECIPIENTS, nurseEmail] : RECIPIENTS,
+      ...(attachments.length ? { attachments } : {}),
       subject: `Invoice ${invoiceNumber} — ${nurse.name} — ${formatCents(computed.grandTotalCents)}`,
       html: buildInvoiceDocumentHtml({
         nurse,
@@ -181,6 +233,7 @@ export default async function handler(req, res) {
         periodEnd,
         computed,
         submittedAt,
+        receiptCount: attachments.length,
       }),
     });
 
@@ -193,6 +246,8 @@ export default async function handler(req, res) {
       ok: true,
       invoiceNumber,
       knownContractor,
+      receiptCount: attachments.length,
+      copiedTo: nurseEmail || null,
       submittedAt,
       // The whole computation, so the copy a nurse saves is rendered from the
       // SAME numbers that went to the approvers rather than from the client's

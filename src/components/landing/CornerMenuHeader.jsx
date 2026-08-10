@@ -5,6 +5,7 @@ import AvalonMark from '@/components/AvalonMark';
 import { AnimatePresence, motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { DURATIONS, EASE } from '@/lib/motion';
 import { isFrontDoorHost } from '@/lib/frontDoor';
+import { clearInvoiceSession, isInvoiceSignedIn } from '@/lib/invoiceSession';
 
 // This header is global — it renders on the front door AND on beta, so the two
 // surfaces get two item lists rather than one edited list. Beta carries the full
@@ -36,6 +37,10 @@ const TEXT_URL = 'sms:+14159807708';
 
 export default function CornerMenuHeader() {
   const [open, setOpen] = useState(false);
+  // A nurse who is signed in should be offered the way out, not the way in.
+  // Read on open and on navigation rather than subscribed to: sessionStorage
+  // fires no event for same-tab writes, and those are the only writes there are.
+  const [signedIn, setSignedIn] = useState(() => isInvoiceSignedIn());
   // Host read taken once via the useState initializer, same technique as
   // FrontDoorRedirect, so the first render already shows the right menu.
   const [items] = useState(() => (isFrontDoorHost() ? FRONT_DOOR_ITEMS : OS_ITEMS));
@@ -78,6 +83,7 @@ export default function CornerMenuHeader() {
 
   useEffect(() => {
     setOpen(false);
+    setSignedIn(isInvoiceSignedIn());
   }, [pathname]);
 
   useEffect(() => {
@@ -128,7 +134,10 @@ export default function CornerMenuHeader() {
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls={menuId}
-            onClick={() => setOpen((current) => !current)}
+            onClick={() => {
+              setSignedIn(isInvoiceSignedIn());
+              setOpen((current) => !current);
+            }}
           >
             <span className="nd-corner-menu__glyph" aria-hidden="true">
               <AnimatePresence initial={false} mode="wait">
@@ -159,13 +168,25 @@ export default function CornerMenuHeader() {
                 exit="exit"
                 variants={panelMotion}
               >
-                {items.map((item) => (
-                  <motion.div key={item.label} {...itemMotion}>
-                    <Link to={item.to} onClick={() => setOpen(false)}>
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                ))}
+                {items.map((item) => {
+                  const signOut = item.to === '/nurse-login' && signedIn;
+                  return (
+                    <motion.div key={item.label} {...itemMotion}>
+                      <Link
+                        to={item.to}
+                        onClick={() => {
+                          if (signOut) {
+                            clearInvoiceSession();
+                            setSignedIn(false);
+                          }
+                          setOpen(false);
+                        }}
+                      >
+                        {signOut ? 'Log out' : item.label}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </motion.nav>
             )}
           </AnimatePresence>

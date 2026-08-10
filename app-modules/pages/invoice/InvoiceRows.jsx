@@ -1,7 +1,8 @@
-import { Minus, Plus, X } from 'lucide-react';
+import { Minus, Paperclip, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { avalonFieldClass } from '@/components/ui/formStyles';
 import { SHIFT_TYPES, findShiftType, formatCents } from '@/data/nurseInvoiceRates';
+import { RECEIPT_ACCEPT_ATTR, formatBytes } from './receiptFile';
 
 // avalonFieldClass is text-sm (14px); anything under 16px makes iOS zoom the
 // viewport on focus, and this form is filled on a phone. cn() runs twMerge so
@@ -194,7 +195,7 @@ export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
   );
 }
 
-export function ExpenseRow({ row, index, onChange, onRemove }) {
+export function ExpenseRow({ row, index, onChange, onRemove, onAttach, attachError }) {
   return (
     <div className={subCardClass}>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -233,6 +234,46 @@ export function ExpenseRow({ row, index, onChange, onRemove }) {
             className={cn(invoiceFieldClass, 'av-mono tabular-nums')}
           />
         </div>
+      </div>
+
+      <div className="mt-3 border-t border-foreground/10 pt-3">
+        {row.receipt ? (
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex min-w-0 items-center gap-2 text-foreground">
+              <Paperclip className="h-4 w-4 shrink-0 text-foreground/50" strokeWidth={1.75} />
+              <span className="truncate font-body text-[14px]">{row.receipt.fileName}</span>
+              <span className="av-mono shrink-0 text-[11px] text-foreground/45">
+                {formatBytes(row.receipt.bytes)}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => onChange({ receipt: null })}
+              className="shrink-0 font-body text-[12px] text-foreground/45 transition-colors hover:text-foreground"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <label className="inline-flex cursor-pointer items-center gap-2 font-body text-[14px] text-foreground/70 transition-colors hover:text-foreground">
+            <Paperclip className="h-4 w-4" strokeWidth={1.75} />
+            Attach receipt
+            <input
+              type="file"
+              accept={RECEIPT_ACCEPT_ATTR}
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                // Reset so picking the same file twice still fires a change.
+                event.target.value = '';
+                if (file) onAttach(file);
+              }}
+            />
+          </label>
+        )}
+        {attachError ? (
+          <p className="mt-2 font-body text-[13px] text-red-600">{attachError}</p>
+        ) : null}
       </div>
     </div>
   );
