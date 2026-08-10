@@ -39,7 +39,7 @@ export default function NurseLogin() {
 
   return (
     <div className="app-shell relative isolate min-h-[100svh] w-full overflow-x-hidden text-foreground">
-      <main className="mx-auto w-full max-w-md px-4 pb-24 pt-20 md:px-6 md:pt-24">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-16 md:px-6 md:pt-20">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

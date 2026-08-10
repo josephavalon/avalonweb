@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useReducer } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Check, CheckCircle2, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import {
   formatCents,
 } from '@/data/nurseInvoiceRates';
 import { ExpenseRow, ShiftRow, invoiceFieldClass, invoiceLabelClass } from './invoice/InvoiceRows';
-import InvoiceUnlock, { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
+import { INVOICE_TOKEN_KEY } from './invoice/InvoiceUnlock';
 
 /**
  * /invoice — the contractor pay form.
@@ -204,6 +205,7 @@ export default function NurseInvoice() {
     robots: 'noindex, nofollow, noarchive',
   });
 
+  const navigate = useNavigate();
   const [state, dispatch] = useReducer(reducer, initialState);
   const nurse = findNurse(state.nurseId);
   const gfeAllowed = canBillGfe(nurse?.role);
@@ -217,7 +219,10 @@ export default function NurseInvoice() {
       const token = window.sessionStorage.getItem(INVOICE_TOKEN_KEY) || '';
       const draftRaw = window.sessionStorage.getItem(DRAFT_KEY);
       const draft = draftRaw ? JSON.parse(draftRaw) : null;
-      if (!token) return;
+      if (!token) {
+        navigate('/nurse-login', { replace: true });
+        return;
+      }
       dispatch({
         type: 'restore',
         value: {
@@ -233,7 +238,7 @@ export default function NurseInvoice() {
     } catch {
       /* a corrupt draft is not worth a broken page */
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !state.token) return;
@@ -299,7 +304,7 @@ export default function NurseInvoice() {
         } catch {
           /* ignore */
         }
-        dispatch({ type: 'relock', error: 'Your session expired. Unlock again to resend.' });
+        navigate('/nurse-login', { replace: true });
         return;
       }
       if (!response.ok) {
@@ -330,10 +335,6 @@ export default function NurseInvoice() {
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           className="grid gap-4"
         >
-          {state.step === 'locked' ? (
-            <InvoiceUnlock onUnlocked={(token) => dispatch({ type: 'unlocked', token })} />
-          ) : null}
-
           {state.step === 'roster' ? (
             <div className={CARD_CLASS}>
               <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
