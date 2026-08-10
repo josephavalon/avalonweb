@@ -69,7 +69,7 @@ export function buildInvoiceDocumentHtml({
     <p style="${MONO} font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #6e6258; margin: 0 0 6px;">Avalon Vitality</p>
     <h1 style="font-size: 22px; margin: 0 0 4px;">Contractor invoice — ${escapeHtml(nurse.name)}</h1>
     <p style="${MONO} font-size: 13px; color: #6e6258; margin: 0 0 20px;">
-      ${escapeHtml(periodStart)} → ${escapeHtml(periodEnd)} &nbsp;·&nbsp; ${escapeHtml(nurse.role)}
+      ${escapeHtml(periodStart)} → ${escapeHtml(periodEnd)}${nurse.role ? ` &nbsp;·&nbsp; ${escapeHtml(nurse.role)}` : ''}
     </p>
 
     <!-- Paste-ready block: Gusto → Pay → US contractors → New Payment -->

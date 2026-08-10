@@ -50,7 +50,10 @@ export const SHIFT_TYPES = Object.freeze([
 // only place the tier rules live.
 export const SHIFT_TYPE_KEYS = Object.freeze(SHIFT_TYPES.map((t) => t.key));
 
-export const GFE_CENTS = 2000; // NP only — see canBillGfe()
+// Billable by anyone on the roster. This was NP-only until 2026-08-10; the rule
+// was relaxed deliberately, not lost. If it is ever reinstated, the gate belongs
+// HERE and on the server, keyed off a role the request body cannot set.
+export const GFE_CENTS = 2000;
 
 export const MAX_SHIFT_ROWS = 40;
 export const MAX_EXPENSE_ROWS = 20;
@@ -61,11 +64,6 @@ export const MAX_DESCRIPTION_LENGTH = 80;
 
 export function findShiftType(key) {
   return SHIFT_TYPES.find((t) => t.key === key) || null;
-}
-
-/** Only nurse practitioners bill the good-faith exam fee. */
-export function canBillGfe(role) {
-  return role === 'NP';
 }
 
 export function shiftTypeHasAdders(key) {
@@ -107,7 +105,7 @@ function isValidHours(value) {
  *           grandTotalCents, errors }. `errors` is authoritative: a non-empty
  *           array means the caller must reject, not round or coerce.
  */
-export function computeInvoice({ role = 'RN', shifts = [], expenses = [] } = {}) {
+export function computeInvoice({ shifts = [], expenses = [] } = {}) {
   const errors = [];
   const shiftRows = Array.isArray(shifts) ? shifts : [];
   const expenseRows = Array.isArray(expenses) ? expenses : [];
@@ -149,17 +147,12 @@ export function computeInvoice({ role = 'RN', shifts = [], expenses = [] } = {})
     if (type && type.perIvCents === 0 && ivCount > 0) fail('ivCount', 'adders_not_permitted');
     if (type && type.perShotCents === 0 && shotCount > 0) fail('shotCount', 'adders_not_permitted');
 
-    // Same shape for GFE: zeroed for non-NP *and* reported, because silently
-    // zeroing would hide a client bug while erroring alone would risk paying it.
-    const billableGfe = canBillGfe(role) ? gfeCount : 0;
-    if (!canBillGfe(role) && gfeCount > 0) fail('gfeCount', 'gfe_not_permitted');
-
     const safeHours = isValidHours(hours) ? hours : 0;
     const hourlyCents = type ? Math.round(type.hourlyCents * safeHours) : 0;
     const adderCents = type
       ? billableIv * type.perIvCents + billableShot * type.perShotCents
       : 0;
-    const gfeCents = billableGfe * GFE_CENTS;
+    const gfeCents = gfeCount * GFE_CENTS;
 
     return {
       index,
@@ -169,7 +162,7 @@ export function computeInvoice({ role = 'RN', shifts = [], expenses = [] } = {})
       hours: safeHours,
       ivCount: billableIv,
       shotCount: billableShot,
-      gfeCount: billableGfe,
+      gfeCount,
       hourlyCents,
       adderCents,
       gfeCents,

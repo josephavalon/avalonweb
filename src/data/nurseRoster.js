@@ -1,14 +1,14 @@
 /**
  * The invoice roster — mirrors the paid contractors in Gusto (People → Active).
  *
- * Roles come straight from their Gusto job titles and exist here for exactly one
- * reason: GFE is NP-only, so the role decides whether that line is billable.
+ * Roles come straight from their Gusto job titles. They label the invoice; since
+ * 2026-08-10 they no longer gate anything, GFE included.
  * Corey Assibey (CFO) and Aaron Goldbard (Head of Workforce Relations) are
  * marked Unpaid in Gusto and are deliberately absent.
  *
- * Pure module — imported by the page AND by api/invoice/submit.js, which reads
- * the role from HERE rather than from the request body so a hand-crafted POST
- * can't promote an RN to NP. Keep it free of aliases and browser globals.
+ * Pure module — imported by the page AND by api/invoice/submit.js, which resolves
+ * the role from HERE rather than trusting the request body. Keep it free of
+ * aliases and browser globals.
  *
  * No email addresses: this file ships inside a publicly fetchable JS chunk, and
  * the invoice always goes to the three fixed internal addresses, so putting
@@ -38,10 +38,9 @@ export function normalizeName(name) {
 }
 
 /**
- * The name is typed, not picked, so this is how the server still decides what
- * someone may bill. GFE is NP-only, and role must never come from the request
- * body or an RN could claim it — matching the typed name against the roster
- * keeps that anchor. A name nobody recognises simply gets no GFE.
+ * The name is typed, not picked, so this is how an invoice is tied back to a
+ * known contractor — for the role label and for Gusto, which pays a person, not
+ * a string. An unmatched name still invoices; it just carries no role.
  */
 export function matchNurseByName(name) {
   const wanted = normalizeName(name);
@@ -49,9 +48,13 @@ export function matchNurseByName(name) {
   return NURSE_ROSTER.find((nurse) => normalizeName(nurse.name) === wanted) || null;
 }
 
-/** The role to price at: the matched roster entry's, or the most restrictive. */
+/**
+ * A label only, since GFE opened up to everyone — role no longer affects pay.
+ * Empty for a name nobody recognises, so an invoice never asserts a credential
+ * that was never checked.
+ */
 export function roleForName(name) {
-  return matchNurseByName(name)?.role || 'RN';
+  return matchNurseByName(name)?.role || '';
 }
 
 /** "Tiffany Ward" -> "TW". Used to build the invoice number Gusto files under. */

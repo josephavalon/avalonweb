@@ -63,7 +63,6 @@ check('mobile visit pays $90/hr', () => {
 
 check('large event pays $50/hr plus $40/IV and $10/shot', () => {
   const out = computeInvoice({
-    role: 'RN',
     shifts: [shift({ typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5 })],
   });
   assert.deepEqual(out.errors, []);
@@ -75,7 +74,6 @@ check('large event pays $50/hr plus $40/IV and $10/shot', () => {
 
 check('small event pays $90/hr flat with NO adders', () => {
   const out = computeInvoice({
-    role: 'RN',
     shifts: [shift({ typeKey: 'small_event', hours: 3, ivCount: 99, shotCount: 99 })],
   });
   // The counts are refused rather than quietly priced.
@@ -86,7 +84,6 @@ check('small event pays $90/hr flat with NO adders', () => {
 
 check('mobile visit ignores IV/shot counts too', () => {
   const out = computeInvoice({
-    role: 'RN',
     shifts: [shift({ typeKey: 'mobile', hours: 1, ivCount: 4 })],
   });
   assert.equal(out.wagesCents, 9000);
@@ -94,33 +91,20 @@ check('mobile visit ignores IV/shot counts too', () => {
 
 // --- GFE ---------------------------------------------------------------------
 
-check('NP bills GFE at $20 each', () => {
-  const out = computeInvoice({
-    role: 'NP',
-    shifts: [shift({ typeKey: 'mobile', hours: 2, gfeCount: 3 })],
-  });
+check('GFE pays $20 each, for anyone', () => {
+  // NP-only until 2026-08-10. Approval before payment is the check now, not the
+  // form — so pricing must be identical whoever submits it.
+  const out = computeInvoice({ shifts: [shift({ typeKey: 'mobile', hours: 2, gfeCount: 3 })] });
   assert.deepEqual(out.errors, []);
   assert.equal(out.shiftLines[0].gfeCents, 3 * GFE_CENTS);
   assert.equal(out.wagesCents, 18000 + 6000);
 });
 
-check('RN GFE is rejected AND zeroed', () => {
-  const out = computeInvoice({
-    role: 'RN',
-    shifts: [shift({ typeKey: 'mobile', hours: 2, gfeCount: 50 })],
-  });
-  assert.ok(out.errors.some((e) => e.code === 'gfe_not_permitted'));
-  assert.equal(out.shiftLines[0].gfeCents, 0);
-  assert.equal(out.wagesCents, 18000);
-});
-
-check('Manager GFE is rejected AND zeroed', () => {
-  const out = computeInvoice({
-    role: 'Manager',
-    shifts: [shift({ typeKey: 'mobile', hours: 1, gfeCount: 1 })],
-  });
-  assert.ok(out.errors.some((e) => e.code === 'gfe_not_permitted'));
-  assert.equal(out.wagesCents, 9000);
+check('GFE counts are still clamped like any other count', () => {
+  for (const gfeCount of [-1, 2.5, 100]) {
+    const out = computeInvoice({ shifts: [shift({ gfeCount })] });
+    assert.ok(out.errors.some((e) => e.code === 'invalid_count'), `gfe=${gfeCount}`);
+  }
 });
 
 // --- Float drift -------------------------------------------------------------
@@ -156,7 +140,6 @@ check('zero, negative and over-cap hours are refused', () => {
 
 check('non-integer and over-cap counts are refused', () => {
   const out = computeInvoice({
-    role: 'RN',
     shifts: [shift({ typeKey: 'large_event', ivCount: 2.5, shotCount: 100 })],
   });
   assert.equal(out.errors.filter((e) => e.code === 'invalid_count').length, 2);
@@ -180,7 +163,6 @@ check('an empty invoice is refused', () => {
 
 check('more than MAX_SHIFT_ROWS shifts is refused', () => {
   const out = computeInvoice({
-    role: 'RN',
     shifts: Array.from({ length: MAX_SHIFT_ROWS + 1 }, () => shift()),
   });
   assert.ok(out.errors.some((e) => e.code === 'too_many_shifts'));
@@ -190,7 +172,6 @@ check('more than MAX_SHIFT_ROWS shifts is refused', () => {
 
 check('expenses total into reimbursements, not wages', () => {
   const out = computeInvoice({
-    role: 'RN',
     shifts: [shift({ hours: 4 })],
     expenses: [
       { description: 'Parking garage', amountCents: 4200 },
@@ -206,7 +187,6 @@ check('expenses total into reimbursements, not wages', () => {
 check('expense amounts must be positive integer cents under the cap', () => {
   for (const amountCents of [0, -100, 12.5, MAX_EXPENSE_CENTS + 1, 'ten']) {
     const out = computeInvoice({
-      role: 'RN',
       shifts: [shift()],
       expenses: [{ description: 'Thing', amountCents }],
     });
@@ -216,14 +196,12 @@ check('expense amounts must be positive integer cents under the cap', () => {
 
 check('expense description is required and length-capped', () => {
   const blank = computeInvoice({
-    role: 'RN',
     shifts: [shift()],
     expenses: [{ description: '   ', amountCents: 500 }],
   });
   assert.ok(blank.errors.some((e) => e.code === 'missing_description'));
 
   const long = computeInvoice({
-    role: 'RN',
     shifts: [shift()],
     expenses: [{ description: 'x'.repeat(81), amountCents: 500 }],
   });
@@ -234,7 +212,6 @@ check('expense description is required and length-capped', () => {
 
 check('grand total always equals wages plus reimbursements', () => {
   const out = computeInvoice({
-    role: 'NP',
     shifts: [
       shift({ typeKey: 'mobile', hours: 7.25 }),
       shift({ typeKey: 'large_event', hours: 5.5, ivCount: 9, shotCount: 3, gfeCount: 2 }),
@@ -279,18 +256,15 @@ check('a typed name resolves to the roster role, whitespace and case aside', () 
   assert.equal(matchNurseByName('Angela Solleder')?.id, 'angela-solleder');
 });
 
-check('an unrecognised name gets the most restrictive role, never NP', () => {
+check('an unrecognised name carries no role rather than a guessed one', () => {
   for (const typed of ['', '   ', 'Somebody Else', 'T. Ward', 'Tiffany', 'NP']) {
-    assert.equal(roleForName(typed), 'RN', `typed=${JSON.stringify(typed)}`);
+    assert.equal(roleForName(typed), '', `typed=${JSON.stringify(typed)}`);
     assert.equal(matchNurseByName(typed), null);
   }
-  // ...and that means the fee is simply not payable to them.
-  const out = computeInvoice({
-    role: roleForName('Somebody Else'),
-    shifts: [shift({ typeKey: 'mobile', hours: 2, gfeCount: 4 })],
-  });
-  assert.ok(out.errors.some((e) => e.code === 'gfe_not_permitted'));
-  assert.equal(out.wagesCents, 18000);
+  // They can still invoice, GFE included — pay does not depend on the match.
+  const out = computeInvoice({ shifts: [shift({ typeKey: 'mobile', hours: 2, gfeCount: 4 })] });
+  assert.deepEqual(out.errors, []);
+  assert.equal(out.wagesCents, 18000 + 8000);
 });
 
 check('initials build the Gusto invoice suffix', () => {
@@ -306,7 +280,6 @@ check('initials build the Gusto invoice suffix', () => {
 check('document carries the Gusto fields, the invoice number and the right money', () => {
   const nurse = findNurse('tiffany-ward');
   const computed = computeInvoice({
-    role: nurse.role,
     shifts: [
       { date: '2026-08-02', typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 },
       { date: '2026-08-05', typeKey: 'mobile', hours: 7.25, ivCount: 0, shotCount: 0, gfeCount: 0 },
@@ -342,7 +315,6 @@ check('document carries the Gusto fields, the invoice number and the right money
 check('document escapes anything a nurse typed', () => {
   const nurse = findNurse('robert-sloan');
   const computed = computeInvoice({
-    role: nurse.role,
     shifts: [{ date: '2026-08-02', typeKey: 'mobile', hours: 2, ivCount: 0, shotCount: 0, gfeCount: 0 }],
     expenses: [{ description: '<script>alert(1)</script>', amountCents: 500 }],
   });
@@ -361,7 +333,6 @@ check('document escapes anything a nurse typed', () => {
 check('the downloadable file is a complete standalone document', () => {
   const nurse = findNurse('anna-holder');
   const computed = computeInvoice({
-    role: nurse.role,
     shifts: [{ date: '2026-08-02', typeKey: 'mobile', hours: 4, ivCount: 0, shotCount: 0, gfeCount: 0 }],
     expenses: [],
   });
@@ -381,7 +352,6 @@ check('the downloadable file is a complete standalone document', () => {
 check('CSV itemises the invoice and neutralises formula injection', () => {
   const nurse = findNurse('tiffany-ward');
   const computed = computeInvoice({
-    role: nurse.role,
     shifts: [{ date: '2026-08-02', typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 }],
     // A description opening with '=' is executed as a formula by Excel and
     // Sheets when the file is opened.

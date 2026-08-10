@@ -102,7 +102,7 @@ function RemoveButton({ onClick, label }) {
   );
 }
 
-export function ShiftRow({ row, index, canBillGfe, subtotalCents, onChange, onRemove }) {
+export function ShiftRow({ row, index, subtotalCents, onChange, onRemove }) {
   const type = findShiftType(row.typeKey);
   // Adder fields render only where the tier actually pays them, so a nurse
   // literally cannot enter an IV count on a small event.
@@ -157,31 +157,30 @@ export function ShiftRow({ row, index, canBillGfe, subtotalCents, onChange, onRe
         <p className="mt-1.5 av-mono text-[11px] text-foreground/45">{type.hint}</p>
       ) : null}
 
-      {hasAdders || canBillGfe ? (
-        <div className="mt-4 grid gap-3 border-t border-foreground/10 pt-4 sm:grid-cols-3">
-          {hasAdders ? (
-            <>
-              <CountField
-                label="IVs"
-                value={row.ivCount}
-                onChange={(ivCount) => onChange({ ivCount })}
-              />
-              <CountField
-                label="Shots"
-                value={row.shotCount}
-                onChange={(shotCount) => onChange({ shotCount })}
-              />
-            </>
-          ) : null}
-          {canBillGfe ? (
+      <div className="mt-4 grid gap-3 border-t border-foreground/10 pt-4 sm:grid-cols-3">
+        {hasAdders ? (
+          <>
             <CountField
-              label="GFE"
-              value={row.gfeCount}
-              onChange={(gfeCount) => onChange({ gfeCount })}
+              label="IVs"
+              value={row.ivCount}
+              onChange={(ivCount) => onChange({ ivCount })}
             />
-          ) : null}
-        </div>
-      ) : null}
+            <CountField
+              label="Shots"
+              value={row.shotCount}
+              onChange={(shotCount) => onChange({ shotCount })}
+            />
+          </>
+        ) : null}
+        {/* GFE shows on every shift for every contractor. It was NP-only until
+            2026-08-10; anyone may now claim it, and approval before payment is
+            where it gets checked. */}
+        <CountField
+          label="GFE"
+          value={row.gfeCount}
+          onChange={(gfeCount) => onChange({ gfeCount })}
+        />
+      </div>
 
       <div className="mt-4 flex items-baseline justify-between border-t border-foreground/10 pt-3">
         <span className="av-mono text-[10px] uppercase tracking-[0.16em] text-foreground/50">
