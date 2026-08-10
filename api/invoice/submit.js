@@ -15,9 +15,9 @@
  * exactly the host this feature runs on.
  *
  * ── THE SERVER NEVER TRUSTS A CLIENT TOTAL ──────────────────────────────────
- * The accepted schema has no `total` field at all — not ignored, absent — and
- * `role` is read from the roster by id, never from the body. Every figure in the
- * email comes from this process's own computeInvoice() call.
+ * The accepted schema has no `total` field at all — not ignored, absent. Every
+ * figure in the email comes from this process's own computeInvoice() call on the
+ * raw hours and counts, so the submitting device cannot set what it is paid.
  */
 import crypto from 'crypto';
 import { Resend } from 'resend';
@@ -105,9 +105,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // The name is typed now, so it is validated for shape rather than looked up
-    // by id. Role still comes from the roster via the name — never from the
-    // body — so an RN cannot type "NP" and start billing GFE.
+    // The name is typed, so it is validated for shape rather than looked up by
+    // id. Role is a label resolved from the roster — never taken from the body —
+    // and since GFE opened to everyone it no longer decides what anyone may bill.
     const nurseName = String(body.nurseName || '').trim().replace(/\s+/g, ' ');
     if (nurseName.length < 2 || nurseName.length > 60) {
       return res.status(400).json({ error: 'Please enter your name.' });
@@ -151,8 +151,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Role comes from the roster, never the body — otherwise an RN could claim NP.
-    const computed = computeInvoice({ role: nurse.role, shifts, expenses });
+    const computed = computeInvoice({ shifts, expenses });
     if (computed.errors.length) {
       return res.status(400).json({
         error: 'Some rows need attention before this can be submitted.',

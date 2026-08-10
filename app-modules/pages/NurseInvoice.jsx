@@ -9,7 +9,6 @@ import { matchNurseByName, roleForName } from '@/data/nurseRoster';
 import {
   MAX_EXPENSE_ROWS,
   MAX_SHIFT_ROWS,
-  canBillGfe,
   computeInvoice,
   formatCents,
 } from '@/data/nurseInvoiceRates';
@@ -86,15 +85,8 @@ function reducer(state, action) {
     case 'unlocked':
       return { ...state, token: action.token, step: 'form', status: 'idle', error: '' };
 
-    case 'setNurseName': {
-      // Typing your way out of an NP name must ZERO the GFE counts, not just
-      // hide the field — otherwise a hidden value keeps riding along where the
-      // nurse can't see or clear it.
-      const shifts = canBillGfe(roleForName(action.value))
-        ? state.shifts
-        : state.shifts.map((row) => ({ ...row, gfeCount: '0' }));
-      return { ...state, nurseName: action.value, shifts, error: '' };
-    }
+    case 'setNurseName':
+      return { ...state, nurseName: action.value, error: '' };
 
     case 'setField':
       return { ...state, [action.field]: action.value, error: '' };
@@ -163,9 +155,8 @@ function reducer(state, action) {
 }
 
 /** Form rows hold strings (that's what inputs give you); the math wants numbers. */
-function toComputeInput(state, role) {
+function toComputeInput(state) {
   return {
-    role,
     shifts: state.shifts.map((row) => ({
       date: row.date,
       typeKey: row.typeKey,
@@ -211,11 +202,10 @@ export default function NurseInvoice() {
 
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(reducer, initialState);
-  // Role is resolved from the typed name against the roster, exactly as the
-  // server does it, so the form offers precisely what the server will pay.
+  // Role is a label resolved from the roster, matching what the server records.
+  // It no longer gates anything — GFE is billable by everyone.
   const matchedNurse = matchNurseByName(state.nurseName);
   const nurse = { name: state.nurseName.trim(), role: roleForName(state.nurseName) };
-  const gfeAllowed = canBillGfe(nurse.role);
 
   // Restore token + draft. sessionStorage (not local) so a shared iPad doesn't
   // stay unlocked, and not memory-only so an accidental refresh mid-form on a
@@ -266,8 +256,8 @@ export default function NurseInvoice() {
   }, [state.token, state.nurseName, state.periodStart, state.periodEnd, state.shifts, state.expenses]);
 
   const computed = useMemo(
-    () => computeInvoice(toComputeInput(state, nurse.role)),
-    [state, nurse.role],
+    () => computeInvoice(toComputeInput(state)),
+    [state],
   );
 
   function handleReview() {
@@ -352,7 +342,7 @@ export default function NurseInvoice() {
 
   async function handleSubmit() {
     dispatch({ type: 'status', status: 'submitting' });
-    const payload = toComputeInput(state, nurse.role);
+    const payload = toComputeInput(state);
     try {
       const response = await fetch('/api/invoice/submit', {
         method: 'POST',
@@ -429,11 +419,6 @@ export default function NurseInvoice() {
                     }
                     className={invoiceFieldClass}
                   />
-                  {gfeAllowed ? (
-                    <p className="mt-2 font-body text-[13px] text-foreground/55">
-                      GFE is billable on your shifts.
-                    </p>
-                  ) : null}
                 </div>
               </div>
 
@@ -483,7 +468,6 @@ export default function NurseInvoice() {
                       key={row.id}
                       row={row}
                       index={index}
-                      canBillGfe={gfeAllowed}
                       subtotalCents={computed.shiftLines[index]?.subtotalCents || 0}
                       onChange={(patch) => dispatch({ type: 'updateShift', id: row.id, patch })}
                       onRemove={
