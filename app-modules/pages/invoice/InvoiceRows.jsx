@@ -50,7 +50,10 @@ export function SegmentedControl({ label, options, value, onChange, className })
       <div
         role="radiogroup"
         aria-label={label}
-        className="grid grid-cols-3 gap-1 rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-1"
+        className={cn(
+          'grid gap-1 rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-1',
+          options.length === 2 ? 'grid-cols-2' : 'grid-cols-3',
+        )}
       >
         {options.map((option) => {
           const active = option.value === value;
