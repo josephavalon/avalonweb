@@ -27,6 +27,10 @@ const TARGETS = [
   { name: 'Checkout success (recovery)', path: '/checkout/success' },
   { name: 'Booking confirmation (recovery)', path: '/booking/confirmation' },
   { name: 'Login', path: '/login' },
+  // Staff-facing, but a nurse filling this on a phone after a shift is exactly
+  // the person who benefits from correct labels and contrast.
+  { name: 'Nurse login', path: '/nurse-login' },
+  { name: 'Invoice', path: '/invoice' },
   { name: 'Forgot password', path: '/forgot' },
   { name: 'Team', path: '/team' },
   { name: 'Locations', path: '/locations' },
