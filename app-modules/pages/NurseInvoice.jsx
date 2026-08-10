@@ -64,6 +64,7 @@ const ERROR_CLASS = 'font-body text-[13px] text-red-600 mt-1';
 const ERROR_MESSAGES = {
   invalid_date: 'Pick a date.',
   invalid_hours: 'Hours must be between 0 and 24, in quarter hours (7, 7.25, 7.5).',
+  hours_exceed_day: 'Shifts on this date add up to more than 24 hours.',
   invalid_count: 'Use a whole number from 0 to 99.',
   adders_not_permitted: 'This shift type does not pay per IV or shot.',
   unknown_shift_type: 'Choose a shift type.',
@@ -157,7 +158,7 @@ function reducer(state, action) {
           const next = { ...row, ...action.patch };
           // Same reasoning as the GFE zeroing above: leaving a tier that pays
           // adders must clear them, or the counts survive invisibly.
-          if (action.patch.typeKey && action.patch.typeKey !== 'large_event') {
+          if (action.patch.typeKey && action.patch.typeKey !== 'event') {
             next.ivCount = '0';
             next.shotCount = '0';
           }

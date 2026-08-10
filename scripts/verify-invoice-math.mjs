@@ -16,6 +16,7 @@ import {
   GFE_CENTS,
   MAX_EXPENSE_CENTS,
   MAX_SHIFT_ROWS,
+  SHIFT_TYPE_KEYS,
   formatCentsPlain,
 } from '../src/data/nurseInvoiceRates.js';
 import {
@@ -61,9 +62,9 @@ check('mobile visit pays $90/hr', () => {
   assert.equal(out.wagesCents, 72000);
 });
 
-check('large event pays $50/hr plus $40/IV and $10/shot', () => {
+check('an event pays $50/hr plus $40/IV and $10/shot', () => {
   const out = computeInvoice({
-    shifts: [shift({ typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5 })],
+    shifts: [shift({ typeKey: 'event', hours: 6, ivCount: 12, shotCount: 5 })],
   });
   assert.deepEqual(out.errors, []);
   // 6h * $50 = $300, 12 IV * $40 = $480, 5 shots * $10 = $50
@@ -72,14 +73,35 @@ check('large event pays $50/hr plus $40/IV and $10/shot', () => {
   assert.equal(out.wagesCents, 83000);
 });
 
-check('small event pays $90/hr flat with NO adders', () => {
+check('a mobile visit pays $90/hr with NO adders', () => {
   const out = computeInvoice({
-    shifts: [shift({ typeKey: 'small_event', hours: 3, ivCount: 99, shotCount: 99 })],
+    shifts: [shift({ typeKey: 'mobile', hours: 3, ivCount: 99, shotCount: 99 })],
   });
   // The counts are refused rather than quietly priced.
   assert.ok(out.errors.some((e) => e.code === 'adders_not_permitted'));
   assert.equal(out.shiftLines[0].adderCents, 0);
   assert.equal(out.wagesCents, 27000);
+});
+
+// 2026-08-10: the small/large split was dropped. Old keys must keep pricing —
+// a draft saved mid-shift, or a tab open across the deploy, would otherwise fail
+// as an unknown type. Both now resolve to the one event tier, which DOES reprice
+// a former small event from $90/hr flat to $50/hr plus adders.
+check('legacy small_event and large_event keys still price, as events', () => {
+  for (const legacy of ['small_event', 'large_event']) {
+    const out = computeInvoice({
+      shifts: [shift({ typeKey: legacy, hours: 4, ivCount: 2, shotCount: 1 })],
+    });
+    assert.deepEqual(out.errors, [], legacy);
+    // 4h * $50 + 2 IV * $40 + 1 shot * $10 = $290
+    assert.equal(out.wagesCents, 29000, legacy);
+    assert.equal(out.shiftLines[0].typeKey, 'event', legacy);
+    assert.equal(out.shiftLines[0].typeLabel, 'Event', legacy);
+  }
+});
+
+check('there are exactly two shift tiers', () => {
+  assert.deepEqual(SHIFT_TYPE_KEYS, ['mobile', 'event']);
 });
 
 check('mobile visit ignores IV/shot counts too', () => {
@@ -140,7 +162,7 @@ check('zero, negative and over-cap hours are refused', () => {
 
 check('non-integer and over-cap counts are refused', () => {
   const out = computeInvoice({
-    shifts: [shift({ typeKey: 'large_event', ivCount: 2.5, shotCount: 100 })],
+    shifts: [shift({ typeKey: 'event', ivCount: 2.5, shotCount: 100 })],
   });
   assert.equal(out.errors.filter((e) => e.code === 'invalid_count').length, 2);
 });
@@ -166,6 +188,44 @@ check('more than MAX_SHIFT_ROWS shifts is refused', () => {
     shifts: Array.from({ length: MAX_SHIFT_ROWS + 1 }, () => shift()),
   });
   assert.ok(out.errors.some((e) => e.code === 'too_many_shifts'));
+});
+
+check('shifts on one date cannot total more than 24 hours', () => {
+  // Each row is legal on its own; together they are not.
+  const out = computeInvoice({
+    shifts: [
+      shift({ date: '2026-08-02', hours: 12 }),
+      shift({ date: '2026-08-02', hours: 12 }),
+      shift({ date: '2026-08-02', hours: 1 }),
+    ],
+  });
+  const flagged = out.errors.filter((e) => e.code === 'hours_exceed_day');
+  // Every row for that date is flagged; the nurse decides which to trim.
+  assert.equal(flagged.length, 3);
+  assert.deepEqual(flagged.map((e) => e.index).sort(), [0, 1, 2]);
+});
+
+check('exactly 24 hours across a date is allowed', () => {
+  const out = computeInvoice({
+    shifts: [
+      shift({ date: '2026-08-02', hours: 12 }),
+      shift({ date: '2026-08-02', hours: 11.75 }),
+      shift({ date: '2026-08-02', hours: 0.25 }),
+    ],
+  });
+  assert.deepEqual(out.errors, []);
+  assert.equal(out.wagesCents, 24 * 9000);
+});
+
+check('the cap is per date, not per invoice', () => {
+  const out = computeInvoice({
+    shifts: [
+      shift({ date: '2026-08-02', hours: 20 }),
+      shift({ date: '2026-08-03', hours: 20 }),
+    ],
+  });
+  assert.deepEqual(out.errors, []);
+  assert.equal(out.wagesCents, 40 * 9000);
 });
 
 // --- Expenses ----------------------------------------------------------------
@@ -214,8 +274,8 @@ check('grand total always equals wages plus reimbursements', () => {
   const out = computeInvoice({
     shifts: [
       shift({ typeKey: 'mobile', hours: 7.25 }),
-      shift({ typeKey: 'large_event', hours: 5.5, ivCount: 9, shotCount: 3, gfeCount: 2 }),
-      shift({ typeKey: 'small_event', hours: 2.75 }),
+      shift({ typeKey: 'event', hours: 5.5, ivCount: 9, shotCount: 3, gfeCount: 2 }),
+      shift({ typeKey: 'mobile', hours: 2.75 }),
     ],
     expenses: [{ description: 'Parking', amountCents: 3500 }],
   });
@@ -281,7 +341,7 @@ check('document carries the Gusto fields, the invoice number and the right money
   const nurse = findNurse('tiffany-ward');
   const computed = computeInvoice({
     shifts: [
-      { date: '2026-08-02', typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 },
+      { date: '2026-08-02', typeKey: 'event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 },
       { date: '2026-08-05', typeKey: 'mobile', hours: 7.25, ivCount: 0, shotCount: 0, gfeCount: 0 },
     ],
     expenses: [{ description: 'Parking garage', amountCents: 4200 }],
@@ -352,7 +412,7 @@ check('the downloadable file is a complete standalone document', () => {
 check('CSV itemises the invoice and neutralises formula injection', () => {
   const nurse = findNurse('tiffany-ward');
   const computed = computeInvoice({
-    shifts: [{ date: '2026-08-02', typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 }],
+    shifts: [{ date: '2026-08-02', typeKey: 'event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 }],
     // A description opening with '=' is executed as a formula by Excel and
     // Sheets when the file is opened.
     expenses: [{ description: '=cmd|calc', amountCents: 4200 }],
@@ -372,7 +432,7 @@ check('CSV itemises the invoice and neutralises formula injection', () => {
   assert.ok(csv.includes('\r\n'), 'needs CRLF line endings');
   assert.ok(csv.includes('AV-20260815-TW-4K2P'));
   assert.ok(csv.includes('Tiffany Ward'));
-  assert.ok(csv.includes('Large event'), 'shift rows missing');
+  assert.ok(csv.includes('Event'), 'shift rows missing');
   assert.ok(csv.includes(formatCentsPlain(computed.grandTotalCents)), 'total missing');
   assert.ok(!/(^|,)=cmd/m.test(csv), 'formula injection was not neutralised');
   assert.ok(csv.includes("'=cmd|calc"), 'expected the apostrophe-prefixed form');

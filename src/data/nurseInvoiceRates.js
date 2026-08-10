@@ -28,27 +28,33 @@ export const SHIFT_TYPES = Object.freeze([
     perShotCents: 0,
   }),
   Object.freeze({
-    key: 'large_event',
-    label: 'Large event',
-    hint: '$50/hr + $40/IV + $10/shot',
+    key: 'event',
+    label: 'Event',
+    hint: 'More than 2 people · $50/hr + $40/IV + $10/shot',
     hourlyCents: 5000,
     perIvCents: 4000,
     perShotCents: 1000,
   }),
-  Object.freeze({
-    key: 'small_event',
-    label: 'Small event',
-    hint: 'Under 4 people · $90/hr flat',
-    hourlyCents: 9000,
-    perIvCents: 0,
-    perShotCents: 0,
-  }),
 ]);
 
-// Small event is "$90/hr flat" — expressed as zero adder rates in the table
-// rather than an `if (typeKey === 'small_event')` branch, so the table stays the
-// only place the tier rules live.
+// "Mobile visit" pays no per-IV or per-shot adder — expressed as zero rates in
+// the table rather than an `if (typeKey === 'mobile')` branch, so the table stays
+// the only place the tier rules live.
 export const SHIFT_TYPE_KEYS = Object.freeze(SHIFT_TYPES.map((t) => t.key));
+
+// 2026-08-10: the small/large split was dropped — there are only events, and an
+// event is more than two people. Both old keys resolve to the one event tier so
+// a draft saved mid-shift, or a request from a tab open across the deploy, still
+// prices instead of failing as an unknown type. Note this DOES reprice a former
+// small event from $90/hr flat to $50/hr plus adders, which is the intent.
+const LEGACY_SHIFT_TYPE_KEYS = Object.freeze({
+  large_event: 'event',
+  small_event: 'event',
+});
+
+export function resolveShiftTypeKey(key) {
+  return LEGACY_SHIFT_TYPE_KEYS[key] || key;
+}
 
 // Billable by anyone on the roster. This was NP-only until 2026-08-10; the rule
 // was relaxed deliberately, not lost. If it is ever reinstated, the gate belongs
@@ -58,12 +64,14 @@ export const GFE_CENTS = 2000;
 export const MAX_SHIFT_ROWS = 40;
 export const MAX_EXPENSE_ROWS = 20;
 export const MAX_HOURS_PER_SHIFT = 24;
+export const MAX_HOURS_PER_DAY = 24;
 export const MAX_COUNT_PER_SHIFT = 99;
 export const MAX_EXPENSE_CENTS = 200000; // $2,000
 export const MAX_DESCRIPTION_LENGTH = 80;
 
 export function findShiftType(key) {
-  return SHIFT_TYPES.find((t) => t.key === key) || null;
+  const resolved = resolveShiftTypeKey(key);
+  return SHIFT_TYPES.find((t) => t.key === resolved) || null;
 }
 
 export function shiftTypeHasAdders(key) {
@@ -188,6 +196,21 @@ export function computeInvoice({ shifts = [], expenses = [] } = {}) {
       amountCents: Number.isInteger(amountCents) && amountCents > 0 ? amountCents : 0,
     };
   });
+
+  // Each row is capped at 24 hours, which does nothing to stop three rows on the
+  // same date totalling thirty. Quarter hours sum exactly in binary (0.25 is a
+  // clean power of two), so this needs no epsilon.
+  const hoursByDate = new Map();
+  for (const line of shiftLines) {
+    if (!line.date) continue;
+    hoursByDate.set(line.date, (hoursByDate.get(line.date) || 0) + line.hours);
+  }
+  for (const line of shiftLines) {
+    if (line.date && hoursByDate.get(line.date) > MAX_HOURS_PER_DAY) {
+      // Flagged on every row for that date — the nurse decides which to trim.
+      errors.push({ scope: 'shift', index: line.index, field: 'hours', code: 'hours_exceed_day' });
+    }
+  }
 
   const wagesCents = shiftLines.reduce((sum, line) => sum + line.subtotalCents, 0);
   const reimbursementsCents = expenseLines.reduce((sum, line) => sum + line.amountCents, 0);
