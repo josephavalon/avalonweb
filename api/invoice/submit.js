@@ -25,7 +25,7 @@ import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeLogContext } from '../_lib/safe-error.js';
 import { bodyContainsPhi } from '../_lib/phi-guard.js';
 import { verifyInvoiceToken } from '../_lib/invoice-token.js';
-import { findNurse, nurseInitials } from '../../src/data/nurseRoster.js';
+import { matchNurseByName, nurseInitials, roleForName } from '../../src/data/nurseRoster.js';
 import {
   computeInvoice,
   formatCents,
@@ -105,8 +105,18 @@ export default async function handler(req, res) {
       });
     }
 
-    const nurse = findNurse(String(body.nurseId || ''));
-    if (!nurse) return res.status(400).json({ error: 'Please select your name.' });
+    // The name is typed now, so it is validated for shape rather than looked up
+    // by id. Role still comes from the roster via the name — never from the
+    // body — so an RN cannot type "NP" and start billing GFE.
+    const nurseName = String(body.nurseName || '').trim().replace(/\s+/g, ' ');
+    if (nurseName.length < 2 || nurseName.length > 60) {
+      return res.status(400).json({ error: 'Please enter your name.' });
+    }
+    if (bodyContainsPhi(nurseName)) {
+      return res.status(400).json({ error: 'Please enter your name only.' });
+    }
+    const nurse = { name: nurseName, role: roleForName(nurseName) };
+    const knownContractor = Boolean(matchNurseByName(nurseName));
 
     if (body.confirmed !== true) {
       return res.status(400).json({ error: 'Please confirm the invoice is accurate.' });
@@ -183,6 +193,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       invoiceNumber,
+      knownContractor,
       submittedAt,
       // The whole computation, so the copy a nurse saves is rendered from the
       // SAME numbers that went to the approvers rather than from the client's

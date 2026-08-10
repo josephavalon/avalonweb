@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Check, CheckCircle2, ChevronDown, Download, Loader2, LogOut, Plus, Printer } from 'lucide-react';
+import { Check, CheckCircle2, Download, Loader2, LogOut, Plus, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
-import { NURSE_ROSTER, findNurse } from '@/data/nurseRoster';
+import { matchNurseByName, roleForName } from '@/data/nurseRoster';
 import {
   MAX_EXPENSE_ROWS,
   MAX_SHIFT_ROWS,
@@ -63,7 +63,7 @@ const emptyExpense = () => ({ id: rowId(), description: '', amount: '' });
 const initialState = {
   step: 'locked',
   token: '',
-  nurseId: '',
+  nurseName: '',
   periodStart: '',
   periodEnd: '',
   shifts: [emptyShift()],
@@ -82,15 +82,14 @@ function reducer(state, action) {
     case 'unlocked':
       return { ...state, token: action.token, step: 'form', status: 'idle', error: '' };
 
-    case 'selectNurse': {
-      const nurse = findNurse(action.nurseId);
-      // Switching to a role that can't bill GFE must ZERO the counts, not just
+    case 'setNurseName': {
+      // Typing your way out of an NP name must ZERO the GFE counts, not just
       // hide the field — otherwise a hidden value keeps riding along where the
       // nurse can't see or clear it.
-      const shifts = canBillGfe(nurse?.role)
+      const shifts = canBillGfe(roleForName(action.value))
         ? state.shifts
         : state.shifts.map((row) => ({ ...row, gfeCount: '0' }));
-      return { ...state, nurseId: action.nurseId, shifts, error: '' };
+      return { ...state, nurseName: action.value, shifts, error: '' };
     }
 
     case 'setField':
@@ -208,8 +207,11 @@ export default function NurseInvoice() {
 
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(reducer, initialState);
-  const nurse = findNurse(state.nurseId);
-  const gfeAllowed = canBillGfe(nurse?.role);
+  // Role is resolved from the typed name against the roster, exactly as the
+  // server does it, so the form offers precisely what the server will pay.
+  const matchedNurse = matchNurseByName(state.nurseName);
+  const nurse = { name: state.nurseName.trim(), role: roleForName(state.nurseName) };
+  const gfeAllowed = canBillGfe(nurse.role);
 
   // Restore token + draft. sessionStorage (not local) so a shared iPad doesn't
   // stay unlocked, and not memory-only so an accidental refresh mid-form on a
@@ -229,7 +231,7 @@ export default function NurseInvoice() {
         value: {
           token,
           step: 'form',
-          nurseId: draft?.nurseId || '',
+          nurseName: draft?.nurseName || '',
           periodStart: draft?.periodStart || '',
           periodEnd: draft?.periodEnd || '',
           shifts: Array.isArray(draft?.shifts) && draft.shifts.length ? draft.shifts : [emptyShift()],
@@ -247,7 +249,7 @@ export default function NurseInvoice() {
       window.sessionStorage.setItem(
         DRAFT_KEY,
         JSON.stringify({
-          nurseId: state.nurseId,
+          nurseName: state.nurseName,
           periodStart: state.periodStart,
           periodEnd: state.periodEnd,
           shifts: state.shifts,
@@ -257,16 +259,16 @@ export default function NurseInvoice() {
     } catch {
       /* storage full or blocked — the form still works */
     }
-  }, [state.token, state.nurseId, state.periodStart, state.periodEnd, state.shifts, state.expenses]);
+  }, [state.token, state.nurseName, state.periodStart, state.periodEnd, state.shifts, state.expenses]);
 
   const computed = useMemo(
-    () => computeInvoice(toComputeInput(state, nurse?.role || 'RN')),
-    [state, nurse],
+    () => computeInvoice(toComputeInput(state, nurse.role)),
+    [state, nurse.role],
   );
 
   function handleReview() {
-    if (!state.nurseId) {
-      dispatch({ type: 'status', status: 'idle', error: 'Please select your name.' });
+    if (state.nurseName.trim().length < 2) {
+      dispatch({ type: 'status', status: 'idle', error: 'Please enter your name.' });
       return;
     }
     if (!state.periodStart || !state.periodEnd) {
@@ -287,7 +289,7 @@ export default function NurseInvoice() {
   // Built from the server's computation, not this page's preview, so the saved
   // copy and the approvers' email can never show different money.
   const documentParams = useMemo(() => {
-    if (!state.result?.invoiceNumber || !state.result?.computed || !nurse) return null;
+    if (!state.result?.invoiceNumber || !state.result?.computed) return null;
     return {
       nurse,
       invoiceNumber: state.result.invoiceNumber,
@@ -296,7 +298,7 @@ export default function NurseInvoice() {
       computed: state.result.computed,
       submittedAt: state.result.submittedAt || '',
     };
-  }, [state.result, state.periodStart, state.periodEnd, nurse]);
+  }, [state.result, state.periodStart, state.periodEnd, nurse.name, nurse.role]);
 
   const invoiceDocument = useMemo(
     () => (documentParams ? buildInvoiceDocumentHtml(documentParams) : ''),
@@ -337,14 +339,14 @@ export default function NurseInvoice() {
 
   async function handleSubmit() {
     dispatch({ type: 'status', status: 'submitting' });
-    const payload = toComputeInput(state, nurse?.role || 'RN');
+    const payload = toComputeInput(state, nurse.role);
     try {
       const response = await fetch('/api/invoice/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: state.token,
-          nurseId: state.nurseId,
+          nurseName: state.nurseName,
           periodStart: state.periodStart,
           periodEnd: state.periodEnd,
           shifts: payload.shifts,
@@ -401,28 +403,19 @@ export default function NurseInvoice() {
                   <label className={invoiceLabelClass} htmlFor="invoice-nurse">
                     Name
                   </label>
-                  <div className="relative">
-                    <select
-                      id="invoice-nurse"
-                      value={state.nurseId}
-                      onChange={(event) =>
-                        dispatch({ type: 'selectNurse', nurseId: event.target.value })
-                      }
-                      className={cn(invoiceFieldClass, 'appearance-none pr-11')}
-                    >
-                      <option value="">Select your name…</option>
-                      {NURSE_ROSTER.map((person) => (
-                        <option key={person.id} value={person.id}>
-                          {person.name} · {person.role}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      aria-hidden="true"
-                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/45"
-                      strokeWidth={2}
-                    />
-                  </div>
+                  <input
+                    id="invoice-nurse"
+                    type="text"
+                    autoComplete="name"
+                    autoCapitalize="words"
+                    maxLength={60}
+                    placeholder="First and last name"
+                    value={state.nurseName}
+                    onChange={(event) =>
+                      dispatch({ type: 'setNurseName', value: event.target.value })
+                    }
+                    className={invoiceFieldClass}
+                  />
                   {gfeAllowed ? (
                     <p className="mt-2 font-body text-[13px] text-foreground/55">
                       GFE is billable on your shifts.
@@ -547,7 +540,7 @@ export default function NurseInvoice() {
             <>
               <StepSummary
                 label="Invoicing as"
-                value={`${nurse?.name} · ${nurse?.role}`}
+                value={matchedNurse ? `${nurse.name} · ${nurse.role}` : nurse.name}
                 onEdit={() => dispatch({ type: 'goto', step: 'form' })}
               />
 

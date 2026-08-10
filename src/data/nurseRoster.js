@@ -32,6 +32,28 @@ export function findNurse(id) {
   return NURSE_ROSTER.find((nurse) => nurse.id === id) || null;
 }
 
+/** "  tiffany   WARD " -> "tiffany ward" */
+export function normalizeName(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/**
+ * The name is typed, not picked, so this is how the server still decides what
+ * someone may bill. GFE is NP-only, and role must never come from the request
+ * body or an RN could claim it — matching the typed name against the roster
+ * keeps that anchor. A name nobody recognises simply gets no GFE.
+ */
+export function matchNurseByName(name) {
+  const wanted = normalizeName(name);
+  if (!wanted) return null;
+  return NURSE_ROSTER.find((nurse) => normalizeName(nurse.name) === wanted) || null;
+}
+
+/** The role to price at: the matched roster entry's, or the most restrictive. */
+export function roleForName(name) {
+  return matchNurseByName(name)?.role || 'RN';
+}
+
 /** "Tiffany Ward" -> "TW". Used to build the invoice number Gusto files under. */
 export function nurseInitials(name) {
   return String(name || '')

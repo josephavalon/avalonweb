@@ -18,7 +18,13 @@ import {
   MAX_SHIFT_ROWS,
   formatCentsPlain,
 } from '../src/data/nurseInvoiceRates.js';
-import { NURSE_ROSTER, findNurse, nurseInitials } from '../src/data/nurseRoster.js';
+import {
+  NURSE_ROSTER,
+  findNurse,
+  matchNurseByName,
+  nurseInitials,
+  roleForName,
+} from '../src/data/nurseRoster.js';
 import { buildInvoiceDocumentHtml, buildInvoiceFileHtml } from '../src/data/invoiceDocument.js';
 
 let passed = 0;
@@ -257,6 +263,30 @@ check('every roster id resolves and every role is known', () => {
     ids.add(nurse.id);
   }
   assert.equal(findNurse('nobody'), null);
+});
+
+// The name is typed, not picked, so name->role matching is now what keeps GFE
+// NP-only. If this loosens, any nurse can bill the $20 fee by typing anything.
+check('a typed name resolves to the roster role, whitespace and case aside', () => {
+  assert.equal(roleForName('Tiffany Ward'), 'NP');
+  assert.equal(roleForName('  tiffany   WARD '), 'NP');
+  assert.equal(roleForName('Robert Sloan'), 'RN');
+  assert.equal(roleForName('Stephanie Weeks'), 'Manager');
+  assert.equal(matchNurseByName('Angela Solleder')?.id, 'angela-solleder');
+});
+
+check('an unrecognised name gets the most restrictive role, never NP', () => {
+  for (const typed of ['', '   ', 'Somebody Else', 'T. Ward', 'Tiffany', 'NP']) {
+    assert.equal(roleForName(typed), 'RN', `typed=${JSON.stringify(typed)}`);
+    assert.equal(matchNurseByName(typed), null);
+  }
+  // ...and that means the fee is simply not payable to them.
+  const out = computeInvoice({
+    role: roleForName('Somebody Else'),
+    shifts: [shift({ typeKey: 'mobile', hours: 2, gfeCount: 4 })],
+  });
+  assert.ok(out.errors.some((e) => e.code === 'gfe_not_permitted'));
+  assert.equal(out.wagesCents, 18000);
 });
 
 check('initials build the Gusto invoice suffix', () => {
