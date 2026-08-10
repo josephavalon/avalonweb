@@ -19,6 +19,7 @@ import {
   formatCentsPlain,
 } from '../src/data/nurseInvoiceRates.js';
 import { NURSE_ROSTER, findNurse, nurseInitials } from '../src/data/nurseRoster.js';
+import { buildInvoiceDocumentHtml, buildInvoiceFileHtml } from '../src/data/invoiceDocument.js';
 
 let passed = 0;
 const failures = [];
@@ -261,6 +262,86 @@ check('every roster id resolves and every role is known', () => {
 check('initials build the Gusto invoice suffix', () => {
   assert.equal(nurseInitials('Tiffany Ward'), 'TW');
   assert.equal(nurseInitials('Rowieh Schabert'), 'RS');
+});
+
+// --- The document -------------------------------------------------------------
+// One builder feeds the approvers' email, the print/PDF copy and the Word
+// download. If it ever disagrees with the computation, a nurse's saved record
+// and the payment made against it diverge silently.
+
+check('document carries the Gusto fields, the invoice number and the right money', () => {
+  const nurse = findNurse('tiffany-ward');
+  const computed = computeInvoice({
+    role: nurse.role,
+    shifts: [
+      { date: '2026-08-02', typeKey: 'large_event', hours: 6, ivCount: 12, shotCount: 5, gfeCount: 3 },
+      { date: '2026-08-05', typeKey: 'mobile', hours: 7.25, ivCount: 0, shotCount: 0, gfeCount: 0 },
+    ],
+    expenses: [{ description: 'Parking garage', amountCents: 4200 }],
+  });
+  assert.deepEqual(computed.errors, []);
+
+  const html = buildInvoiceDocumentHtml({
+    nurse,
+    invoiceNumber: 'AV-20260815-TW-4K2P',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-15',
+    computed,
+    submittedAt: '2026-08-10T18:30:00.000Z',
+  });
+
+  for (const field of ['Contractor', 'Invoice', 'Wage', 'Reimbursement', 'Total']) {
+    assert.ok(html.includes(field), `Gusto field missing from document: ${field}`);
+  }
+  assert.ok(html.includes('AV-20260815-TW-4K2P'), 'invoice number missing');
+  assert.ok(html.includes('Tiffany Ward'), 'contractor name missing');
+
+  // Gusto's inputs reject "$1,542.50" — the paste-ready figures must be bare.
+  assert.ok(html.includes(formatCentsPlain(computed.wagesCents)), 'plain wage figure missing');
+  assert.ok(
+    html.includes(formatCentsPlain(computed.reimbursementsCents)),
+    'plain reimbursement figure missing',
+  );
+  assert.equal(computed.grandTotalCents, computed.wagesCents + computed.reimbursementsCents);
+});
+
+check('document escapes anything a nurse typed', () => {
+  const nurse = findNurse('robert-sloan');
+  const computed = computeInvoice({
+    role: nurse.role,
+    shifts: [{ date: '2026-08-02', typeKey: 'mobile', hours: 2, ivCount: 0, shotCount: 0, gfeCount: 0 }],
+    expenses: [{ description: '<script>alert(1)</script>', amountCents: 500 }],
+  });
+  const html = buildInvoiceDocumentHtml({
+    nurse,
+    invoiceNumber: 'AV-20260815-RS-TEST',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-15',
+    computed,
+    submittedAt: '2026-08-10T18:30:00.000Z',
+  });
+  assert.ok(!html.includes('<script>alert(1)</script>'), 'expense description was not escaped');
+  assert.ok(html.includes('&lt;script&gt;'), 'expected the escaped form');
+});
+
+check('the downloadable file is a complete standalone document', () => {
+  const nurse = findNurse('anna-holder');
+  const computed = computeInvoice({
+    role: nurse.role,
+    shifts: [{ date: '2026-08-02', typeKey: 'mobile', hours: 4, ivCount: 0, shotCount: 0, gfeCount: 0 }],
+    expenses: [],
+  });
+  const file = buildInvoiceFileHtml({
+    nurse,
+    invoiceNumber: 'AV-20260815-AH-TEST',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-15',
+    computed,
+    submittedAt: '2026-08-10T18:30:00.000Z',
+  });
+  assert.ok(file.startsWith('<!DOCTYPE html>'), 'download must be a full document, not a fragment');
+  assert.ok(file.includes('charset="utf-8"'), 'download needs an explicit charset for Word');
+  assert.ok(file.includes('AV-20260815-AH-TEST'));
 });
 
 // --- Report ------------------------------------------------------------------
