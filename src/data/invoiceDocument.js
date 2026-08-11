@@ -1,9 +1,10 @@
 /**
- * The invoice document — one HTML rendering used by three consumers:
+ * The invoice document — one HTML rendering used by two consumers:
  *
  *   api/invoice/submit.js  the email sent to the approvers
  *   /invoice sent screen   the print / Save-as-PDF copy
- *   /invoice sent screen   the downloadable Word file
+ *
+ * The Word download is NOT here: it is a real .docx built in invoiceDocx.js.
  *
  * Deliberately one function so a nurse's saved copy and the email an approver
  * reads can never disagree about what was submitted. Same discipline as
@@ -123,16 +124,6 @@ export function buildInvoiceDocumentHtml({
       Totals are calculated server-side from the entered shifts — the submitting device cannot set them.
     </p>
   </div>`;
-}
-
-/** A complete standalone file, for download rather than embedding in an email. */
-export function buildInvoiceFileHtml(params) {
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8" />
-<title>Avalon invoice ${escapeHtml(params.invoiceNumber)}</title>
-</head><body style="margin:0;background:#f6f2eb;">
-${buildInvoiceDocumentHtml(params)}
-</body></html>`;
 }
 
 /**

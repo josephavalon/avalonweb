@@ -11,6 +11,7 @@ import {
   MAX_SHIFT_ROWS,
   computeInvoice,
   formatCents,
+  formatCentsPlain,
 } from '@/data/nurseInvoiceRates';
 import {
   ExpenseRow,
@@ -31,11 +32,8 @@ import {
   clearInvoiceSession,
   readInvoiceToken,
 } from '@/lib/invoiceSession';
-import {
-  buildInvoiceCsv,
-  buildInvoiceDocumentHtml,
-  buildInvoiceFileHtml,
-} from '@/data/invoiceDocument';
+import { buildInvoiceCsv, buildInvoiceDocumentHtml } from '@/data/invoiceDocument';
+import { DOCX_MIME, buildInvoiceDocx } from '@/data/invoiceDocx';
 
 /**
  * /invoice — the contractor pay form.
@@ -451,12 +449,15 @@ export default function NurseInvoice() {
     saveBlob(buildInvoiceCsv(documentParams), 'text/csv;charset=utf-8', 'csv');
   }
 
-  function handleDownloadDoc() {
+  function handleDownloadDocx() {
     if (!documentParams) return;
-    const html = buildInvoiceFileHtml(documentParams);
-    // Word opens HTML served as msword; this avoids pulling a document-writing
-    // dependency into a bundle that ships to every nurse's phone.
-    saveBlob(html, 'application/msword', 'doc');
+    // A genuine .docx rather than HTML wearing a Word MIME type. Word tolerated
+    // the old trick; LibreOffice showed the nurse a page of raw markup.
+    saveBlob(
+      buildInvoiceDocx({ ...documentParams, money: formatCents, moneyPlain: formatCentsPlain }),
+      DOCX_MIME,
+      'docx',
+    );
   }
 
   async function handleSubmit() {
@@ -833,7 +834,7 @@ export default function NurseInvoice() {
                 <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handlePrint}>
                   <Printer className="h-4 w-4" /> PDF
                 </Button>
-                <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handleDownloadDoc}>
+                <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handleDownloadDocx}>
                   <Download className="h-4 w-4" /> Word
                 </Button>
                 <Button type="button" variant="outline" size="lg" className="w-full gap-2" disabled={!invoiceDocument} onClick={handleDownloadCsv}>
