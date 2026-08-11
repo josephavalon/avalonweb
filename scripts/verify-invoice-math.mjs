@@ -13,6 +13,7 @@
 import assert from 'node:assert/strict';
 import {
   computeInvoice,
+  formatCents,
   GFE_CENTS,
   MAX_EXPENSE_CENTS,
   MAX_SHIFT_ROWS,
@@ -26,11 +27,8 @@ import {
   nurseInitials,
   roleForName,
 } from '../src/data/nurseRoster.js';
-import {
-  buildInvoiceCsv,
-  buildInvoiceDocumentHtml,
-  buildInvoiceFileHtml,
-} from '../src/data/invoiceDocument.js';
+import { buildInvoiceCsv, buildInvoiceDocumentHtml } from '../src/data/invoiceDocument.js';
+import { buildInvoiceDocx } from '../src/data/invoiceDocx.js';
 
 let passed = 0;
 const failures = [];
@@ -390,23 +388,56 @@ check('document escapes anything a nurse typed', () => {
   assert.ok(html.includes('&lt;script&gt;'), 'expected the escaped form');
 });
 
-check('the downloadable file is a complete standalone document', () => {
+check('the Word download is a real docx, not HTML in disguise', () => {
+  // The previous download was HTML served as application/msword. Word tolerated
+  // it; LibreOffice showed the nurse a page of raw markup.
   const nurse = findNurse('anna-holder');
   const computed = computeInvoice({
     shifts: [{ date: '2026-08-02', typeKey: 'mobile', hours: 4, ivCount: 0, shotCount: 0, gfeCount: 0 }],
-    expenses: [],
+    expenses: [{ description: 'Parking garage', amountCents: 4200 }],
   });
-  const file = buildInvoiceFileHtml({
+  const bytes = buildInvoiceDocx({
     nurse,
     invoiceNumber: 'AV-20260815-AH-TEST',
     periodStart: '2026-08-01',
     periodEnd: '2026-08-15',
     computed,
     submittedAt: '2026-08-10T18:30:00.000Z',
+    money: formatCents,
+    moneyPlain: formatCentsPlain,
   });
-  assert.ok(file.startsWith('<!DOCTYPE html>'), 'download must be a full document, not a fragment');
-  assert.ok(file.includes('charset="utf-8"'), 'download needs an explicit charset for Word');
-  assert.ok(file.includes('AV-20260815-AH-TEST'));
+
+  assert.ok(bytes instanceof Uint8Array, 'expected raw bytes');
+  // Local file header signature: a ZIP, which is what a .docx is.
+  assert.deepEqual([...bytes.slice(0, 4)], [0x50, 0x4b, 0x03, 0x04]);
+  const text = Buffer.from(bytes).toString('latin1');
+  for (const part of ['[Content_Types].xml', '_rels/.rels', 'word/document.xml']) {
+    assert.ok(text.includes(part), `missing part: ${part}`);
+  }
+  assert.ok(text.includes('AV-20260815-AH-TEST'), 'invoice number missing');
+  assert.ok(text.includes('Anna Holder'), 'contractor name missing');
+  assert.ok(!text.includes('<html'), 'a docx must not contain HTML');
+});
+
+check('the docx is byte-identical between builds', () => {
+  // A fixed ZIP timestamp rather than "now", so two downloads of one invoice can
+  // be compared rather than merely looking alike.
+  const nurse = findNurse('anna-holder');
+  const computed = computeInvoice({
+    shifts: [{ date: '2026-08-02', typeKey: 'mobile', hours: 4, ivCount: 0, shotCount: 0, gfeCount: 0 }],
+    expenses: [],
+  });
+  const params = {
+    nurse,
+    invoiceNumber: 'AV-1',
+    periodStart: '2026-08-01',
+    periodEnd: '2026-08-15',
+    computed,
+    submittedAt: '2026-08-10T18:30:00.000Z',
+    money: formatCents,
+    moneyPlain: formatCentsPlain,
+  };
+  assert.deepEqual([...buildInvoiceDocx(params)], [...buildInvoiceDocx(params)]);
 });
 
 check('CSV itemises the invoice and neutralises formula injection', () => {
