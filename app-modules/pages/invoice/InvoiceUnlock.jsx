@@ -105,9 +105,11 @@ export default function InvoiceUnlock({ onUnlocked }) {
             inside the left column below. */}
         <LoginHeading className="order-1 px-6 pt-9 md:px-12 md:pt-12 lg:hidden" />
 
-        {/* Left column on desktop; the explanatory rows drop below the form on
-            mobile so the fields stay reachable without scrolling past them. */}
-        <div className="order-3 flex flex-col justify-center px-6 pb-9 pt-8 md:px-12 md:pb-14 lg:order-1 lg:py-14 lg:pt-14">
+        {/* Desktop only. On a phone these rows sat below the sign-in button and
+            the support number, where nobody who came here to log in was going to
+            read them — they only added scroll. The title above the form already
+            says what this is. */}
+        <div className="order-3 hidden flex-col justify-center px-6 pb-9 pt-8 md:px-12 md:pb-14 lg:order-1 lg:flex lg:py-14 lg:pt-14">
           <LoginHeading className="hidden lg:block" />
 
           <ul className="grid gap-7 lg:mt-10">
