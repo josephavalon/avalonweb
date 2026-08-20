@@ -249,7 +249,7 @@ function Landing({
         )}
 
         <div className={`${focused ? 'mt-6 gap-3.5' : 'mt-10 gap-5'} grid`} data-testid="landing-form">
-          <CognitoFormEmbed compact tight={focused} prefill={prefill} />
+          <CognitoFormEmbed compact tight={focused} appointmentFields prefill={prefill} />
           {/* data-when="pre-submit": both lines speak to a form that hasn't been sent
               yet ("we'll text you", "by submitting"), so they read as stale once
               Cognito swaps in its confirmation. Hidden by a :has() rule in

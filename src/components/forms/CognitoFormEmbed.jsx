@@ -50,6 +50,7 @@ export default function CognitoFormEmbed({
   accountKey = import.meta.env.VITE_COGNITO_ACCOUNT_KEY,
   compact = false,
   tight = false,
+  appointmentFields = false,
   prefill = null,
 }) {
   // `formNumber` (when passed) is authoritative — no env fallback. Campaign
@@ -124,7 +125,7 @@ export default function CognitoFormEmbed({
       <div
         ref={mountRef}
         data-testid="cognito-embed"
-        className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}`}
+        className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}${appointmentFields ? ' cognito--appointment-fields' : ''}`}
       />
       {/* Placeholder for the ~1.3s Cognito spends loading its own chunks and
           making its new-session / form-def round trips. Without it /start paints
@@ -145,6 +146,14 @@ export default function CognitoFormEmbed({
         <span className="cognito-skeleton__field" />
         <span className="cognito-skeleton__label" />
         <span className="cognito-skeleton__field" />
+        {appointmentFields && (
+          <>
+            <span className="cognito-skeleton__label" />
+            <span className="cognito-skeleton__field" />
+            <span className="cognito-skeleton__label" />
+            <span className="cognito-skeleton__field" />
+          </>
+        )}
         <span className="cognito-skeleton__button" />
       </div>
     </div>
