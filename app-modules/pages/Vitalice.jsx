@@ -12,13 +12,6 @@ import { useSeo } from '@/lib/seo';
 // campaign form so submissions land in a dedicated Cognito entry queue.
 const VITALICE_FORM_NUMBER = import.meta.env.VITE_COGNITO_VITALICE_FORM_ID;
 
-const OFFER_META = [
-  { label: 'Date', value: 'Choose below' },
-  { label: 'Time', value: 'Choose below' },
-  { label: 'Visit', value: 'Varies by treatment' },
-  { label: 'Payment', value: 'On site' },
-];
-
 // Exact reproduction of the Vital Ice header monogram from vitalicesf.com
 // (their <header> SVG, verified 2026-08-05): a thin horizontal rail above
 // two letters V and I in SF Pro Display 600.
@@ -92,47 +85,6 @@ function CoBrandRibbon() {
   );
 }
 
-function OfferPanel() {
-  return (
-    <aside data-testid="vitalice-offer-panel" className="lg:sticky lg:top-24">
-      <div className="rounded-[2rem] border border-foreground/[0.10] bg-background px-6 py-6 shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)] md:px-8 md:py-8">
-        <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
-          Vital Ice Member Offer
-        </p>
-        <div className="mt-3 h-[3px] w-14 rounded-full bg-[#4FB3B8]" aria-hidden="true" />
-        <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[2.5rem] leading-[0.9] md:text-[3rem]">
-          Visit Details
-        </h2>
-
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          {OFFER_META.map((meta) => (
-            <div
-              key={meta.label}
-              className="rounded-2xl border border-foreground/[0.10] bg-[#fffdf8] px-4 py-3"
-            >
-              <p className="av-mono text-[10px] uppercase tracking-[0.16em] text-foreground/50">
-                {meta.label}
-              </p>
-              <p className="mt-1 font-body text-[15px] font-semibold text-foreground">
-                {meta.value}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-7 border-t border-foreground/[0.10] pt-5">
-          <p className="font-body text-[15px] font-semibold leading-[1.5] text-foreground">
-            Choose your treatment in the secure appointment form.
-          </p>
-          <p className="mt-2 font-body text-[13px] leading-[1.55] text-foreground/65">
-            The dropdown includes Avalon&rsquo;s current IV menu and pricing. IVs normally priced at $250 are $275 for this booking.
-          </p>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 export default function Vitalice() {
   useSeo({
     title: 'Vital Ice × Avalon — Treatment Menu',
@@ -166,7 +118,7 @@ export default function Vitalice() {
         >
           <CoBrandRibbon />
 
-          <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 lg:items-start">
+          <div className="mx-auto mt-8 max-w-2xl lg:mt-10">
             {/* START card */}
             <div className="rounded-[2rem] border border-foreground/[0.10] bg-background px-6 py-8 shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)] md:px-10 md:py-10">
               <div className="flex items-center gap-2 text-foreground">
@@ -229,8 +181,6 @@ export default function Vitalice() {
                 </Link>
               </div>
             </div>
-
-            <OfferPanel />
           </div>
         </motion.section>
       </main>
