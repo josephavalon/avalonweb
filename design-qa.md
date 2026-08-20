@@ -452,6 +452,68 @@ final result: passed
 
 ---
 
+# Start Appointment Visibility and Mobile Fit
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/ZHooXn/Screenshot 2026-08-20 at 3.43.07 AM.png`
+  (`482 × 1022` physical pixels, including iOS status and Safari toolbar chrome).
+- Browser-rendered implementation:
+  `.context/qa/start-mobile-after.png` (Chrome CSS viewport `390 × 844`).
+- Combined comparison:
+  `.context/qa/start-mobile-source-vs-after.png` (reported source left,
+  corrected implementation right).
+- The source's app-owned region was cropped from `y=80` through `y=924`, then
+  normalized to `390 × 844` before comparison.
+- State: `/start`, form loaded, cookie choice resolved, no fields edited, and
+  no form submitted.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] Cognito previously initialized Appointment Time from the
+  device's current time (`3:42 AM` in the source), immediately placing the
+  untouched form in an invalid state. The saved form now initializes to the
+  valid opening value `8:00 AM`; Appointment Date initializes to today.
+- [P1 resolved] The source clipped the `START` heading beneath the consumer
+  header and required vertical scrolling to reach supporting copy. The mobile
+  intake now clears the complete utility/navigation stack and locks to one
+  dynamic viewport with no document or internal form scroll.
+- [P2 resolved] A later global `61px` input rule overrode the focused form's
+  compact treatment. All five mobile controls now share the same `44px` height,
+  `16px` text, cream fill, border, radius, and visible foreground value.
+- At `390 × 844`, the document and focused main both report
+  `scrollHeight === clientHeight === 844`; the complete heading, fields,
+  consent, START button, deposit note, and service-SMS note are visible.
+- At `360 × 640`, document and focused-main height both equal `640`, with no
+  horizontal overflow and all core content visible.
+- At `320 × 568`, document and focused-main height both equal `568`. The core
+  intake, required consent, and START action remain visible at 44px touch
+  height; only repeated coverage/deposit/SMS reminders collapse at this
+  constrained height.
+- Appointment Date renders `08/20/2026`; Appointment Time renders `08:00 AM`.
+  Both controls accept focus, retain their values, and report no invalid state
+  or validation error. The date bounds are `2026-08-20` through `2026-10-19`,
+  preserving the requested 60-day booking window.
+- The combined comparison shows the original clipped heading and red invalid
+  time treatment removed, while the existing Avalon type, color, form order,
+  labels, consent, and primary action are preserved.
+- Chrome's local Vite run records Cognito's existing third-party
+  `insertBefore` exception while its seamless form initializes; the form still
+  loads and the app emits its successful form-loaded event. No app-owned error
+  or visible failure was found.
+- No actionable P0, P1, or P2 visual mismatch remains.
+
+## Automated checks
+
+- `npm run lint`: passed (217 source files).
+- `npm run build`: passed.
+- `git diff --check`: passed.
+
+final result: passed
+
+---
+
 # Vital Ice Visit Details Removal
 
 ## Visual truth and capture state

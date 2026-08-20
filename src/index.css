@@ -12899,3 +12899,160 @@ html.av-browser-espresso #root {
     bottom: calc(max(env(safe-area-inset-bottom), 0px) + 4.5rem);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Focused /start intake — mobile viewport contract.
+
+   The consumer header is an overlay, so the intake must clear the full utility
+   bar + navigation stack rather than the old 3.6rem brand-row estimate. Keep
+   every control at least 44px tall and its text at 16px (no iOS focus zoom),
+   while fitting the complete first step — including consent copy and START —
+   inside one dynamic viewport with no internal scroll.
+--------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  .nd-flow--focused-booking > main {
+    padding: calc(6rem + 0.1rem) 1.25rem env(safe-area-inset-bottom) !important;
+    overflow: hidden !important;
+  }
+
+  .nd-flow--focused-booking > main > * {
+    margin-block: 0 !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 {
+    font-size: clamp(2rem, 9vw, 2.25rem) !important;
+    line-height: 0.9 !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 + p {
+    margin-top: 0.2rem !important;
+    font-size: 0.78rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .nd-flow--focused-booking .nd-mobile-service-coverage {
+    min-height: 1.35rem;
+    margin-top: 0.18rem;
+    padding-top: 0.18rem;
+    font-size: 0.58rem;
+  }
+
+  .nd-flow--focused-booking .nd-mobile-service-coverage svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] {
+    margin-top: 0.25rem !important;
+    gap: 0.18rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-label {
+    margin-bottom: 0.12rem !important;
+    padding-top: 0 !important;
+    font-size: 0.57rem !important;
+    line-height: 1 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-input {
+    margin-bottom: 0 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field,
+  .nd-flow--focused-booking .cognito .cog-col {
+    margin-bottom: 0.12rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .el-date-editor,
+  .nd-flow--focused-booking .cognito .el-date-editor.el-input {
+    min-height: 2.75rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito input.el-input__inner,
+  .nd-flow--focused-booking .cognito input[type='text'],
+  .nd-flow--focused-booking .cognito input[type='tel'],
+  .nd-flow--focused-booking .cognito input[type='email'],
+  .nd-flow--focused-booking .cognito input[type='date'],
+  .nd-flow--focused-booking .cognito input[type='time'],
+  .nd-flow--focused-booking .cognito select.el-input__inner,
+  .nd-flow--focused-booking .cognito select {
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+    border-radius: 0.7rem !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-checkable {
+    font-size: 0.66rem !important;
+    line-height: 1.18 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-checkable .el-checkbox {
+    gap: 0.55rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .el-checkbox__inner {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-helptext {
+    margin-top: 0.08rem !important;
+    font-size: 0.5rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-button {
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    margin-top: 0 !important;
+    padding-block: 0.6rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p:first-of-type {
+    font-size: 0.59rem !important;
+    line-height: 1.18 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p:last-of-type {
+    gap: 0.3rem !important;
+    font-size: 0.5rem !important;
+    line-height: 1.16 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p:last-of-type svg {
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-top: 0.05rem;
+  }
+
+  /* Once a visitor has answered the privacy prompt, keep the preferences
+     shortcut available without letting its floating button cover the primary
+     action on short phones. The heading leaves a deliberate open corner. */
+  body:has(.nd-flow--focused-booking) .av-cookie-control {
+    top: 6.2rem;
+    right: 1.25rem;
+    bottom: auto;
+    left: auto;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+/* 568–620px-tall phones cannot hold the two repeated supporting notes without
+   sacrificing the 44px controls. Keep the complete intake, consent checkbox,
+   and primary action; the omitted coverage/deposit/SMS reminders are repeated
+   in the checkbox and confirmation flow. */
+@media (max-width: 760px) and (max-height: 620px) {
+  .nd-flow--focused-booking .nd-mobile-service-coverage,
+  .nd-flow--focused-booking [data-testid='landing-form'] > p {
+    display: none !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] {
+    margin-top: 0.12rem !important;
+  }
+}
