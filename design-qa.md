@@ -1393,3 +1393,92 @@ final result: passed
 - `git diff --check`: passed.
 
 final result: passed
+
+---
+
+# Start Appointment Apple-Quality Mobile Polish
+
+## Visual truth and capture state
+
+- Production baseline: `.context/qa/start-apple-baseline-390x844.png`
+  (Chrome CSS viewport `390 × 844`, current live `/start`).
+- Browser-rendered implementation:
+  `.context/qa/start-apple-after-390x844.png` (Chrome CSS viewport
+  `390 × 844`, local corrected `/start`).
+- Full-view comparison:
+  `.context/qa/start-apple-before-after-390x844.png` (production baseline
+  left, corrected implementation right).
+- Focused appointment/legal comparison:
+  `.context/qa/start-apple-focused-before-after.png` (equal `390 × 414`
+  crops from `y=430`, baseline left and corrected implementation right).
+- Additional implementation captures:
+  `.context/qa/start-apple-after-393x852.png` and
+  `.context/qa/start-apple-after-320x568.png`.
+- State: resolved cookie choice, live Cognito values present, no patient data
+  entered, no form submitted, cream theme.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] The mobile appointment spacing selector targeted Cognito's
+  desktop `.el-date-editor` wrapper, but Cognito renders bare native
+  `input[type='date']` and `input[type='time']` controls on iPhone-size
+  viewports. The intended rhythm therefore never applied. The corrected
+  selector targets the actual native controls.
+- [P1 resolved] WebKit's picker indicator participated in the native field's
+  inline layout, making `text-align:center` insufficient on iPhone. The native
+  indicator is now removed from text flow and pinned to a measured 16px
+  trailing inset; the date/time value wrapper uses a full-width centered flex
+  layout with tabular numerals.
+- [P2 resolved] The cookie shortcut was explicitly overridden into the upper
+  right of focused-booking mobile pages and its 52px child was compressed by a
+  36px parent. It now uses a true 44 × 44px touch target in the bottom-left
+  safe area. Supporting legal copy reserves a 56px rail so button and text do
+  not overlap. On the shortest 320 × 568 viewport, cookie and START share a
+  separate 44px action row with a 12px gap.
+- On `390 × 844` and `393 × 852`, the measured rhythm is 8px from each label
+  to its control and 16px between date and time groups. Both controls are
+  52px high, equal-width, center-aligned, and retain visible defaults
+  `2026-08-20` and `08:00`.
+- On `375 × 667`, the compact rhythm is 6px / 12px with 44px controls. On
+  `360 × 640` and `320 × 568`, the existing no-scroll compact contract remains
+  intact with all core fields, consent, and START available.
+- Every tested phone reports `scrollHeight === clientHeight`, zero horizontal
+  overflow, and no visible Cognito validation errors.
+- Cookie preferences interaction: the bottom-left button opens a `312 × 375`
+  popover fully inside the `393 × 852` viewport, anchored above the button;
+  close interaction works and no horizontal overflow appears.
+- Cognito loading remains atomic. A 25ms sample showed the complete skeleton
+  until date, time, checkbox, and button were all present, then one swap to the
+  complete native form.
+- Desktop `1280 × 900` now correctly uses the intended two-column appointment
+  row: equal `260.5px` controls, aligned tops and heights, centered visible
+  values, and no horizontal overflow.
+- Vital Ice regression check: its 24-option treatment menu, date, time, and
+  START button load; the native form is visible and date/time remain centered.
+- Fonts and typography retain Avalon families and hierarchy; only numeric
+  appointment values gain tabular spacing. Colors, radii, borders, shadows,
+  icons, imagery, and all app copy remain on the existing design system.
+- No actionable P0, P1, or P2 visual mismatch remains.
+
+## Comparison history
+
+- Pass 1 reproduced the cramped production rhythm and top-right cookie
+  control, then identified the non-matching `.el-date-editor` mobile selector.
+- Pass 2 applied the correct native-input selector but exposed Cognito flex
+  growth as a large blank gap; the appointment row was changed to an explicit
+  single-column grid with intrinsic children.
+- Pass 3 established the 8/16px modern-iPhone rhythm, 6/12px compact-iPhone
+  rhythm, bottom-left cookie rail, and shortest-screen action row. Full and
+  focused comparisons show aligned controls and clear legal copy.
+
+## Automated checks
+
+- `git diff --check`: passed.
+- `npm run lint`: passed (217 source files).
+- `npm run build`: passed.
+- `npm run test:front-door`: passed.
+- `npm run test:privacy`: passed.
+- `npm audit --omit=dev --audit-level=high`: passed; two existing moderate
+  React Router advisories remain below the requested threshold.
+
+final result: passed

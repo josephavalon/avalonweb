@@ -159,16 +159,16 @@ export default function CognitoFormEmbed({
         <span className="cognito-skeleton__field">Email address</span>
         {appointmentFields && (
           <>
-            <span className="cognito-skeleton__label">
+            <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
               Appointment date
             </span>
-            <span className="cognito-skeleton__field cognito-skeleton__field--appointment">
+            <span className="cognito-skeleton__field cognito-skeleton__field--appointment cognito-skeleton__field--appointment-date">
               Today
             </span>
-            <span className="cognito-skeleton__label">
+            <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
               Appointment time
             </span>
-            <span className="cognito-skeleton__field cognito-skeleton__field--appointment">
+            <span className="cognito-skeleton__field cognito-skeleton__field--appointment cognito-skeleton__field--appointment-time">
               8:00 AM
             </span>
           </>
