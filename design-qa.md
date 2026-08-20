@@ -452,6 +452,88 @@ final result: passed
 
 ---
 
+# Start Mobile Balance and Atomic Form Reveal
+
+## Visual truth and capture state
+
+- Production baseline: `.context/qa/start-mobile-production-before-390x844.png`
+  (Chrome CSS viewport `390 × 844`).
+- Browser-rendered implementation:
+  `.context/qa/start-mobile-balanced-390x844.png` (Chrome CSS viewport
+  `390 × 844`).
+- Full-view comparison:
+  `.context/qa/start-mobile-before-after-390x844.png` (production baseline
+  left, corrected implementation right).
+- Loading-state comparison:
+  `.context/qa/start-mobile-loading-final-390x844.png` (complete static
+  loading preview left, final Cognito form right).
+- State: `/start`, cream theme, current appointment defaults visible, cookie
+  banner dismissed, no patient information entered, no form submitted.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] At `390 × 844`, the previous short-phone compression was
+  applied to every mobile height. The form ended near `642px`, leaving roughly
+  `202px` of dead canvas below it. The standard-phone contract now expands the
+  section from `101.59px` to `799.06px`, leaving a balanced bottom inset while
+  retaining a true `844px / 844px` no-scroll document.
+- [P1 resolved] Cognito previously revealed its form as soon as the empty form
+  shell appeared, then streamed date, time, consent, and button controls in on
+  later frames. The CSS readiness gate now keeps the native form hidden until
+  all final controls exist. A `25ms` browser sample found only two visible
+  states: complete static form preview, then complete native form. No partial
+  native field state was visible.
+- [P1 resolved] Native date and time controls were optically left-aligned by
+  asymmetric padding. Both now compute to `text-align: center` with `48px`
+  left and right padding, and retain visible defaults `2026-08-20` and
+  `08:00` after focus.
+- All five native fields and the primary button are `52px` high at
+  `390 × 844`; text fields remain start-aligned while only date/time values are
+  centered.
+- `375 × 667` and `320 × 568` retain `44px` controls, no horizontal overflow,
+  and `scrollHeight === clientHeight`; the smallest view preserves the full
+  intake, consent, and START action while hiding only repeated supporting
+  notes.
+- Desktop `1280 × 900` retains the established layout, visible appointment
+  defaults, centered date/time values, and no horizontal overflow.
+- Primary interaction check: date and time were focused in Chrome; their
+  values remained present, `aria-invalid` stayed unset, and no visible
+  validation error appeared. No form was submitted.
+- Vital Ice regression check used the production Cognito form number. Its
+  treatment dropdown, date, time, and START button all loaded; the atomic gate
+  released the complete form and introduced no horizontal overflow.
+- The local Vite/React development runtime continues to expose Cognito's
+  pre-existing third-party `seamless.js` null `insertBefore` exception during
+  StrictMode remounting. The form recovers and loads; this was not introduced
+  by the layout or readiness changes and will be rechecked on the deployed
+  production build.
+- No actionable P0, P1, or P2 visual mismatch remains.
+
+## Comparison history
+
+- Pass 1 confirmed the production form was complete but vertically compacted,
+  with date/time text offset left and approximately `202px` of unused canvas.
+- Pass 2 expanded standard-phone rhythm while preserving the short-phone
+  no-scroll contract; visual comparison confirmed balanced top and bottom
+  spacing.
+- Pass 3 replaced the partial native reveal with a geometry-matched complete
+  loading preview and confirmed a single atomic swap to the final form.
+
+## Automated checks
+
+- `git diff --check`: passed.
+- `npm run lint`: passed (217 source files).
+- `npm run build`: passed.
+- `npm run test:front-door`: passed.
+- `npm run test:privacy`: passed.
+- `npm audit --omit=dev --audit-level=high`: passed; two existing moderate
+  React Router advisories remain below the requested severity threshold and
+  require a separate breaking major-version migration.
+
+final result: passed
+
+---
+
 # Start Appointment Visibility and Mobile Fit
 
 ## Visual truth and capture state
