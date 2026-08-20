@@ -7,8 +7,13 @@
     var stored = window.localStorage.getItem('avalon.theme');
     var path = String(window.location.pathname || '/');
     var isAvalonOsBeta = String(window.location.hostname || '').toLowerCase() === 'beta.avalonvitality.co';
+    var navigatorRef = window.navigator || {};
+    var isIosBrowser = /iP(?:hone|ad|od)/.test(navigatorRef.userAgent || '')
+      || (navigatorRef.platform === 'MacIntel' && navigatorRef.maxTouchPoints > 1);
     var isPortal = /^\/(provider|admin|members|account)(\/|$)/.test(path)
       || /^\/(login|signup|forgot|forgot-password)(\/|$)/.test(path);
+    var isPrivateChrome = /^\/(account|admin|invoice|kiosk|login|members|nurse-login|organizer|provider|signup|forgot)(\/|$)/.test(path)
+      || /\/kiosk\//.test(path);
     if (isPortal) stored = 'dark';
     if (stored === 'dubs' || stored === 'warriors') stored = 'dark';
     var theme = (stored && ALLOWED.indexOf(stored) !== -1) ? stored : 'dark';
@@ -17,6 +22,7 @@
     try { window.localStorage.setItem('avalon.theme', theme); } catch (_) {}
     try { window.localStorage.setItem('avalon.theme.v2', '1'); } catch (_) {}
     var cl = document.documentElement.classList;
+    if (isIosBrowser) cl.add('av-ios-browser');
     cl.remove('dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
     cl.add(theme);
     // Consumer cream theme (2026-07-29): every consumer page shares the new
@@ -25,6 +31,7 @@
     // Avalon OS beta carries the same cream/editorial language through every
     // role surface. Existing production portals remain dark.
     if (isAvalonOsBeta || (!isPortal && !/^\/(organizer|kiosk)(\/|$)/.test(path))) cl.add('av-cream');
+    if (!isPrivateChrome) cl.add('av-browser-espresso');
     var nameFlag = '__AV_BOOT_SPLASH_SEEN__';
     var seenInSession = window.sessionStorage.getItem('av.bootSplashSeen') === '1';
     var skipOnce = window.sessionStorage.getItem('av.skipSplashOnce') === '1';

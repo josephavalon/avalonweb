@@ -1,6 +1,7 @@
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import AvalonStaticBackdrop from '@/components/AvalonStaticBackdrop';
 import CornerMenuHeader from '@/components/landing/CornerMenuHeader';
+import { isPublicChromeRoute } from '@/lib/publicChrome';
 
 // Signage/kiosk surfaces are chrome-free: a Guided-Access iPad must not offer
 // nav escape routes, and the departures board is pure-black signage.
@@ -23,14 +24,26 @@ export default function MobileShell() {
 
   const currentConsumerSurface = CURRENT_CONSUMER_SURFACES.some((pattern) => pattern.test(pathname));
   const preserveLegacyBackdrop = pathname !== '/' && !currentConsumerSurface;
+  const showSafariTintBar = isPublicChromeRoute(pathname);
 
   return (
     <>
       {preserveLegacyBackdrop ? <AvalonStaticBackdrop /> : null}
-      <div className="nd-global-corner-header">
+      <div className={`nd-global-corner-header${showSafariTintBar ? ' nd-global-corner-header--with-tint' : ''}`}>
+        {showSafariTintBar ? (
+          <div className="nd-safari-tint-bar">
+            <span>Mobile wellness, delivered.</span>
+            <Link to="/start">Start your visit</Link>
+          </div>
+        ) : null}
         <CornerMenuHeader />
       </div>
-      {currentConsumerSurface ? <div className="nd-global-corner-header__spacer" aria-hidden="true" /> : null}
+      {currentConsumerSurface ? (
+        <div
+          className={`nd-global-corner-header__spacer${showSafariTintBar ? ' nd-global-corner-header__spacer--with-tint' : ''}`}
+          aria-hidden="true"
+        />
+      ) : null}
     </>
   );
 }

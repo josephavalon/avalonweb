@@ -18,6 +18,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
+import { isPublicChromeRoute } from '@/lib/publicChrome';
 import MfaGate from '@/components/auth/MfaGate';
 import IdleWarning from '@/components/auth/IdleWarning';
 import { requiresPrivilegedMfa } from '@/lib/portalAccess';
@@ -290,6 +291,7 @@ const ConsumerThemeSync = () => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.classList.toggle('av-cream', AVALON_OS_BETA_ENABLED || !PORTAL_PREFIX.test(pathname));
+    document.documentElement.classList.toggle('av-browser-espresso', isPublicChromeRoute(pathname));
   }, [pathname]);
   return null;
 };

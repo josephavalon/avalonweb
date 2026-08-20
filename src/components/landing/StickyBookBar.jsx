@@ -78,7 +78,7 @@ export default function StickyBookBar() {
       initial={false}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.12, ease: EASE }}
-      className="fixed inset-x-0 z-[70] md:hidden"
+      className="av-sticky-book-bar fixed inset-x-0 z-[70] transition-[opacity,transform] duration-200 md:hidden"
       style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}
       aria-label="Quick booking bar"
     >

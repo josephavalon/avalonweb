@@ -9865,11 +9865,44 @@ body:has(.nd-hero) {
   left: 0;
 }
 
+.nd-safari-tint-bar {
+  display: flex;
+  width: 100%;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: #2b211b;
+  color: #fffdf8;
+  font-family: var(--font-body);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.nd-safari-tint-bar a {
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nd-safari-tint-bar a:hover,
+.nd-safari-tint-bar a:focus-visible {
+  border-bottom-color: transparent;
+  outline: none;
+}
+
 .nd-global-corner-header__spacer {
   width: 100%;
   height: 5.4rem;
   flex: 0 0 auto;
   background: #f6f2eb;
+}
+
+.nd-global-corner-header__spacer--with-tint {
+  height: 7.4rem;
 }
 
 .nd-corner-header {
@@ -10133,8 +10166,34 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
 }
 
 @media (max-width: 900px) {
+  .nd-safari-tint-bar {
+    display: flex;
+    box-sizing: border-box;
+    height: 2.15rem;
+    padding: 0 0.8rem;
+    flex-wrap: nowrap;
+    gap: 0.65rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+  }
+
+  .nd-safari-tint-bar span,
+  .nd-safari-tint-bar a {
+    white-space: nowrap;
+  }
+
+  .nd-safari-tint-bar a {
+    display: inline-flex;
+    min-height: 0 !important;
+    align-items: center;
+  }
+
   .nd-global-corner-header__spacer {
     height: 3.85rem;
+  }
+
+  .nd-global-corner-header__spacer--with-tint {
+    height: 6.4rem;
   }
 
   .nd-corner-header {
@@ -10187,6 +10246,30 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
   .nd-corner-menu__panel a {
     min-height: 3rem;
     font-size: 1.55rem;
+  }
+}
+
+/* In an ordinary Safari tab the browser already owns the status area, so the
+   strip must stay thin. Standalone/full-screen iOS surfaces can expose a real
+   safe-area inset; use that value without inventing additional vertical space. */
+@media (max-width: 900px) and (hover: none) and (pointer: coarse) {
+  html.av-ios-browser .nd-safari-tint-bar {
+    height: calc(2.15rem + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  html.av-ios-browser .nd-global-corner-header__spacer--with-tint {
+    height: calc(6.4rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (max-width: 360px) {
+  .nd-safari-tint-bar {
+    gap: 0.45rem;
+    padding-right: 0.6rem;
+    padding-left: 0.6rem;
+    font-size: 0.52rem;
+    letter-spacing: 0.07em;
   }
 }
 
@@ -11683,6 +11766,10 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     height: 5rem;
   }
 
+  body:has(.nd-home) .nd-global-corner-header__spacer--with-tint {
+    height: 7rem;
+  }
+
   body:has(.nd-home) .nd-corner-header {
     padding-right: clamp(2rem, 3.25vw, 3rem);
     padding-left: clamp(2rem, 3.25vw, 3rem);
@@ -11857,6 +11944,24 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
     align-content: center;
     padding-top: 0;
   }
+}
+
+/* When first-visit consent is present, reserve its measured height inside the
+   opening composition. The press rail already completes the hero viewport;
+   reducing only the split by the consent height keeps that rail in normal
+   document flow and places it directly above the bar. This avoids turning the
+   press logos into another fixed overlay and keeps the first screen balanced. */
+@media (min-width: 901px) {
+  html[data-av-cookie-notice='visible'] body:has(.nd-home) .nd-hero__split {
+    height: calc(100svh - 11.125rem - var(--av-cookie-banner-height, 0px));
+    min-height: calc(29.5rem - var(--av-cookie-banner-height, 0px));
+  }
+
+  html[data-av-cookie-notice='visible'] body:has(.nd-home) .nd-hero__editorial {
+    align-content: start;
+    padding-top: 1.5rem;
+  }
+
 }
 
 /* ---------------------------------------------------------------------------
@@ -12756,4 +12861,41 @@ input[type='date'] {
   appearance: none;
   min-width: 0;
   max-width: 100%;
+}
+
+/* The first-visit privacy choice owns the bottom edge on mobile. The duplicate
+   sticky booking action stays out of the way until that choice is complete. */
+html[data-av-cookie-notice='visible'] .av-sticky-book-bar {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Safari 26 can derive its toolbar tint from the document canvas when it does
+   not honor theme-color. Keep that browser-facing fallback espresso while the
+   app root continues to paint the approved cream consumer surface. Native
+   full-screen toolbar styling remains controlled by Safari itself. */
+html.av-browser-espresso,
+html.av-browser-espresso body {
+  background-color: #2b211b !important;
+}
+
+html.av-browser-espresso {
+  color-scheme: light;
+}
+
+html.av-browser-espresso #root {
+  min-height: 100dvh;
+  background-color: #f6f2eb !important;
+}
+
+/* The resolved cookie control stays clear of the mobile booking action. */
+.av-cookie-preferences-popover::before {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  body:has(.av-sticky-book-bar) .av-cookie-control {
+    bottom: calc(max(env(safe-area-inset-bottom), 0px) + 4.5rem);
+  }
 }
