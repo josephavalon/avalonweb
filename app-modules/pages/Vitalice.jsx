@@ -15,14 +15,8 @@ const VITALICE_FORM_NUMBER = import.meta.env.VITE_COGNITO_VITALICE_FORM_ID;
 const OFFER_META = [
   { label: 'Date', value: 'Choose below' },
   { label: 'Time', value: 'Choose below' },
-  { label: 'Visit', value: '10–30 min' },
+  { label: 'Visit', value: 'Varies by treatment' },
   { label: 'Payment', value: 'On site' },
-];
-
-const OFFER_ITEMS = [
-  { name: 'Hydration IV', note: 'electrolytes', price: '$120' },
-  { name: 'Festival IV', note: 'anti-nausea, anti-inflammatory, B-12', price: '$160' },
-  { name: 'B-12 Shot', note: 'solo · or $40 as an IV add-on', price: '$60' },
 ];
 
 // Exact reproduction of the Vital Ice header monogram from vitalicesf.com
@@ -107,7 +101,7 @@ function OfferPanel() {
         </p>
         <div className="mt-3 h-[3px] w-14 rounded-full bg-[#4FB3B8]" aria-hidden="true" />
         <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[2.5rem] leading-[0.9] md:text-[3rem]">
-          Treatment Menu
+          Visit Details
         </h2>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
@@ -126,26 +120,14 @@ function OfferPanel() {
           ))}
         </div>
 
-        <dl className="mt-7">
-          {OFFER_ITEMS.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-start justify-between gap-4 border-t border-foreground/[0.10] py-4 last:pb-0"
-            >
-              <div>
-                <dt className="font-body text-[15px] font-bold text-foreground md:text-base">
-                  {item.name}
-                </dt>
-                <p className="mt-0.5 font-body text-[12px] text-foreground/60 md:text-[13px]">
-                  {item.note}
-                </p>
-              </div>
-              <dd className="av-mono text-right text-[18px] font-semibold tabular-nums text-foreground md:text-[20px]">
-                {item.price}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <div className="mt-7 border-t border-foreground/[0.10] pt-5">
+          <p className="font-body text-[15px] font-semibold leading-[1.5] text-foreground">
+            Choose your treatment in the secure appointment form.
+          </p>
+          <p className="mt-2 font-body text-[13px] leading-[1.55] text-foreground/65">
+            The dropdown includes Avalon&rsquo;s current IV menu and pricing. IVs normally priced at $250 are $275 for this booking.
+          </p>
+        </div>
       </div>
     </aside>
   );
@@ -220,7 +202,7 @@ export default function Vitalice() {
               </div>
 
               <div className="mt-8 grid gap-4" data-testid="vitalice-form">
-                <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} appointmentFields />
+                <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} appointmentFields treatmentField />
 
                 <p
                   data-when="pre-submit"

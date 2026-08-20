@@ -452,6 +452,88 @@ final result: passed
 
 ---
 
+# Vital Ice Treatment Dropdown and Appointment Control Visibility
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/Hlgcsp/Screenshot 2026-08-20 at 2.37.02 AM.png`
+  (`112 × 548` pixels), a focused mobile crop showing the date and time
+  controls collapsed into blank thin lines beneath the standard inputs.
+- Browser-rendered mobile implementation:
+  `.context/qa/vitalice-treatment-mobile-390x844.png` (Chrome CSS viewport
+  `390 × 844`; captured content `375 × 812`).
+- Browser-rendered desktop implementation:
+  `.context/qa/vitalice-treatment-desktop-1024x900.png` (Chrome CSS viewport
+  `1024 × 900`; captured content `1009 × 887`).
+- Focused side-by-side comparison:
+  `.context/qa/vitalice-treatment-comparison.png` (`595 × 866`; reported crop
+  left, corrected mobile form right).
+- Density and crop normalization: the source crop was scaled proportionally to
+  the mobile implementation capture height (`812px`) before both were joined;
+  the source was not stretched or reframed.
+- State: `/vitalice`, Cognito form loaded, date/time defaults visible,
+  Treatment Menu unselected with its prompt visible, cream/glacier theme.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] Appointment Date and Appointment Time rendered as blank,
+  approximately `22px`-high native controls in the supplied mobile crop. Both
+  now use the exact `61px` control height used by name, mobile, and email, with
+  left-aligned visible values (`08/20/2026` and `07:00 AM` in the captured
+  state), full borders, radii, and calendar/clock affordances.
+- [P1 resolved] The old three-item Vital Ice offer was not the current Avalon
+  catalog and did not create a treatment choice in the appointment entry. The
+  protected required Cognito Choice field now contains 23 current primary IV,
+  NAD+, and CBD treatments. Every current `$250` IV is listed at `$275`.
+- [P2 resolved] The new native select initially inherited a shorter Cognito
+  control. It now matches the standard `61px` field height on desktop and
+  mobile and exposes the `Choose a treatment` prompt.
+- Fonts and typography: existing Avalon label tracking, body font, weights,
+  line heights, and uppercase hierarchy are preserved.
+- Spacing and layout rhythm: all six controls share the same height and card
+  inset; date/time stay side-by-side on desktop and stack on mobile. No
+  horizontal overflow is present at either verified viewport.
+- Colors and visual tokens: cream input fill, espresso text, muted prompt,
+  hairline border, focus border, and glacier backdrop remain mapped to the
+  existing front-door tokens.
+- Image quality and asset fidelity: the supplied glacier image, crop, and
+  co-brand assets are unchanged.
+- Copy and content: the obsolete `$120/$160/$60` offer list is removed. The
+  Visit Details card explains that the secure form owns the current menu and
+  states the `$250 → $275` booking price rule.
+- Primary interactions: the treatment dropdown was opened programmatically,
+  `Myers' Cocktail IV — $275` was selected and verified, then the field was
+  returned to its unselected prompt. No form was submitted.
+- Console check: local development logs contain the pre-existing React
+  `fetchPriority` warning and Cognito seamless-script `insertBefore` message
+  during repeated reloads; the form still loaded and all verified controls
+  remained interactive. Production verification remains part of the release
+  gate.
+
+## Comparison history
+
+- Pass 1 recorded blank, undersized date/time controls and the obsolete static
+  offer menu from the supplied source crop.
+- Pass 2 added committed Cognito defaults, hardened native date/time sizing,
+  added and sized the protected treatment dropdown, and replaced the obsolete
+  offer copy. The combined post-fix comparison shows readable values and
+  consistent full-height controls with no remaining P0/P1/P2 mismatch.
+
+## Automated checks
+
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test:front-door`: passed.
+- `npm run test:privacy`: passed.
+- `npm audit --omit=dev --audit-level=high`: passed with two existing moderate
+  React Router advisories; no high-severity production advisory was reported.
+- `git diff --check`: passed.
+
+final result: passed
+
+---
+
 # Avalon Beta Events Supplied Hero Photograph
 
 ## Visual truth and capture state

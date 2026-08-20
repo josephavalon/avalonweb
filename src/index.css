@@ -11943,7 +11943,8 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   -webkit-appearance: none !important;
   appearance: none !important;
   display: block !important;
-  height: auto !important;
+  height: 3.8125rem !important;
+  min-height: 3.8125rem !important;
   width: 100% !important;
   box-sizing: border-box !important;
   padding: 1.125rem 1.25rem !important;
@@ -11962,6 +11963,36 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 .cognito input[type='text']:focus,
 .cognito input[type='tel']:focus,
 .cognito input[type='email']:focus {
+  outline: none !important;
+  border-color: #2b211b !important;
+}
+
+/* Cognito renders Choice fields as native selects in the seamless embed.
+   Match the same visible box used by every other form control while preserving
+   the platform picker and its keyboard/accessibility behavior. */
+.cognito select.el-input__inner,
+.cognito select {
+  display: block !important;
+  width: 100% !important;
+  height: 3.8125rem !important;
+  min-height: 3.8125rem !important;
+  box-sizing: border-box !important;
+  padding: 1.125rem 3rem 1.125rem 1.25rem !important;
+  background-color: #fffdf8 !important;
+  border: 1px solid #d9d2c8 !important;
+  border-radius: 0.875rem !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  line-height: 1.3 !important;
+  color: #2b211b !important;
+}
+
+.cognito select.el-input__inner.is-null { color: #a89f94 !important; }
+.cognito select.el-input__inner option { color: #2b211b !important; }
+
+.cognito select.el-input__inner:focus,
+.cognito select:focus {
   outline: none !important;
   border-color: #2b211b !important;
 }
@@ -11986,6 +12017,8 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 .cognito .el-date-editor input.el-input__inner,
 .cognito input[type='date'],
 .cognito input[type='time'] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
   display: block !important;
   width: 100% !important;
   height: 3.8125rem !important;
@@ -12003,6 +12036,12 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   -webkit-text-fill-color: #2b211b !important;
   opacity: 1 !important;
   color-scheme: light !important;
+}
+
+.cognito input[type='date']::-webkit-date-and-time-value,
+.cognito input[type='time']::-webkit-date-and-time-value {
+  min-height: 1.3em !important;
+  text-align: left !important;
 }
 
 .cognito input[type='date']::-webkit-datetime-edit,

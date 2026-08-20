@@ -51,6 +51,7 @@ export default function CognitoFormEmbed({
   compact = false,
   tight = false,
   appointmentFields = false,
+  treatmentField = false,
   prefill = null,
 }) {
   // `formNumber` (when passed) is authoritative — no env fallback. Campaign
@@ -125,7 +126,7 @@ export default function CognitoFormEmbed({
       <div
         ref={mountRef}
         data-testid="cognito-embed"
-        className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}${appointmentFields ? ' cognito--appointment-fields' : ''}`}
+        className={`cognito${compact ? ' cognito--compact' : ''}${tight ? ' cognito--tight' : ''}${appointmentFields ? ' cognito--appointment-fields' : ''}${treatmentField ? ' cognito--treatment-field' : ''}`}
       />
       {/* Placeholder for the ~1.3s Cognito spends loading its own chunks and
           making its new-session / form-def round trips. Without it /start paints
@@ -159,6 +160,16 @@ export default function CognitoFormEmbed({
             </span>
             <span className="cognito-skeleton__field cognito-skeleton__field--appointment">
               Choose a time
+            </span>
+          </>
+        )}
+        {treatmentField && (
+          <>
+            <span className="cognito-skeleton__label cognito-skeleton__label--treatment">
+              Treatment menu
+            </span>
+            <span className="cognito-skeleton__field cognito-skeleton__field--treatment">
+              Choose a treatment
             </span>
           </>
         )}
