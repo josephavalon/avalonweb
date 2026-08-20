@@ -176,7 +176,7 @@ export default function Vitalice() {
             legibility duty via their own opaque cream fill + shadow. */}
       </div>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-24 md:px-6 md:pt-28 lg:px-8 lg:pt-32">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 md:px-6 md:pt-10 lg:px-8">
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1018,3 +1018,74 @@ final result: passed
 - No actionable P0, P1, or P2 issue remains.
 
 final result: passed
+
+---
+
+# Vital Ice Top-Spacing Balance
+
+## Visual truth and capture state
+
+- Source visual truth:
+  `.context/attachments/tBakBj/Screenshot 2026-08-20 at 2.20.53 AM.png`
+  (`2322 × 564` physical pixels, including 32 pixels of browser chrome).
+- Browser-rendered desktop implementation:
+  `.context/qa/vitalice-balanced-desktop-1024x235.png` (Chrome CSS viewport
+  `1024 × 235`; captured content `1009 × 232`).
+- Browser-rendered mobile implementation:
+  `.context/qa/vitalice-balanced-mobile-390x844.png` (Chrome CSS viewport
+  `390 × 844`).
+- Full-view comparison:
+  `.context/qa/vitalice-spacing-comparison.png` (reported source left,
+  corrected implementation right).
+- Density normalization: the 32-pixel browser strip was removed from the
+  source, then its app-owned region was normalized to the implementation's
+  `1009 × 232` capture before both images were joined in one comparison.
+- State: `/vitalice`, form loaded, desktop and mobile cream/glacier theme.
+- A separate focused-region comparison was not needed because the requested
+  change is limited to the two clearly visible vertical gaps surrounding the
+  co-brand ribbon; ribbon content and the opening card edges remain readable in
+  the full-view comparison.
+
+## Findings, correction, and post-fix evidence
+
+- [P2 resolved] The source showed approximately `112px` above the co-brand
+  ribbon but only `40px` between the ribbon and the cards, making the page feel
+  top-heavy. The page inset now uses the same rhythm as the following section
+  gap: `40px / 40px` at desktop and `32px / 32px` on mobile.
+- The correction moves the ribbon and both cards upward without changing their
+  width, height, internal padding, grid tracks, border radii, or shadow.
+- Fonts and typography: the Vital Ice lockup, Avalon wordmark, START heading,
+  label tracking, weights, and line heights are unchanged.
+- Spacing and layout rhythm: the desktop ribbon begins at `40px` and ends at
+  `128px`; the card grid begins at `168px`. Mobile uses a `32px` top inset and
+  a `32px` ribbon-to-card gap. No horizontal overflow is present.
+- Colors and visual tokens: the espresso ribbon, cream cards, teal accents,
+  borders, and foreground colors are unchanged.
+- Image quality and asset fidelity: the supplied glacier image, crop,
+  sharpness, and fixed full-viewport treatment are unchanged.
+- Copy and content: all Vital Ice, Avalon, treatment-menu, appointment, pricing,
+  consent, and form copy remains unchanged.
+- Primary interaction check: the Cognito form loaded and its native date and
+  time controls remained visible. No form was submitted.
+- Console check: no app error appeared on the production baseline. Cognito
+  continues to emit its existing third-party null-date warning before a date is
+  selected; this predates and is unrelated to the spacing correction.
+- No actionable P0, P1, or P2 visual mismatch remains.
+
+## Comparison history
+
+- Pass 1 found the top inset at `112px` versus the next section gap at `40px`.
+- Pass 2 reduced the responsive top inset to the existing section rhythm and
+  confirmed exact `40px / 40px` desktop and `32px / 32px` mobile spacing in the
+  post-fix browser captures.
+
+## Automated checks
+
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test:front-door`: passed.
+- `npm run test:privacy`: passed.
+- `npm audit --omit=dev --audit-level=high`: passed.
+- `git diff --check`: passed.
+
+final result: passed
