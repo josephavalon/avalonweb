@@ -452,6 +452,84 @@ final result: passed
 
 ---
 
+# Vital Ice Visit Details Removal
+
+## Visual truth and capture state
+
+- User-selected removal target:
+  `.context/attachments/XvS5sw/Screenshot 2026-08-20 at 3.24.39 AM.png`
+  (`1074 × 1244` physical pixels), showing the complete Visit Details card.
+- Same-state desktop baseline before removal:
+  `.context/qa/vitalice-treatment-live-desktop-1024x900.png`
+  (`1009 × 1458` captured pixels from a `1024 × 900` Chrome CSS viewport).
+- Browser-rendered desktop implementation after removal:
+  `.context/qa/vitalice-no-visit-details-desktop-1024x900.png`
+  (`1009 × 1458` captured pixels from a `1024 × 900` Chrome CSS viewport).
+- Browser-rendered mobile implementation after removal:
+  `.context/qa/vitalice-no-visit-details-mobile-390x844.png`
+  (`375 × 1582` captured pixels from a `390 × 844` Chrome CSS viewport).
+- Full-view normalized comparison:
+  `.context/qa/vitalice-remove-visit-details-comparison.png` (before left,
+  corrected implementation right).
+- Density normalization: baseline and implementation were captured from the
+  same Chrome surface, CSS viewport, and device density and have identical
+  pixel dimensions, so no scaling was required.
+- State: `/vitalice`, Cognito form loaded, no patient information entered, and
+  treatment dropdown reset to its placeholder.
+- A separate focused-region comparison was not needed because the removed card
+  and the re-centered primary form are both clearly readable in the normalized
+  full-page comparison.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] The user-selected Visit Details card remained visible beside
+  the booking form. The entire card, its metadata grid, supporting copy, and
+  component data were removed.
+- [P2 resolved] Removing the second desktop column would have left the booking
+  form visually stranded at the left edge. The form now uses a centered
+  `max-w-2xl` container: `672px` wide at the desktop QA viewport and `343px`
+  wide on mobile.
+- Fonts and typography: the co-brand ribbon, Avalon lockup, START heading,
+  form labels, input typography, and consent copy remain unchanged.
+- Spacing and layout rhythm: the header-to-card gap remains unchanged; the
+  primary card is centered with balanced glacier space on both sides and no
+  horizontal overflow at either tested viewport.
+- Colors and visual tokens: the cream card, espresso CTA and ribbon, teal
+  accent, borders, radii, and shadows remain unchanged.
+- Image quality and asset fidelity: the original Vital Ice glacier asset,
+  crop, sharpness, and full-viewport treatment remain unchanged.
+- Copy and content: only the user-selected Visit Details card copy was removed.
+  Appointment, treatment, payment, consent, and co-brand copy remain intact.
+- Primary interaction check: selected `Myers' Cocktail IV — $275`, verified the
+  value, and reset the dropdown without submitting. Date remained visibly set
+  to `08/20/2026`, time to `07:00 AM`, and the 60-day date maximum to
+  `10/19/2026`.
+- Console check: no new first-party error resulted from this change. The local
+  development session retained the pre-existing React `fetchPriority` warning
+  and Cognito `seamless.js` reload warning documented by earlier QA.
+- No actionable P0, P1, or P2 issue remains.
+
+## Comparison history
+
+- Pass 1 identified the requested card and the desktop imbalance that direct
+  removal would create.
+- Pass 2 removed the card, collapsed the two-column layout, centered the form,
+  and confirmed the corrected desktop and mobile compositions in Chrome.
+
+## Automated checks
+
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test:front-door`: passed.
+- `npm run test:privacy`: passed.
+- `npm audit --omit=dev --audit-level=high`: passed with only two existing
+  moderate React Router advisories and no high-severity finding.
+- `git diff --check`: passed.
+
+final result: passed
+
+---
+
 # Vital Ice Treatment Dropdown and Appointment Control Visibility
 
 ## Visual truth and capture state
