@@ -192,7 +192,7 @@ export default function Footer() {
   const [openGroup, setOpenGroup] = useState(null);
 
   return (
-    <footer className="px-4 pb-4 pt-6 md:pb-4 md:pt-6">
+    <footer className="av-legacy-footer px-4 pb-4 pt-6 md:pb-4 md:pt-6">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}

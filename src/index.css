@@ -13396,3 +13396,236 @@ html.av-browser-espresso #root {
     margin-left: 3.5rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Global mobile footer — the shared bottom menu on every public consumer page.
+
+   Desktop pages keep their existing footer treatments. On phones the route-
+   local footer is replaced by one stable instance after the routed content,
+   which prevents legacy/legal/B2B pages from drifting away from the consumer
+   navigation shown everywhere else.
+--------------------------------------------------------------------------- */
+.nd-mobile-footer-stage {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .nd-mobile-footer-stage {
+    display: block;
+    overflow: hidden;
+    background: #211f1e;
+  }
+
+  .nd-footer:not(.nd-footer--global-mobile),
+  .av-legacy-footer,
+  .b2b-footer {
+    display: none !important;
+  }
+
+  .nd-footer--global-mobile {
+    display: block;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0 0 clamp(3.25rem, 14vw, 4.25rem) clamp(3.25rem, 14vw, 4.25rem);
+    background: var(--nd-canvas, #f6f2eb);
+    box-shadow: 0 1.35rem 2.8rem rgb(0 0 0 / 0.14);
+    color: var(--nd-ink, #2b211b);
+  }
+
+  .nd-footer--global-mobile .nd-footer__main {
+    display: block;
+    width: 100%;
+    padding: 1.55rem 1.25rem 0;
+    text-align: left;
+  }
+
+  .nd-footer--global-mobile .nd-footer__intro,
+  .nd-footer--global-mobile .nd-footer__group--desktop {
+    display: none;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile {
+    display: block;
+    width: 100%;
+    padding: 0 !important;
+    border: 0 !important;
+    border-right: 1px solid rgb(187 176 164 / 0.62) !important;
+    border-left: 1px solid rgb(187 176 164 / 0.62) !important;
+    background: rgb(255 253 248 / 0.18);
+  }
+
+  .nd-footer--global-mobile details.nd-footer__group--mobile:first-of-type {
+    border-top: 1px solid rgb(187 176 164 / 0.62) !important;
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+
+  .nd-footer--global-mobile details.nd-footer__group--mobile:last-of-type {
+    border-bottom: 1px solid rgb(187 176 164 / 0.62) !important;
+    border-radius: 0 0 0.75rem 0.75rem;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile + .nd-footer__group--mobile {
+    border-top: 1px solid rgb(187 176 164 / 0.46) !important;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile summary {
+    display: flex;
+    min-height: 2.625rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 1.05rem;
+    color: var(--nd-ink, #2b211b);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    list-style: none;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile summary svg {
+    position: static;
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
+    color: var(--nd-ink, #2b211b) !important;
+    stroke-width: 2;
+    transition: transform 180ms ease;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile[open] summary svg {
+    transform: rotate(180deg);
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile nav {
+    display: grid;
+    padding: 0 1.05rem 0.7rem;
+  }
+
+  .nd-footer--global-mobile .nd-footer__group--mobile nav a {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: flex-start;
+    border-top: 1px solid rgb(187 176 164 / 0.42);
+    color: var(--nd-ink, #2b211b) !important;
+    font-size: 0.82rem;
+    text-align: left;
+  }
+
+  .nd-footer--global-mobile .nd-footer__contact {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 1.4rem 0.65rem 0 !important;
+    border: 0 !important;
+    text-align: left;
+  }
+
+  .nd-footer--global-mobile .nd-footer__contact h2 {
+    width: 100%;
+    margin: 0 0 0.35rem;
+    color: var(--nd-ink, #2b211b) !important;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .nd-footer--global-mobile .nd-footer__contact > a,
+  .nd-footer--global-mobile .nd-footer__contact > p {
+    display: flex;
+    width: 100%;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    margin: 0;
+    border-bottom: 1px solid rgb(187 176 164 / 0.44);
+    color: var(--nd-ink, #2b211b) !important;
+    font-size: 0.72rem;
+    font-weight: 450;
+    line-height: 1.25;
+  }
+
+  .nd-footer--global-mobile .nd-footer__contact > a span {
+    overflow-wrap: anywhere;
+  }
+
+  .nd-footer--global-mobile .nd-footer__contact > a svg,
+  .nd-footer--global-mobile .nd-footer__contact > p svg {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    stroke-width: 1.8;
+  }
+
+  .nd-footer--global-mobile .nd-footer__social {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.65rem 0 0;
+    padding: 0.1rem 0 0.75rem;
+    border: 0;
+  }
+
+  .nd-footer--global-mobile .nd-footer__social a {
+    display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    flex: 0 0 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    color: var(--nd-ink, #2b211b) !important;
+  }
+
+  .nd-footer--global-mobile .nd-footer__social a svg {
+    display: block;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .nd-footer--global-mobile .nd-footer__notice {
+    display: block;
+    margin: 0 1.9rem;
+    padding: 1rem 0 2.75rem;
+    border-top: 1px solid rgb(187 176 164 / 0.44);
+    background: transparent;
+    text-align: center;
+  }
+
+  .nd-footer--global-mobile .nd-footer__notice p {
+    max-width: 20rem;
+    margin: 0 auto;
+    color: var(--nd-ink, #2b211b) !important;
+    font-size: 0.59rem;
+    font-weight: 450;
+    line-height: 1.55;
+    text-align: center;
+  }
+
+  .nd-footer--global-mobile .nd-footer__notice .nd-footer__copyright {
+    margin-bottom: 0.65rem;
+    font-size: 0.62rem;
+    text-align: center;
+  }
+}

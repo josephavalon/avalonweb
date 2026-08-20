@@ -1,6 +1,6 @@
-import { Fragment } from 'react';
+import { Fragment, useId } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Mail, MapPin, Phone } from 'lucide-react';
+import { ChevronDown, Clock, Mail, MapPin, Phone } from 'lucide-react';
 import {
   FaFacebookF,
   FaGoogle,
@@ -49,9 +49,14 @@ function FooterLink({ link }) {
   return <Link to={link.to}>{link.label}</Link>;
 }
 
-export default function ConsumerFooter() {
+export default function ConsumerFooter({ globalMobile = false }) {
+  const idPrefix = useId().replace(/:/g, '');
+
   return (
-    <footer className="nd-footer" aria-label="Avalon Vitality">
+    <footer
+      className={`nd-footer${globalMobile ? ' nd-footer--global-mobile' : ''}`}
+      aria-label="Avalon Vitality"
+    >
       <div className="nd-footer__main">
         <div className="nd-footer__intro">
           <Link to="/" className="nd-footer__brand" aria-label="Avalon Vitality home">
@@ -67,9 +72,9 @@ export default function ConsumerFooter() {
           <Fragment key={group.label}>
             <section
               className="nd-footer__group nd-footer__group--desktop"
-              aria-labelledby={`footer-${group.label.toLowerCase()}-desktop`}
+              aria-labelledby={`${idPrefix}-footer-${group.label.toLowerCase()}-desktop`}
             >
-              <h2 id={`footer-${group.label.toLowerCase()}-desktop`}>{group.label}</h2>
+              <h2 id={`${idPrefix}-footer-${group.label.toLowerCase()}-desktop`}>{group.label}</h2>
               <nav aria-label={group.label}>
                 {group.links.map((link) => <FooterLink key={link.label} link={link} />)}
               </nav>
@@ -87,8 +92,8 @@ export default function ConsumerFooter() {
           </Fragment>
         ))}
 
-        <section className="nd-footer__group nd-footer__contact" aria-labelledby="footer-contact">
-          <h2 id="footer-contact">Contact</h2>
+        <section className="nd-footer__group nd-footer__contact" aria-labelledby={`${idPrefix}-footer-contact`}>
+          <h2 id={`${idPrefix}-footer-contact`}>Contact</h2>
           <a href="mailto:support@avalonvitality.co">
             <Mail aria-hidden="true" />
             <span>support@avalonvitality.co</span>
@@ -98,7 +103,7 @@ export default function ConsumerFooter() {
             <span>(415) 980-7708</span>
           </a>
           <p><MapPin aria-hidden="true" /> SF Bay Area</p>
-          <p>Daily · 8AM–8PM</p>
+          <p>{globalMobile && <Clock aria-hidden="true" />} Daily · 8AM–8PM</p>
           <div className="nd-footer__social" aria-label="Avalon on social media">
             {SOCIALS.map(({ label, href, icon: Icon }) => (
               <a
@@ -116,8 +121,8 @@ export default function ConsumerFooter() {
         </section>
       </div>
 
-      <aside className="nd-footer__notice" aria-labelledby="footer-wellness-notice">
-        <h2 id="footer-wellness-notice" className="sr-only">Wellness notice</h2>
+      <aside className="nd-footer__notice" aria-labelledby={`${idPrefix}-footer-wellness-notice`}>
+        <h2 id={`${idPrefix}-footer-wellness-notice`} className="sr-only">Wellness notice</h2>
         <p className="nd-footer__copyright">© 2026 Avalon Vitality. All rights reserved.</p>
         <p>
           General wellness services only. Not emergency care or a substitute for medical advice,

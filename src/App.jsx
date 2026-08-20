@@ -9,6 +9,7 @@ import RouteFallback from '@/components/RouteFallback';
 import AppLoader from '@/components/AppLoader';
 import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
+import MobilePublicFooter from '@/components/landing/MobilePublicFooter';
 import CareAcuityForward from '@/components/CareAcuityForward';
 import FrontDoorRedirect from '@/components/FrontDoorRedirect';
 import { isFrontDoorHost } from '@/lib/frontDoor';
@@ -597,6 +598,7 @@ function App() {
           <ScrollProgress />
           <MobileShell />
           <AppRoutes />
+          <MobilePublicFooter />
           <StickyBookBar />
           <CookieConsent />
           <IdleWarning />
