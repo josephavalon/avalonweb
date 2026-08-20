@@ -378,7 +378,7 @@ function AppRoutes() {
             <Route path="/start" element={<NurseDelivery entry="book" />} />
             <Route path="/start/received" element={<RequestReceived />} />
             <Route path="/nurse-delivery" element={<NurseDelivery />} />
-            {/* Vital Ice × Avalon co-branded intake for Outside Lands weekend.
+            {/* Vital Ice × Avalon co-branded appointment intake.
                 Separate Cognito form; same PHI posture as /start. */}
             <Route path="/vitalice" element={<Vitalice />} />
             {/* Contractor pay form. Deliberately NOT wrapped in FrontDoorRedirect:

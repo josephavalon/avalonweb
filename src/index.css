@@ -11926,6 +11926,7 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
    styling the wrapper as well is what produced a box inside a box. */
 .cognito .cog-input,
 .cognito .el-input {
+  position: relative !important;
   display: block !important;
   width: 100% !important;
   background: transparent !important;
@@ -11968,6 +11969,62 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 .cognito input::placeholder {
   color: #a89f94 !important;
   opacity: 1 !important;
+}
+
+/* Appointment date + time fields are native Cognito Date fields. Cognito's
+   Element UI wrapper owns the calendar/clock pickers, while Avalon only skins
+   the visible controls. The values still post straight to Cognito and are
+   never read by our code. */
+.cognito .el-date-editor,
+.cognito .el-date-editor.el-input {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+.cognito .el-date-editor input.el-input__inner {
+  padding-right: 3rem !important;
+}
+
+.cognito .el-date-editor .el-input__prefix,
+.cognito .el-date-editor .el-input__suffix {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  color: #6e6258 !important;
+  pointer-events: none !important;
+}
+
+.cognito .el-date-editor .el-input__prefix {
+  right: 1rem !important;
+  left: auto !important;
+}
+
+.cognito .el-date-editor .el-input__suffix {
+  right: 1rem !important;
+}
+
+/* In Cognito's builder the two appointment fields must share one row at half
+   width. The global front-door reset makes every other field full-width; this
+   scoped restoration lets that one date/time row render as two columns on
+   desktop and naturally stack under the existing width:100% rule on mobile. */
+@media (min-width: 640px) {
+  .cognito--appointment-fields .cog-row:has(.el-date-editor) {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+    width: 100% !important;
+  }
+
+  .cognito--appointment-fields .cog-row:has(.el-date-editor) > .cog-col,
+  .cognito--appointment-fields .cog-row:has(.el-date-editor) > .cog-field {
+    flex: 1 1 0 !important;
+    width: calc(50% - 0.5rem) !important;
+    min-width: 0 !important;
+  }
 }
 
 /* Consent row. Kept visible and legible on purpose — it is the stored per-entry

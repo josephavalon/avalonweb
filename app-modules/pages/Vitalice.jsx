@@ -5,7 +5,7 @@ import AvalonMark from '@/components/AvalonMark';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
 import { useSeo } from '@/lib/seo';
 
-// Vital Ice × Avalon — Outside Lands weekend front door.
+// Vital Ice × Avalon evergreen appointment front door.
 // Same PHI posture as /start (see CognitoFormEmbed): the sealed Cognito form is
 // the only intake surface; this page never observes a submit. The account key
 // is shared with the shipping Avalon intake, but data-form points at a separate
@@ -13,8 +13,8 @@ import { useSeo } from '@/lib/seo';
 const VITALICE_FORM_NUMBER = import.meta.env.VITE_COGNITO_VITALICE_FORM_ID;
 
 const OFFER_META = [
-  { label: 'Date', value: 'Saturday, August 8' },
-  { label: 'Time', value: '11 AM–2 PM' },
+  { label: 'Date', value: 'Choose below' },
+  { label: 'Time', value: 'Choose below' },
   { label: 'Visit', value: '10–30 min' },
   { label: 'Payment', value: 'On site' },
 ];
@@ -107,9 +107,7 @@ function OfferPanel() {
         </p>
         <div className="mt-3 h-[3px] w-14 rounded-full bg-[#4FB3B8]" aria-hidden="true" />
         <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[2.5rem] leading-[0.9] md:text-[3rem]">
-          Outside Lands
-          <br />
-          Weekend Menu
+          Treatment Menu
         </h2>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
@@ -155,9 +153,9 @@ function OfferPanel() {
 
 export default function Vitalice() {
   useSeo({
-    title: 'Vital Ice × Avalon — Outside Lands',
+    title: 'Vital Ice × Avalon — Treatment Menu',
     description:
-      'Vital Ice members: reserve a mobile IV or shot for Outside Lands weekend, Saturday August 8, 11 AM–2 PM.',
+      'Vital Ice members: request a preferred appointment time for a mobile IV or B-12 shot with Avalon Vitality.',
     path: '/vitalice',
   });
 
@@ -211,24 +209,24 @@ export default function Vitalice() {
                   Reserve Your Appointment
                 </h2>
                 <p className="mt-4 font-body text-[15px] leading-[1.55] text-foreground/75 md:text-base">
-                  Outside Lands appointments at Vital Ice are available Saturday, August 8 from 11:00 AM–2:00 PM.
+                  Choose your preferred appointment date and time. Our team will text to confirm availability.
                 </p>
                 <div className="mt-5 flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-[#4FB3B8]" strokeWidth={1.75} />
                   <p className="font-body text-[14px] leading-[1.55] text-foreground/75 md:text-[15px]">
-                    Complete the form below.
+                    Complete the form below to request your appointment.
                   </p>
                 </div>
               </div>
 
               <div className="mt-8 grid gap-4" data-testid="vitalice-form">
-                <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} />
+                <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} appointmentFields />
 
                 <p
                   data-when="pre-submit"
                   className="font-body text-sm font-medium leading-[1.55] text-foreground/65"
                 >
-                  Payment on site · No deposit required for this event.
+                  Payment on site · No deposit required.
                 </p>
                 <p
                   data-when="pre-submit"
