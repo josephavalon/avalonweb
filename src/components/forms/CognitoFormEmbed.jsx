@@ -122,7 +122,9 @@ export default function CognitoFormEmbed({
   // own rules are authored at :root:root:root:root:root specificity, so that
   // block is where the design is enforced, not here.
   return (
-    <div className="cognito-wrap">
+    <div
+      className={`cognito-wrap${appointmentFields ? ' cognito-wrap--appointment' : ''}${treatmentField ? ' cognito-wrap--treatment' : ''}`}
+    >
       <div
         ref={mountRef}
         data-testid="cognito-embed"
@@ -136,44 +138,53 @@ export default function CognitoFormEmbed({
           It is a SIBLING of the mount node, not a child: the effect above calls
           host.replaceChildren(), which would wipe anything rendered inside.
 
-          It creates NO fields — only decorative boxes, aria-hidden and
-          pointer-events:none. It is dismissed by a pure CSS :has() rule the
-          moment Cognito's <form> lands (see src/index.css), so no JavaScript
-          here observes, reads, or mutates the PHI DOM. Keep it that way. */}
+          It creates NO fields — only decorative spans, aria-hidden and
+          pointer-events:none. A pure CSS :has() readiness gate swaps the whole
+          placeholder for the whole Cognito form only after its final controls
+          exist (see src/index.css), so patients never see fields stream in out
+          of order and no JavaScript observes, reads, or mutates the PHI DOM.
+          Keep it that way. */}
       <div className="cognito-skeleton" aria-hidden="true">
-        <span className="cognito-skeleton__label" />
-        <span className="cognito-skeleton__field" />
-        <span className="cognito-skeleton__label" />
-        <span className="cognito-skeleton__field" />
-        <span className="cognito-skeleton__label" />
-        <span className="cognito-skeleton__field" />
+        {treatmentField && (
+          <>
+            <span className="cognito-skeleton__label">Treatment menu</span>
+            <span className="cognito-skeleton__field">Choose a treatment</span>
+          </>
+        )}
+        <span className="cognito-skeleton__label">Your name</span>
+        <span className="cognito-skeleton__field">Full name</span>
+        <span className="cognito-skeleton__label">Mobile number</span>
+        <span className="cognito-skeleton__field">(415) 000-0000</span>
+        <span className="cognito-skeleton__label">Email</span>
+        <span className="cognito-skeleton__field">Email address</span>
         {appointmentFields && (
           <>
-            <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
+            <span className="cognito-skeleton__label">
               Appointment date
             </span>
             <span className="cognito-skeleton__field cognito-skeleton__field--appointment">
-              Choose a date
+              Today
             </span>
-            <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
+            <span className="cognito-skeleton__label">
               Appointment time
             </span>
             <span className="cognito-skeleton__field cognito-skeleton__field--appointment">
-              Choose a time
+              8:00 AM
             </span>
           </>
         )}
-        {treatmentField && (
+        {appointmentFields && !treatmentField && (
           <>
-            <span className="cognito-skeleton__label cognito-skeleton__label--treatment">
-              Treatment menu
+            <span className="cognito-skeleton__consent">
+              <span className="cognito-skeleton__checkbox" />
+              <span>I agree that Avalon Vitality may contact me about this request.</span>
             </span>
-            <span className="cognito-skeleton__field cognito-skeleton__field--treatment">
-              Choose a treatment
+            <span className="cognito-skeleton__help">
+              Your information is used only to contact you about your care.
             </span>
           </>
         )}
-        <span className="cognito-skeleton__button" />
+        <span className="cognito-skeleton__button">Start</span>
       </div>
     </div>
   );
