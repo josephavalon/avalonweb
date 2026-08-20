@@ -969,7 +969,7 @@ export default function B2B() {
       </section>
 
       {/* Footer / disclaimer — centered, generously spaced */}
-      <footer className="relative z-10 px-5 md:px-10 py-10 md:py-14 border-t border-white/12 mt-auto">
+      <footer className="b2b-footer relative z-10 px-5 md:px-10 py-10 md:py-14 border-t border-white/12 mt-auto">
         <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-5 md:gap-6">
           <p className="b2b-display text-sm md:text-base uppercase tracking-[0.3em]">
             Avalon Vitality &middot; California-licensed clinicians

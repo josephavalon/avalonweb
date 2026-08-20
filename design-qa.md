@@ -1482,3 +1482,98 @@ final result: passed
   React Router advisories remain below the requested threshold.
 
 final result: passed
+
+---
+
+# Global Mobile Footer Polish
+
+## Visual evidence
+
+- Source reference:
+  `.context/attachments/Fnv6aH/Screenshot 2026-08-20 at 9.56.55 AM.png`
+  (`550 × 620` source pixels).
+- Browser-rendered implementation:
+  `.context/qa/mobile-footer-implementation-final-touch-390x844.png` (`375 × 591`
+  captured footer pixels from a Chrome CSS viewport of `390 × 844`; desktop
+  Chrome's scrollbar leaves a `375px` content width; device scale factor 1).
+- Full-view comparison:
+  `.context/qa/mobile-footer-reference-vs-final-touch.png` (reference left,
+  implementation right).
+- State: public home page at the footer, all accordion rows collapsed, cookie
+  choice resolved, no personal data entered. The source is already a focused
+  footer crop, so the full-view comparison also supplies the readable focused
+  evidence for typography, icons, dividers, and spacing.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] Public routes had several route-local footer implementations,
+  producing visual drift and leaving some pages without the requested mobile
+  treatment. A single global mobile footer now renders on every public
+  consumer route while the original route footers remain the desktop source.
+- [P2 resolved] The existing mobile footer lacked the reference's bordered
+  three-row accordion, Clock icon, ruled contact rows, centered bare social
+  icons, and rounded cream panel. These surfaces now match the supplied image's
+  grouping, order, border rhythm, and alignment.
+- [P2 resolved] The first comparison exposed `37.6px` social touch targets.
+  Their invisible hit areas are now exactly `44 × 44px` without changing the
+  small, visually centered icons.
+- [P2 resolved] The broad mobile audit then exposed `36px` email and phone
+  interaction rows at the tablet breakpoint. All four contact rows are now
+  consistently `44px` high; the linked rows meet the same Apple-sized target
+  standard as the social controls.
+- Typography keeps Avalon's existing display/body system and follows the
+  reference hierarchy. Spacing, cream/dark tokens, one-pixel rules, and large
+  lower corner radii match the source. Copy matches the reference, including
+  email, phone, service area, hours, copyright, and medical disclaimer.
+- No raster image asset appears in this footer target. The implementation uses
+  the project's existing Lucide and React Icons libraries for the reference's
+  mail, phone, map, clock, Instagram, Facebook, Google, and Yelp glyphs; no
+  placeholder or fabricated visual asset was introduced.
+- Accordion interaction was verified open and closed; Services exposes Start,
+  Menu, and Events. A clean home-page browser tab logged zero warnings or
+  errors.
+- Focused mobile route verification passed on `/`, `/protocols`,
+  `/privacy-policy`, `/b2b`, and `/careers`, with exactly one visible global
+  footer and zero horizontal overflow. The broad route suite was also
+  exercised at `320`, `375`, `390`, `430`, and `768px` widths.
+- `/start`, `/vitalice`, event kiosk, and event board intentionally exclude the
+  global footer so their focused/no-scroll workflows remain intact. `/start`
+  still fits `390 × 844` without scrolling and retains visible current date
+  and time values.
+- Desktop checks at `1280 × 900` preserve the existing home, legal, and B2B
+  footer implementations with the global mobile footer hidden.
+- Compact `320 × 568` verification reports no horizontal overflow, exact
+  `44 × 44px` social targets, and no cookie-notice overlap.
+- No actionable P0, P1, or P2 visual mismatch remains.
+
+## Comparison history
+
+- Pass 1 established the grouped accordion, contact rules, icon sequence,
+  centered socials, legal copy, and rounded panel, then identified undersized
+  social hit targets in the browser measurement.
+- Pass 2 enlarged the invisible social interaction areas to `44 × 44px` and
+  exposed the two `36px` linked contact rows in the broad audit.
+- Pass 3 established consistent `44px` contact rows and re-captured the final
+  side-by-side comparison. Visual hierarchy and source fidelity remain intact
+  while every footer link meets the target-size standard.
+
+## Automated checks
+
+- `git diff --check`: passed.
+- `npm run lint`: passed (218 source files).
+- `npm run build`: passed, including the B2B and 149 SEO outputs.
+- `npm run test:front-door`: passed (8 client-gated routes, 25 server-gated
+  handlers, single Cognito CSP grant).
+- `npm run test:privacy`: passed (11 tracked browser storage keys).
+- `npm audit --omit=dev --audit-level=high`: passed at the requested threshold;
+  two existing moderate React Router advisories require a breaking major
+  upgrade and remain out of scope.
+- The first unscoped `npm run test:mobile` invocation accidentally targeted a
+  stale server on port 4173 and reached its proxy/firewall error document. The
+  scoped run used `MOBILE_QA_BASE_URL=http://127.0.0.1:4181` against this
+  implementation. It exercised the complete route matrix without blank pages
+  or footer overflow, and identified the now-resolved footer contact targets;
+  the legacy suite remains red for existing non-footer targets (including the
+  thin `Start your visit` utility link) and existing Cognito/B2B console noise.
+
+final result: passed
