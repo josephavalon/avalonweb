@@ -30,10 +30,10 @@ export const SHIFT_TYPES = Object.freeze([
   Object.freeze({
     key: 'mobile_nad_iv',
     label: 'Mobile NAD+ IV',
-    hint: '$90/hr',
+    hint: '$90/hr + $40/IV + $10/shot',
     hourlyCents: 9000,
-    perIvCents: 0,
-    perShotCents: 0,
+    perIvCents: 4000,
+    perShotCents: 1000,
   }),
   Object.freeze({
     key: 'event',
@@ -45,9 +45,9 @@ export const SHIFT_TYPES = Object.freeze([
   }),
 ]);
 
-// Flat-rate mobile tiers pay no per-IV or per-shot adder — expressed as zero
-// rates in the table rather than a type-key branch, so the table stays the only
-// place the tier rules live.
+// Flat-rate tiers express their lack of per-IV or per-shot adders as zero rates
+// in the table rather than a type-key branch, so the table stays the only place
+// the tier rules live.
 export const SHIFT_TYPE_KEYS = Object.freeze(SHIFT_TYPES.map((t) => t.key));
 
 // 2026-08-10: the small/large split was dropped — there are only events, and an
