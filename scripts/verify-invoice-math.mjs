@@ -60,14 +60,24 @@ check('mobile visit pays $90/hr', () => {
   assert.equal(out.wagesCents, 72000);
 });
 
-check('Mobile NAD+ IV pays $90/hr with no adders', () => {
+check('Mobile NAD+ IV pays $90/hr plus IV, shot and GFE counts', () => {
   const out = computeInvoice({
-    shifts: [shift({ typeKey: 'mobile_nad_iv', hours: 4.5 })],
+    shifts: [shift({
+      typeKey: 'mobile_nad_iv',
+      hours: 4.5,
+      ivCount: 2,
+      shotCount: 3,
+      gfeCount: 1,
+    })],
   });
   assert.deepEqual(out.errors, []);
   assert.equal(out.shiftLines[0].typeLabel, 'Mobile NAD+ IV');
-  assert.equal(out.shiftLines[0].adderCents, 0);
-  assert.equal(out.wagesCents, 40500);
+  assert.equal(out.shiftLines[0].ivCount, 2);
+  assert.equal(out.shiftLines[0].shotCount, 3);
+  assert.equal(out.shiftLines[0].gfeCount, 1);
+  assert.equal(out.shiftLines[0].adderCents, 11000);
+  assert.equal(out.shiftLines[0].gfeCents, 2000);
+  assert.equal(out.wagesCents, 53500);
 });
 
 check('an event pays $50/hr plus $40/IV and $10/shot', () => {

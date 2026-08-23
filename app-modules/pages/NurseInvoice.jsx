@@ -12,6 +12,7 @@ import {
   computeInvoice,
   formatCents,
   formatCentsPlain,
+  shiftTypeHasAdders,
 } from '@/data/nurseInvoiceRates';
 import {
   ExpenseRow,
@@ -156,7 +157,7 @@ function reducer(state, action) {
           const next = { ...row, ...action.patch };
           // Same reasoning as the GFE zeroing above: leaving a tier that pays
           // adders must clear them, or the counts survive invisibly.
-          if (action.patch.typeKey && action.patch.typeKey !== 'event') {
+          if (action.patch.typeKey && !shiftTypeHasAdders(action.patch.typeKey)) {
             next.ivCount = '0';
             next.shotCount = '0';
           }
