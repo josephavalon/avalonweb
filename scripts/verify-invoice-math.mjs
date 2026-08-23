@@ -60,6 +60,16 @@ check('mobile visit pays $90/hr', () => {
   assert.equal(out.wagesCents, 72000);
 });
 
+check('Mobile NAD+ IV pays $90/hr with no adders', () => {
+  const out = computeInvoice({
+    shifts: [shift({ typeKey: 'mobile_nad_iv', hours: 4.5 })],
+  });
+  assert.deepEqual(out.errors, []);
+  assert.equal(out.shiftLines[0].typeLabel, 'Mobile NAD+ IV');
+  assert.equal(out.shiftLines[0].adderCents, 0);
+  assert.equal(out.wagesCents, 40500);
+});
+
 check('an event pays $50/hr plus $40/IV and $10/shot', () => {
   const out = computeInvoice({
     shifts: [shift({ typeKey: 'event', hours: 6, ivCount: 12, shotCount: 5 })],
@@ -98,8 +108,8 @@ check('legacy small_event and large_event keys still price, as events', () => {
   }
 });
 
-check('there are exactly two shift tiers', () => {
-  assert.deepEqual(SHIFT_TYPE_KEYS, ['mobile', 'event']);
+check('there are exactly three shift tiers', () => {
+  assert.deepEqual(SHIFT_TYPE_KEYS, ['mobile', 'mobile_nad_iv', 'event']);
 });
 
 check('mobile visit ignores IV/shot counts too', () => {
