@@ -588,7 +588,7 @@ begin
     'mobile_shift_step_events', 'shift_exceptions'
   ] loop
     execute format('alter table public.%I enable row level security', v_table);
-    execute format('revoke all on public.%I from public, anon, authenticated', v_table);
+    execute format('revoke all on public.%I from public, anon, authenticated, service_role', v_table);
     execute format('grant select, insert, update, delete on public.%I to service_role', v_table);
   end loop;
 end $$;

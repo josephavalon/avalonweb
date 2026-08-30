@@ -86,10 +86,10 @@ const rlsBlock = migration.slice(
   migration.indexOf('create or replace function app_private.prevent_nurse_event_mutation'),
 );
 for (const table of tables) {
-  assert.ok(rlsBlock.includes(`'${table}'`), `${table} must be included in the 061 RLS/server-only loop`);
+  assert.ok(rlsBlock.includes(`'${table}'`), `${table} must be included in the 062 RLS/server-only loop`);
 }
 assert.match(rlsBlock, /alter table public\.%I enable row level security/);
-assert.match(rlsBlock, /revoke all on public\.%I from public, anon, authenticated/);
+assert.match(rlsBlock, /revoke all on public\.%I from public, anon, authenticated, service_role/);
 assert.match(rlsBlock, /grant select, insert, update, delete on public\.%I to service_role/);
 
 for (const child of [
