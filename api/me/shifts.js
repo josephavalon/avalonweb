@@ -1,24 +1,29 @@
 import { requireRole } from '../_lib/supabase-auth.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { isSchedulingMigrationError, schedulingRpcError } from '../_lib/operational-workflows.js';
 import {
-  isSchedulingMigrationError,
+  NURSE_ROLES,
+  callNurseRpc,
+  clientIdempotencyKey,
+  engagementFromPreferences,
+  evaluateShiftReadiness,
+  isNurseWorkflowMigrationError,
+  loadLatestRun,
+  loadOwnAssignment,
+  loadShiftById,
+  loadWorkPreferences,
+  nurseWorkflowError,
+  parseJsonBody,
+  publicProvider,
+  requestError,
+  requirePositiveVersion,
   requireUuid,
-  requireVersion,
-  schedulingRpcError,
-} from '../_lib/operational-workflows.js';
+  resolveNurseProvider,
+} from '../_lib/nurse-workflow.js';
 
 const SHIFT_SELECT = 'id,series_id,occurrence_key,event_container_id,appointment_id,title,starts_at,ends_at,timezone,location_name,location_address,service_area,role_required,slots_required,status,instructions,version';
 const ASSIGNMENT_SELECT = 'id,shift_id,provider_profile_id,status,offered_at,claimed_at,assigned_at,completed_at,created_at,updated_at';
-
-function requestError(message, code, status = 400) {
-  return Object.assign(new Error(message), { code, status, expose: true });
-}
-
-function parseBody(req) {
-  if (typeof req.body !== 'string') return req.body || {};
-  try { return JSON.parse(req.body); }
-  catch { throw requestError('Request body must be valid JSON.', 'invalid_json'); }
-}
+const READINESS_SOURCE = Symbol('nurseReadinessSource');
 
 function isoBoundary(value, fallback, field) {
   if (!value) return fallback;
@@ -26,27 +31,6 @@ function isoBoundary(value, fallback, field) {
   if (!Number.isFinite(timestamp)) throw requestError(`${field} is invalid.`, 'invalid_schedule_range');
   return new Date(timestamp).toISOString();
 }
-
-async function resolveActiveProvider(db, authed) {
-  const { data, error } = await db.from('provider_profiles')
-    .select('id,profile_id,provider_role,credential_status,nursys_status,scope_tags,active')
-    .eq('tenant_id', authed.tenantId)
-    .eq('profile_id', authed.user.id)
-    .eq('active', true)
-    .eq('credential_status', 'clear')
-    .eq('nursys_status', 'clear')
-    .in('provider_role', ['rn', 'np'])
-    .limit(2);
-  if (error) throw error;
-  if (!(data || []).length) {
-    throw requestError('An active, credential-cleared nurse profile is required.', 'provider_not_eligible', 403);
-  }
-  if (data.length > 1) {
-    throw requestError('Multiple active provider profiles need administrator review.', 'provider_profile_ambiguous', 409);
-  }
-  return data[0];
-}
-
 function canCover(providerRole, roleRequired) {
   const required = String(roleRequired || '').trim().toLowerCase();
   return providerRole === 'np' ? ['rn', 'np'].includes(required) : required === 'rn';
@@ -69,9 +53,9 @@ async function hydrate(db, tenantId, shifts, ownAssignments) {
     const event = eventById.get(shift.event_container_id) || null;
     return {
       ...shift,
-      // A free-text admin title or event name can contain a person's name even
-      // when keyword guards pass. Before a nurse claims the shift, expose only
-      // a server-derived operational label and the minimum staffing facts.
+      // Free-text titles and addresses can contain patient or event-attendee
+      // details. Keep the raw row server-only for readiness evaluation, then
+      // return only the minimum offer facts until this nurse accepts the work.
       title: hasOperationalAccess ? shift.title : `${String(shift.role_required || 'clinical').toUpperCase()} shift`,
       event_container_id: hasOperationalAccess ? shift.event_container_id : null,
       appointment_id: hasOperationalAccess ? shift.appointment_id : null,
@@ -81,6 +65,7 @@ async function hydrate(db, tenantId, shifts, ownAssignments) {
       instructions: hasOperationalAccess ? shift.instructions : null,
       event: hasOperationalAccess && event ? event : null,
       assignment,
+      [READINESS_SOURCE]: { ...shift, assignment },
     };
   });
 }
@@ -100,11 +85,11 @@ async function loadShifts(db, authed, provider, queryParams = {}) {
 
   const ownPromise = assignedIds.length
     ? db.from('operational_shifts').select(SHIFT_SELECT).eq('tenant_id', authed.tenantId)
-      .in('id', assignedIds).gte('starts_at', from).lte('starts_at', to).limit(500)
+      .in('id', assignedIds).gte('starts_at', from).lte('starts_at', to).limit(250)
     : Promise.resolve({ data: [], error: null });
   const openPromise = db.from('operational_shifts').select(SHIFT_SELECT).eq('tenant_id', authed.tenantId)
     .eq('status', 'open').gte('starts_at', new Date(now).toISOString()).lte('starts_at', to)
-    .order('starts_at', { ascending: true }).limit(500);
+    .order('starts_at', { ascending: true }).limit(250);
   const [ownResult, openResult] = await Promise.all([ownPromise, openPromise]);
   if (ownResult.error) throw ownResult.error;
   if (openResult.error) throw openResult.error;
@@ -115,53 +100,137 @@ async function loadShifts(db, authed, provider, queryParams = {}) {
   return hydrate(db, authed.tenantId, sorted, assignments);
 }
 
-async function callSchedulingRpc(db, name, args) {
-  const { data, error } = await db.rpc(name, args);
-  if (error) throw schedulingRpcError(error);
-  return data;
+async function enrichShifts({ db, authed, provider, shifts, preferences }) {
+  const enriched = [];
+  // Each evaluation reads several independent sources and persists a short-lived
+  // snapshot. Small batches avoid exhausting the serverless DB connection pool.
+  for (let index = 0; index < shifts.length; index += 5) {
+    const batch = shifts.slice(index, index + 5);
+    const rows = await Promise.all(batch.map(async (shift) => {
+      const sourceShift = shift[READINESS_SOURCE] || shift;
+      const { [READINESS_SOURCE]: ignoredSource, ...publicShift } = shift;
+      const [{ readiness, offerTerms }, run] = await Promise.all([
+        evaluateShiftReadiness({ db, authed, provider, shift: sourceShift, preferences }),
+        loadLatestRun(db, authed.tenantId, provider.id, shift.id),
+      ]);
+      void ignoredSource;
+      return { ...publicShift, readiness, offer_terms: offerTerms, run };
+    }));
+    enriched.push(...rows);
+  }
+  return enriched;
+}
+
+function cleanCounterTerms(body) {
+  const input = body.counter && typeof body.counter === 'object' && !Array.isArray(body.counter)
+    ? body.counter : body.requestedTerms && typeof body.requestedTerms === 'object' ? body.requestedTerms : {};
+  const terms = {};
+  if (input.proposedRateCents != null || input.proposed_rate_cents != null) {
+    const cents = Number(input.proposedRateCents ?? input.proposed_rate_cents);
+    if (!Number.isInteger(cents) || cents < 0 || cents > 1_000_000) {
+      throw requestError('Proposed rate must be a valid amount.', 'counter_terms_invalid');
+    }
+    terms.proposed_rate_cents = cents;
+  }
+  for (const [clientKey, dbKey] of [['proposedStartAt', 'proposed_start_at'], ['proposedEndAt', 'proposed_end_at']]) {
+    const value = input[clientKey] ?? input[dbKey];
+    if (value != null) {
+      const timestamp = Date.parse(String(value));
+      if (!Number.isFinite(timestamp)) throw requestError('Proposed shift time is invalid.', 'counter_terms_invalid');
+      terms[dbKey] = new Date(timestamp).toISOString();
+    }
+  }
+  const note = String(input.note || '').trim().replace(/\s+/g, ' ').slice(0, 500);
+  if (note) terms.note = note;
+  if (!Object.keys(terms).length) throw requestError('Counter terms are required.', 'counter_terms_required');
+  return terms;
+}
+
+async function reloadShiftContext(authed, provider, shiftId, preferences) {
+  const [shift, assignment, run] = await Promise.all([
+    loadShiftById(authed.db, authed.tenantId, shiftId),
+    loadOwnAssignment(authed.db, authed.tenantId, provider.id, shiftId),
+    loadLatestRun(authed.db, authed.tenantId, provider.id, shiftId),
+  ]);
+  const withAssignment = { ...shift, assignment };
+  const { readiness, offerTerms } = await evaluateShiftReadiness({
+    db: authed.db, authed, provider, shift: withAssignment, preferences,
+  });
+  return { shift: withAssignment, assignment, run, readiness, offer_terms: offerTerms };
 }
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  const authed = await requireRole(req, res, ['nurse', 'rn', 'np', 'admin']);
+  const authed = await requireRole(req, res, NURSE_ROLES);
   if (!authed) return;
   try {
-    const provider = await resolveActiveProvider(authed.db, authed);
+    const provider = await resolveNurseProvider(authed);
+    const preferences = await loadWorkPreferences(authed.db, authed.tenantId, provider.id);
+    const engagement = engagementFromPreferences(preferences);
     if (req.method === 'GET') {
       const shifts = await loadShifts(authed.db, authed, provider, req.query || {});
-      return res.status(200).json({ shifts });
+      const enriched = await enrichShifts({ db: authed.db, authed, provider, shifts, preferences });
+      return res.status(200).json({ shifts: enriched, provider: publicProvider(provider, engagement) });
     }
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'GET, POST');
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const body = parseBody(req);
+    const body = parseJsonBody(req);
     const action = String(body.action || '').toLowerCase();
+    const shiftId = requireUuid(body.shiftId, 'Shift id');
+    const version = requirePositiveVersion(body.version, 'Shift version');
+    const [shift, assignment] = await Promise.all([
+      loadShiftById(authed.db, authed.tenantId, shiftId),
+      loadOwnAssignment(authed.db, authed.tenantId, provider.id, shiftId),
+    ]);
+    const current = { ...shift, assignment };
     const common = {
       p_tenant_id: authed.tenantId,
       p_actor_profile_id: authed.user.id,
-      p_shift_id: requireUuid(body.shiftId, 'Shift id'),
+      p_shift_id: shiftId,
       p_provider_profile_id: provider.id,
-      p_expected_version: requireVersion(body.version),
+      p_expected_version: version,
     };
+
     if (action === 'claim') {
-      const assignment = await callSchedulingRpc(authed.db, 'claim_operational_shift', common);
-      return res.status(200).json({ ok: true, assignment });
+      const { readiness } = await evaluateShiftReadiness({
+        db: authed.db, authed, provider, shift: current, preferences,
+      });
+      if (!readiness.claim_allowed || shift.status !== 'open'
+        || ['claimed', 'assigned', 'completed'].includes(assignment?.status)) {
+        return res.status(409).json({ error: 'This shift is not ready to accept.', code: 'shift_not_ready', readiness });
+      }
+      await callNurseRpc(authed.db, 'claim_operational_shift', common);
+      const context = await reloadShiftContext(authed, provider, shiftId, preferences);
+      return res.status(200).json({ ok: true, ...context });
     }
-    if (action === 'complete') {
-      const assignment = await callSchedulingRpc(authed.db, 'complete_operational_shift_assignment', common);
-      return res.status(200).json({ ok: true, assignment });
+    if (action === 'decline') {
+      await callNurseRpc(authed.db, 'decline_operational_shift', common);
+      const context = await reloadShiftContext(authed, provider, shiftId, preferences);
+      return res.status(200).json({ ok: true, ...context });
+    }
+    if (action === 'counter') {
+      const requestedTerms = cleanCounterTerms(body);
+      const requestKey = clientIdempotencyKey(body.requestKey || body.idempotencyKey, 'counter');
+      const counter = await callNurseRpc(authed.db, 'counter_operational_shift_offer', {
+        ...common,
+        p_request_key: requestKey,
+        p_requested_terms: requestedTerms,
+      });
+      const context = await reloadShiftContext(authed, provider, shiftId, preferences);
+      return res.status(200).json({ ok: true, counter, request_key: requestKey, ...context });
     }
     return res.status(400).json({ error: 'Unsupported shift action.', code: 'invalid_action' });
   } catch (caught) {
-    const error = isSchedulingMigrationError(caught) ? schedulingRpcError(caught) : caught;
+    let error = caught;
+    if (isNurseWorkflowMigrationError(error)) error = nurseWorkflowError(error);
+    else if (isSchedulingMigrationError(error)) error = schedulingRpcError(error);
+    else error = nurseWorkflowError(error, 'Could not load or update shifts.');
     console.warn('[me/shifts] failed', safeLogContext(error, 'me_shifts_failed'));
-    const publicMessage = error.code === 'scheduling_migration_required' || error.expose
-      ? error.message
-      : 'Could not load shifts.';
     return res.status(error.status || 500).json({
-      error: publicMessage,
+      error: error.expose || error.code === 'nurse_workflow_migration_required' ? error.message : 'Could not load or update shifts.',
       code: safeErrorCode(error, 'me_shifts_failed'),
     });
   }

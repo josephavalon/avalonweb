@@ -10,9 +10,12 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const migration = read('../supabase/migrations/050_operational_backoffice.sql');
 const adminApi = read('../api/admin/scheduling.js');
 const providerApi = read('../api/me/shifts.js');
+const nurseWorkflow = read('../api/_lib/nurse-workflow.js');
 const invoicesApi = read('../api/me/nurse-invoices.js');
 const adminPage = read('../app-modules/pages/admin/SchedulingControl.jsx');
 const providerPage = read('../app-modules/pages/provider/NurseSchedule.jsx');
+const guidedPage = read('../app-modules/pages/provider/NurseGuidedShift.jsx');
+const settingsPage = read('../app-modules/pages/provider/NurseWorkSettings.jsx');
 const invoicePage = read('../app-modules/pages/provider/NurseInvoices.jsx');
 const routes = read('../src/App.jsx');
 const adminShell = read('../src/components/admin/AdminShell.jsx');
@@ -94,13 +97,13 @@ for (const name of [
 assert.doesNotMatch(adminApi, /\.(?:insert|update|upsert|delete)\(/, 'admin scheduling writes must be RPC-only');
 assert.doesNotMatch(adminApi, /sendEmail|writeAuditEvent|nurse_profile_id/, 'admin scheduling must not preserve stale side effects or profile identity');
 
-assert.match(providerApi, /\.eq\('profile_id', authed\.user\.id\)/, 'auth profile id must resolve a provider_profiles id');
-assert.match(providerApi, /\.eq\('credential_status', 'clear'\)/);
-assert.match(providerApi, /\.eq\('nursys_status', 'clear'\)/);
+assert.match(providerApi, /resolveNurseProvider\(authed\)/, 'provider API must use the canonical authenticated nurse resolver');
+assert.match(nurseWorkflow, /\.eq\('profile_id', authed\.user\.id\)/, 'auth profile id must resolve a provider_profiles id');
+assert.match(nurseWorkflow, /provider\.credential_status === 'clear'/);
+assert.match(nurseWorkflow, /provider\.nursys_status === 'clear'/);
 assert.match(providerApi, /provider_profile_id/);
 assert.match(providerApi, /claim_operational_shift/);
-assert.match(providerApi, /complete_operational_shift_assignment/);
-assert.match(providerApi, /p_expected_version: requireVersion\(body\.version\)/);
+assert.match(providerApi, /p_expected_version: version/);
 assert.match(providerApi, /location_name: hasOperationalAccess \? shift\.location_name : null/);
 assert.match(providerApi, /location_address: hasOperationalAccess \? shift\.location_address : null/);
 assert.match(providerApi, /instructions: hasOperationalAccess \? shift\.instructions : null/);
@@ -110,9 +113,9 @@ assert.doesNotMatch(providerApi, /\.(?:insert|update|upsert|delete)\(/, 'provide
 assert.doesNotMatch(providerApi, /nurse_profile_id/, 'provider_profiles.id is the operational assignment identity');
 
 assert.match(invoicesApi, /\.eq\('nurse_profile_id', authed\.user\.id\)/, '047 invoices remain linked to the auth/profile id');
-assert.match(invoicesApi, /provider_profiles[\s\S]*\.eq\('profile_id', authed\.user\.id\)/, 'own-invoice access must resolve the authenticated provider');
-assert.match(invoicesApi, /\.eq\('credential_status', 'clear'\)/);
-assert.match(invoicesApi, /\.eq\('nursys_status', 'clear'\)/);
+assert.match(invoicesApi, /resolveNurseProvider\(authed\)/, 'own-invoice access must use the canonical authenticated provider resolver');
+assert.match(invoicesApi, /\.eq\('provider_profile_id', provider\.id\)/, 'actual-time history must be scoped to the authenticated provider');
+assert.doesNotMatch(invoicesApi, /\.eq\('(?:credential_status|nursys_status)', 'clear'\)/, 'historical time and pay must remain visible when current readiness changes');
 assert.doesNotMatch(invoicesApi, /\.ilike\('nurse_email'|select\('\*'\)/, 'own invoice reads must not use self-asserted email or wildcard columns');
 assert.match(invoicesApi, /finance_migration_required/);
 assert.match(invoicePage, /noindex, nofollow, noarchive/);
@@ -122,10 +125,18 @@ assert.match(adminPage, /provider_profile_id/);
 assert.match(adminPage, /Assign credential-cleared nurse/);
 assert.match(adminPage, /disabled=\{saving \|\| !state\.available\}/, 'failed setup check must disable schedule writes');
 assert.match(providerPage, /version: shift\.version/);
-assert.match(providerPage, /Start invoice/);
-assert.doesNotMatch(providerPage, /to: '\/provider\/shift'|\bRoute\b/, 'this slice must not port or advertise the route builder');
+assert.match(providerPage, /\/provider\/shifts\/\$\{encodeURIComponent\(shift\.id\)\}/, 'accepted work must open the persisted guided shift route');
+assert.match(guidedPage, /\/api\/me\/shift-runs/, 'guided shift must use the persisted shift-run API');
+assert.match(settingsPage, /\/api\/me\/business-profile/, 'nurse settings must use the persisted business-profile API');
 
-for (const path of ['/provider/shifts', '/provider/invoices', '/admin/scheduling']) {
+for (const path of [
+  '/provider/shifts',
+  '/provider/shifts/:shiftId',
+  '/provider/shifts/:shiftId/run',
+  '/provider/settings',
+  '/provider/invoices',
+  '/admin/scheduling',
+]) {
   assert.ok(routes.includes(`path="${path}"`), `missing route ${path}`);
 }
 for (const legacyPath of ['/provider/today', '/provider/dashboard', '/provider/dispatch', '/provider/field', '/provider/shift']) {
@@ -144,7 +155,7 @@ assert.match(adminShell, /label: 'Finance'/);
 assert.match(adminAccess, /LIVE_ADMIN_ROUTES[\s\S]*'\/admin\/scheduling'/);
 const staffRoutes = adminAccess.match(/STAFF_ROUTES = Object\.freeze\(\[([\s\S]*?)\]\);/)?.[1] || '';
 assert.doesNotMatch(staffRoutes, /\/admin\/scheduling/, 'generic staff must not receive scheduling control');
-for (const source of [adminApi, providerApi, invoicesApi, adminPage, providerPage, invoicePage]) {
+for (const source of [adminApi, providerApi, invoicesApi, adminPage, providerPage, guidedPage, settingsPage, invoicePage]) {
   assert.doesNotMatch(source, /mock|demo|sample|preview data/i, 'live scheduling and nurse self-service must not fall back to test data');
 }
 
