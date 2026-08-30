@@ -40,6 +40,8 @@ jobs:
           PUBLIC_SITE_URL: https://www.avalonvitality.co
           AVALON_ENABLE_LIVE_API: 'true'
           VITE_AVALON_ENABLE_LIVE_API: 'true'
+          VITE_MFA_ENFORCED: 'true'
+          MFA_ENFORCED: 'true'
           VITE_AUTH_GOOGLE_ENABLED: ${{ vars.VITE_AUTH_GOOGLE_ENABLED || 'false' }}
           VITE_AUTH_APPLE_ENABLED: ${{ vars.VITE_AUTH_APPLE_ENABLED || 'false' }}
           VITE_AUTH_PHONE_ENABLED: ${{ vars.VITE_AUTH_PHONE_ENABLED || 'false' }}

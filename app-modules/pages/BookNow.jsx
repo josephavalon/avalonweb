@@ -47,22 +47,18 @@ import {
 
 import Navbar from '@/components/landing/Navbar';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
-import { useCart } from '@/context/CartContext';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import { COVERED_ZIPS, extractZip } from '@/lib/serviceArea';
 import { useSeo } from '@/lib/seo';
 import {
   appendActivity,
   clearBookingDraft,
+  clearLocal,
   readLocal,
-  readBookingDraft,
-  readLastBooking,
-  saveBookingDraft,
-  saveLastBooking,
   writeLocal,
 } from '@/lib/localOs';
 import { createBookingRecord, resolveGfeRequirement, validateBookingForCheckout } from '@/lib/bookingLifecycle';
-import { orchestrateOrderHandoff, readClientProfile } from '@/lib/platformOps';
+import { readClientProfile } from '@/lib/platformOps';
 import { ANALYTICS_EVENTS, getAttribution, track } from '@/lib/analytics';
 import { FEATURED_SUBSCRIPTION_TIER_KEY, SUBSCRIPTION_TIERS } from '@/config/subscriptionTiers';
 import { SUBSCRIPTION_COMMITMENT_COPY } from '@/lib/subscription';
@@ -679,22 +675,12 @@ function readStepHash() {
   return clampStep(Number(match[1]) - 1);
 }
 
-function readBookingSessionDraft() {
-  if (typeof window === 'undefined') return null;
-  try {
-    const parsed = JSON.parse(window.sessionStorage.getItem(BOOKING_SESSION_KEY) || 'null');
-    return parsed && parsed.draftVersion === BOOKING_DRAFT_VERSION ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveBookingSessionDraft(payload) {
+function saveBookingSessionDraft() {
   if (typeof window === 'undefined') return;
   try {
-    window.sessionStorage.setItem(BOOKING_SESSION_KEY, JSON.stringify({ ...payload, draftVersion: BOOKING_DRAFT_VERSION }));
+    window.sessionStorage.removeItem(BOOKING_SESSION_KEY);
   } catch {
-    // Session restore is best effort only.
+    // Best-effort deletion only.
   }
 }
 
@@ -3965,13 +3951,26 @@ export default function BookNow() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const fastMode = false;
-  const { clearItems, addItem, setMembershipTier, clearMembership } = useCart();
   const { user } = useAuthStore();
   const signedInClient = user?.role === 'client';
   const [creditState, setCreditState] = useState({ loading: false, balance: 0, error: '' });
   const [useMemberCredit, setUseMemberCredit] = useState(false);
-  const clientProfile = useMemo(() => readClientProfile(), []);
-  const lastBooking = useMemo(() => readLastBooking(), []);
+  // Local profile/booking caches are allowed only in the isolated simulation.
+  // A configured Supabase environment uses the authenticated server profile.
+  const clientProfile = useMemo(() => hasSupabase ? EMPTY_CLIENT_PROFILE : readClientProfile(), []);
+  const lastBooking = null;
+  useEffect(() => {
+    if (!hasSupabase) return;
+    clearBookingDraft();
+    clearBookingSessionDraft();
+    [
+      'lastBooking',
+      'webstore.groupLead',
+      'webstore.subscriptionIntake',
+      'webstore.subscriptionPlan',
+      'webstore.eventRequest',
+    ].forEach(clearLocal);
+  }, []);
   // Fast checkout: the server-synced GFE + saved address (populated from Acuity
   // by the GFE sync). Used to prefill the address and treat a cleared GFE as on
   // file. No-ops gracefully when there's nothing on file yet.
@@ -4032,9 +4031,7 @@ export default function BookNow() {
   const canUseClinicalReviewOnFile = signedInClient && !profileGfe.required;
   const reduceMotion = useReducedMotion();
   const shouldResetDraft = searchParams.get('reset') === '1';
-  const shouldResumeDraft = searchParams.get('resume') === '1';
-  const sessionDraft = useMemo(() => shouldResetDraft ? null : readBookingSessionDraft(), [shouldResetDraft]);
-  const persistedDraft = useMemo(() => shouldResetDraft ? null : readBookingDraft(), [shouldResetDraft]);
+  const sessionDraft = null;
   const initialProtocolParam = searchParams.get('protocol');
   const initialProtocolKey = PUBLIC_BOOKING_PROTOCOL_KEYS.has(initialProtocolParam) ? initialProtocolParam : '';
   const initialSubscriptionParam = searchParams.get('subscription');
@@ -4048,13 +4045,9 @@ export default function BookNow() {
   const stepShellRef = useRef(null);
   const hasMountedStepRef = useRef(false);
   const [state, setState] = useState(() => {
-    // Cart persistence policy: the in-tab session draft hydrates freely (so you
-    // don't lose progress mid-flow), but the cross-session localStorage draft
-    // only rehydrates on an explicit ?resume=1. Closing the browser / returning
-    // later therefore starts with an empty cart instead of a stale selection.
-    const draft = shouldResetDraft
-      ? {}
-      : (sessionDraft?.webstore || (shouldResumeDraft ? persistedDraft?.webstore : null) || {});
+    // Booking state is memory-only. Legacy browser drafts are deleted above and
+    // never rehydrated, even when an old ?resume=1 link is opened.
+    const draft = shouldResetDraft ? {} : (sessionDraft?.webstore || {});
     const savedWebstoreRaw = draft && typeof draft === 'object' ? draft : {};
     const savedWebstoreAddress = realAddress(savedWebstoreRaw.address);
     const savedWebstore = {
@@ -4202,29 +4195,15 @@ export default function BookNow() {
     if (typeof window !== 'undefined' && window.location.hash !== `#step-${step + 1}`) {
       window.history.pushState({ avalonBookingStep: step }, '', `${window.location.pathname}${window.location.search}#step-${step + 1}`);
     }
-    const draftPayload = {
-      webstore: { ...state, customPlanEstimate },
-      step,
-      therapyCategoryScreen,
-      subtotal,
-      updatedAt: new Date().toISOString(),
-    };
-    saveBookingDraft(draftPayload);
-    saveBookingSessionDraft(draftPayload);
+    clearBookingDraft();
+    saveBookingSessionDraft();
     scrollStepIntoView();
   }, [step]);
 
   useEffect(() => {
     if (!hasMountedStepRef.current || shouldResetDraft) return;
-    const draftPayload = {
-      webstore: { ...state, customPlanEstimate },
-      step,
-      therapyCategoryScreen,
-      subtotal,
-      updatedAt: new Date().toISOString(),
-    };
-    saveBookingDraft(draftPayload);
-    saveBookingSessionDraft(draftPayload);
+    clearBookingDraft();
+    saveBookingSessionDraft();
   }, [state, step, therapyCategoryScreen, shouldResetDraft]);
 
   useEffect(() => {
@@ -4515,22 +4494,13 @@ export default function BookNow() {
   const topAddressSuggestion = addressQuery.length >= 2 ? addressSuggestions[0] : null;
 
   useEffect(() => {
-    const visibleStep = readStepHash();
-    const draftPayload = { webstore: { ...state, customPlanEstimate }, step: visibleStep ?? step, therapyCategoryScreen, subtotal, updatedAt: new Date().toISOString() };
-    saveBookingDraft(draftPayload);
-    saveBookingSessionDraft(draftPayload);
+    clearBookingDraft();
+    saveBookingSessionDraft();
   }, [state, step, therapyCategoryScreen, subtotal, customPlanEstimate]);
 
-  const persistBookingProgress = (nextStep = step, nextTherapyCategoryScreen = therapyCategoryScreen, nextState = state) => {
-    const draftPayload = {
-      webstore: { ...nextState, customPlanEstimate },
-      step: nextStep,
-      therapyCategoryScreen: nextTherapyCategoryScreen,
-      subtotal,
-      updatedAt: new Date().toISOString(),
-    };
-    saveBookingDraft(draftPayload);
-    saveBookingSessionDraft(draftPayload);
+  const persistBookingProgress = () => {
+    clearBookingDraft();
+    saveBookingSessionDraft();
   };
 
   useEffect(() => {
@@ -4678,35 +4648,9 @@ export default function BookNow() {
   };
 
   const routeGroupContact = () => {
-    writeLocal('webstore.groupLead', {
-      protocol: serviceLabel || 'Protocol pending',
-      protocolKey: isCustomTreatment ? `custom-${customBase.key}` : product?.key || '',
-      customTreatment: isCustomTreatment ? {
-        base: customBase.label,
-        baseKey: customBase.key,
-        estimate: baseSubtotal,
-      } : null,
-      addOns: selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
-      baseSubtotal,
-      requestedGuests: guestCount,
-      locationType: state.locationType,
-      address: cleanBookingAddress(state.address),
-      zip: state.zip,
-      eventType: state.eventType,
-      time: bookingTimeSummary(state),
-      contact: {
-        name: state.name,
-        email: state.email,
-        phone: state.phone,
-      },
-      status: 'Group planning required',
-      updatedAt: new Date().toISOString(),
-    });
-    appendActivity(`Group planning requested: ${guestCount}+ guests · ${serviceLabel || 'Protocol'}`, {
-      role: 'client',
-      orderType: 'event',
-      protocolKey: isCustomTreatment ? `custom-${customBase.key}` : product?.key,
-    });
+    if (!hasSupabase) {
+      appendActivity('Group planning request opened', { role: 'client', orderType: 'event' });
+    }
     track(ANALYTICS_EVENTS.STEP_COMPLETED, {
       funnel: 'webstore',
       step_index: step,
@@ -4720,7 +4664,8 @@ export default function BookNow() {
   };
 
   const goToReturningSignIn = () => {
-    saveBookingDraft({ webstore: { ...state, clientType: 'new' }, step, subtotal, updatedAt: new Date().toISOString() });
+    clearBookingDraft();
+    clearBookingSessionDraft();
     navigate(`/login?redirect=${encodeURIComponent('/book?returning=1')}`);
   };
 
@@ -5386,25 +5331,16 @@ export default function BookNow() {
       });
     };
 
-    clearItems();
-    localBooking.items.forEach(addItem);
-    saveLastBooking(localBooking);
-    orchestrateOrderHandoff(localBooking, {
-      source: 'avalon-webstore',
-      type: visitType.label,
-      scope: scopeLabel,
-      depositAmount: localBooking.depositAmount,
-    });
     writeCheckoutHandoffMarker();
-    if (localBooking.subscription) writeLocal('webstore.subscriptionPlan', localBooking.subscription);
-    if (localBooking.event) writeLocal('webstore.eventRequest', localBooking.event);
-    appendActivity(localBooking.manualBilling ? `VIP manual booking requested: ${localBooking.service}` : `Webstore payment started: ${localBooking.service}`, { role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType });
+    if (!hasSupabase) {
+      appendActivity(localBooking.manualBilling ? 'Manual booking requested' : 'Checkout started', {
+        role: 'client', bookingId: localBooking.id, orderType: localBooking.orderType, scope: scopeLabel,
+      });
+    }
   };
 
   const ensureCheckoutLocalMarkers = (localBooking) => {
     if (!localBooking?.id) return;
-    const saved = readLastBooking();
-    if (saved?.id !== localBooking.id) saveLastBooking(localBooking);
     const handoff = readLocal('webstore.latestHandoff', null);
     if (handoff?.bookingId !== localBooking.id) {
       writeLocal('webstore.latestHandoff', {
@@ -5668,39 +5604,12 @@ export default function BookNow() {
 			          estimate: baseSubtotal,
 			        } : null,
 	        addOns: selectedAddons.map((item) => item.type === 'im' ? `IM · ${item.label}` : item.label),
-        intake: {
-          name: state.name.trim(),
-          email: state.email.trim(),
-          phone: state.phone.trim(),
-          dob: state.dob,
-          emergencyContact: emergencyContactValue,
-          emergencyContactName: state.emergencyContactName.trim(),
-          emergencyContactPhone: state.emergencyContactPhone.trim(),
-          address: state.address.trim(),
-          zip: String(state.zip || '').trim(),
-          locationType: state.locationType,
-          timeIntent: state.timeIntent,
-          customDate: state.customDate,
-          customTime: state.customTime,
-          notes: state.notes,
-          clientType: state.clientType,
-        },
       };
 
       persistLocalBooking(localBooking, 'Subscription checkout');
-      clearMembership?.();
-      setMembershipTier?.(subscriptionPlan);
-	      writeLocal('webstore.subscriptionIntake', {
-	        ...subscriptionPlan,
-	        subtotal,
-	        customPlanEstimate,
-	        updatedAt: new Date().toISOString(),
-	      });
-	      appendActivity(`Subscription checkout started: ${plan.label} · ${serviceLabel}`, {
-	        role: 'client',
-	        orderType: 'subscription',
-	        protocolKey: isCustomTreatment ? `custom-${customBase.key}` : product.key,
-	      });
+      if (!hasSupabase) {
+        appendActivity('Subscription checkout started', { role: 'client', orderType: 'subscription' });
+      }
       track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
         funnel: 'webstore',
         order_type: 'subscription',

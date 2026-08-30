@@ -97,6 +97,17 @@ export default async function handler(req, res) {
     const { error } = await db.auth.admin.updateUserById(user.id, { password });
     if (error) throw error;
 
+    // Clear forced rotation only after the identity provider confirms the
+    // password write. This service-role mutation is the sole completion path;
+    // browser sessions cannot clear the profile flag directly.
+    const { data: profile, error: profileError } = await db.from('profiles')
+      .update({ must_change_password: false, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .select('must_change_password')
+      .single();
+    if (profileError) throw profileError;
+    if (profile?.must_change_password !== false) throw new Error('Password rotation state did not clear');
+
     await writeAuditEvent(db, {
       tenantId: tenantId || null,
       actorProfileId: user?.id || null,

@@ -16,7 +16,7 @@
  *
  * Size/type guards enforce the TTF page-weight budget at the door.
  */
-import { getServiceClient, getAuthedUser, requireStaff } from '../_lib/supabase-auth.js';
+import { getAuthedUser, privilegedSessionFailure, requireStaff } from '../_lib/supabase-auth.js';
 
 const BUCKET = 'event-assets';
 const MAX_BYTES = 12 * 1024 * 1024;
@@ -26,13 +26,8 @@ const RENDITIONS = [
   ['thumb_320', 320],
 ];
 
-async function callerForEvent(req, res, db, container) {
+async function callerForEvent(res, db, container, auth) {
   // Staff pass outright; promoters pass only for THEIR event.
-  const auth = await getAuthedUser(req);
-  if (!auth?.user) {
-    res.status(401).json({ ok: false, error: 'Sign in required.' });
-    return null;
-  }
   const role = auth.role || auth.profile?.role || 'client';
   const staffRoles = ['ops_manager', 'staff', 'admin', 'founder', 'nurse', 'rn', 'np', 'physician', 'medical_director'];
   if (staffRoles.includes(role)) return { ...auth, isStaff: true };
@@ -40,15 +35,25 @@ async function callerForEvent(req, res, db, container) {
   // lets an existing Avalon account reuse its identity and password without
   // replacing its canonical profile role.
   const { data } = await db.from('event_promoters')
-    .select('id').eq('container_id', container.id).eq('profile_id', auth.user.id).maybeSingle();
+    .select('id')
+    .eq('tenant_id', auth.tenantId)
+    .eq('container_id', container.id)
+    .eq('profile_id', auth.user.id)
+    .maybeSingle();
   if (data) return { ...auth, isStaff: false };
   res.status(403).json({ ok: false, error: 'Not allowed for this event.' });
   return null;
 }
 
 export default async function handler(req, res) {
-  const db = await getServiceClient();
-  if (!db) return res.status(500).json({ ok: false, error: 'Service unavailable.' });
+  const auth = await getAuthedUser(req);
+  if (!auth?.user) return res.status(401).json({ ok: false, error: 'Sign in required.' });
+  const sessionFailure = privilegedSessionFailure(auth);
+  if (sessionFailure) {
+    return res.status(sessionFailure.status).json({ ok: false, error: sessionFailure.message, code: sessionFailure.code });
+  }
+  if (!auth.tenantId) return res.status(403).json({ ok: false, error: 'Tenant-scoped event access required.' });
+  const db = auth.db;
 
   const params = req.method === 'GET' ? req.query : (typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {});
   const slug = String(params.slug || '').trim();
@@ -56,15 +61,19 @@ export default async function handler(req, res) {
     .from('event_containers')
     .select('id, tenant_id, slug, theme_id')
     .eq('slug', slug)
+    .eq('tenant_id', auth.tenantId)
     .maybeSingle();
   if (!container) return res.status(404).json({ ok: false, error: 'Event not found.' });
 
   try {
     if (req.method === 'GET') {
-      const caller = await callerForEvent(req, res, db, container);
+      const caller = await callerForEvent(res, db, container, auth);
       if (!caller) return undefined;
       const [{ data: assets }, { data: themes }] = await Promise.all([
-        db.from('event_assets').select('*').eq('container_id', container.id).order('created_at', { ascending: false }),
+        db.from('event_assets').select('*')
+          .eq('tenant_id', container.tenant_id)
+          .eq('container_id', container.id)
+          .order('created_at', { ascending: false }),
         db.from('event_themes').select('id, name, tokens, active').eq('active', true),
       ]);
       // Signed preview URLs for the audit view (1h).
@@ -85,7 +94,7 @@ export default async function handler(req, res) {
     const action = String(params.action || '');
 
     if (action === 'upload_url') {
-      const caller = await callerForEvent(req, res, db, container);
+      const caller = await callerForEvent(res, db, container, auth);
       if (!caller) return undefined;
       const ext = String(params.fileName || '').toLowerCase().match(/\.(jpe?g|png|webp|heic)$/)?.[1];
       if (!ext) return res.status(400).json({ ok: false, error: 'JPEG, PNG, WEBP, or HEIC only.' });
@@ -96,7 +105,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'finalize') {
-      const caller = await callerForEvent(req, res, db, container);
+      const caller = await callerForEvent(res, db, container, auth);
       if (!caller) return undefined;
       const path = String(params.path || '');
       if (!path.startsWith(`${container.id}/originals/`)) {
@@ -137,11 +146,14 @@ export default async function handler(req, res) {
     if (action === 'moderate') {
       const caller = await requireStaff(req, res);
       if (!caller) return undefined;
+      if (caller.tenantId !== container.tenant_id) return res.status(404).json({ ok: false, error: 'Event not found.' });
       const status = ['live', 'pulled', 'pending'].includes(params.status) ? params.status : null;
       if (!status) return res.status(400).json({ ok: false, error: 'Bad status.' });
       const { data: asset, error } = await db.from('event_assets')
         .update({ status, reviewed_by: caller.user?.id || null, reviewed_at: new Date().toISOString() })
-        .eq('id', params.assetId).eq('container_id', container.id)
+        .eq('id', params.assetId)
+        .eq('tenant_id', caller.tenantId)
+        .eq('container_id', container.id)
         .select().single();
       if (error) throw error;
       await db.from('event_audit_log').insert({
@@ -155,12 +167,16 @@ export default async function handler(req, res) {
     if (action === 'set_theme') {
       const caller = await requireStaff(req, res);
       if (!caller) return undefined;
+      if (caller.tenantId !== container.tenant_id) return res.status(404).json({ ok: false, error: 'Event not found.' });
       const themeId = params.themeId || null;
       if (themeId) {
         const { data: theme } = await db.from('event_themes').select('id').eq('id', themeId).eq('active', true).maybeSingle();
         if (!theme) return res.status(400).json({ ok: false, error: 'Unknown theme.' });
       }
-      const { error } = await db.from('event_containers').update({ theme_id: themeId }).eq('id', container.id);
+      const { error } = await db.from('event_containers')
+        .update({ theme_id: themeId })
+        .eq('id', container.id)
+        .eq('tenant_id', caller.tenantId);
       if (error) throw error;
       await db.from('event_audit_log').insert({
         tenant_id: container.tenant_id, actor: caller.user?.id || null,

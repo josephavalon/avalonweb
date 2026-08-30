@@ -5,12 +5,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  ImagePlus,
   LogOut,
   MessageCircle,
   Plus,
   Send,
-  X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
@@ -30,55 +28,14 @@ const CARD_STRONG = 'hsl(var(--foreground) / 0.075)';
 const BORDER = 'hsl(var(--foreground) / 0.10)';
 const BAD = 'hsl(0 70% 62%)';
 
-// Storage bucket for member-uploaded message images. Must exist + carry the
-// member-scoped policies from migration 022 (see REPORT). Mirrors team-inbox.
-const MSG_IMAGE_BUCKET = 'member-messages';
-// Max attachment size we'll accept client-side (bucket also enforces 10 MB).
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
 // --- Helpers --------------------------------------------------------------
 
-// Normalize whatever the messages row carries for attachments into an array of
-// { url, name } objects. Tolerates: a jsonb `attachments` array, or a single
-// `image_url` text column — whichever the deployed schema actually has. Guards
-// for legacy rows with neither (returns []).
-function attachmentsFor(m) {
-  if (!m) return [];
-  const raw = m.attachments;
-  if (Array.isArray(raw)) {
-    return raw
-      .map((a) => (typeof a === 'string' ? { url: a } : a))
-      .filter((a) => a && a.url);
-  }
-  if (typeof raw === 'string' && raw.trim()) {
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.filter((a) => a && a.url);
-    } catch {
-      /* not JSON — fall through to image_url */
-    }
-  }
-  if (m.image_url) return [{ url: m.image_url }];
-  return [];
-}
-
-// Run a messages select that first tries to include the attachment columns
-// (`attachments`, `image_url`) and transparently falls back to the base columns
-// if the deployed schema doesn't have them yet (PostgREST 42703 / "column ...
-// does not exist"). `build` receives the query and applies filters/order/limit.
-// `baseCols` is the column list known to exist on every deploy.
+// Raw attachment metadata and legacy public URLs are intentionally excluded
+// from browser responses. A future server endpoint may return scan-approved,
+// short-lived capabilities; the member client must not fetch storage columns.
 async function selectMessages(build, baseCols) {
-  const richCols = `${baseCols}, attachments, image_url`;
-  let res = await build(supabase.from('messages').select(richCols));
-  if (res.error) {
-    const msg = String(res.error.message || '').toLowerCase();
-    const missingCol =
-      res.error.code === '42703' || msg.includes('column') || msg.includes('does not exist');
-    if (!missingCol) throw res.error;
-    // Retry with just the columns guaranteed to exist.
-    res = await build(supabase.from('messages').select(baseCols));
-    if (res.error) throw res.error;
-  }
+  const res = await build(supabase.from('messages').select(baseCols));
+  if (res.error) throw res.error;
   return res.data || [];
 }
 
@@ -305,12 +262,8 @@ function LiveMessages() {
   // Care-team's read cursor for the active thread (the counterparty's
   // last_read_at). Drives the "Seen" receipt on the member's sent messages.
   const [otherReadAt, setOtherReadAt] = useState(null);
-  // Pending image attachment for the next sent message: { url, name } | null.
-  const [pendingImage, setPendingImage] = useState(null);
-  const [uploading, setUploading] = useState(false);
   // Whether the care team is currently typing (ephemeral, via Realtime).
   const [careTyping, setCareTyping] = useState(false);
-  const fileRef = useRef(null);
   // Realtime channel + typing-broadcast throttle bookkeeping (refs so the
   // keystroke handler doesn't re-subscribe the channel).
   const presenceChannelRef = useRef(null);
@@ -382,7 +335,7 @@ function LiveMessages() {
         const last = latestByConvo.get(mp.conversation_id) || null;
         const lastAt = last?.created_at || c.updated_at || null;
         const lastReadAt = mp.last_read_at || null;
-        const lastHasImage = last ? attachmentsFor(last).length > 0 : false;
+        const lastHasImage = false;
         const lastPreview = last
           ? (last.body && last.body.trim() ? last.body : lastHasImage ? 'Sent an image' : '')
           : '';
@@ -561,89 +514,32 @@ function LiveMessages() {
     el.scrollTop = el.scrollHeight;
   }, [threadState.messages.length, activeThreadId]);
 
-  // -- Attach an image: upload to member-scoped Storage, hold the URL -------
-  const handlePickImage = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-selecting the same file
-    if (!file || !supabase || !userId) return;
-    if (!file.type.startsWith('image/')) {
-      setSendError('Only image files can be attached.');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setSendError('Image is too large (max 10 MB).');
-      return;
-    }
-    setUploading(true);
-    setSendError('');
-    try {
-      // Member-scoped path: storage RLS (migration 022) restricts writes to a
-      // folder named after the member's auth uid, so a member can only write
-      // under their own prefix.
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const path = `${userId}/${activeThreadId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from(MSG_IMAGE_BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from(MSG_IMAGE_BUCKET).getPublicUrl(path);
-      if (!pub?.publicUrl) throw new Error('Could not resolve image URL.');
-      setPendingImage({ url: pub.publicUrl, name: file.name });
-    } catch (err) {
-      setSendError(err?.message || 'Could not upload image.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   // -- Send a message ------------------------------------------------------
   const handleSend = async (e) => {
     e?.preventDefault?.();
     const body = draft.trim();
-    const image = pendingImage;
-    // Allow a send when there's text OR an attached image.
-    if ((!body && !image) || !activeThreadId || !supabase || !userId) return;
+    if (!body || !activeThreadId || !supabase || !userId) return;
     setSending(true);
     setSendError('');
     broadcastStopTyping();
     const tempId = `tmp-${Date.now()}`;
-    const attachments = image ? [{ url: image.url, name: image.name }] : [];
     const optimistic = {
       id: tempId,
       conversation_id: activeThreadId,
       sender_id: userId,
       body,
-      attachments,
       created_at: new Date().toISOString(),
       _optimistic: true,
     };
     setThreadState((s) => ({ ...s, messages: [...s.messages, optimistic] }));
     setDraft('');
-    setPendingImage(null);
     try {
-      // The body column has a NOT NULL + 1..4000 check, so when only an image is
-      // sent we store a single space as the body.
-      const row = { conversation_id: activeThreadId, body: body || ' ', sender_id: userId };
-      if (image) row.attachments = attachments; // dropped via retry if column absent (see below)
-      let res = await supabase
+      const row = { conversation_id: activeThreadId, body, sender_id: userId };
+      const res = await supabase
         .from('messages')
         .insert(row)
-        .select('id, conversation_id, sender_id, body, created_at, attachments, image_url')
+        .select('id, conversation_id, sender_id, body, created_at')
         .single();
-      // If the attachments/image_url columns aren't deployed yet, retry text-only
-      // so sending never hard-breaks before migration 022 lands.
-      if (res.error) {
-        const msg = String(res.error.message || '').toLowerCase();
-        const missingCol =
-          res.error.code === '42703' || msg.includes('column') || msg.includes('does not exist');
-        if (missingCol) {
-          res = await supabase
-            .from('messages')
-            .insert({ conversation_id: activeThreadId, body: body || ' ', sender_id: userId })
-            .select('id, conversation_id, sender_id, body, created_at')
-            .single();
-        }
-      }
       if (res.error) throw res.error;
       const data = res.data;
       setThreadState((s) => ({
@@ -651,7 +547,7 @@ function LiveMessages() {
         messages: s.messages.map((m) => (m.id === tempId ? data : m)),
       }));
       // Bump the thread preview locally.
-      const preview = body || (image ? 'Sent an image' : '');
+      const preview = body;
       setThreadsState((s) => ({
         ...s,
         threads: s.threads.map((t) =>
@@ -663,7 +559,6 @@ function LiveMessages() {
       // Roll back the optimistic message.
       setThreadState((s) => ({ ...s, messages: s.messages.filter((m) => m.id !== tempId) }));
       setDraft(body);
-      setPendingImage(image);
     } finally {
       setSending(false);
     }
@@ -769,7 +664,6 @@ function LiveMessages() {
                 const prev = threadState.messages[i - 1];
                 const showBucket = !prev || hourBucket(prev.created_at) !== hourBucket(m.created_at);
                 const mine = m.sender_id === userId;
-                const atts = attachmentsFor(m);
                 // Body may be a placeholder space for image-only messages.
                 const hasText = m.body && m.body.trim();
                 return (
@@ -790,26 +684,6 @@ function LiveMessages() {
                           : { alignSelf: 'flex-start', background: CARD_STRONG, color: TEXT, border: `1px solid ${BORDER}` }
                       }
                     >
-                      {atts.length ? (
-                        <div className="mb-1.5 flex flex-col gap-1.5">
-                          {atts.map((att, ai) => (
-                            <a
-                              key={att.url || ai}
-                              href={att.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block"
-                            >
-                              <img
-                                src={att.url}
-                                alt={att.name || 'attachment'}
-                                className="max-h-60 max-w-full rounded-xl object-cover"
-                                style={{ border: `1px solid ${BORDER}` }}
-                              />
-                            </a>
-                          ))}
-                        </div>
-                      ) : null}
                       {hasText ? (
                         <p className="whitespace-pre-wrap break-words">{m.body}</p>
                       ) : null}
@@ -848,47 +722,7 @@ function LiveMessages() {
           className="mt-3 rounded-2xl p-2"
           style={{ background: CARD, border: `1px solid ${BORDER}` }}
         >
-          {/* Pending image preview (clears after send). */}
-          {pendingImage ? (
-            <div className="mb-2 px-1">
-              <span className="relative inline-block">
-                <img
-                  src={pendingImage.url}
-                  alt={pendingImage.name || 'attachment'}
-                  className="h-16 w-16 rounded-lg object-cover"
-                  style={{ border: `1px solid ${BORDER}` }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setPendingImage(null)}
-                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full"
-                  style={{ background: BG, border: `1px solid ${BORDER}`, color: TEXT }}
-                  aria-label="Remove image"
-                >
-                  <X className="h-3 w-3" strokeWidth={2.4} />
-                </button>
-              </span>
-            </div>
-          ) : null}
-
           <div className="flex items-end gap-2">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl disabled:opacity-50"
-              style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: MUTED }}
-              aria-label="Attach image"
-            >
-              <ImagePlus className="h-4 w-4" strokeWidth={1.9} />
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePickImage}
-            />
             <label className="sr-only" htmlFor="message-draft">Write a message</label>
             <textarea
               id="message-draft"
@@ -909,13 +743,11 @@ function LiveMessages() {
           </div>
           <div className="mt-1 flex items-center justify-between gap-2">
             <p className="font-body text-[10px]" style={{ color: sendError ? BAD : DIM }}>
-              {uploading
-                ? 'Uploading image…'
-                : sendError || 'Enter to send · Shift+Enter for newline'}
+              {sendError || 'Enter to send · Attachments are temporarily unavailable'}
             </p>
             <button
               type="submit"
-              disabled={sending || uploading || (!draft.trim() && !pendingImage)}
+              disabled={sending || !draft.trim()}
               className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-4 font-body text-[10px] font-bold uppercase tracking-[0.18em] disabled:opacity-50"
               style={{ background: TEXT, color: INVERT }}
             >

@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   const authed = await requireStaff(req, res);
   if (!authed) return;
-  const { db } = authed;
+  const { db, tenantId } = authed;
 
   const threadId = String(req.query?.threadId || '').trim();
   if (!threadId) return res.status(400).json({ error: 'threadId is required', code: 'thread_id_required' });
@@ -21,6 +21,11 @@ export default async function handler(req, res) {
     .from('comm_threads')
     .select('id, channel, contact, customer_name, unread_count')
     .eq('id', threadId)
+    // `db` is a service-role client and bypasses RLS. The caller's tenant must
+    // therefore be part of the object lookup, not inferred from authentication
+    // alone. Unassigned (tenant_id = null) inbound threads remain inaccessible
+    // until the inbound integration binds them to a tenant.
+    .eq('tenant_id', tenantId)
     .limit(1);
   if (tErr) {
     console.warn('[admin/thread] thread query failed', safeLogContext(tErr, 'admin_thread_query_failed'));
@@ -32,7 +37,10 @@ export default async function handler(req, res) {
   const { data: messages, error: mErr } = await db
     .from('comm_messages')
     .select('id, direction, channel, body, created_at')
-    .eq('thread_id', threadId)
+    // The authorized parent thread is the object boundary. Using its id instead
+    // of the raw request value keeps message access tied to that authorization.
+    .eq('thread_id', thread.id)
+    .eq('tenant_id', tenantId)
     .order('created_at', { ascending: true })
     .limit(1000);
   if (mErr) {
@@ -41,7 +49,10 @@ export default async function handler(req, res) {
   }
 
   if (thread.unread_count) {
-    await db.from('comm_threads').update({ unread_count: 0 }).eq('id', threadId);
+    await db.from('comm_threads')
+      .update({ unread_count: 0 })
+      .eq('id', thread.id)
+      .eq('tenant_id', tenantId);
   }
 
   return res.status(200).json({ thread, messages: messages || [] });

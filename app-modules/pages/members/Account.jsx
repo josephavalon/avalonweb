@@ -16,7 +16,7 @@ import MemberBottomNav from '@/components/landing/MemberBottomNav';
 import MemberSectionNav from './MemberSectionNav.jsx';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
-import { readClientProfile, saveClientProfile } from '@/lib/platformOps';
+import { clearClientProfileCache, readClientProfile, saveClientProfile } from '@/lib/platformOps';
 import { authProviderConfig } from '@/lib/authProviderConfig';
 import { apiGet, apiPatch, apiPost } from '@/lib/apiClient';
 
@@ -68,7 +68,7 @@ function mergeServerProfile(local, server) {
   if (phi.covidRecent != null) merged.covidStatus = phi.covidRecent;
   if (phi.infectiousIllness != null) merged.infectiousStatus = phi.infectiousIllness;
   if (phi.ivHistory != null) merged.ivHistory = phi.ivHistory;
-  if (phi.nurseNotes != null) merged.nurseNotes = phi.nurseNotes;
+  if (phi.patientNotes != null) merged.nurseNotes = phi.patientNotes;
   // Clinical-review metadata is set by the RN/admin side, not editable here.
   if (phi.lastReviewedBy != null) merged.lastReviewedBy = phi.lastReviewedBy;
   if (phi.lastReviewedAt != null) merged.lastReviewedAt = phi.lastReviewedAt;
@@ -106,7 +106,7 @@ function formToServerPayload(form) {
       covidRecent: form.health.covid || null,
       infectiousIllness: form.health.infectious || null,
       ivHistory: form.health.ivHistory || null,
-      nurseNotes: form.health.nurseNotes || '',
+      patientNotes: form.health.nurseNotes || '',
     },
     commPrefs: {
       channel: form.comms.channel,
@@ -353,6 +353,7 @@ export default function MemberAccount() {
   // sessions skip this and stay on localStorage only.
   useEffect(() => {
     if (authBackend !== 'supabase') return;
+    clearClientProfileCache();
     let cancelled = false;
     apiGet('/api/me/profile')
       .then((res) => {
@@ -417,9 +418,8 @@ export default function MemberAccount() {
     setForm((prev) => ({ ...prev, [group]: { ...prev[group], [key]: value } }));
   };
 
-  // Persist a local cache no matter which backend we're on — keeps BookNow's
-  // returning-client prefill working offline, and is the source of truth for
-  // demo / passwordless sessions that don't have a Supabase row to PATCH.
+  // Synthetic local/demo sessions have no server profile. Their cache still
+  // passes through the shared PHI redactor and is never used as live authority.
   const persistLocal = () => {
     const allergies = form.health.allergies ? form.health.allergies.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
     const medications = form.health.medications ? form.health.medications.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : [];
@@ -452,8 +452,8 @@ export default function MemberAccount() {
   };
 
   const handleSave = async () => {
-    // Demo / passwordless sessions never had a Supabase row — keep them on the
-    // localStorage path so the demo surface stays editable without a backend.
+    // Demo/review sessions stay editable without a backend. Live Supabase
+    // sessions use the server record only and purge the legacy browser cache.
     if (authBackend !== 'supabase') {
       persistLocal();
       initialRef.current = JSON.stringify(form);
@@ -465,10 +465,7 @@ export default function MemberAccount() {
     try {
       const payload = formToServerPayload(form);
       await apiPatch('/api/me/profile', payload);
-      // Mirror to localStorage so BookNow / consumerTruth still see the fresh
-      // data without re-fetching, and so the form stays populated if the user
-      // navigates away before the next mount fetch resolves.
-      persistLocal();
+      clearClientProfileCache();
       initialRef.current = JSON.stringify(form);
       setSaveState({ status: 'ok', message: 'Saved.' });
       setTimeout(() => setSaveState({ status: 'idle', message: '' }), 1800);

@@ -28,6 +28,10 @@ export default async function handler(req, res) {
   if (!expected) return res.status(503).json({ error: 'Webhook not configured' });
   const provided = String(req.query?.secret || req.headers['x-webhook-secret'] || '');
   if (provided !== expected) return res.status(401).json({ error: 'Unauthorized' });
+  const tenantId = String(process.env.QUO_TENANT_ID || '').trim();
+  if (!tenantId) {
+    return res.status(503).json({ error: 'Webhook tenant is not configured', code: 'quo_tenant_not_configured' });
+  }
 
   const payload = req.body || {};
   const type = String(payload.type || payload.event || '').toLowerCase();
@@ -44,6 +48,9 @@ export default async function handler(req, res) {
   const providerMessageId = pick(obj, 'id', 'messageId') || null;
   if (!from || !body) return res.status(200).json({ ok: true, ignored: 'missing_from_or_body' });
 
-  await recordInbound({ channel: 'sms', contact: from, body, providerMessageId });
+  const threadId = await recordInbound({ tenantId, channel: 'sms', contact: from, body, providerMessageId });
+  if (!threadId) {
+    return res.status(503).json({ error: 'Inbound message could not be recorded', code: 'quo_inbound_store_failed' });
+  }
   return res.status(200).json({ ok: true });
 }

@@ -51,6 +51,10 @@ export function clearAllAvLocal() {
       }
     }
     toRemove.forEach((key) => window.localStorage.removeItem(key));
+    // BookNow historically used a non-prefixed session key containing the
+    // entire booking form. Remove it on sign-out so another account in the
+    // same browser cannot inherit identity, address, or Clinical context.
+    window.sessionStorage?.removeItem('avalon.webstore.sessionDraft');
   } catch (err) {
     if (import.meta.env?.DEV) console.warn('[local-os-clear-all]', err);
   }

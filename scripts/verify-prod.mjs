@@ -13,6 +13,8 @@ const requiredEnv = [
   'PUBLIC_SITE_URL',
   'AVALON_ENABLE_LIVE_API',
   'VITE_AVALON_ENABLE_LIVE_API',
+  'VITE_MFA_ENFORCED',
+  'MFA_ENFORCED',
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_ANON_KEY',
   'SUPABASE_URL',
@@ -44,6 +46,14 @@ if (!String(process.env.PUBLIC_SITE_URL || '').startsWith('https://')) {
 }
 if (process.env.AVALON_ENABLE_LIVE_API !== 'true' || process.env.VITE_AVALON_ENABLE_LIVE_API !== 'true') {
   console.error('FAIL: AVALON_ENABLE_LIVE_API and VITE_AVALON_ENABLE_LIVE_API must both be true for launch verification.');
+  process.exit(1);
+}
+if (process.env.VITE_MFA_ENFORCED !== process.env.MFA_ENFORCED) {
+  console.error('FAIL: VITE_MFA_ENFORCED and MFA_ENFORCED must match for launch verification.');
+  process.exit(1);
+}
+if (process.env.VITE_MFA_ENFORCED !== 'true' || process.env.MFA_ENFORCED !== 'true') {
+  console.error('FAIL: VITE_MFA_ENFORCED and MFA_ENFORCED must both be true for launch verification.');
   process.exit(1);
 }
 if (!String(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_test_')) {

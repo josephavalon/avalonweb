@@ -2,8 +2,9 @@
  * GET /api/admin/communications/threads
  *
  * Staff/admin: list client message threads (SMS today) for the inbox, newest
- * activity first. Tenant-scoped, but also includes threads with no tenant yet
- * (inbound from an unknown number) so nothing is silently hidden.
+ * activity first. Null-tenant threads are deliberately excluded: the
+ * service-role client bypasses RLS, and unassigned data has no authorized
+ * operator audience.
  */
 import { requireStaff } from '../../_lib/supabase-auth.js';
 import { safeErrorCode, safeLogContext } from '../../_lib/safe-error.js';
@@ -15,12 +16,12 @@ export default async function handler(req, res) {
   if (!authed) return;
   const { db, tenantId } = authed;
 
-  let query = db
+  const query = db
     .from('comm_threads')
     .select('id, channel, contact, customer_name, last_message_at, last_message_preview, last_direction, unread_count')
+    .eq('tenant_id', tenantId)
     .order('last_message_at', { ascending: false, nullsFirst: false })
     .limit(500);
-  if (tenantId) query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
 
   const { data, error } = await query;
   if (error) {

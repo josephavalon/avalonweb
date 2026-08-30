@@ -8,32 +8,104 @@
  *
  * PHI LAW: names, service class, gfe enum + scope flags. Nothing deeper.
  */
-import { getServiceClient, requireStaff } from '../_lib/supabase-auth.js';
+import { requireStaff } from '../_lib/supabase-auth.js';
 import { mintVisitToken, qrMode } from '../_lib/events-qr.js';
+
+function nonEmptyJti(value) {
+  const jti = String(value || '').trim();
+  return jti || null;
+}
+
+/**
+ * Return only a JTI confirmed to exist on the tenant/event-scoped visit row.
+ * Concurrent manifest requests race through a conditional null-only update; a
+ * loser must re-read the winner. Read/write errors and a missing winner fail
+ * closed so mintVisitToken can never invent an untracked replay identifier.
+ */
+export async function ensurePersistedVisitJti({
+  db,
+  visit,
+  tenantId,
+  containerId,
+  createJti = () => crypto.randomUUID(),
+}) {
+  const existing = nonEmptyJti(visit?.qr_jti);
+  if (existing) return existing;
+
+  const candidate = nonEmptyJti(createJti());
+  if (!candidate) throw new Error('event_visit_jti_generation_failed');
+
+  const { data: claimed, error: claimError } = await db
+    .from('event_visits')
+    .update({ qr_jti: candidate })
+    .eq('id', visit.id)
+    .eq('tenant_id', tenantId)
+    .eq('container_id', containerId)
+    .is('qr_jti', null)
+    .select('qr_jti')
+    .maybeSingle();
+  if (claimError) throw claimError;
+
+  const claimedJti = nonEmptyJti(claimed?.qr_jti);
+  if (claimedJti) {
+    if (claimedJti !== candidate) throw new Error('event_visit_jti_claim_mismatch');
+    return claimedJti;
+  }
+
+  const { data: winner, error: winnerError } = await db
+    .from('event_visits')
+    .select('qr_jti')
+    .eq('id', visit.id)
+    .eq('tenant_id', tenantId)
+    .eq('container_id', containerId)
+    .maybeSingle();
+  if (winnerError) throw winnerError;
+
+  const winnerJti = nonEmptyJti(winner?.qr_jti);
+  if (!winnerJti) throw new Error('event_visit_jti_not_persisted');
+  return winnerJti;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'Method not allowed' });
   const caller = await requireStaff(req, res);
   if (!caller) return undefined;
-
-  const db = await getServiceClient();
-  if (!db) return res.status(500).json({ ok: false, error: 'Service unavailable.' });
+  const { db, tenantId } = caller;
 
   try {
     const slug = String(req.query?.slug || '').trim();
-    const { data: container } = await db
+    const { data: container, error: containerError } = await db
       .from('event_containers')
       .select('id, slug, name, starts_at')
       .eq('slug', slug)
+      .eq('tenant_id', tenantId)
       .maybeSingle();
+    if (containerError) throw containerError;
     if (!container) return res.status(404).json({ ok: false, error: 'Event not found.' });
 
     const { data: visits, error } = await db
       .from('event_visits')
-      .select('id, attendee_name, status, gfe_status, gfe_scope, qr_jti, qr_key_id, service_id, event_services:service_id (name, service_class, requires_gfe)')
+      .select('id, attendee_name, status, gfe_status, gfe_scope, qr_jti, qr_key_id, service_id')
+      .eq('tenant_id', tenantId)
       .eq('container_id', container.id)
       .in('status', ['pending', 'confirmed', 'served']);
     if (error) throw error;
+
+    // Do not rely on a nested service-role join for authorization. Resolve the
+    // referenced services through an explicit tenant-scoped lookup, then fail
+    // closed if a visit points at a service outside that boundary.
+    const serviceIds = [...new Set((visits || []).map((visit) => visit.service_id).filter(Boolean))];
+    const servicesById = new Map();
+    if (serviceIds.length) {
+      const { data: services, error: servicesError } = await db
+        .from('event_services')
+        .select('id, name, service_class, requires_gfe')
+        .eq('tenant_id', tenantId)
+        .in('id', serviceIds);
+      if (servicesError) throw servicesError;
+      for (const service of services || []) servicesById.set(service.id, service);
+      if (serviceIds.some((id) => !servicesById.has(id))) throw new Error('event_service_scope_mismatch');
+    }
 
     const now = new Date();
     const entries = [];
@@ -41,31 +113,25 @@ export default async function handler(req, res) {
       // Persist the jti BEFORE minting so concurrent manifest downloads mint
       // identical tokens: the conditional update (is qr_jti null) makes the
       // first writer win; losers re-read the winner's jti.
-      let jti = v.qr_jti;
-      if (!jti) {
-        const candidate = crypto.randomUUID();
-        const { data: claimed } = await db
-          .from('event_visits')
-          .update({ qr_jti: candidate })
-          .eq('id', v.id)
-          .is('qr_jti', null)
-          .select('qr_jti')
-          .maybeSingle();
-        if (claimed?.qr_jti) {
-          jti = claimed.qr_jti;
-        } else {
-          const { data: winner } = await db.from('event_visits').select('qr_jti').eq('id', v.id).maybeSingle();
-          jti = winner?.qr_jti || candidate;
-        }
-      }
+      const service = v.service_id ? servicesById.get(v.service_id) : null;
+      const jti = await ensurePersistedVisitJti({
+        db,
+        visit: v,
+        tenantId,
+        containerId: container.id,
+      });
       const minted = mintVisitToken({
         ...v,
         qr_jti: jti,
-        service_class: v.event_services?.service_class || null,
+        service_class: service?.service_class || null,
         event_slug: container.slug,
       }, { now });
       if (minted.kid && minted.kid !== v.qr_key_id) {
-        await db.from('event_visits').update({ qr_key_id: minted.kid }).eq('id', v.id);
+        await db.from('event_visits')
+          .update({ qr_key_id: minted.kid })
+          .eq('id', v.id)
+          .eq('tenant_id', tenantId)
+          .eq('container_id', container.id);
       }
       entries.push({
         visitId: v.id,
@@ -74,9 +140,9 @@ export default async function handler(req, res) {
         status: v.status,
         gfeStatus: v.gfe_status,
         gfeScope: v.gfe_scope || {},
-        gfeRequired: Boolean(v.event_services?.requires_gfe),
-        serviceName: v.event_services?.name || null,
-        serviceClass: v.event_services?.service_class || null,
+        gfeRequired: Boolean(service?.requires_gfe),
+        serviceName: service?.name || null,
+        serviceClass: service?.service_class || null,
         token: minted.token,
       });
     }

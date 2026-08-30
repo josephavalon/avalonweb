@@ -71,6 +71,63 @@ Human steps:
 2. Set `VITE_AUTH_PASSKEY_ENABLED=true` in the target Vercel environment.
 3. Run a manual sign-in/enrollment drill from `/members/account`.
 
+## Privileged Admin/Staff MFA
+
+Privileged MFA uses two environment flags because enforcement happens in two
+independent places:
+
+- `VITE_MFA_ENFORCED=false` is the build-time client gate. When enabled, the
+  browser reads the signed-in session through Supabase
+  `auth.mfa.getAuthenticatorAssuranceLevel()` and keeps every canonical Admin
+  or staff identity at the enrollment/challenge screen until `currentLevel` is
+  `aal2`.
+- `MFA_ENFORCED=false` is server-only. When enabled, the standard Admin/staff
+  role helpers and the enumerated custom Avalon OS, organizer, event
+  asset/document, and appointment-summary gates reject access tokens whose
+  signed JWT `aal` claim is not `aal2`.
+
+This is an API-layer control, not proof that every route or direct Supabase Data
+API policy is covered. The release inventory and database AAL2 work remain open
+P0 requirements in the security remediation plan.
+
+Do not enable only one half in production. Keep both flags false for local/demo
+review; demo and beta-review identities retain the explicit
+`not_required_demo_local` state and never manufacture a Supabase AAL.
+
+Lockout-safe activation:
+
+1. Replace shared credentials with named Supabase users and enable TOTP in the
+   target Supabase project.
+2. In a protected preview/staging environment, set both flags to `true`, sign in
+   as a named Admin, and complete the QR enrollment or existing-factor challenge.
+3. Confirm the browser reports AAL2, a privileged API succeeds, a fresh AAL1
+   session is denied, and enrollment recovery works for a second named Admin.
+4. Set both flags to `true` in the reviewed production release. The gate keeps
+   enrollment, challenge, retry, and sign-out reachable before protected pages.
+5. If assurance cannot be read, the client reports `assurance_unavailable` and
+   privileged access stays gated. Roll back by setting both flags to `false` in
+   one reviewed release; never weaken the state parser or trust User metadata.
+
+Run `npm run verify:mfa-assurance` for the supported-API and fail-closed
+contract. Production activation still requires a manual enrollment, recovery,
+step-up, and session-revocation drill with captured evidence.
+
+## Forced Password Rotation
+
+`profiles.must_change_password` is server-owned authorization state. An
+Admin/staff identity with this flag set is redirected to
+`/account/new-password`, and privileged APIs return
+`password_change_required` until rotation completes. The password page sends
+the new password to `/api/me/account/password`; that server route first waits
+for Supabase Auth to confirm the password write and only then clears the flag
+with the service-role client. Browser code cannot clear the flag through a
+profile update or an authenticated RPC.
+
+The password endpoint remains reachable while rotation is required so the
+operator cannot be locked out of the completion path. This repository check
+does not prove that migration 055 is applied in a target Supabase project;
+confirm the migration and run a real forced-rotation drill before release.
+
 ## Verification
 
 After optional providers are configured:
@@ -103,6 +160,8 @@ Production auth, checkout, scheduling, messaging, and rate-limit readiness depen
 - `VITE_AUTH_APPLE_ENABLED`
 - `VITE_AUTH_PHONE_ENABLED`
 - `VITE_AUTH_PASSKEY_ENABLED`
+- `VITE_MFA_ENFORCED`
+- `MFA_ENFORCED`
 - `APPOINTMENT_SUMMARY_TOKEN_SECRET`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `STRIPE_SECRET_KEY`

@@ -6,11 +6,13 @@
 
 import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import { appendActivity, clearAllAvLocal } from './localOs';
-import { seedDemoState } from './platformOps';
+import { clearClientProfileCache, seedDemoState } from './platformOps';
 import { isBetaReviewAuthAllowed, isDemoAuthAllowed, demoAuthLockReason, PRE_API_SECURITY_MODE } from './preApiSecurity';
 import { supabase, hasSupabase } from './supabase';
 import { authProviderConfig } from './authProviderConfig';
 import { clearPortalIntent, readPortalIntent, rememberPortalIntent, resolvePortalSession } from './portalAccess';
+import { readSupabaseMfaAssurance } from './mfaAssurance';
+import { apiPost } from './apiClient';
 
 const AuthStoreContext = createContext(null);
 const SESSION_KEY = 'av.session';
@@ -34,6 +36,11 @@ const IDLE_WARNING_MS = 60 * 1000;
 // While the warning banner is up we need to notice a "stay signed in" click (or
 // any other activity) faster than the 30s coarse tick, or the banner could lag.
 const IDLE_WARNING_TICK_MS = 1000;
+// Keep this paired with the server-only MFA_ENFORCED flag. When false, an MFA
+// assurance read failure must not change current Supabase or local-review login
+// behavior. When true, an unreadable assurance result remains unverified and
+// RequireAuth keeps privileged users at the enrollment/challenge gate.
+const PRIVILEGED_MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
 
 function noteActivity() {
   try { sessionStorage.setItem(IDLE_KEY, String(Date.now())); } catch { /* private mode */ }
@@ -123,20 +130,8 @@ function demoMfaState() {
   };
 }
 
-function supabaseMfaState(authUser = {}) {
-  const aal = String(authUser?.aal || authUser?.app_metadata?.aal || '').toLowerCase();
-  const amr = Array.isArray(authUser?.amr) ? authUser.amr : [];
-  const methodNames = amr.map((entry) => String(entry?.method || entry || '').toLowerCase());
-  const verified = aal === 'aal2' || methodNames.some((method) => ['mfa', 'totp', 'webauthn', 'phone'].includes(method));
-  return {
-    status: verified ? 'verified' : 'not_enforced',
-    required: false,
-    verified,
-    method: verified ? 'supabase_session_factor' : 'passwordless_or_sso',
-    reason: verified
-      ? 'Supabase session reports a second authentication factor.'
-      : 'Supabase MFA enforcement is a production configuration decision tracked as a go-live user action.',
-  };
+async function supabaseMfaState() {
+  return readSupabaseMfaAssurance(supabase, { enforced: PRIVILEGED_MFA_ENFORCED });
 }
 
 function readSession() {
@@ -196,6 +191,9 @@ async function loadSupabaseProfile(authUser) {
 // Admin; transient reads retry and then fail closed.
 async function buildSupabaseUser(authUser) {
   if (!authUser) return null;
+  // Remove any profile cache created by an older build or synthetic review.
+  // Real sessions resolve identity and Clinical data from authenticated APIs.
+  clearClientProfileCache();
   let canonicalRole = 'client';
   let status = 'active';
   let mustChangePassword = false;
@@ -204,6 +202,7 @@ async function buildSupabaseUser(authUser) {
   if (data?.status) status = data.status;
   if (data?.must_change_password) mustChangePassword = true;
   if (!['active', 'approved'].includes(String(status).toLowerCase())) return null;
+  const mfa = await supabaseMfaState();
   const portalSession = resolvePortalSession({
     canonicalRole,
     authUser,
@@ -223,7 +222,7 @@ async function buildSupabaseUser(authUser) {
     mustChangePassword,
     redirect: portalSession.redirect,
     authMode: 'supabase',
-    mfa: supabaseMfaState(authUser),
+    mfa,
     lastActiveAt: new Date().toISOString(),
   };
 }
@@ -460,22 +459,14 @@ export function AuthStoreProvider({ children }) {
     if (!hasSupabase) return { ok: false, error: 'Not configured.' };
     setError(null);
     try {
-      const { data, error: err } = await supabase.auth.updateUser({ password: String(newPassword || '') });
-      if (err) throw err;
-      // Clear the must-change flag through the narrow security-definer RPC.
-      // Fall back only for environments where migration 041 is not applied yet;
-      // once the authority guard exists, the broad update is rejected.
-      try {
-        const { error: clearError } = await supabase.rpc('clear_own_password_rotation_flag');
-        if (clearError) await supabase.from('profiles').update({ must_change_password: false }).eq('id', data?.user?.id);
-      } catch { /* non-fatal — the password itself has already changed */ }
-      const u = await buildSupabaseUser(data?.user || null);
-      if (u) setUser(u);
+      await apiPost('/api/me/account/password', { password: String(newPassword || ''), mode: 'set' });
+      const u = await refreshSupabaseSession();
+      if (!u || u.mustChangePassword) throw new Error('Password rotation state could not be verified.');
       return { ok: true };
     } catch (err) {
       return { ok: false, error: customerSafeAuthError('Could not update your password.') };
     }
-  }, []);
+  }, [refreshSupabaseSession]);
 
   // Phone OTP (Supabase). signInWithPhone texts a code (delivered via the Quo
   // Send-SMS auth hook); verifyPhoneOtp checks it and onAuthStateChange sets

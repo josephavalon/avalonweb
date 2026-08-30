@@ -133,6 +133,39 @@ function mfaEnforced() {
   return v === 'true' || v === '1' || v === 'yes';
 }
 
+const PRIVILEGED_SESSION_ROLES = new Set(['admin', 'staff']);
+
+/**
+ * Return the reason a verified identity cannot use an Admin/staff API session.
+ * Keeping this policy pure lets custom authorization paths use the same checks
+ * as requireAdmin/requireStaff without changing their response envelopes.
+ */
+export function privilegedSessionFailure(authed, { enforceMfa = mfaEnforced() } = {}) {
+  if (!authed || !PRIVILEGED_SESSION_ROLES.has(String(authed.role || '').toLowerCase())) return null;
+  if (authed.mustChangePassword) {
+    return {
+      status: 403,
+      code: 'password_change_required',
+      message: 'Password change required',
+    };
+  }
+  if (enforceMfa && authed.aal !== 'aal2') {
+    return {
+      status: 403,
+      code: 'mfa_required',
+      message: 'Multi-factor authentication required',
+    };
+  }
+  return null;
+}
+
+function sendPrivilegedSessionFailure(res, authed) {
+  const failure = privilegedSessionFailure(authed);
+  if (!failure) return false;
+  res.status(failure.status).json({ error: failure.message, code: failure.code });
+  return true;
+}
+
 /**
  * Verify the request's Supabase access token. Returns
  * { user, role, email, tenantId, db } on success, or null if unauthenticated /
@@ -151,7 +184,7 @@ export async function getAuthedUser(req) {
   let status = 'active';
   let profileRow = null;
   const { data: profile, error: profileError } = await db.from('profiles')
-    .select('role, tenant_id, status')
+    .select('role, tenant_id, status, must_change_password')
     .eq('id', user.id)
     .maybeSingle();
   if (profileError) {
@@ -188,7 +221,15 @@ export async function getAuthedUser(req) {
   if (role !== 'client' && !tenantId) {
     role = 'client';
   }
-  return { user, role, email: (user.email || '').trim(), tenantId, db, aal: jwtAal(token) };
+  return {
+    user,
+    role,
+    email: (user.email || '').trim(),
+    tenantId,
+    db,
+    aal: jwtAal(token),
+    mustChangePassword: profileRow?.must_change_password === true,
+  };
 }
 
 /** Gate a route to admins. Writes the 401/403 response itself; returns null when blocked. */
@@ -196,10 +237,7 @@ export async function requireAdmin(req, res) {
   const authed = await getAuthedUser(req);
   if (!authed) { res.status(401).json({ error: 'Sign in required' }); return null; }
   if (authed.role !== 'admin') { res.status(403).json({ error: 'Admin access required' }); return null; }
-  if (mfaEnforced() && authed.aal !== 'aal2') {
-    res.status(403).json({ error: 'Multi-factor authentication required', code: 'mfa_required' });
-    return null;
-  }
+  if (sendPrivilegedSessionFailure(res, authed)) return null;
   return authed;
 }
 
@@ -213,11 +251,7 @@ export async function requireRole(req, res, roles = []) {
   const authed = await getAuthedUser(req);
   if (!authed) { res.status(401).json({ error: 'Sign in required' }); return null; }
   if (!allowed.includes(authed.role)) { res.status(403).json({ error: 'Insufficient access' }); return null; }
-  // Operator-tier (admin/staff) sessions must be AAL2 once enforcement is on.
-  if (mfaEnforced() && (authed.role === 'admin' || authed.role === 'staff') && authed.aal !== 'aal2') {
-    res.status(403).json({ error: 'Multi-factor authentication required', code: 'mfa_required' });
-    return null;
-  }
+  if (sendPrivilegedSessionFailure(res, authed)) return null;
   return authed;
 }
 

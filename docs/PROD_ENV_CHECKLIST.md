@@ -13,6 +13,8 @@ These block payment, scheduling, auth, or staff operations if missing.
 - `VITE_AUTH_APPLE_ENABLED` - set `true` only after Apple is configured in Supabase and should be exposed in the UI.
 - `VITE_AUTH_PHONE_ENABLED` - set `true` only after Phone OTP is configured in Supabase and should be exposed in the UI.
 - `VITE_AUTH_PASSKEY_ENABLED` - set `true` only after passkey sign-in/enrollment is verified for the Supabase project.
+- `VITE_MFA_ENFORCED` - client Admin/staff route gate. Keep `false` until named admin/staff operators complete enrollment and recovery drills; then enable together with `MFA_ENFORCED`.
+- `MFA_ENFORCED` - server Admin/staff AAL2 gate, including custom OS, organizer, event asset/document, and appointment-summary authorization paths. Its production value must match `VITE_MFA_ENFORCED`; never enable only one side.
 - `VITE_SUPABASE_URL` - public Supabase project URL.
 - `VITE_SUPABASE_ANON_KEY` - public Supabase anon key.
 - `SUPABASE_URL` - server-side Supabase project URL.
@@ -156,6 +158,7 @@ npm run test:oauth-config
 STRIPE_SECRET_KEY=sk_test_... ACUITY_VERIFY=1 npm run verify:booking-to-acuity
 STRIPE_SECRET_KEY=sk_test_... npm run verify:plan-billing
 npm run verify:password-reset
+npm run verify:mfa-assurance
 npm run verify:prod
 VERIFY_ENV_FILE=.context/vercel-snooches-deploy.env npm run verify:prod
 npm run verify:hosted-admin-endpoints

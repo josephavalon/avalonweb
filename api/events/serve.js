@@ -8,23 +8,46 @@
  * clinical stop, green means cleared — the UI colors come from the shared
  * status module, this endpoint never sends colors.
  */
-import { getServiceClient, requireStaff } from '../_lib/supabase-auth.js';
+import { requireStaff } from '../_lib/supabase-auth.js';
 import { verifyVisitToken, clearanceAtStation } from '../_lib/events-qr.js';
 
 const STATIONS = new Set(['flow', 'express', 'experience']);
+
+export function requireEventVisitRead(result) {
+  if (result?.error) throw result.error;
+  return result?.data || null;
+}
+
+export function tokenMatchesPersistedVisitJti(tokenPayload, storedJti) {
+  const tokenJti = String(tokenPayload?.jti || '').trim();
+  const persistedJti = String(storedJti || '').trim();
+  return Boolean(tokenJti && persistedJti && tokenJti === persistedJti);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
   const caller = await requireStaff(req, res);
   if (!caller) return undefined;
-
-  const db = await getServiceClient();
-  if (!db) return res.status(500).json({ ok: false, error: 'Service unavailable.' });
+  const { db, tenantId } = caller;
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
     const station = STATIONS.has(body.station) ? body.station : 'experience';
     const action = body.action === 'checkin' ? 'checkin' : 'scan';
+    const slug = String(body.slug || '').trim();
+    if (!slug) return res.status(400).json({ ok: false, error: 'Event slug is required.' });
+
+    // Resolve the event inside the caller's tenant before accepting either a
+    // raw visit id or a signed visit token. The service-role client bypasses
+    // RLS, so this relationship check is the authorization boundary.
+    const { data: container, error: containerError } = await db
+      .from('event_containers')
+      .select('id, slug, name')
+      .eq('slug', slug)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (containerError) throw containerError;
+    if (!container) return res.status(404).json({ ok: false, error: 'Event not found.' });
 
     let visitId = String(body.visitId || '').trim();
     let tokenPayload = null;
@@ -35,25 +58,46 @@ export default async function handler(req, res) {
       }
       tokenPayload = verdict.payload;
       visitId = tokenPayload.vid;
+      if (tokenPayload.ev !== container.slug && tokenPayload.ev !== container.id) {
+        return res.status(200).json({ ok: true, result: 'token_event_mismatch' });
+      }
     }
     if (!visitId) return res.status(400).json({ ok: false, error: 'visitId or token required.' });
 
-    const { data: visit } = await db
+    const visitResult = await db
       .from('event_visits')
-      .select('id, attendee_name, status, gfe_status, gfe_scope, qr_jti, served_at, container_id, event_services:service_id (name, service_class, requires_gfe), event_containers:container_id (slug, name)')
+      .select('id, attendee_name, status, gfe_status, gfe_scope, qr_jti, served_at, container_id, service_id')
       .eq('id', visitId)
+      .eq('tenant_id', tenantId)
+      .eq('container_id', container.id)
       .maybeSingle();
+    const visit = requireEventVisitRead(visitResult);
     if (!visit) return res.status(200).json({ ok: true, result: 'not_found' });
 
-    // Replay protection (T7): the token's jti must match the visit's current one.
-    if (tokenPayload && visit.qr_jti && tokenPayload.jti !== visit.qr_jti) {
+    let service = null;
+    if (visit.service_id) {
+      const { data, error: serviceError } = await db
+        .from('event_services')
+        .select('id, name, service_class, requires_gfe')
+        .eq('id', visit.service_id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (serviceError) throw serviceError;
+      if (!data) throw new Error('event_service_scope_mismatch');
+      service = data;
+    }
+
+    // Replay protection (T7): a signed token is usable only when the scoped
+    // database row holds the same non-empty JTI. Missing persisted state is a
+    // denial, never an invitation to trust the token payload.
+    if (tokenPayload && !tokenMatchesPersistedVisitJti(tokenPayload, visit.qr_jti)) {
       return res.status(200).json({ ok: true, result: 'replayed_or_rotated_token' });
     }
 
     const clearance = clearanceAtStation({
       gfeStatus: visit.gfe_status,
       gfeScope: visit.gfe_scope,
-      gfeRequired: Boolean(visit.event_services?.requires_gfe),
+      gfeRequired: Boolean(service?.requires_gfe),
     }, station);
 
     const shape = {
@@ -61,9 +105,9 @@ export default async function handler(req, res) {
       name: visit.attendee_name || 'Guest',
       status: visit.status,
       gfeStatus: visit.gfe_status,
-      serviceName: visit.event_services?.name || null,
-      serviceClass: visit.event_services?.service_class || null,
-      event: visit.event_containers?.name || null,
+      serviceName: service?.name || null,
+      serviceClass: service?.service_class || null,
+      event: container.name,
       alreadyServed: Boolean(visit.served_at),
       clearance,               // { allowed, level: 'ok'|'stop', reason? }
     };
@@ -93,7 +137,12 @@ export default async function handler(req, res) {
     });
     if (error) throw error;
     if (typeof body.photoRelease === 'boolean') {
-      await db.from('event_visits').update({ photo_release: body.photoRelease }).eq('id', visit.id);
+      const { error: photoError } = await db.from('event_visits')
+        .update({ photo_release: body.photoRelease })
+        .eq('id', visit.id)
+        .eq('tenant_id', tenantId)
+        .eq('container_id', container.id);
+      if (photoError) throw photoError;
     }
     return res.status(200).json({ ok: true, result: 'served', visit: { ...shape, status: served?.status || 'served' } });
   } catch (err) {

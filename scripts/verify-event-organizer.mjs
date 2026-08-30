@@ -46,15 +46,42 @@ check('organizer login submits visible browser-autofilled credentials', () => {
 check('organizer routes preserve the dedicated Event Hub login entry point', () => {
   assert.match(appRoutes, /pathname\.startsWith\('\/organizer'\)/);
   assert.match(appRoutes, /portal=organizer&redirect=/);
-  assert.match(loginPage, /next === 'organizer' && !supabaseMode && demoAuthAvailable/);
+  assert.match(loginPage, /const localOrganizerDemo = requestedOrganizer && !supabaseMode && demoAuthAvailable/);
 });
 
-check('event discovery orders upcoming above past with the requested events', () => {
-  assert.ok(eventsPage.indexOf('Upcoming Events') < eventsPage.indexOf('Past Events'));
-  assert.match(eventsPage, /Cannabis CE Night/);
-  assert.match(eventsPage, /2026-08-28/);
-  assert.match(eventsPage, /Maxim Superbowl Party/);
-  assert.match(eventsPage, /2026-02-07/);
+check('custom event gates apply the shared privileged-session policy', () => {
+  assert.match(organizerApi, /privilegedSessionFailure\(authed\)/);
+  assert.match(assetApi, /privilegedSessionFailure\(auth\)/);
+  assert.match(eventDocumentsApi, /privilegedSessionFailure\(auth\)/);
+});
+
+check('organizer, asset, and document service-role paths stay inside the caller tenant', () => {
+  assert.match(organizerApi, /if \(!authed\.tenantId\)/,
+    'organizer access must require explicit tenant ownership');
+  assert.match(organizerApi, /from\('event_promoters'\)[\s\S]*?\.eq\('tenant_id', authed\.tenantId\)/,
+    'organizer assignments must be tenant scoped');
+  assert.match(organizerApi, /from\('event_containers'\)[\s\S]*?\.eq\('tenant_id', authed\.tenantId\)/,
+    'organizer event reads must be tenant scoped');
+  for (const source of [assetApi, eventDocumentsApi]) {
+    assert.match(source, /if \(!auth\.tenantId\)/,
+      'event file access must require an explicit caller tenant');
+    assert.match(source, /from\('event_containers'\)[\s\S]*?\.eq\('tenant_id', auth\.tenantId\)/,
+      'event file parent lookup must be scoped before authorization');
+    assert.match(source, /from\('event_promoters'\)[\s\S]*?\.eq\('tenant_id', auth\.tenantId\)/,
+      'event file promoter assignments must be tenant scoped');
+  }
+  assert.match(assetApi, /from\('event_assets'\)[\s\S]*?\.eq\('tenant_id', container\.tenant_id\)/,
+    'asset reads must independently carry the event tenant');
+  assert.match(eventDocumentsApi, /from\('event_documents'\)[\s\S]*?\.eq\('tenant_id', container\.tenant_id\)/,
+    'document reads must independently carry the event tenant');
+});
+
+check('public events entry point captures a scoped quote request', () => {
+  assert.match(eventsPage, /Build your event/);
+  assert.match(eventsPage, /fetch\('\/api\/events\/host-inquiry'/);
+  assert.match(eventsPage, /name: contactName/);
+  assert.match(eventsPage, /email: contactEmail/);
+  assert.match(eventsPage, /phone: contactPhone/);
 });
 
 check('local Event Hub preview does not pin HMR to another port', () => {

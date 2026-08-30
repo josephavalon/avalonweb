@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Loader2, ArrowRight, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/lib/useAuthStore';
 
 /**
  * Operator-tier MFA gate. RequireAuth renders this (instead of the admin app)
@@ -17,6 +18,7 @@ import { supabase } from '@/lib/supabase';
  * on, and enrollment is always reachable from here.
  */
 export default function MfaGate() {
+  const { signOut } = useAuthStore();
   const [mode, setMode] = useState('loading'); // loading | enroll | challenge | error
   const [factorId, setFactorId] = useState('');
   const [challengeId, setChallengeId] = useState('');
@@ -24,6 +26,7 @@ export default function MfaGate() {
   const [secret, setSecret] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState('');
 
   const init = useCallback(async () => {
@@ -76,6 +79,12 @@ export default function MfaGate() {
       setError(err?.message || 'That code did not verify. Check your authenticator and try again.');
       setBusy(false);
     }
+  };
+
+  const handleSwitchAccount = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    await signOut();
   };
 
   return (
@@ -160,6 +169,18 @@ export default function MfaGate() {
             </button>
           </div>
         )}
+
+        <div className="mt-6 border-t border-foreground/10 pt-5">
+          <button
+            type="button"
+            onClick={handleSwitchAccount}
+            disabled={signingOut}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-foreground/15 px-5 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/65 transition-colors hover:border-foreground/30 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" strokeWidth={2} />}
+            <span>{signingOut ? 'Signing out' : 'Sign out & switch account'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

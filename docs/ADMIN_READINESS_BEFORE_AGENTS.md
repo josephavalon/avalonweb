@@ -1,5 +1,15 @@
 # Avalon Admin definition of ready before agents
 
+The platform-wide security design, current threat model, phased remediation, and evidence status are maintained in:
+
+- `SECURITY_PLATFORM_ARCHITECTURE.md`
+- `SECURITY_THREAT_MODEL.md`
+- `SECURITY_REMEDIATION_PLAN.md`
+- `SECURITY_CONTROL_REGISTRY.md`
+- `SECURITY_PHASE_0_IMPLEMENTATION.md`
+
+Those documents are release inputs for every Admin domain and agent. This checklist does not override a security P0 or missing runtime/contract evidence.
+
 ## Decision
 
 Do not activate autonomous agents until the P0 gates below are complete and verified. RobBot3K can remain available in research and dry-run mode while the Admin control plane is finished.

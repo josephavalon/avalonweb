@@ -117,7 +117,10 @@ export const PHI_STORAGE_KEYS = [
   'dob',
   'dateofbirth',
   'birthdate',
+  'address',
   'emergencycontact',
+  'emergencyname',
+  'emergencyrelationship',
   'vitals',
   'bloodpressure',
   'heartrate',
@@ -147,6 +150,12 @@ export const PHI_STORAGE_KEYS = [
   'contraindications',
   'nursesignature',
   'acuitynote',
+  'covidstatus',
+  'infectiousstatus',
+  'ivhistory',
+  'nursenotes',
+  'phipolicy',
+  'gfe',
 ];
 
 const PHI_EXACT_KEYS = new Set(['bp', 'hr', 'spo2']);

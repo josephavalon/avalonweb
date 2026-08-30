@@ -9,7 +9,7 @@
  * clinical service_id. Avalon retains clinical catalog, pricing, publishing,
  * medical staffing, eligibility, care, billing, and refunds.
  */
-import { getAuthedUser } from '../_lib/supabase-auth.js';
+import { getAuthedUser, privilegedSessionFailure } from '../_lib/supabase-auth.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeErrorCode } from '../_lib/safe-error.js';
 import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
@@ -30,31 +30,43 @@ const cleanCount = (value, max) => {
 };
 
 async function assignedContainer(authed, containerId) {
-  let query = authed.db.from('event_containers').select('*').eq('id', containerId);
-  if (authed.tenantId) query = query.eq('tenant_id', authed.tenantId);
+  const query = authed.db.from('event_containers').select('*')
+    .eq('id', containerId)
+    .eq('tenant_id', authed.tenantId);
   const { data: container, error } = await query.maybeSingle();
   if (error) throw error;
   if (!container) return null;
   if (authed.role === 'admin') return container;
   const { data: assignment } = await authed.db.from('event_promoters')
-    .select('id').eq('profile_id', authed.user.id).eq('container_id', container.id).maybeSingle();
+    .select('id')
+    .eq('tenant_id', authed.tenantId)
+    .eq('profile_id', authed.user.id)
+    .eq('container_id', container.id)
+    .maybeSingle();
   return assignment ? container : null;
 }
 
 async function loadContainers(authed) {
   if (authed.role === 'admin') {
-    let query = authed.db.from('event_containers').select('*').in('status', [...ACTIVE_EVENT_STATUSES]).order('starts_at', { ascending: true });
-    if (authed.tenantId) query = query.eq('tenant_id', authed.tenantId);
+    const query = authed.db.from('event_containers').select('*')
+      .eq('tenant_id', authed.tenantId)
+      .in('status', [...ACTIVE_EVENT_STATUSES])
+      .order('starts_at', { ascending: true });
     const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }
   const { data: assignments, error: assignmentError } = await authed.db.from('event_promoters')
-    .select('container_id').eq('profile_id', authed.user.id);
+    .select('container_id')
+    .eq('tenant_id', authed.tenantId)
+    .eq('profile_id', authed.user.id);
   if (assignmentError) throw assignmentError;
   const ids = (assignments || []).map((row) => row.container_id).filter(Boolean);
   if (!ids.length) return [];
-  const { data, error } = await authed.db.from('event_containers').select('*').in('id', ids).order('starts_at', { ascending: true });
+  const { data, error } = await authed.db.from('event_containers').select('*')
+    .eq('tenant_id', authed.tenantId)
+    .in('id', ids)
+    .order('starts_at', { ascending: true });
   if (error) throw error;
   return data || [];
 }
@@ -89,12 +101,12 @@ async function hubPayload(authed) {
   if (!ids.length) return { events: [], privacyMode: 'aggregate-only', clinicalCommerce: 'avalon-controlled' };
 
   const [{ data: tiers, error: tierError }, { data: visits, error: visitError }, { data: orders, error: orderError }, { data: assets, error: assetError }, { data: privateRows, error: privateError }, { data: documents, error: documentError }] = await Promise.all([
-    authed.db.from('event_tiers').select('id, container_id, name, description, price_cents, allocation, presale_opens_at, public_opens_at, experience_only, service_id, price_locked, active').in('container_id', ids).order('price_cents', { ascending: true }),
-    authed.db.from('event_visits').select('container_id, tier_id, order_id, status').in('container_id', ids),
-    authed.db.from('event_orders').select('id, container_id, total_cents, status').in('container_id', ids),
-    authed.db.from('event_assets').select('container_id, status, kind').in('container_id', ids),
-    authed.db.from('event_container_private').select('container_id, run_of_show').in('container_id', ids),
-    authed.db.from('event_documents').select('container_id, kind, status').in('container_id', ids),
+    authed.db.from('event_tiers').select('id, container_id, name, description, price_cents, allocation, presale_opens_at, public_opens_at, experience_only, service_id, price_locked, active').eq('tenant_id', authed.tenantId).in('container_id', ids).order('price_cents', { ascending: true }),
+    authed.db.from('event_visits').select('container_id, tier_id, order_id, status').eq('tenant_id', authed.tenantId).in('container_id', ids),
+    authed.db.from('event_orders').select('id, container_id, total_cents, status').eq('tenant_id', authed.tenantId).in('container_id', ids),
+    authed.db.from('event_assets').select('container_id, status, kind').eq('tenant_id', authed.tenantId).in('container_id', ids),
+    authed.db.from('event_container_private').select('container_id, run_of_show').eq('tenant_id', authed.tenantId).in('container_id', ids),
+    authed.db.from('event_documents').select('container_id, kind, status').eq('tenant_id', authed.tenantId).in('container_id', ids),
   ]);
   if (tierError || visitError || orderError || assetError || privateError || documentError) throw tierError || visitError || orderError || assetError || privateError || documentError;
 
@@ -181,6 +193,11 @@ export default async function handler(req, res) {
   if (!limit.ok) return res.status(429).json({ ok: false, error: 'Too many requests. Try again shortly.' });
   const authed = await getAuthedUser(req);
   if (!authed?.user) return res.status(401).json({ ok: false, error: 'Sign in required.' });
+  const sessionFailure = privilegedSessionFailure(authed);
+  if (sessionFailure) {
+    return res.status(sessionFailure.status).json({ ok: false, error: sessionFailure.message, code: sessionFailure.code });
+  }
+  if (!authed.tenantId) return res.status(403).json({ ok: false, error: 'Tenant-scoped organizer access required.' });
   const portalAccess = Array.isArray(authed.user.app_metadata?.portal_access) ? authed.user.app_metadata.portal_access : [];
   if (!['promoter', 'admin'].includes(authed.role) && !portalAccess.includes('organizer')) {
     return res.status(403).json({ ok: false, error: 'Organizer access required.' });
@@ -216,7 +233,10 @@ export default async function handler(req, res) {
         description_blocks: { ...existingBlocks, description, vibe },
         updated_at: new Date().toISOString(),
       };
-      const { error } = await authed.db.from('event_containers').update(patch).eq('id', container.id);
+      const { error } = await authed.db.from('event_containers')
+        .update(patch)
+        .eq('id', container.id)
+        .eq('tenant_id', authed.tenantId);
       if (error) throw error;
       await authed.db.from('event_audit_log').insert({
         tenant_id: container.tenant_id, actor: authed.user.id, action: 'organizer_details_update',
@@ -255,7 +275,10 @@ export default async function handler(req, res) {
         upgradeRequests: cleanText(body.upgradeRequests, 2400),
       };
       const { data: existingPrivate } = await authed.db.from('event_container_private')
-        .select('run_of_show').eq('container_id', container.id).maybeSingle();
+        .select('run_of_show')
+        .eq('tenant_id', authed.tenantId)
+        .eq('container_id', container.id)
+        .maybeSingle();
       const runOfShow = existingPrivate?.run_of_show && !Array.isArray(existingPrivate.run_of_show)
         ? existingPrivate.run_of_show
         : {};
@@ -296,7 +319,10 @@ export default async function handler(req, res) {
       if (!tierPatch.name) return res.status(400).json({ ok: false, error: 'Ticket name is required.' });
       if (tierId) {
         const { data: existing } = await authed.db.from('event_tiers').select('id, experience_only, service_id, price_locked, price_cents')
-          .eq('id', tierId).eq('container_id', container.id).maybeSingle();
+          .eq('id', tierId)
+          .eq('tenant_id', authed.tenantId)
+          .eq('container_id', container.id)
+          .maybeSingle();
         if (!existing) return res.status(404).json({ ok: false, error: 'Ticket tier not found.' });
         if (!existing.experience_only || existing.service_id) {
           return res.status(403).json({ ok: false, error: 'Clinical service pricing is managed by Avalon.' });
@@ -304,7 +330,11 @@ export default async function handler(req, res) {
         if (existing.price_locked && priceCents !== existing.price_cents) {
           return res.status(403).json({ ok: false, error: 'This admission price is locked by Avalon.' });
         }
-        const { error } = await authed.db.from('event_tiers').update(tierPatch).eq('id', tierId).eq('container_id', container.id);
+        const { error } = await authed.db.from('event_tiers')
+          .update(tierPatch)
+          .eq('id', tierId)
+          .eq('tenant_id', authed.tenantId)
+          .eq('container_id', container.id);
         if (error) throw error;
       } else {
         const { error } = await authed.db.from('event_tiers').insert({

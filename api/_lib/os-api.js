@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getAuthedUser } from './supabase-auth.js';
+import { getAuthedUser, privilegedSessionFailure } from './supabase-auth.js';
 
 export function osBetaEnabled() {
   return [process.env.AVALON_OS_BETA, process.env.VITE_AVALON_OS_BETA]
@@ -40,6 +40,11 @@ export async function requireOsOperator(req, res, id) {
   }
   if (!['admin', 'staff'].includes(authed.role)) {
     fail(res, 403, 'operator_access_required', 'Admin or staff access is required.', { requestId: id });
+    return null;
+  }
+  const sessionFailure = privilegedSessionFailure(authed);
+  if (sessionFailure) {
+    fail(res, sessionFailure.status, sessionFailure.code, sessionFailure.message, { requestId: id });
     return null;
   }
   if (!authed.tenantId) {

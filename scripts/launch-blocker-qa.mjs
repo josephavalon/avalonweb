@@ -369,6 +369,31 @@ function checkAdminEndpointsGated() {
       fail(`api/_lib/supabase-auth.js missing MFA enforcement plumbing: ${required}`);
     }
   }
+  const clientAuthSource = readRepoFile('src/lib/useAuthStore.js');
+  const assuranceSource = readRepoFile('src/lib/mfaAssurance.js');
+  if (!assuranceSource.includes('getAuthenticatorAssuranceLevel')) {
+    fail('client MFA assurance must use Supabase mfa.getAuthenticatorAssuranceLevel()');
+  }
+  if (/authUser\?\.(?:aal|amr)|authUser\?\.app_metadata\?\.aal/.test(clientAuthSource)) {
+    fail('client MFA assurance must not infer AAL/AMR from unsupported Supabase User fields');
+  }
+  if (!clientAuthSource.includes('readSupabaseMfaAssurance')) {
+    fail('useAuthStore must consume the supported Supabase MFA assurance adapter');
+  }
+  for (const customGate of [
+    'api/_lib/os-api.js',
+    'api/events/organizer.js',
+    'api/events/assets.js',
+    'api/events/documents.js',
+    'api/appointment-summary.js',
+  ]) {
+    if (!readRepoFile(customGate).includes('privilegedSessionFailure')) {
+      fail(`${customGate} has a custom privileged role check but does not enforce the shared MFA/password-rotation policy`);
+    }
+  }
+  if (!helperSource.includes('must_change_password') || !helperSource.includes('password_change_required')) {
+    fail('api/_lib/supabase-auth.js must deny privileged API access during forced password rotation');
+  }
 }
 
 function checkSummaryTokenNotInQueryString() {

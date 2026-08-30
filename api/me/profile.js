@@ -7,8 +7,8 @@
  *
  * PATCH — accept a subset of editable fields from the Account page and write
  * them back to `profiles`. Any change that touches PHI (the `phi` blob or
- * `emergency_contact`) emits an audit event so HIPAA logging stays intact even
- * when the patient self-edits.
+ * `emergency_contact`) attempts the existing audit event write. Making those
+ * audit writes transactional and fail-closed remains separate remediation.
  *
  * PHI surface: only the caller's own row is ever read/written.
  */
@@ -16,6 +16,7 @@ import { getAuthedUser } from '../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { blockFrontDoorPhiRoute } from '../_lib/pre-api-guard.js';
+import { resolveUniqueProfileIdByEmail } from '../_lib/profile-identity.js';
 
 // Columns we expose on the profile API. Kept in one place so GET and PATCH
 // agree on the wire shape, and the field allow-list for PATCH is derived from
@@ -90,12 +91,24 @@ function buildUpdatePatch(body = {}) {
   return { patch, phiFields };
 }
 
-async function readProfileRow(db, userId, email) {
+async function readProfileRow(db, userId, email, tenantId) {
   // Prefer the auth-id match (post-007 trigger seeds it); fall back to email
-  // for legacy rows that pre-date the auth trigger.
-  let { data, error } = await db.from('profiles').select(PROFILE_COLUMNS).eq('id', userId).maybeSingle();
-  if (!data && email) {
-    ({ data, error } = await db.from('profiles').select(PROFILE_COLUMNS).eq('email', email).maybeSingle());
+  // only for one unambiguous row in the authenticated tenant. Email is not a
+  // stable identity key and must never drive a multi-row service-role update.
+  let { data, error } = await db.from('profiles')
+    .select(PROFILE_COLUMNS)
+    .eq('id', userId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (!data && !error && email) {
+    const legacyProfileId = await resolveUniqueProfileIdByEmail(db, { tenantId, email });
+    if (legacyProfileId) {
+      ({ data, error } = await db.from('profiles')
+        .select(PROFILE_COLUMNS)
+        .eq('id', legacyProfileId)
+        .eq('tenant_id', tenantId)
+        .maybeSingle());
+    }
   }
   return { data: data || null, error: error || null };
 }
@@ -107,6 +120,7 @@ export default async function handler(req, res) {
   const authed = await getAuthedUser(req);
   if (!authed) return res.status(401).json({ error: 'Sign in required' });
   const { db, user, email, tenantId } = authed;
+  if (!tenantId) return res.status(403).json({ error: 'Account tenant is required.', code: 'tenant_required' });
 
   if (req.method === 'GET') {
     if (!email) {
@@ -116,7 +130,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ profile: empty, gfe: null, savedAddress: null });
     }
     try {
-      const { data, error } = await readProfileRow(db, user.id, email);
+      const { data, error } = await readProfileRow(db, user.id, email, tenantId);
       if (error) throw error;
       const profile = toClientProfile(data, email);
       // Legacy fields stay at the top level for BookNow / GFE consumers that
@@ -135,40 +149,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No editable fields in request body.' });
     }
     try {
-      // Constrain the update to the caller's own row. Service-role bypasses
-      // RLS, so the `eq('id', user.id)` is the actual authorization boundary.
-      const { data, error } = await db.from('profiles')
-        .update(patch)
-        .eq('id', user.id)
-        .select(PROFILE_COLUMNS)
-        .maybeSingle();
+      const { data: currentProfile, error: currentProfileError } = await readProfileRow(db, user.id, email, tenantId);
+      if (currentProfileError) throw currentProfileError;
+      if (!currentProfile?.id) return res.status(404).json({ error: 'Profile not found for this account.' });
+
+      // The database merges patient-owned PHI keys against the row it locks for
+      // update. This avoids a read/modify/write race that could otherwise restore
+      // stale clinician notes or review markers over a concurrent clinical edit.
+      const { data: updated, error } = await db.rpc('update_patient_profile_fields', {
+        p_profile_id: currentProfile.id,
+        p_tenant_id: tenantId,
+        p_patch: patch,
+      });
       if (error) throw error;
+      const data = Array.isArray(updated) ? updated[0] : updated;
       if (!data) {
-        // No row matched the auth id — likely a legacy email-only profile. Try
-        // an update by email so the patient can still save while the trigger
-        // backfill catches up.
-        if (email) {
-          const { data: byEmail, error: byEmailErr } = await db.from('profiles')
-            .update(patch)
-            .eq('email', email)
-            .select(PROFILE_COLUMNS)
-            .maybeSingle();
-          if (byEmailErr) throw byEmailErr;
-          if (byEmail) {
-            if (phiFields.length) {
-              await writeAuditEvent(db, {
-                tenantId: byEmail.tenant_id || tenantId || null,
-                actorProfileId: byEmail.id || null,
-                action: 'profile_self_edit_phi',
-                entityType: 'profiles',
-                entityId: byEmail.id || null,
-                phiTouched: true,
-                payload: { fields: phiFields },
-              });
-            }
-            return res.status(200).json({ profile: toClientProfile(byEmail, email) });
-          }
-        }
         return res.status(404).json({ error: 'Profile not found for this account.' });
       }
 

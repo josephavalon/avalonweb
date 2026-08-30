@@ -36,6 +36,7 @@ const vercelConfig = JSON.parse(readFileSync(new URL('../vercel.json', import.me
 const authCallbackSource = readFileSync(new URL('../src/pages/AuthCallback.jsx', import.meta.url), 'utf8');
 const newPasswordSource = readFileSync(new URL('../src/pages/NewPassword.jsx', import.meta.url), 'utf8');
 const authStoreSource = readFileSync(new URL('../src/lib/useAuthStore.js', import.meta.url), 'utf8');
+const mfaAssuranceSource = readFileSync(new URL('../src/lib/mfaAssurance.js', import.meta.url), 'utf8');
 const supabaseClientSource = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8');
 const loginQaSource = readFileSync(new URL('./login-qa.mjs', import.meta.url), 'utf8');
 const interactionQaSource = readFileSync(new URL('./interaction-qa.mjs', import.meta.url), 'utf8');
@@ -411,6 +412,8 @@ for (const verifyProdRequired of [
   'PUBLIC_SITE_URL',
   'AVALON_ENABLE_LIVE_API',
   'VITE_AVALON_ENABLE_LIVE_API',
+  'VITE_MFA_ENFORCED',
+  'MFA_ENFORCED',
   'VITE_STRIPE_PUBLISHABLE_KEY',
   'STRIPE_WEBHOOK_SECRET',
   'APPOINTMENT_SUMMARY_TOKEN_SECRET',
@@ -419,6 +422,8 @@ for (const verifyProdRequired of [
   assert(goLiveWorkflowSource.includes(`${verifyProdRequired}:`), `Go-live workflow must pass ${verifyProdRequired} into verify:prod`);
 }
 assert(verifyProdSource.includes("process.env.AVALON_ENABLE_LIVE_API !== 'true'"), 'verify:prod must require live API flags to be true');
+assert(verifyProdSource.includes('process.env.VITE_MFA_ENFORCED !== process.env.MFA_ENFORCED'), 'verify:prod must reject mismatched client/server MFA flags');
+assert(verifyProdSource.includes("process.env.VITE_MFA_ENFORCED !== 'true' || process.env.MFA_ENFORCED !== 'true'"), 'verify:prod must require both MFA flags to be true');
 assert(verifyProdSource.includes("startsWith('pk_')"), 'verify:prod must require a Stripe publishable key for the build');
 assert(verifyProdSource.includes('ACUITY_DEFAULT_TYPE_ID') && verifyProdSource.includes('ACUITY_TYPE_HYDRATION') && verifyProdSource.includes('ACUITY_TYPE_MEMBERSHIP'), 'verify:prod must require deterministic Acuity type config');
 for (const workflowStep of ['npm run lint', 'npm run typecheck', 'npm run build', 'npm run verify:prod', 'npm run test:launch-blockers']) {
@@ -759,7 +764,10 @@ for (const [label, source] of Object.entries({ authStoreSource, interactionQaSou
   assert(source.includes('not_required_demo_local'), `Demo MFA state must be explicit in ${label}`);
 }
 assert(authStoreSource.includes('function supabaseMfaState'), 'Supabase auth must record MFA enforcement state explicitly');
-assert(authStoreSource.includes("status: verified ? 'verified' : 'not_enforced'"), 'Supabase MFA state must not imply enforcement by default');
+assert(authStoreSource.includes('readSupabaseMfaAssurance'), 'Supabase auth must read assurance through the supported MFA adapter');
+assert(mfaAssuranceSource.includes('getAuthenticatorAssuranceLevel'), 'MFA adapter must use Supabase getAuthenticatorAssuranceLevel');
+assert(!/authUser\?\.(aal|amr)|authUser\?\.app_metadata\?\.aal/.test(authStoreSource), 'Supabase MFA state must not infer assurance from unsupported User fields');
+assert(mfaAssuranceSource.includes("status: enforced ? 'assurance_unavailable' : 'not_enforced'"), 'Unreadable assurance must fail closed only when enforcement is enabled');
 assert(authStoreSource.includes("role: 'nurse'"), 'Demo roster must include the launch nurse role');
 for (const retiredRole of ["role: 'np'", "role: 'physician'", 'NP001', 'MD001', 'PHYSICIAN001']) {
   assert(!authStoreSource.includes(retiredRole), `Retired prescriber demo role remains in auth store: ${retiredRole}`);

@@ -685,7 +685,7 @@ export default function NurseInvoice() {
                   </p>
                 <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
                   Reimbursed separately from your shift pay. Attach a receipt where you have one.
-                  Descriptions and receipts should show the purchase only — no patient names or
+                  Descriptions and receipts should show the purchase only — no personal names or
                   health details. Files are stored privately and remain quarantined until an
                   approved scanner clears them for Finance review.
                 </p>

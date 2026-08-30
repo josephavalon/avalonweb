@@ -2,7 +2,7 @@
  * Event operations document pipeline. COIs, floor plans, and venue requirement
  * files only — never attendee data, charts, health forms, or clinical records.
  */
-import { getServiceClient, getAuthedUser, requireStaff } from '../_lib/supabase-auth.js';
+import { getAuthedUser, privilegedSessionFailure, requireStaff } from '../_lib/supabase-auth.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 
 const BUCKET = 'event-documents';
@@ -10,13 +10,14 @@ const MAX_BYTES = 20 * 1024 * 1024;
 const KINDS = new Set(['coi', 'floor_plan', 'venue_photo', 'venue_requirements', 'other']);
 const EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png']);
 
-async function callerForEvent(req, res, db, container) {
-  const auth = await getAuthedUser(req);
-  if (!auth?.user) { res.status(401).json({ ok: false, error: 'Sign in required.' }); return null; }
+async function callerForEvent(res, db, container, auth) {
   const role = auth.role || auth.profile?.role || 'client';
   if (['ops_manager', 'staff', 'admin', 'founder'].includes(role)) return { ...auth, isStaff: true };
   const { data } = await db.from('event_promoters').select('id')
-    .eq('container_id', container.id).eq('profile_id', auth.user.id).maybeSingle();
+    .eq('tenant_id', auth.tenantId)
+    .eq('container_id', container.id)
+    .eq('profile_id', auth.user.id)
+    .maybeSingle();
   if (data) return { ...auth, isStaff: false };
   res.status(403).json({ ok: false, error: 'Not allowed for this event.' });
   return null;
@@ -31,18 +32,30 @@ function isExpectedFile(buffer, extension) {
 export default async function handler(req, res) {
   const limit = await checkRateLimit({ key: `event-documents:${clientIp(req)}`, windowMs: 60_000, max: 40 });
   if (!limit.ok) return res.status(429).json({ ok: false, error: 'Too many document requests. Try again shortly.' });
-  const db = await getServiceClient();
-  if (!db) return res.status(500).json({ ok: false, error: 'Service unavailable.' });
+  const auth = await getAuthedUser(req);
+  if (!auth?.user) return res.status(401).json({ ok: false, error: 'Sign in required.' });
+  const sessionFailure = privilegedSessionFailure(auth);
+  if (sessionFailure) {
+    return res.status(sessionFailure.status).json({ ok: false, error: sessionFailure.message, code: sessionFailure.code });
+  }
+  if (!auth.tenantId) return res.status(403).json({ ok: false, error: 'Tenant-scoped event access required.' });
+  const db = auth.db;
   const params = req.method === 'GET' ? req.query : (typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {});
   const slug = String(params.slug || '').trim();
-  const { data: container } = await db.from('event_containers').select('id, tenant_id, slug').eq('slug', slug).maybeSingle();
+  const { data: container } = await db.from('event_containers').select('id, tenant_id, slug')
+    .eq('slug', slug)
+    .eq('tenant_id', auth.tenantId)
+    .maybeSingle();
   if (!container) return res.status(404).json({ ok: false, error: 'Event not found.' });
 
   try {
     if (req.method === 'GET') {
-      const caller = await callerForEvent(req, res, db, container);
+      const caller = await callerForEvent(res, db, container, auth);
       if (!caller) return undefined;
-      const { data } = await db.from('event_documents').select('*').eq('container_id', container.id).order('created_at', { ascending: false });
+      const { data } = await db.from('event_documents').select('*')
+        .eq('tenant_id', container.tenant_id)
+        .eq('container_id', container.id)
+        .order('created_at', { ascending: false });
       const documents = [];
       for (const document of data || []) {
         const { data: signed } = await db.storage.from(BUCKET).createSignedUrl(document.storage_path, 3600);
@@ -54,7 +67,7 @@ export default async function handler(req, res) {
     const action = String(params.action || '');
 
     if (action === 'upload_url') {
-      const caller = await callerForEvent(req, res, db, container);
+      const caller = await callerForEvent(res, db, container, auth);
       if (!caller) return undefined;
       const kind = KINDS.has(params.kind) ? params.kind : null;
       const extension = String(params.fileName || '').toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
@@ -66,7 +79,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'finalize') {
-      const caller = await callerForEvent(req, res, db, container);
+      const caller = await callerForEvent(res, db, container, auth);
       if (!caller) return undefined;
       const kind = KINDS.has(params.kind) ? params.kind : null;
       const path = String(params.path || '');
@@ -97,9 +110,16 @@ export default async function handler(req, res) {
     if (action === 'moderate') {
       const caller = await requireStaff(req, res);
       if (!caller) return undefined;
+      if (caller.tenantId !== container.tenant_id) return res.status(404).json({ ok: false, error: 'Event not found.' });
       const status = ['approved', 'rejected', 'superseded', 'pending'].includes(params.status) ? params.status : null;
       if (!status) return res.status(400).json({ ok: false, error: 'Bad status.' });
-      const { data: document, error } = await db.from('event_documents').update({ status, reviewed_by: caller.user.id, reviewed_at: new Date().toISOString() }).eq('id', params.documentId).eq('container_id', container.id).select().single();
+      const { data: document, error } = await db.from('event_documents')
+        .update({ status, reviewed_by: caller.user.id, reviewed_at: new Date().toISOString() })
+        .eq('id', params.documentId)
+        .eq('tenant_id', caller.tenantId)
+        .eq('container_id', container.id)
+        .select()
+        .single();
       if (error) throw error;
       return res.status(200).json({ ok: true, document });
     }

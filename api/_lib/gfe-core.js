@@ -6,6 +6,8 @@
  */
 import { getAppointment, acuityFetch } from '../_acuity.js';
 import { createExamInvite, isQualiphyConfigured } from './qualiphy.js';
+import { legacyQualiphyMutationEnabled } from './qualiphy-webhook-policy.js';
+import { resolveUniqueProfileIdByEmail } from './profile-identity.js';
 
 const GFE_VALID_DAYS = 365;
 
@@ -113,8 +115,10 @@ export async function writeGfeToAcuity(acuityAppointmentId, { status, date, prov
 // GFE when the category toggle is on and the patient has none valid. Fully
 // best-effort — the caller wraps it so it can never break the Acuity webhook.
 export async function gfeSyncAndAssign({ db, appt, appointmentRow, tenantId, baseUrl, action }) {
+  if (!db || !tenantId || !appointmentRow?.id) return;
   const payload = appointmentRow?.external_payload || {};
   const email = String(payload.contact?.email || appt?.email || '').trim().toLowerCase();
+  const profileId = await resolveUniqueProfileIdByEmail(db, { tenantId, email });
   const now = new Date();
 
   // (1) Sync GFE from the Acuity form → profile + our appointment row.
@@ -135,20 +139,25 @@ export async function gfeSyncAndAssign({ db, appt, appointmentRow, tenantId, bas
       gfe_status: approved ? 'approved' : 'denied',
       external_payload: { ...payload, gfe: { ...(payload.gfe || {}), ...gfeRecord } },
       updated_at: now.toISOString(),
-    }).eq('id', appointmentRow.id);
-    if (approved && email) await db.from('profiles').update({ gfe: gfeRecord }).eq('email', email);
+    }).eq('id', appointmentRow.id).eq('tenant_id', tenantId);
+    if (approved && profileId) {
+      await db.from('profiles').update({ gfe: gfeRecord }).eq('id', profileId).eq('tenant_id', tenantId);
+    }
   }
 
   // (2) Cache the service address on the profile for fast checkout.
   const addr = payload.appointment?.address;
-  if (addr && email) {
-    await db.from('profiles').update({ saved_address: { raw: addr, ...(payload.appointment?.zip ? { zip: payload.appointment.zip } : {}) } }).eq('email', email);
+  if (addr && profileId) {
+    await db.from('profiles')
+      .update({ saved_address: { raw: addr, ...(payload.appointment?.zip ? { zip: payload.appointment.zip } : {}) } })
+      .eq('id', profileId)
+      .eq('tenant_id', tenantId);
   }
 
   // (3) Auto-assign Qualiphy — only on a fresh booking, only if no GFE yet.
   if (action !== 'scheduled') return;
   if (payload.gfe?.patientExamId || fromForm.status) return; // already assigned or already has a GFE
-  if (!isQualiphyConfigured() || !tenantId) return;
+  if (!isQualiphyConfigured()) return;
 
   const { data: settings } = await db.from('gfe_settings').select('*').eq('tenant_id', tenantId).maybeSingle();
   if (!settings) return;
@@ -157,8 +166,8 @@ export async function gfeSyncAndAssign({ db, appt, appointmentRow, tenantId, bas
   if (!toggle) return; // OFF → Avalon NP handles it in Acuity
 
   // No reassign if the profile already has a valid GFE.
-  if (email) {
-    const { data: prof } = await db.from('profiles').select('gfe').eq('email', email).maybeSingle();
+  if (profileId) {
+    const { data: prof } = await db.from('profiles').select('gfe').eq('id', profileId).eq('tenant_id', tenantId).maybeSingle();
     if (gfeValid(prof?.gfe, now)) return;
   }
 
@@ -168,7 +177,7 @@ export async function gfeSyncAndAssign({ db, appt, appointmentRow, tenantId, bas
   if (!dob) { console.warn('[gfe] skip auto-assign: no dob on file', { appointmentId: appointmentRow?.id || null }); return; }
   const examIds = Array.isArray(settings.qualiphy_exam_ids) && settings.qualiphy_exam_ids.length ? settings.qualiphy_exam_ids : [4106];
   const teleState = (String(payload.appointment?.state || '').slice(0, 2) || 'CA').toUpperCase();
-  const secret = process.env.QUALIPHY_WEBHOOK_SECRET;
+  const secret = legacyQualiphyMutationEnabled() ? process.env.QUALIPHY_WEBHOOK_SECRET : '';
   const webhookUrl = secret && baseUrl ? `${baseUrl}/api/webhooks/qualiphy-inbound?secret=${encodeURIComponent(secret)}` : undefined;
 
   const res = await createExamInvite({
@@ -187,10 +196,11 @@ export async function gfeSyncAndAssign({ db, appt, appointmentRow, tenantId, bas
       gfe_status: 'in_progress',
       external_payload: { ...payload, gfe: { ...(payload.gfe || {}), patientExamId, meetingUrl: res.data?.meeting_url || null, source: 'qualiphy', assignedAt: now.toISOString() } },
       updated_at: now.toISOString(),
-    }).eq('id', appointmentRow.id);
+    }).eq('id', appointmentRow.id).eq('tenant_id', tenantId);
   } else {
     console.warn('[gfe] qualiphy exam_invite failed', { code: res.code, status: res.status });
   }
 }
 
 export { getAppointment };
+export { resolveUniqueProfileIdByEmail };

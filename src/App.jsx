@@ -24,9 +24,10 @@ import MfaGate from '@/components/auth/MfaGate';
 import IdleWarning from '@/components/auth/IdleWarning';
 import { requiresPrivilegedMfa } from '@/lib/portalAccess';
 
-// Operator-tier MFA enforcement. Off by default; flip VITE_MFA_ENFORCED=true
-// (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
-// or the gate would lock every admin out of /admin.
+// Operator-tier MFA enforcement. Off by default; VITE_MFA_ENFORCED and the
+// server-only MFA_ENFORCED flag must be changed as one reviewed release. The
+// gate supports first-factor enrollment and retry, while unreadable assurance
+// remains unverified instead of being inferred from unsupported User fields.
 const MFA_ENFORCED = String(import.meta.env.VITE_MFA_ENFORCED || '').trim().toLowerCase() === 'true';
 const AVALON_OS_BETA_ENABLED = String(import.meta.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
 

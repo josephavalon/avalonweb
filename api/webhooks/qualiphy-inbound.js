@@ -9,9 +9,15 @@
  *   3. write the GFE into the Acuity appointment (source of record).
  */
 import { getServiceClient } from '../_lib/supabase-auth.js';
-import { writeGfeToAcuity, deriveExpiry } from '../_lib/gfe-core.js';
+import { writeGfeToAcuity, deriveExpiry, resolveUniqueProfileIdByEmail } from '../_lib/gfe-core.js';
 import { safeLogContext } from '../_lib/safe-error.js';
+import { legacyQualiphyMutationEnabled } from '../_lib/qualiphy-webhook-policy.js';
 
+// Temporary containment only. The legacy provider flow authenticates with a
+// static secret embedded in its callback URL and has no freshness/replay proof.
+// It may be exercised with synthetic data in local development, but production
+// mutation remains impossible until a native signed, replay-safe endpoint is
+// implemented and reviewed.
 function pick(obj, ...keys) {
   for (const k of keys) if (obj && obj[k] != null && obj[k] !== '') return obj[k];
   return undefined;
@@ -19,6 +25,10 @@ function pick(obj, ...keys) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (!legacyQualiphyMutationEnabled()) {
+    return res.status(503).json({ error: 'Clinical webhook mutation is not enabled.', code: 'qualiphy_webhook_disabled' });
+  }
 
   const expected = process.env.QUALIPHY_WEBHOOK_SECRET;
   if (!expected) return res.status(503).json({ error: 'Webhook not configured' });
@@ -46,15 +56,19 @@ export default async function handler(req, res) {
     const { data: rows } = await db.from('appointments')
       .select('id, tenant_id, acuity_appointment_id, external_payload')
       .contains('external_payload', { gfe: { patientExamId } })
-      .limit(1);
-    let appt = rows?.[0];
+      .limit(2);
+    let appt = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
     if (!appt) {
       // Fallback: scan recent appointments whose gfe.patientExamId matches.
       const { data: recent } = await db.from('appointments')
         .select('id, tenant_id, acuity_appointment_id, external_payload')
         .order('created_at', { ascending: false }).limit(200);
-      appt = (recent || []).find((r) => String(r.external_payload?.gfe?.patientExamId || '') === patientExamId);
+      const matches = (recent || []).filter((r) => String(r.external_payload?.gfe?.patientExamId || '') === patientExamId);
+      appt = matches.length === 1 ? matches[0] : null;
     }
+
+    // Even synthetic/local callbacks must never mutate a tenantless object.
+    if (appt && !appt.tenant_id) appt = null;
 
     const clearedAt = new Date().toISOString();
     const gfeRecord = {
@@ -74,11 +88,14 @@ export default async function handler(req, res) {
         gfe_status: approved ? 'approved' : 'denied',
         external_payload: { ...payload, gfe: { ...(payload.gfe || {}), ...gfeRecord } },
         updated_at: clearedAt,
-      }).eq('id', appt.id);
+      }).eq('id', appt.id).eq('tenant_id', appt.tenant_id);
 
       // 2. Cache on the patient profile (fast checkout).
       if (approved && email) {
-        await db.from('profiles').update({ gfe: gfeRecord }).eq('email', email);
+        const profileId = await resolveUniqueProfileIdByEmail(db, { tenantId: appt.tenant_id, email });
+        if (profileId) {
+          await db.from('profiles').update({ gfe: gfeRecord }).eq('id', profileId).eq('tenant_id', appt.tenant_id);
+        }
       }
 
       // 3. Write into the Acuity appointment (source of record).
@@ -89,7 +106,7 @@ export default async function handler(req, res) {
         if (!w.ok) console.warn('[qualiphy/webhook] acuity write skipped', w);
       }
     } else {
-      console.warn('[qualiphy/webhook] no appointment matched patient_exam_id', { patientExamId });
+      console.warn('[qualiphy/webhook] no appointment matched provider identifier');
     }
 
     return res.status(200).json({ ok: true, matched: !!appt, approved });

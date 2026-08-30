@@ -1,4 +1,4 @@
-import { readLocal, writeLocal, appendActivity, readLastBooking, saveLastBooking } from '../../src/lib/localOs';
+import { readLocal, writeLocal, clearLocal, appendActivity, readLastBooking, saveLastBooking } from '../../src/lib/localOs';
 import { queueCrossPortalEvent, upsertRepositoryEntity } from '../../src/lib/localRepository';
 import { HUBSPOT_PLACEHOLDER as ATTIO_PLACEHOLDER, buildHubspotClientPayload as buildAttioClientPayload } from '../../src/lib/hubspotPlaceholder';
 import {
@@ -1788,6 +1788,13 @@ export function readClientProfile() {
     wallet: { ...DEFAULT_CLIENT_PROFILE.wallet, ...(saved.wallet || {}) },
     documents: saved.documents || DEFAULT_CLIENT_PROFILE.documents,
   };
+}
+
+// Real Supabase sessions must not use the legacy browser profile cache. This
+// cache exists only for synthetic local/demo flows; live identity and Clinical
+// data come from authenticated server endpoints.
+export function clearClientProfileCache() {
+  clearLocal('clientProfile');
 }
 
 export function saveClientProfile(patch = {}) {

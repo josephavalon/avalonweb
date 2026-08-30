@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { getAppointment } from './_acuity.js';
 import { writeAuditEvent } from './_lib/audit-events.js';
 import { isLiveApiEnabled, localAppointment } from './_lib/pre-api-guard.js';
-import { getAuthedUser } from './_lib/supabase-auth.js';
+import { getAuthedUser, privilegedSessionFailure } from './_lib/supabase-auth.js';
 import { verifyAppointmentSummaryToken } from './_lib/summary-token.js';
 import { getSupabaseServiceClient } from './_supabase-server.js';
 import {
@@ -162,6 +162,10 @@ export default async function handler(req, res) {
       || '';
 
     const authed = await getAuthedUser(req);
+    const sessionFailure = privilegedSessionFailure(authed);
+    if (sessionFailure) {
+      return res.status(sessionFailure.status).json({ error: sessionFailure.message, code: sessionFailure.code });
+    }
     const accessMode = summaryAccessMode({ req, authed, session, record, checkout: checkout || {}, acuityId });
     const auditDb = await getSupabaseServiceClient();
     if (!accessMode) {
