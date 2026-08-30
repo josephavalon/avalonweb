@@ -45,6 +45,12 @@ function RequireAuth({ children, allowedRoles }) {
   const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
   if (!user) {
+    // Admin stays on its dedicated, noindex sign-in surface even on the public
+    // front-door hostname. This is the only protected portal allowed to bypass
+    // the consumer /start bounce.
+    if (pathname.startsWith('/admin')) {
+      return <Navigate to="/admin/login" replace />;
+    }
     // The front door has no sign-in surface, so there is nowhere to send an
     // unauthenticated visitor except back to /start. This must be a DIRECT
     // bounce: routing them to /login instead would chain into the gate on that
@@ -56,9 +62,6 @@ function RequireAuth({ children, allowedRoles }) {
     }
     if (pathname.startsWith('/organizer')) {
       return <Navigate to={{ pathname: '/login', search: `?portal=organizer&redirect=${encodeURIComponent(pathname)}` }} replace />;
-    }
-    if (pathname.startsWith('/admin')) {
-      return <Navigate to="/admin/login" replace />;
     }
     return <Navigate to="/login" replace />;
   }
