@@ -454,8 +454,11 @@ async function checkInvoicePageIsPhiFree(failures) {
       failures.push(`${rel}: missing — the invoice page must not be deleted without removing /invoice from vercel.json and src/App.jsx`);
       continue;
     }
+    // Safety copy may explicitly say "no patient names". Remove only that
+    // exact prohibition before scanning; any other use still fails the check.
+    const scanSource = source.replace(/no patient names/gi, '');
     for (const pattern of INVOICE_FORBIDDEN_TOKENS) {
-      if (pattern.test(source)) {
+      if (pattern.test(scanSource)) {
         failures.push(`${rel}: contains ${pattern} — /invoice must stay pay-data-only, never patient-facing`);
       }
     }
