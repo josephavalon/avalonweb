@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(new URL(path, import.meta.url), 'utf8');
 
-const migration = read('../supabase/migrations/061_nurse_guided_shift.sql');
+const migration = read('../supabase/migrations/062_nurse_guided_shift.sql');
 const workflow = read('../api/_lib/nurse-workflow.js');
 const shiftsApi = read('../api/me/shifts.js');
 const runsApi = read('../api/me/shift-runs.js');
@@ -50,13 +50,13 @@ const tables = [
   'shift_exceptions',
 ];
 for (const table of tables) {
-  assert.match(migration, new RegExp(`create table if not exists public\\.${table}\\s*\\(`), `061 must create ${table}`);
+  assert.match(migration, new RegExp(`create table if not exists public\\.${table}\\s*\\(`), `062 must create ${table}`);
 }
 const firstExecutableStatement = migration.split('\n')
   .map((line) => line.trim())
   .find((line) => line && !line.startsWith('--'));
-assert.equal(firstExecutableStatement, 'begin;', '061 must begin with an explicit transaction for SQL Editor application');
-assert.match(migration, /\ncommit;\s*$/, '061 must commit only after every schema, trigger, function, ACL, and comment statement');
+assert.equal(firstExecutableStatement, 'begin;', '062 must begin with an explicit transaction for SQL Editor application');
+assert.match(migration, /\ncommit;\s*$/, '062 must commit only after every schema, trigger, function, ACL, and comment statement');
 assert.match(migration, /nurse_operational_bootstrap_required/);
 assert.doesNotMatch(migration, /migration_050_required/);
 assert.match(migration, /migration_051_required/);
@@ -64,7 +64,7 @@ const prerequisiteBlock = migration.slice(0, migration.indexOf('-- Offer decisio
 assert.match(
   prerequisiteBlock,
   /to_regclass\('public\.provider_route_days'\)[\s\S]*?to_regclass\('public\.provider_route_day_stops'\)/,
-  '061 must require both route tables before schema changes',
+  '062 must require both route tables before schema changes',
 );
 for (const constraint of [
   'provider_route_days_tenant_id_id_key',
@@ -74,7 +74,7 @@ for (const constraint of [
   'provider_route_day_stops_route_provider_tenant_fk',
   'provider_route_day_stops_appointment_tenant_fk',
 ]) {
-  assert.ok(prerequisiteBlock.includes(`conname = '${constraint}'`), `061 must preflight ${constraint}`);
+  assert.ok(prerequisiteBlock.includes(`conname = '${constraint}'`), `062 must preflight ${constraint}`);
 }
 assert.match(prerequisiteBlock, /constraint_definition\.convalidated/);
 assert.match(prerequisiteBlock, /array\['tenant_id', 'route_day_id', 'assigned_provider_profile_id'\]::text\[\]/);
@@ -161,7 +161,7 @@ const topLevelSql = migration.replace(
   /create or replace function[\s\S]*?\bas\s+\$\$[\s\S]*?\$\$;/gi,
   '',
 );
-assert.doesNotMatch(topLevelSql, /insert\s+into\s+public\./i, '061 must not seed nurse, work, guide, readiness, time, or exception rows');
+assert.doesNotMatch(topLevelSql, /insert\s+into\s+public\./i, '062 must not seed nurse, work, guide, readiness, time, or exception rows');
 
 // ── Authorization and ownership ────────────────────────────────────────────
 
