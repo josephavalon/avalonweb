@@ -57,7 +57,7 @@ begin
       ('provider_profiles', 'id', 'uuid'::regtype, true),
       ('provider_profiles', 'tenant_id', 'uuid'::regtype, true),
       ('appointments', 'id', 'uuid'::regtype, true),
-      ('appointments', 'tenant_id', 'uuid'::regtype, true)
+      ('appointments', 'tenant_id', 'uuid'::regtype, false)
     ) as required(table_name, column_name, type_oid, is_not_null)
     left join pg_namespace table_namespace
       on table_namespace.nspname = 'public'

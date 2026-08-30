@@ -44,7 +44,7 @@ for (const [table, column, type, notNull] of [
   ['provider_profiles', 'id', 'uuid', true],
   ['provider_profiles', 'tenant_id', 'uuid', true],
   ['appointments', 'id', 'uuid', true],
-  ['appointments', 'tenant_id', 'uuid', true],
+  ['appointments', 'tenant_id', 'uuid', false],
 ]) {
   assert.ok(
     preflight.includes(`('${table}', '${column}', '${type}'::regtype, ${notNull})`),
