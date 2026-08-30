@@ -57,6 +57,9 @@ function RequireAuth({ children, allowedRoles }) {
     if (pathname.startsWith('/organizer')) {
       return <Navigate to={{ pathname: '/login', search: `?portal=organizer&redirect=${encodeURIComponent(pathname)}` }} replace />;
     }
+    if (pathname.startsWith('/admin')) {
+      return <Navigate to="/admin/login" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
   // Admin force-set a temporary password — make them rotate it before anything else.
@@ -207,6 +210,7 @@ const AdminInbox = lazyRoute(() => import('./pages/admin/Inbox'));
 const AdminTeamInbox = lazyRoute(() => import('./pages/admin/TeamInbox'));
 const AdminGfeSettings = lazyRoute(() => import('./pages/admin/GfeSettings'));
 const AdminFinanceControl = lazyRoute(() => import('./pages/admin/FinanceControl'));
+const AdminNurseInvoices = lazyRoute(() => import('./pages/admin/NurseInvoices'));
 const AdminCredentialControl = lazyRoute(() => import('./pages/admin/CredentialControl'));
 const AdminDispatchControl = lazyRoute(() => import('./pages/admin/DispatchControl'));
 const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
@@ -225,6 +229,8 @@ const AdminRefunds = lazyRoute(() => import('./pages/admin/Refunds'));
 const AdminDeletionRequests = lazyRoute(() => import('./pages/admin/DeletionRequests'));
 const AdminExpiringCredits = lazyRoute(() => import('./pages/admin/ExpiringCredits'));
 const AdminReviews = lazyRoute(() => import('./pages/admin/Reviews'));
+const AdminAvalonBD = lazyRoute(() => import('./pages/admin/AvalonBD'));
+const AdminRobBot3K = lazyRoute(() => import('./pages/admin/RobBot3K'));
 const AdminSupportTickets = lazyRoute(() => import('./pages/admin/SupportTickets'));
 const AdminReconciliation = lazyRoute(() => import('./pages/admin/Reconciliation'));
 const Review = lazyRoute(() => import('./pages/Review'));
@@ -284,14 +290,23 @@ const AnalyticsRouteTracker = () => {
 // is set pre-paint by public/theme-bootstrap.js (same predicate) so the first
 // render never flashes dark; this only handles route changes after mount.
 // The dedicated Avalon OS beta uses the cream editorial theme everywhere.
-// Production portals and auth retain their current dark appearance.
+// Production portals and auth retain their current dark appearance, except
+// Admin, which has its own cream product surface and glass material system.
 const PORTAL_PREFIX = /^\/(provider|admin|members|account|organizer|kiosk|login|signup|forgot|forgot-password)(\/|$)/;
+const ADMIN_PREFIX = /^\/admin(\/|$)/;
 
 const ConsumerThemeSync = () => {
   const { pathname } = useLocation();
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    document.documentElement.classList.toggle('av-cream', AVALON_OS_BETA_ENABLED || !PORTAL_PREFIX.test(pathname));
+    const adminCream = ADMIN_PREFIX.test(pathname);
+    const consumerCream = AVALON_OS_BETA_ENABLED || !PORTAL_PREFIX.test(pathname);
+    document.documentElement.classList.toggle('av-cream', consumerCream);
+    document.documentElement.classList.toggle('av-admin-cream', adminCream);
+    document.documentElement.style.colorScheme = adminCream || consumerCream ? 'light' : 'dark';
+    document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+      meta.setAttribute('content', adminCream || consumerCream ? '#f6f2eb' : 'rgb(43, 33, 27)');
+    });
     document.documentElement.classList.toggle('av-browser-espresso', isPublicChromeRoute(pathname));
   }, [pathname]);
   return null;
@@ -537,6 +552,7 @@ function AppRoutes() {
             <Route path="/admin/crm" element={<Navigate to="/admin/hubspot" replace />} />
             <Route path="/admin/hubspot" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminHubspotControl /></RequireAuth>} />
             <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
+            <Route path="/admin/nurse-invoices" element={<RequireAuth allowedRoles={['admin']}><AdminNurseInvoices /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
             <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />
@@ -554,6 +570,8 @@ function AppRoutes() {
             <Route path="/admin/deletion-requests" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminDeletionRequests /></RequireAuth>} />
             <Route path="/admin/expiring-credits" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminExpiringCredits /></RequireAuth>} />
             <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
+            <Route path="/admin/bd/*" element={<RequireAuth allowedRoles={['admin']}><AdminAvalonBD /></RequireAuth>} />
+            <Route path="/admin/robbot3k" element={<RequireAuth allowedRoles={['admin']}><AdminRobBot3K /></RequireAuth>} />
             <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/os/:capability" element={AVALON_OS_BETA_ENABLED ? <RequireAuth allowedRoles={['admin', 'staff']}><AdminOsCapability /></RequireAuth> : <NotFound />} />

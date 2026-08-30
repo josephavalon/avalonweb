@@ -12,6 +12,7 @@
       || (navigatorRef.platform === 'MacIntel' && navigatorRef.maxTouchPoints > 1);
     var isPortal = /^\/(provider|admin|members|account)(\/|$)/.test(path)
       || /^\/(login|signup|forgot|forgot-password)(\/|$)/.test(path);
+    var isAdmin = /^\/admin(\/|$)/.test(path);
     var isPrivateChrome = /^\/(account|admin|invoice|kiosk|login|members|nurse-login|organizer|provider|signup|forgot)(\/|$)/.test(path)
       || /\/kiosk\//.test(path);
     if (isPortal) stored = 'dark';
@@ -25,6 +26,12 @@
     if (isIosBrowser) cl.add('av-ios-browser');
     cl.remove('dark', 'giants', 'daytime', 'golden-hour', 'warriors', 'pride', 'july', 'light', 'golden', 'dubs');
     cl.add(theme);
+    cl.toggle('av-admin-cream', isAdmin);
+    if (isAdmin) {
+      document.documentElement.style.colorScheme = 'light';
+      var themeColors = document.querySelectorAll('meta[name="theme-color"]');
+      for (var i = 0; i < themeColors.length; i += 1) themeColors[i].setAttribute('content', '#f6f2eb');
+    }
     // Consumer cream theme (2026-07-29): every consumer page shares the new
     // snooches design. Set pre-paint so there's no dark flash before React
     // mounts; App.jsx keeps it in sync on client-side navigation.

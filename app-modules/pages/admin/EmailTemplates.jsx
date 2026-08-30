@@ -55,7 +55,7 @@ function PreviewModal({ open, onClose, subject, html, busy }) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4"
+      className="av-modal-scrim fixed inset-0 z-[200] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div

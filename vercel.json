@@ -9,6 +9,14 @@
     {
       "path": "/api/cron/post-visit-survey",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/robbot3k-morning",
+      "schedule": "0 13,14 * * *"
+    },
+    {
+      "path": "/api/cron/robbot3k-execute",
+      "schedule": "*/30 15-23 * * 1-5"
     }
   ],
   "redirects": [

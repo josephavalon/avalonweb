@@ -40,6 +40,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/messages',
   '/admin/bookings',
   '/admin/finance',
+  '/admin/nurse-invoices', // contractor pay review (admin-only)
   '/admin/inventory',
   '/admin/team',
   '/admin/gfe', // GFE policy toggles (admin-only)
@@ -50,6 +51,8 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/deletion-requests', // member account-deletion requests
   '/admin/expiring-credits', // members with credits about to expire
   '/admin/reviews', // post-visit NPS + review moderation
+  '/admin/bd', // B2B system of record (admin-only)
+  '/admin/robbot3k', // permission-gated business development operator (admin-only)
   '/admin/support-tickets', // public support queue
   '/admin/reconciliation', // renewals / acuity sync / payment failures
   '/admin/os', // persisted Avalon OS beta capability workspaces
@@ -73,7 +76,10 @@ function avalonOsBetaEnabled() {
 // inherits permission from `/admin/clients`).
 function matchesAllowList(path, allowList) {
   if (allowList.includes(path)) return true;
-  return allowList.some((entry) => path.startsWith(`${entry}/`));
+  // `/admin` is the dashboard route, not a wildcard for every admin child.
+  // Treating it as a prefix would silently grant staff access to admin-only
+  // surfaces such as RobBot3K.
+  return allowList.some((entry) => entry !== '/admin' && path.startsWith(`${entry}/`));
 }
 
 /** Can a given role open a given admin path? */

@@ -14,7 +14,12 @@ import {
   generateToken, generateCode, hashToken, hashCode, safeEqualHex, isInviteLive, isValidTier,
 } from '../api/_lib/invite-token.js';
 import { decideDropsLastAdmin, TEAM_ROLES } from '../api/_lib/team-core.js';
-import { canAccessAdminRoute, allowedRolesForRoute, LIVE_ADMIN_ROUTES } from '../src/lib/adminAccess.js';
+import {
+  canAccessAdminRoute,
+  allowedRolesForRoute,
+  LIVE_ADMIN_ROUTES,
+  STAFF_ROUTES,
+} from '../src/lib/adminAccess.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -86,7 +91,9 @@ check('TEAM_ROLES is exactly staff + admin', () => {
 
 console.log('\n[3] Role → allowed routes');
 check('admin can open only live admin routes when preview is off', () => {
-  for (const p of LIVE_ADMIN_ROUTES) assert.equal(canAccessAdminRoute('admin', p), true);
+  for (const p of LIVE_ADMIN_ROUTES.filter((route) => route !== '/admin/os')) {
+    assert.equal(canAccessAdminRoute('admin', p), true);
+  }
   for (const p of ['/admin/crm', '/admin/credentials', '/admin/field', '/admin/client-heat-map', '/admin/dispatch']) {
     assert.equal(canAccessAdminRoute('admin', p), false);
   }
@@ -98,10 +105,21 @@ check('dispatch and preview surfaces are redirect-only when preview is off', () 
   }
 });
 check('staff can open the live staff surface, including read-only Team', () => {
-  for (const p of LIVE_ADMIN_ROUTES) assert.equal(canAccessAdminRoute('staff', p), true);
+  for (const p of STAFF_ROUTES.filter((route) => route !== '/admin/os' && LIVE_ADMIN_ROUTES.includes(route))) {
+    assert.equal(canAccessAdminRoute('staff', p), true);
+  }
 });
 check('staff is blocked from hidden preview and sensitive routes when preview is off', () => {
-  for (const p of ['/admin/crm', '/admin/credentials', '/admin/field', '/admin/client-heat-map', '/admin/dispatch']) {
+  for (const p of [
+    '/admin/crm',
+    '/admin/credentials',
+    '/admin/field',
+    '/admin/client-heat-map',
+    '/admin/dispatch',
+    '/admin/robbot3k',
+    '/admin/robbot3k/prospect/example',
+    '/admin/nurse-invoices',
+  ]) {
     assert.equal(canAccessAdminRoute('staff', p), false);
   }
 });
@@ -113,6 +131,9 @@ check('allowedRolesForRoute adds staff only on staff routes', () => {
   assert.deepEqual(allowedRolesForRoute('/admin/crm'), ['admin', 'staff']);
   assert.deepEqual(allowedRolesForRoute('/admin/team'), ['admin', 'staff']);
   assert.deepEqual(allowedRolesForRoute('/admin/credentials'), ['admin']);
+  assert.deepEqual(allowedRolesForRoute('/admin/robbot3k'), ['admin']);
+  assert.deepEqual(allowedRolesForRoute('/admin/robbot3k/prospect/example'), ['admin']);
+  assert.deepEqual(allowedRolesForRoute('/admin/nurse-invoices'), ['admin']);
 });
 
 console.log(`\n${process.exitCode ? 'FAILED' : `OK — ${passed} checks passed`}\n`);

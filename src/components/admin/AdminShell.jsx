@@ -5,6 +5,7 @@ import AvalonMark from '@/components/AvalonMark';
 import {
   Activity,
   Bell,
+  Bot,
   CalendarCheck,
   CalendarDays,
   ChevronDown,
@@ -18,7 +19,6 @@ import {
   Menu,
   MessageSquare,
   Package,
-  Palette,
   Settings,
   ShieldCheck,
   Stethoscope,
@@ -31,7 +31,6 @@ import {
 import { useAuthStore } from '@/lib/useAuthStore';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
 import { apiGet } from '@/lib/apiClient';
-import { cycleTheme, getThemeLabel, readStoredTheme } from '@/lib/theme';
 import { osCapabilityPath } from '@/data/osCapabilities';
 
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
@@ -47,7 +46,7 @@ const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
   { label: 'Bookings', icon: CalendarCheck, to: '/admin/bookings' },
   {
-    label: 'Patients', icon: Users, children: [
+    label: 'Clinical', icon: Users, children: [
       { label: 'Patient records', to: '/admin/clients' },
       { label: 'Memberships', to: '/admin/memberships' },
       { label: 'Expiring credits', to: '/admin/expiring-credits' },
@@ -65,6 +64,12 @@ const NAV_LIVE = [
     ],
   },
   {
+    label: 'BD', icon: Bot, children: [
+      { label: 'Avalon BD', to: '/admin/bd' },
+      { label: 'Rob Bot', to: '/admin/robbot3k' },
+    ],
+  },
+  {
     label: 'Finance', icon: CreditCard, children: [
       {
         label: 'Executive', children: [
@@ -78,6 +83,7 @@ const NAV_LIVE = [
       },
       {
         label: 'Revenue & Payments', children: [
+          { label: 'Nurse invoices', to: '/admin/nurse-invoices' },
           { label: 'Revenue Dashboard', to: soon('Revenue Dashboard') },
           { label: 'Sales', to: soon('Sales') },
           { label: 'Memberships', to: soon('Memberships') },
@@ -87,7 +93,7 @@ const NAV_LIVE = [
           { label: 'Transactions', to: soon('Transactions') },
           { label: 'Deposits', to: soon('Deposits') },
           { label: 'Outstanding Balances', to: soon('Outstanding Balances') },
-          { label: 'Invoices', to: soon('Invoices') },
+          { label: 'Customer invoices', to: soon('Customer Invoices') },
           { label: 'Refunds', to: '/admin/refunds' },
           { label: 'Chargebacks', to: soon('Chargebacks') },
         ],
@@ -323,8 +329,8 @@ function ChildLeaf({ item, pathname, onNavigate }) {
     <Link
       to={item.to}
       onClick={onNavigate}
-      className={`relative rounded-lg px-3 py-1.5 font-body text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-        active ? 'bg-foreground/[0.08] text-foreground' : 'text-foreground/45 hover:text-foreground'
+      className={`av-admin-nav-leaf relative rounded-xl px-3 py-2 font-body text-[10px] font-semibold uppercase tracking-[0.12em] transition-all ${
+        active ? 'is-active bg-white/[0.64] text-foreground shadow-[0_8px_26px_rgba(43,33,27,0.07)]' : 'text-foreground/45 hover:bg-white/[0.32] hover:text-foreground'
       }`}
     >
       {active && <span className="absolute -left-[calc(0.75rem+1px)] top-1/2 h-3.5 w-px -translate-y-1/2 bg-foreground" />}
@@ -389,8 +395,8 @@ function NavGroup({ item, pathname, onNavigate }) {
     <Link
       to={item.to}
       onClick={onNavigate}
-      className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 font-body text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${
-        active ? 'bg-foreground/[0.08] text-foreground' : 'text-foreground/55 hover:text-foreground'
+      className={`av-admin-nav-leaf relative flex items-center gap-3 rounded-2xl px-3 py-2.5 font-body text-[11px] font-semibold uppercase tracking-[0.13em] transition-all ${
+        active ? 'is-active bg-white/[0.64] text-foreground shadow-[0_8px_26px_rgba(43,33,27,0.07)]' : 'text-foreground/55 hover:bg-white/[0.32] hover:text-foreground'
       }`}
     >
       {active && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-foreground" />}
@@ -476,7 +482,6 @@ function AdminProfileMenu({ user, onSignOut }) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState(null);
   const [prefs, setPrefs] = useState(() => readNotifPrefs());
-  const [themeLabel, setThemeLabel] = useState(() => getThemeLabel(readStoredTheme()));
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -533,9 +538,6 @@ function AdminProfileMenu({ user, onSignOut }) {
     writeNotifPrefs(next);
   };
 
-  // Cycle the theme in place; keep the menu open so the change is visible.
-  const onCycleTheme = () => { setThemeLabel(getThemeLabel(cycleTheme())); };
-
   const name = user?.name || user?.fullName || user?.email?.split('@')[0] || 'Admin';
   const role = roleLabel(user?.role);
   const isAdmin = user?.role === 'admin';
@@ -547,7 +549,7 @@ function AdminProfileMenu({ user, onSignOut }) {
           ref={menuRef}
           role="menu"
           style={{ position: 'fixed', top: coords.top, right: coords.right, zIndex: 9999 }}
-          className="w-72 overflow-hidden rounded-xl border border-foreground/[0.10] bg-background shadow-[0_18px_60px_rgba(0,0,0,0.6)]"
+          className="av-admin-profile-menu w-72 overflow-hidden rounded-[1.35rem] border border-foreground/[0.10] bg-background/72 shadow-[0_24px_80px_rgba(43,33,27,0.16)] backdrop-blur-2xl"
         >
           <div className="border-b border-foreground/[0.08] px-4 py-3">
             <div className="flex items-center gap-2">
@@ -568,12 +570,6 @@ function AdminProfileMenu({ user, onSignOut }) {
                 : <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-foreground/35" strokeWidth={2} />}
             />
             <MenuRow icon={User} label="Profile" to={soon('Profile')} onClick={close} />
-            <MenuRow
-              icon={Palette}
-              label="Appearance"
-              onClick={onCycleTheme}
-              right={<span className="font-body text-[11px] text-foreground/45">{themeLabel}</span>}
-            />
             {isAdmin ? <MenuRow icon={Users} label="Team & access" to="/admin/team" onClick={close} /> : null}
             <MenuRow icon={Activity} label="Activity" to={soon('Activity')} onClick={close} />
           </div>
@@ -641,7 +637,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
       <div className="flex items-center justify-between px-4 py-5">
         <Link to="/admin" className="flex items-center gap-2.5">
           <AvalonMark className="h-9 w-[22px] text-foreground" />
-          <span className="font-heading text-2xl uppercase leading-none tracking-[0.08em] text-foreground">Admin</span>
+          <span className="font-body text-[13px] font-semibold uppercase leading-none tracking-[0.16em] text-foreground">Avalon Admin</span>
         </Link>
         <button type="button" onClick={() => setDrawer(false)} className="text-foreground/50 md:hidden" aria-label="Close menu">
           <X className="h-5 w-5" strokeWidth={1.8} />
@@ -663,9 +659,9 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
   );
 
   return (
-    <div className={`av-page-surface flex min-h-dvh font-body text-foreground${fullBleed ? ' md:h-dvh md:min-h-0 md:overflow-hidden' : ''}`}>
+    <div className={`av-admin-shell av-page-surface flex min-h-dvh font-body text-foreground${fullBleed ? ' md:h-dvh md:min-h-0 md:overflow-hidden' : ''}`}>
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 border-r border-foreground/[0.08] bg-foreground/[0.02] md:block">
+      <aside className="av-admin-sidebar sticky top-0 hidden h-dvh w-64 shrink-0 border-r border-foreground/[0.08] bg-background/48 backdrop-blur-3xl md:block">
         {Sidebar}
       </aside>
 
@@ -677,7 +673,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
             role="dialog"
             aria-modal="true"
             aria-label="Admin navigation menu"
-            className="fixed inset-y-0 left-0 z-50 w-64 border-r border-foreground/[0.08] bg-background md:hidden"
+            className="av-admin-sidebar fixed inset-y-0 left-0 z-50 w-72 max-w-[88vw] border-r border-foreground/[0.08] bg-background/88 backdrop-blur-3xl md:hidden"
           >
             {Sidebar}
           </aside>
@@ -686,12 +682,12 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-foreground/[0.08] bg-background/86 px-4 py-3.5 backdrop-blur-2xl md:px-7">
+        <header className="av-admin-header sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-foreground/[0.08] bg-background/64 px-4 py-4 backdrop-blur-3xl md:px-8 md:py-5">
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => setDrawer(true)} className="text-foreground/60 md:hidden" aria-label="Open menu">
               <Menu className="h-5 w-5" strokeWidth={1.8} />
             </button>
-            <h1 className="font-heading text-2xl uppercase leading-none tracking-[0.04em] md:text-3xl">{title}</h1>
+            <h1 className="font-body text-lg font-semibold leading-tight tracking-[-0.025em] md:text-xl">{title}</h1>
           </div>
           <div className="flex items-center gap-3">
             {actions}
@@ -700,7 +696,7 @@ export default function AdminShell({ title = 'Dashboard', actions, children, ful
         </header>
         <main className={fullBleed
           ? 'flex min-h-0 flex-1 flex-col md:overflow-hidden'
-          : 'mx-auto w-full max-w-6xl flex-1 px-4 py-4 md:px-7 md:py-5'}
+          : 'av-admin-main mx-auto w-full max-w-7xl flex-1 px-4 py-5 md:px-8 md:py-8'}
         >{children}</main>
       </div>
     </div>

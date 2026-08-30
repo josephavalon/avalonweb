@@ -31,12 +31,12 @@ function fmtDateTime(iso) {
 
 function Metric({ label, value, detail, icon: Icon }) {
   return (
-    <div className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+    <div className="min-w-0 rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <p className="font-body text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: DIM }}>{label}</p>
         <Icon className="h-4 w-4" style={{ color: DIM }} strokeWidth={1.8} />
       </div>
-      <p className="font-heading text-4xl uppercase leading-none" style={{ color: TEXT }}>{value}</p>
+      <p className="break-words font-heading text-3xl uppercase leading-none sm:text-4xl" style={{ color: TEXT }}>{value}</p>
       <p className="mt-1 font-body text-xs" style={{ color: MUTED }}>{detail}</p>
     </div>
   );
@@ -92,15 +92,20 @@ export default function FinanceControl() {
     <AdminShell
       title="Finance"
       actions={(
-        <button
-          type="button"
-          onClick={load}
-          disabled={state.loading}
-          className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/60 disabled:opacity-45"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${state.loading ? 'animate-spin' : ''}`} strokeWidth={2} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/admin/nurse-invoices" className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/60">
+            Nurse invoices
+          </Link>
+          <button
+            type="button"
+            onClick={load}
+            disabled={state.loading}
+            className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/60 disabled:opacity-45"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${state.loading ? 'animate-spin' : ''}`} strokeWidth={2} />
+            Refresh
+          </button>
+        </div>
       )}
     >
       <div className="space-y-6">
