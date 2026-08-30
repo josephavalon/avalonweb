@@ -133,6 +133,8 @@ const MembersSupport = lazyRoute(() => import('./pages/members/Support'));
 const ProviderClients = lazyRoute(() => import('./pages/provider/Clients'));
 const NurseSchedule = lazyRoute(() => import('./pages/provider/NurseSchedule'));
 const NurseInvoices = lazyRoute(() => import('./pages/provider/NurseInvoices'));
+const NurseGuidedShift = lazyRoute(() => import('../app-modules/pages/provider/NurseGuidedShift'));
+const NurseWorkSettings = lazyRoute(() => import('../app-modules/pages/provider/NurseWorkSettings'));
 const OrganizerEventHub = lazyRoute(() => import('./pages/organizer/EventHub'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
@@ -512,7 +514,10 @@ function AppRoutes() {
             <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
             <Route path="/provider" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
             <Route path="/provider/shifts" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseSchedule /></RequireAuth>} />
+            <Route path="/provider/shifts/:shiftId" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseGuidedShift /></RequireAuth>} />
+            <Route path="/provider/shifts/:shiftId/run" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseGuidedShift /></RequireAuth>} />
             <Route path="/provider/invoices" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseInvoices /></RequireAuth>} />
+            <Route path="/provider/settings" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseWorkSettings /></RequireAuth>} />
             <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
@@ -526,7 +531,7 @@ function AppRoutes() {
             <Route path="/provider/acuity" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/appointments" replace /></RequireAuth>} />
             <Route path="/provider/crm" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin/crm" replace /></RequireAuth>} />
             <Route path="/provider/finance" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin/finance" replace /></RequireAuth>} />
-            <Route path="/provider/credentials" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/settings" replace /></RequireAuth>} />
+            <Route path="/provider/credentials" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/settings" replace /></RequireAuth>} />
             <Route path="/provider/dispatch" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/field" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/kits" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
@@ -534,7 +539,6 @@ function AppRoutes() {
             <Route path="/provider/shift" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/role-os" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/reports" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/invoices" replace /></RequireAuth>} />
-            <Route path="/provider/settings" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/admin" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEssentials /></RequireAuth>} />
             <Route path="/admin/acuity" element={<RequireAuth allowedRoles={['admin']}><AdminAcuityControl /></RequireAuth>} />
             <Route path="/admin/clients" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminPatientRecords /></RequireAuth>} />

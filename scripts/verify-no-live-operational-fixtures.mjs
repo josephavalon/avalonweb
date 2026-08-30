@@ -43,6 +43,49 @@ function requireProductionGate(relativePath) {
   ]);
 }
 
+// The shipped nurse experience must be backed only by authenticated APIs.
+// Browser storage is allowed for auth/session mechanics elsewhere, but never as
+// the source of truth for work, readiness, clock, guide, exception, or pay data.
+const activeNurseModules = [
+  'app-modules/pages/provider/NurseSchedule.jsx',
+  'app-modules/pages/provider/NurseGuidedShift.jsx',
+  'app-modules/pages/provider/NurseWorkSettings.jsx',
+];
+const forbiddenNurseOperationalSources = [
+  '@/fixtures',
+  '/fixtures/',
+  'commandMockData',
+  'localOs',
+  'QuickPatientAdd',
+  'readLastBooking',
+  'INVOICE_DRAFT_KEY',
+  'window.localStorage',
+  'window.sessionStorage',
+  'localStorage.',
+  'sessionStorage.',
+];
+
+for (const relativePath of activeNurseModules) {
+  forbid(relativePath, forbiddenNurseOperationalSources);
+  requireText(relativePath, ['assertApiResponse', 'OperationalSourceUnavailable']);
+}
+requireText('app-modules/pages/provider/NurseSchedule.jsx', [
+  '/api/me/shifts',
+  'Work queue unavailable',
+]);
+requireText('app-modules/pages/provider/NurseGuidedShift.jsx', [
+  '/api/me/shift-runs',
+  'Guided shift unavailable',
+]);
+requireText('app-modules/pages/provider/NurseWorkSettings.jsx', [
+  '/api/me/business-profile',
+  '/api/me/availability',
+  '/api/me/service-preferences',
+  '/api/me/service-area',
+  '/api/me/engagement-status',
+  'unavailable',
+]);
+
 requireText('src/lib/adminAccess.js', [
   'if (import.meta.env?.PROD) return false;',
 ]);
@@ -203,8 +246,8 @@ for (const [relativePath, unavailableCopy] of [
   ['app-modules/pages/admin/PatientRecords.jsx', 'No zeroed or sample clinical totals are shown'],
   ['app-modules/pages/admin/LiveBookings.jsx', 'No zeroed or sample booking totals are shown'],
   ['app-modules/pages/admin/SchedulingControl.jsx', 'No queue counts or records are shown'],
-  ['app-modules/pages/provider/NurseInvoices.jsx', 'No invoice records are shown'],
-  ['app-modules/pages/provider/NurseSchedule.jsx', 'No queue records are shown'],
+  ['app-modules/pages/provider/NurseInvoices.jsx', 'No amounts or payment status are shown'],
+  ['app-modules/pages/provider/NurseSchedule.jsx', 'No work records are shown'],
   ['app-modules/pages/admin/PromoCodes.jsx', 'No empty or sample code list is shown'],
   ['app-modules/pages/admin/Refunds.jsx', 'No clear queue or sample requests are shown'],
   ['app-modules/pages/admin/DeletionRequests.jsx', 'No clear queue or sample requests are shown'],
@@ -260,6 +303,8 @@ for (const relativePath of [
   'app-modules/pages/admin/SupportTickets.jsx',
   'app-modules/pages/admin/Reconciliation.jsx',
   'app-modules/pages/provider/NurseSchedule.jsx',
+  'app-modules/pages/provider/NurseGuidedShift.jsx',
+  'app-modules/pages/provider/NurseWorkSettings.jsx',
   'app-modules/pages/provider/NurseInvoices.jsx',
 ]) {
   requireText(relativePath, ['assertApiResponse']);
