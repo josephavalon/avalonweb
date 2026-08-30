@@ -116,6 +116,30 @@ export default async function handler(req, res) {
       });
     }
 
+    if (['approved', 'paid'].includes(nextStatus)) {
+      const expectedReceiptCount = Math.max(0, Math.floor(Number(current.payload?.receiptCount) || 0));
+      if (expectedReceiptCount > 0) {
+        if (current.receipt_storage_status !== 'complete') {
+          return res.status(409).json({
+            error: 'Receipt evidence is not fully stored. Request a correction before approving or paying this invoice.',
+            code: 'receipt_storage_incomplete',
+          });
+        }
+        const receiptResult = await authed.db.from('nurse_invoice_receipts')
+          .select('id, scan_status')
+          .eq('tenant_id', authed.tenantId)
+          .eq('invoice_id', invoiceId);
+        if (receiptResult.error) throw receiptResult.error;
+        const receiptRows = receiptResult.data || [];
+        if (receiptRows.length < expectedReceiptCount || receiptRows.some((receipt) => receipt.scan_status !== 'cleared')) {
+          return res.status(409).json({
+            error: 'Every submitted receipt must be present and cleared before this invoice can be approved or paid.',
+            code: 'receipt_evidence_not_cleared',
+          });
+        }
+      }
+    }
+
     const note = String(body.reviewNote || '').trim().slice(0, 1000);
     if ((current.status === 'quarantined' || ['correction_required', 'rejected'].includes(nextStatus)) && !note) {
       return res.status(400).json({

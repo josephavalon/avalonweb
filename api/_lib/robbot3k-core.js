@@ -15,6 +15,84 @@ import { reconcileRobBotProspectToBd, recordRobBotCrmOutcome } from './bd-crm-co
 const TERMINAL_STATUSES = new Set(['replied', 'booked', 'suppressed', 'completed', 'archived']);
 const STOP_SEQUENCE_STATUSES = new Set(['replied', 'booked', 'completed', 'suppressed', 'cancelled']);
 const UNSUBSCRIBE_PATTERN = /(no thanks|unsubscribe|stop hearing|we will stop|we’ll stop)/i;
+const STAGE_STATUSES = Object.freeze({
+  research: Object.freeze(['research']),
+  review: Object.freeze(['ready']),
+  approved: Object.freeze(['approved', 'outreach']),
+  stopped: Object.freeze(['held', 'rejected', 'replied', 'booked', 'suppressed', 'completed', 'archived']),
+});
+
+export function robBotStageForStatus(value) {
+  const status = string(value, 40).toLowerCase();
+  if (STAGE_STATUSES.review.includes(status)) return 'review';
+  if (STAGE_STATUSES.approved.includes(status)) return 'approved';
+  if (STAGE_STATUSES.stopped.includes(status)) return 'stopped';
+  return 'research';
+}
+
+export function robBotStageStatuses(value) {
+  const stage = string(value, 40).toLowerCase();
+  return STAGE_STATUSES[stage] ? [...STAGE_STATUSES[stage]] : [];
+}
+
+export function countRobBotStages(rows = []) {
+  const counts = { research: 0, review: 0, approved: 0, stopped: 0 };
+  rows.forEach((item) => { counts[robBotStageForStatus(item?.status)] += 1; });
+  return counts;
+}
+
+function safeQueueSearch(value) {
+  return string(value, 160)
+    .normalize('NFKC')
+    .replace(/[^\p{L}\p{N}\s@._+\-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function applyRobBotQueueFilters(query, {
+  stage = '', segment = '', priority = '', emailStatus = '', search = '',
+} = {}) {
+  let next = query;
+  const statuses = robBotStageStatuses(stage);
+  if (statuses.length) next = next.in('status', statuses);
+
+  const segmentValue = string(segment, 160);
+  if (segmentValue && segmentValue.toLowerCase() !== 'all') next = next.eq('segment', segmentValue);
+
+  const priorityValue = String(priority || '').trim().toLowerCase();
+  const numericPriority = priorityValue === 'high' ? 3 : priorityValue === 'medium' ? 2 : priorityValue === 'low' ? 1 : Number(priorityValue);
+  if ([1, 2, 3].includes(numericPriority)) next = next.eq('priority', numericPriority);
+
+  const normalizedEmailStatus = String(emailStatus || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (['manually_verified', 'verified'].includes(normalizedEmailStatus)) {
+    next = next.eq('contact_manually_verified', true);
+  } else if (['needs_manual_verification', 'unverified'].includes(normalizedEmailStatus)) {
+    next = next.eq('contact_manually_verified', false).not('contact_email', 'is', null);
+  } else if (['not_found', 'missing'].includes(normalizedEmailStatus)) {
+    next = next.is('contact_email', null);
+  }
+
+  const searchValue = safeQueueSearch(search);
+  if (searchValue) {
+    const pattern = `*${searchValue}*`;
+    next = next.or([
+      `organization.ilike.${pattern}`,
+      `contact_name.ilike.${pattern}`,
+      `contact_role.ilike.${pattern}`,
+      `contact_email.ilike.${pattern}`,
+    ].join(','));
+  }
+  return next;
+}
+
+function excludeRetiredTestRecords(query) {
+  return query.or('source_payload->>is_test_record.is.null,source_payload->>is_test_record.neq.true');
+}
+
+function isRetiredTestRecord(row) {
+  return row?.source_payload?.is_test_record === true
+    || String(row?.source_payload?.is_test_record || '').toLowerCase() === 'true';
+}
 
 export function statusAfterProspectEdit(existingStatus, approvalSensitiveChange, fallbackStatus) {
   if (['approved', 'outreach'].includes(existingStatus)) {
@@ -119,7 +197,6 @@ export function normalizeManualProspectInput(input = {}) {
   }
   const numericPriority = Number(input.priority);
   const priority = [1, 2, 3].includes(numericPriority) ? numericPriority : 2;
-  const isTestRecord = input.isTestRecord === true || input.is_test_record === true;
   const sourceVerified = input.sourceVerified === true || input.source_verified === true;
   return {
     personName,
@@ -132,7 +209,6 @@ export function normalizeManualProspectInput(input = {}) {
     sourceUrl,
     primarySourceUrl,
     priority,
-    isTestRecord,
     sourceVerified,
     sourceId: `manual:${crypto.createHash('sha256').update(
       email || `${company.toLowerCase()}|${personName.toLowerCase()}|${primarySourceUrl.toLowerCase()}`,
@@ -178,13 +254,16 @@ export function pacificClock(now = new Date()) {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    weekday: 'short',
     hourCycle: 'h23',
   }).formatToParts(now);
   const value = (type) => parts.find((part) => part.type === type)?.value || '';
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(value('weekday'));
   return {
     date: `${value('year')}-${value('month')}-${value('day')}`,
     hour: Number(value('hour')),
     minute: Number(value('minute')),
+    weekday,
     timeZone: 'America/Los_Angeles',
   };
 }
@@ -260,9 +339,8 @@ export function shapeProspect(row, { approval = null, sequence = null, meeting =
     ? row.source_payload
     : {};
   const manualEntry = row.source_kind === 'manual' || sourcePayload.manual_entry === true;
-  const testRecord = sourcePayload.is_test_record === true;
   const sourceLabel = manualEntry
-    ? testRecord ? 'Manual test contact' : row.source_kind === 'manual' ? 'Manual admin entry' : 'Manual entry + Atlas'
+    ? row.source_kind === 'manual' ? 'Manual admin entry' : 'Manual entry + Atlas'
     : 'Regional Opportunity Atlas';
   const evidence = sources.map((url, index) => ({
     id: `${row.id}:source:${index}`,
@@ -289,7 +367,6 @@ export function shapeProspect(row, { approval = null, sequence = null, meeting =
     source: { label: sourceLabel, url: sources[0] || (manualEntry ? '' : ATLAS_DEFAULT_URL) },
     sourceKind: row.source_kind,
     manualEntry,
-    isTestRecord: testRecord,
     opportunityContext: string(sourcePayload.opportunity_context, 2_000) || row.research_summary || '',
     manualNotes: string(sourcePayload.notes, 4_000),
     contact: {
@@ -364,6 +441,7 @@ export async function readRobBotSettings(db, tenantId) {
     // a selected provider or expose any secret material through this object.
     providerStatus: 'not_configured',
     providerConnected: false,
+    globalPause: row.global_pause !== false,
     updatedAt: row.updated_at || null,
   };
 }
@@ -388,6 +466,7 @@ export async function updateRobBotSettings(db, tenantId, actorProfileId, input =
     // Selection is not a connection. A future adapter and server-only secret
     // must both exist before this may become connected.
     provider_status: 'not_configured',
+    global_pause: input.globalPause !== false,
     created_by: actorProfileId,
     updated_by: actorProfileId,
   };
@@ -402,9 +481,10 @@ export async function updateRobBotSettings(db, tenantId, actorProfileId, input =
     entityId: tenantId,
     phiTouched: false,
     payload: {
-      changedFields: ['senderDisplayName', 'displayName', 'fromEmail', 'replyToEmail', 'calendlyUrl', 'physicalPostalAddress', 'postalAddress', 'providerSelection']
+      changedFields: ['senderDisplayName', 'displayName', 'fromEmail', 'replyToEmail', 'calendlyUrl', 'physicalPostalAddress', 'postalAddress', 'providerSelection', 'globalPause']
         .filter((key) => Object.prototype.hasOwnProperty.call(input, key)),
       providerConnected: false,
+      globalPause: row.global_pause,
     },
   });
   return readRobBotSettings(db, tenantId);
@@ -457,7 +537,6 @@ export async function upsertManualRobBotProspect(db, tenantId, actorProfileId, i
   const sourcePayload = {
     ...priorPayload,
     manual_entry: true,
-    is_test_record: normalized.isTestRecord,
     website_url: normalized.websiteUrl || null,
     source_url: normalized.sourceUrl || normalized.primarySourceUrl,
     opportunity_context: normalized.opportunityContext,
@@ -471,7 +550,7 @@ export async function upsertManualRobBotProspect(db, tenantId, actorProfileId, i
     source_snapshot: `manual:${pacificClock(new Date()).date}`,
     organization: normalized.company,
     name: normalized.company,
-    segment: existing?.segment || (normalized.isTestRecord ? 'Manual test contact' : 'Manual contact'),
+    segment: existing?.segment || 'Manual contact',
     location: existing?.location || null,
     priority: normalized.priority,
     verification,
@@ -543,7 +622,6 @@ export async function upsertManualRobBotProspect(db, tenantId, actorProfileId, i
     phiTouched: false,
     payload: {
       created: !existing,
-      isTestRecord: normalized.isTestRecord,
       sourceVerified: normalized.sourceVerified,
       approvalCreated: false,
       outreachExecuted: false,
@@ -555,15 +633,18 @@ export async function upsertManualRobBotProspect(db, tenantId, actorProfileId, i
   };
 }
 
-export async function listRobBotDashboard(db, tenantId, { limit = 100, offset = 0 } = {}) {
+export async function listRobBotDashboard(db, tenantId, {
+  limit = 100, offset = 0, stage = '', segment = '', priority = '', emailStatus = '', search = '',
+} = {}) {
   const pageLimit = Math.min(Math.max(Number(limit) || 100, 1), 150);
   const pageOffset = Math.max(Number(offset) || 0, 0);
   let prospectQuery = db.from('robbot3k_prospects')
     .select('*', { count: 'exact' })
     .order('priority', { ascending: false })
-    .order('updated_at', { ascending: false })
-    .range(pageOffset, pageOffset + pageLimit - 1);
+    .order('updated_at', { ascending: false });
   if (tenantId) prospectQuery = prospectQuery.eq('tenant_id', tenantId);
+  prospectQuery = applyRobBotQueueFilters(excludeRetiredTestRecords(prospectQuery), { stage, segment, priority, emailStatus, search })
+    .range(pageOffset, pageOffset + pageLimit - 1);
   const prospectResult = await prospectQuery;
   const prospects = requireData(prospectResult) || [];
   const total = Number(prospectResult.count || prospects.length);
@@ -582,11 +663,17 @@ export async function listRobBotDashboard(db, tenantId, { limit = 100, offset = 
       return requireData(await query) || [];
     })(),
     readRobBotSettings(db, tenantId),
-    selectAllTenantRows(db, 'robbot3k_prospects', 'status,last_researched_at', tenantId),
-    selectAllTenantRows(db, 'robbot3k_sequences', 'status,next_due_at', tenantId),
-    selectAllTenantRows(db, 'robbot3k_messages', 'direction,created_at', tenantId),
-    selectAllTenantRows(db, 'robbot3k_meetings', 'status,created_at', tenantId),
+    selectAllTenantRows(db, 'robbot3k_prospects', 'id,status,last_researched_at,segment,priority,contact_email,contact_manually_verified,source_payload', tenantId),
+    selectAllTenantRows(db, 'robbot3k_sequences', 'prospect_id,status,next_due_at', tenantId),
+    selectAllTenantRows(db, 'robbot3k_messages', 'prospect_id,direction,created_at', tenantId),
+    selectAllTenantRows(db, 'robbot3k_meetings', 'prospect_id,status,created_at', tenantId),
   ]);
+
+  const visibleGlobalProspects = globalProspects.filter((row) => !isRetiredTestRecord(row));
+  const visibleProspectIds = new Set(visibleGlobalProspects.map((row) => row.id));
+  const visibleGlobalSequences = globalSequences.filter((row) => visibleProspectIds.has(row.prospect_id));
+  const visibleGlobalMessages = globalMessages.filter((row) => visibleProspectIds.has(row.prospect_id));
+  const visibleGlobalMeetings = globalMeetings.filter((row) => visibleProspectIds.has(row.prospect_id));
 
   const approvalMap = new Map();
   approvals.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).forEach((row) => {
@@ -613,14 +700,19 @@ export async function listRobBotDashboard(db, tenantId, { limit = 100, offset = 
     return !Number.isNaN(date.getTime()) && pacificClock(date).date === pacificToday;
   };
   const stats = {
-    researchedToday: globalProspects.filter((item) => isPacificToday(item.last_researched_at)).length,
-    readyForReview: globalProspects.filter((item) => item.status === 'ready').length,
-    dueToday: globalSequences.filter((item) => ['ready', 'active'].includes(item.status) && item.next_due_at && new Date(item.next_due_at).getTime() <= now).length,
-    activeSequences: globalSequences.filter((item) => ['ready', 'active'].includes(item.status)).length,
-    repliesToday: globalMessages.filter((item) => item.direction === 'inbound' && isPacificToday(item.created_at)).length,
-    totalReplies: globalMessages.filter((item) => item.direction === 'inbound').length,
-    callsBookedToday: globalMeetings.filter((item) => ['scheduled', 'completed'].includes(item.status) && isPacificToday(item.created_at)).length,
-    totalCallsBooked: globalMeetings.filter((item) => ['scheduled', 'completed'].includes(item.status)).length,
+    researchedToday: visibleGlobalProspects.filter((item) => isPacificToday(item.last_researched_at)).length,
+    readyForReview: visibleGlobalProspects.filter((item) => item.status === 'ready').length,
+    dueToday: visibleGlobalSequences.filter((item) => ['ready', 'active'].includes(item.status) && item.next_due_at && new Date(item.next_due_at).getTime() <= now).length,
+    activeSequences: visibleGlobalSequences.filter((item) => ['ready', 'active'].includes(item.status)).length,
+    repliesToday: visibleGlobalMessages.filter((item) => item.direction === 'inbound' && isPacificToday(item.created_at)).length,
+    totalReplies: visibleGlobalMessages.filter((item) => item.direction === 'inbound').length,
+    callsBookedToday: visibleGlobalMeetings.filter((item) => ['scheduled', 'completed'].includes(item.status) && isPacificToday(item.created_at)).length,
+    totalCallsBooked: visibleGlobalMeetings.filter((item) => ['scheduled', 'completed'].includes(item.status)).length,
+  };
+  const stageCounts = countRobBotStages(visibleGlobalProspects);
+  const facets = {
+    segments: [...new Set(visibleGlobalProspects.map((item) => string(item.segment, 160)).filter(Boolean))].sort(),
+    emailStatuses: ['Manually verified', 'Needs manual verification', 'Not found'],
   };
   const lastRefresh = runs.find((row) => row.run_type === 'refresh' && row.status === 'succeeded');
   const lastExecution = runs.find((row) => row.run_type === 'outreach');
@@ -633,6 +725,8 @@ export async function listRobBotDashboard(db, tenantId, { limit = 100, offset = 
       hasMore: pageOffset + prospects.length < total,
     },
     stats,
+    stageCounts,
+    facets,
     runs: runs.map((row) => ({
       id: row.id,
       type: row.run_type === 'outreach' ? 'run_due_outreach' : row.run_type,
@@ -642,6 +736,7 @@ export async function listRobBotDashboard(db, tenantId, { limit = 100, offset = 
       counts: row.counts,
       provider: row.provider,
       providerStatus: row.provider_status,
+      errorCode: row.error_code,
       createdAt: row.started_at,
       completedAt: row.finished_at,
     })),
@@ -661,6 +756,8 @@ export async function listRobBotDashboard(db, tenantId, { limit = 100, offset = 
       cadenceDays: [...CADENCE_DAYS],
       humanApprovalIsNotRecipientConsent: true,
       senderConfigured: Boolean(settings.fromEmail),
+      globalPause: settings.globalPause,
+      sendWindow: 'Monday-Friday, 9:00 AM-5:00 PM America/Los_Angeles',
     },
     settings,
     liveSendEnabled: false,
@@ -672,7 +769,7 @@ async function getProspect(db, tenantId, prospectId) {
   let query = db.from('robbot3k_prospects').select('*').eq('id', prospectId);
   if (tenantId) query = query.eq('tenant_id', tenantId);
   const row = requireData(await query.maybeSingle());
-  if (!row) fail(404, 'prospect_not_found', 'Prospect not found.');
+  if (!row || isRetiredTestRecord(row)) fail(404, 'prospect_not_found', 'Prospect not found.');
   return row;
 }
 
@@ -884,6 +981,14 @@ export async function decideRobBotProspect(db, tenantId, actorProfileId, prospec
     if (!robBotHasOfficialEvidence(prospect)) fail(400, 'official_evidence_required', 'A source-linked record is required before approval.');
     if (hash !== prospect.draft_hash) fail(409, 'draft_hash_mismatch', 'The drafts changed. Save and review them again.');
     if (TERMINAL_STATUSES.has(prospect.status)) fail(409, 'prospect_stopped', 'This prospect has a stop condition.');
+    const senderSettings = await readRobBotSettings(db, tenantId);
+    if (!senderSettings.displayName
+      || !validEmail(senderSettings.fromEmail)
+      || !validEmail(senderSettings.replyToEmail)
+      || !senderSettings.calendlyUrl
+      || !senderSettings.physicalPostalAddress) {
+      fail(409, 'sender_settings_required', 'Complete the sender, reply-to, Calendly, and postal settings before approval.');
+    }
     if (await isSuppressed(db, tenantId, recipient)) fail(409, 'recipient_suppressed', 'This recipient is suppressed.');
     if (await hasReplyOrMeeting(db, tenantId, prospectId)) fail(409, 'reply_or_booking_exists', 'A reply or meeting already stopped outreach.');
 
@@ -907,6 +1012,7 @@ export async function decideRobBotProspect(db, tenantId, actorProfileId, prospec
         reviewed_draft_changed: 'The recipient, copy, or source evidence changed. Review the updated record before approving.',
         prospect_not_approvable: 'This prospect is no longer ready for approval.',
         verified_recipient_required: 'A human-verified recipient is required.',
+        sender_settings_required: 'Complete the sender, reply-to, Calendly, and postal settings before approval.',
         official_evidence_required: 'Source evidence changed or no longer qualifies.',
         four_drafts_required: 'Exactly four reviewed drafts are required.',
         approved_step_invalid: 'The reviewed cadence or compliance copy is invalid.',

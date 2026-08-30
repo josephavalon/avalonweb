@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { getDefaultTenantId } from '../_supabase-server.js';
 import { getServiceClient } from '../_lib/supabase-auth.js';
-import { executeDueOutreach } from '../_lib/robbot3k-execution.js';
+import { executeDueOutreach, pacificSendWindow } from '../_lib/robbot3k-execution.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { requireBdDataReview } from '../_lib/bd-data-review-gate.js';
 
 function secretMatches(req) {
   const expected = String(process.env.CRON_SECRET || '');
@@ -18,6 +19,11 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   if (!process.env.CRON_SECRET) return res.status(503).json({ error: 'Cron authentication is not configured.' });
   if (!secretMatches(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!requireBdDataReview(res)) return;
+  const window = pacificSendWindow(new Date());
+  if (!window.open) {
+    return res.status(200).json({ ok: true, skipped: true, reason: window.reason, pacific: window });
+  }
   try {
     const db = await getServiceClient();
     if (!db) return res.status(503).json({ error: 'Supabase service role is not configured.' });

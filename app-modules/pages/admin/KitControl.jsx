@@ -15,8 +15,8 @@ import {
   UserCheck,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import PageShell from '@/components/admin/PageShell';
-import { SEED_ITEMS } from '@/data/inventorySeed';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { NURSES, REQUESTS } from '@/fixtures/commandMockData';
 import {
@@ -51,7 +51,7 @@ function buildFieldVisits() {
 
 function buildTower() {
   return buildKitControlTower({
-    inventory: SEED_ITEMS,
+    inventory: [],
     nurses: NURSES,
     visits: buildFieldVisits(),
   });
@@ -59,7 +59,7 @@ function buildTower() {
 
 function syncAndBuildTower() {
   syncVisitKitUsage({
-    inventory: SEED_ITEMS,
+    inventory: [],
     visits: buildFieldVisits(),
     actor: 'Kit Control',
   });
@@ -405,7 +405,7 @@ function ProofPanel({ tower }) {
   );
 }
 
-export default function KitControl() {
+function KitControlPreview() {
   const [tower, setTower] = useState(syncAndBuildTower);
   const [note, setNote] = useState('');
   const [view, setView] = useState('items');
@@ -428,7 +428,7 @@ export default function KitControl() {
 
   const handleSweep = () => {
     const result = runKitControlSweep({
-      inventory: SEED_ITEMS,
+      inventory: [],
       nurses: NURSES,
       visits: buildFieldVisits(),
     });
@@ -456,7 +456,7 @@ export default function KitControl() {
 
   const handleDeduction = (visit) => {
     const entry = queueKitDeduction(visit, tower.items);
-    syncVisitKitUsage({ inventory: SEED_ITEMS, visits: buildFieldVisits(), actor: 'Kit Control' });
+    syncVisitKitUsage({ inventory: [], visits: buildFieldVisits(), actor: 'Kit Control' });
     setNote(`Queued: ${entry.client}`);
     refresh();
   };
@@ -619,4 +619,18 @@ export default function KitControl() {
       </PageShell>
     </AdminShell>
   );
+}
+
+export default function KitControl() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminShell title="Kits">
+        <OperationalSourceUnavailable
+          title="Kit source unavailable"
+          description="No sample kits, supply counts, deductions, restocks, visits, or nurse assignments are shown in production. Controls remain disabled until live inventory and visit sources are connected."
+        />
+      </AdminShell>
+    );
+  }
+  return <KitControlPreview />;
 }

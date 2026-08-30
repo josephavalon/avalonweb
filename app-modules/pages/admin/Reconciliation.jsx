@@ -14,6 +14,8 @@ import {
   ShieldAlert, Wallet, X,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import PageShell from '@/components/admin/PageShell';
 import { Button } from '@/components/ui/button';
 import {
@@ -384,9 +386,9 @@ export default function Reconciliation() {
   // Per-tab data + state. Keeping it in a single object means a refetch of one
   // tab doesn't wipe another tab's count badge.
   const [byKind, setByKind] = useState({
-    renewals: { issues: [], loading: false, error: null, meta: null },
-    acuity_sync: { issues: [], loading: false, error: null, meta: null },
-    payment_failures: { issues: [], loading: false, error: null, meta: null },
+    renewals: { issues: [], loading: true, error: null, meta: null, sourceReady: false },
+    acuity_sync: { issues: [], loading: true, error: null, meta: null, sourceReady: false },
+    payment_failures: { issues: [], loading: true, error: null, meta: null, sourceReady: false },
   });
 
   const [resolveTarget, setResolveTarget] = useState(null);
@@ -399,17 +401,25 @@ export default function Reconciliation() {
 
   const loadKind = useCallback(async (kind, opts = {}) => {
     const wantResolved = opts.showResolved ?? showResolved;
-    setKindState(kind, { loading: true, error: null });
+    setKindState(kind, { loading: true, error: null, sourceReady: false });
     try {
       const data = await apiGet(`/api/admin/reconciliation?kind=${encodeURIComponent(kind)}${wantResolved ? '&showResolved=1' : ''}`);
+      assertApiResponse(data, { arrays: ['issues'] }, 'Reconciliation returned an invalid response.');
+      const flag = kind === 'renewals' ? data.configured : !data.tableMissing;
+      if ((kind === 'renewals' && typeof data.configured !== 'boolean')
+        || (kind !== 'renewals' && typeof data.tableMissing !== 'boolean')
+        || !hasObjectRows(data.issues, ['entityId'])) {
+        throw invalidApiResponse('Reconciliation returned invalid issue records.');
+      }
       setKindState(kind, {
-        issues: data?.issues || [],
+        issues: data.issues,
         meta: {
           configured: data?.configured,
           reason: data?.reason,
           tableMissing: data?.tableMissing,
         },
         loading: false,
+        sourceReady: flag,
       });
     } catch (err) {
       setKindState(kind, { loading: false, error: err?.message || 'Could not load.' });
@@ -433,9 +443,9 @@ export default function Reconciliation() {
   }, [showResolved]);
 
   const counts = useMemo(() => ({
-    renewals: (byKind.renewals.issues || []).filter((i) => !i.resolved).length,
-    acuity_sync: (byKind.acuity_sync.issues || []).filter((i) => !i.resolved).length,
-    payment_failures: (byKind.payment_failures.issues || []).filter((i) => !i.resolved).length,
+    renewals: byKind.renewals.sourceReady ? (byKind.renewals.issues || []).filter((i) => !i.resolved).length : null,
+    acuity_sync: byKind.acuity_sync.sourceReady ? (byKind.acuity_sync.issues || []).filter((i) => !i.resolved).length : null,
+    payment_failures: byKind.payment_failures.sourceReady ? (byKind.payment_failures.issues || []).filter((i) => !i.resolved).length : null,
   }), [byKind]);
 
   const active = byKind[tab];
@@ -485,6 +495,17 @@ export default function Reconciliation() {
       </Button>
     </div>
   );
+
+  if (!active.loading && !active.sourceReady) {
+    return (
+      <AdminShell title="Reconciliation">
+        <OperationalSourceUnavailable
+          title="Reconciliation source unavailable"
+          description="Renewal, Acuity, and payment-recovery signals could not be verified. No zeroed issue count, clear queue, or sample failures are shown, and acknowledgement actions remain disabled until the live sources reconnect."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Reconciliation">

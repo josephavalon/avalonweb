@@ -501,7 +501,7 @@ for (const sensitiveAnalyticsField of ['customeremail', 'customername', 'emergen
   assert(serverAnalyticsSource.includes(sensitiveAnalyticsField), `Server analytics deny-list must cover ${sensitiveAnalyticsField}`);
 }
 assert(!adminSchedulingBookingsSource.includes('setError(err.message)'), 'Admin scheduling bookings UI must not render raw provider errors');
-assert(adminSchedulingBookingsSource.includes("authBackend === 'supabase' ? <LiveAdminBookings /> : <AdminBookings />"), '/admin/bookings must use the live payments-backed surface in Supabase mode');
+assert(adminSchedulingBookingsSource.includes("authBackend === 'supabase' ? <LiveAdminBookings /> : <BookingsUnavailable />"), '/admin/bookings must use the live payments-backed surface in Supabase mode and fail closed otherwise');
 assert(!financeControlSource.includes("err?.message || 'Could not load finance summary.'"), 'Admin finance UI must not render raw finance API/client errors');
 assert(financeControlSource.includes("error: 'Could not load finance summary.'"), 'Admin finance UI must use customer-safe finance error copy');
 assert(!liveAdminBookingsSource.includes("err.body?.error || err.message || 'Could not load bookings.'"), 'Live admin bookings UI must not render raw booking API errors');

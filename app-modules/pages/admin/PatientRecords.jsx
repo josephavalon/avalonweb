@@ -13,7 +13,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Phone, Mail, Calendar, AlertCircle, ChevronDown, Users, ArrowUpRight } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -142,7 +144,9 @@ export default function PatientRecords() {
     setState((s) => ({ ...s, loading: true, error: '' }));
     try {
       const data = await apiGet('/api/admin/bookings');
-      setState({ loading: false, error: '', bookings: Array.isArray(data?.bookings) ? data.bookings : [] });
+      assertApiResponse(data, { arrays: ['bookings'] }, 'Clinical returned an invalid booking response.');
+      if (!hasObjectRows(data.bookings)) throw invalidApiResponse('Clinical returned invalid booking rows.');
+      setState({ loading: false, error: '', bookings: data.bookings });
     } catch (err) {
       setState({ loading: false, error: 'Could not load patient records.', bookings: [] });
     }
@@ -153,8 +157,19 @@ export default function PatientRecords() {
   const { loading, error, bookings } = state;
   const patients = useMemo(() => buildPatients(bookings), [bookings]);
 
+  if (!loading && error) {
+    return (
+      <AdminShell title="Clinical">
+        <OperationalSourceUnavailable
+          title="Clinical source unavailable"
+          description="Patient and visit records could not be verified. No zeroed or sample clinical totals are shown, and patient actions remain disabled until the live clinical source reconnects."
+        />
+      </AdminShell>
+    );
+  }
+
   return (
-    <AdminShell title="Patients">
+    <AdminShell title="Clinical">
       <div className="min-h-dvh font-body" style={{ background: BG, color: TEXT }}>
         <div className="mx-auto max-w-5xl px-4 py-2 md:px-8 md:py-3">
           <div className="flex items-end justify-between gap-3">

@@ -1,9 +1,6 @@
-// Unified data layer for /admin/team. In live mode (Supabase) it calls the
-// admin API; in demo mode (no Supabase) it reads/writes a sessionStorage roster
-// so the screen is fully interactive — invites, role changes, deactivation, and
-// password resets all work and persist until the tab is reloaded.
+// Unified data layer for /admin/team. Live mode calls the admin API. The legacy
+// local adapter starts empty; the routed UI fails closed before invoking it.
 import { apiGet, apiPost } from './apiClient';
-import { TEAM_MEMBERS, PENDING_INVITES } from '@/data/teamMockData';
 
 const DEMO_KEY = 'av.demo.team';
 const FAIL = (msg) => { throw new Error(msg); };
@@ -11,8 +8,8 @@ const FAIL = (msg) => { throw new Error(msg); };
 // ── Demo store (sessionStorage) ───────────────────────────────────────────
 function seed() {
   return {
-    members: TEAM_MEMBERS.map((m) => ({ ...m })),
-    invites: PENDING_INVITES.map((i) => ({ ...i })),
+    members: [],
+    invites: [],
   };
 }
 function readDemo() {

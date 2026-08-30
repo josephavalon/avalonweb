@@ -5,6 +5,7 @@ import {
   AlertTriangle, FileText, X, RefreshCw, Clock,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { PAYMENTS } from '@/fixtures/commandMockData';
 import { readPayrollProofQueue } from '@/lib/platformOps';
 import {
@@ -352,7 +353,7 @@ function FinanceHandoffCard({ icon: Icon, title, status, body, items, delay = 0 
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function Accounting() {
+function AccountingPreview() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [payrollProofQueue] = useState(() => readPayrollProofQueue());
 
@@ -533,4 +534,19 @@ export default function Accounting() {
       </div>
     </AdminLayout>
   );
+}
+
+export default function Accounting() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Accounting source unavailable"
+          description="No sample payments, balances, collections, or payroll records are shown. Finance actions remain disabled until the verified accounting source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <AccountingPreview />;
 }

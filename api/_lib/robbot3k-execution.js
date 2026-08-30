@@ -38,6 +38,55 @@ function normalizedEmail(value) {
   return /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(email) ? email : '';
 }
 
+function normalizedSetting(value, { email = false, lower = false } = {}) {
+  const normalized = email ? normalizedEmail(value) : String(value || '').trim();
+  return lower ? normalized.toLowerCase() : normalized;
+}
+
+export function approvalSenderSettingsSnapshot(settings = {}) {
+  return {
+    senderDisplayName: normalizedSetting(settings.sender_display_name ?? settings.senderDisplayName ?? settings.displayName),
+    fromEmail: normalizedSetting(settings.from_email ?? settings.fromEmail, { email: true }),
+    replyToEmail: normalizedSetting(settings.reply_to_email ?? settings.replyToEmail, { email: true }),
+    calendlyUrl: normalizedSetting(settings.calendly_url ?? settings.calendlyUrl),
+    physicalPostalAddress: normalizedSetting(settings.physical_postal_address ?? settings.physicalPostalAddress ?? settings.postalAddress),
+    providerSelection: normalizedSetting(settings.provider_selection ?? settings.providerSelection, { lower: true }),
+    providerStatus: normalizedSetting(settings.provider_status ?? settings.providerStatus, { lower: true }),
+  };
+}
+
+export function senderSettingsMatchApproval(approval = {}, settings = {}) {
+  const approved = approval.approved_sender_settings ?? approval.approvedSenderSettings;
+  if (!approved || typeof approved !== 'object' || Array.isArray(approved) || Object.keys(approved).length === 0) return false;
+  return JSON.stringify(approvalSenderSettingsSnapshot(approved)) === JSON.stringify(approvalSenderSettingsSnapshot(settings));
+}
+
+export function pacificSendWindow(now = new Date()) {
+  const clock = pacificClock(now);
+  const weekdayOpen = clock.weekday >= 1 && clock.weekday <= 5;
+  const hourOpen = clock.hour >= 9 && clock.hour < 17;
+  return {
+    open: weekdayOpen && hourOpen,
+    reason: !weekdayOpen ? 'outside_send_weekday' : !hourOpen ? 'outside_send_window' : null,
+    startHour: 9,
+    endHour: 17,
+    ...clock,
+  };
+}
+
+export function outreachExecutionControl(settings = {}, now = new Date()) {
+  const globalPause = settings.global_pause ?? settings.globalPause ?? true;
+  if (globalPause !== false) {
+    return { allowed: false, reason: 'global_pause', window: pacificSendWindow(now) };
+  }
+  const window = pacificSendWindow(now);
+  return { allowed: window.open, reason: window.reason, window };
+}
+
+export function shouldEnforceOutreachControls({ live = false, triggerSource = 'manual' } = {}) {
+  return live === true || triggerSource === 'schedule';
+}
+
 function liveRequested() {
   return ['true', '1', 'yes'].includes(String(process.env.ROBBOT3K_LIVE_SEND_ENABLED || '').trim().toLowerCase());
 }
@@ -109,7 +158,7 @@ async function stopSequence(db, sequence, status, reason) {
   if (result.error) throw result.error;
 }
 
-async function gateSequence(db, sequence, now = new Date()) {
+async function gateSequence(db, sequence, now = new Date(), { enforceSendControls = false } = {}) {
   const [prospectResult, approvalResult, replyResult, meetingResult, sentResult, settingsResult] = await Promise.all([
     db.from('robbot3k_prospects').select('*').eq('id', sequence.prospect_id).eq('tenant_id', sequence.tenant_id).maybeSingle(),
     db.from('robbot3k_approvals').select('*').eq('id', sequence.approval_id).eq('tenant_id', sequence.tenant_id).maybeSingle(),
@@ -124,6 +173,16 @@ async function gateSequence(db, sequence, now = new Date()) {
   const meetings = requireData(meetingResult) || [];
   const sent = requireData(sentResult) || [];
   const settings = requireData(settingsResult) || {};
+
+  if (prospect?.source_payload?.is_test_record === true
+    || String(prospect?.source_payload?.is_test_record || '').toLowerCase() === 'true') {
+    return { allowed: false, reason: 'test_records_retired', stop: ['cancelled', 'test_records_retired'] };
+  }
+
+  if (enforceSendControls) {
+    const executionControl = outreachExecutionControl(settings, now);
+    if (!executionControl.allowed) return { allowed: false, reason: executionControl.reason };
+  }
 
   if (!prospect) return { allowed: false, reason: 'prospect_missing', stop: ['cancelled', 'prospect_missing'] };
   if (['replied', 'booked', 'suppressed', 'completed', 'archived', 'rejected', 'held'].includes(prospect.status)) {
@@ -151,6 +210,9 @@ async function gateSequence(db, sequence, now = new Date()) {
   }
   if (!approval || approval.decision !== 'approved' || !approval.is_current) {
     return { allowed: false, reason: 'current_approval_missing', stop: ['cancelled', 'current_approval_missing'] };
+  }
+  if (!senderSettingsMatchApproval(approval, settings)) {
+    return { allowed: false, reason: 'approved_sender_settings_changed', stop: ['cancelled', 'approved_sender_settings_changed'] };
   }
   if (initialApprovalExpired(approval, sequence)) {
     return { allowed: false, reason: 'initial_approval_expired', stop: ['cancelled', 'initial_approval_expired'] };
@@ -381,7 +443,9 @@ export async function executeDueOutreach(db, tenantId, actorProfileId, {
 
     for (const sequence of sequences) {
       try {
-        const gate = await gateSequence(db, sequence, now);
+        const gate = await gateSequence(db, sequence, now, {
+          enforceSendControls: shouldEnforceOutreachControls({ live, triggerSource }),
+        });
         if (gate.reconcileMessage) {
           const sentAt = gate.reconcileMessage.sent_at && !Number.isNaN(new Date(gate.reconcileMessage.sent_at).getTime())
             ? new Date(gate.reconcileMessage.sent_at)
@@ -401,6 +465,13 @@ export async function executeDueOutreach(db, tenantId, actorProfileId, {
           counts.blocked += 1;
           if (gate.stop) {
             await stopSequence(db, sequence, gate.stop[0], gate.stop[1]);
+            if (gate.stop[1] === 'approved_sender_settings_changed') {
+              requireData(await db.from('robbot3k_prospects').update({ status: 'ready' })
+                .eq('id', sequence.prospect_id)
+                .eq('tenant_id', sequence.tenant_id)
+                .select('id')
+                .single());
+            }
             counts.stopped += 1;
           }
           results.push({ sequenceId: sequence.id, prospectId: sequence.prospect_id, outcome: 'blocked', reason: gate.reason });

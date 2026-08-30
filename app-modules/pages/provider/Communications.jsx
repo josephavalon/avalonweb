@@ -3,6 +3,7 @@ import {
   Clock, MessageSquare, Check, RefreshCw, Star, PlusCircle,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { FOLLOWUPS } from '@/fixtures/commandMockData';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -202,7 +203,7 @@ function SummaryChip({ label, value, color }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function Communications() {
+function CommunicationsPreview() {
   const { toast } = useToast();
   const { user } = useAuthStore();
   const [activeFilter, setActiveFilter] = useState('all');
@@ -305,4 +306,19 @@ export default function Communications() {
       ))}
     </AdminLayout>
   );
+}
+
+export default function Communications() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Communication source unavailable"
+          description="No sample messages, follow-ups, broadcasts, alerts, or client status records are shown. Communication actions remain disabled until the verified messaging source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <CommunicationsPreview />;
 }

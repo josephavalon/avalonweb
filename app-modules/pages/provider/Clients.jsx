@@ -1,14 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import {
-  Search, X, Plus, ChevronRight, Check, Clock,
+  Search, X, ChevronRight, Check, Clock,
   MapPin, Phone, Mail, Calendar, DollarSign,
   User, Activity, FileText, Edit2, ToggleLeft, ToggleRight,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
-import { CLIENTS, APPOINTMENTS, INVOICES } from '@/fixtures/adminMockData';
-import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
-import { patientToClientShape, readQuickPatients } from '@/lib/clientIntakeStore';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+
+const APPOINTMENTS = Object.freeze([]);
+const INVOICES = Object.freeze([]);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const EASE = [0.16, 1, 0.3, 1];
@@ -28,60 +29,6 @@ const AVATAR_COLORS = [
 const TAG_FILTERS = ['All', 'VIP', 'Recurring', 'Athlete', 'Corporate'];
 
 const SOURCES = ['website', 'referral', 'instagram', 'google', 'yelp', 'corporate', 'other'];
-
-const PREVIEW_CLIENTS = [
-  {
-    id: 'preview-client-1',
-    first_name: 'Alexandra',
-    last_name: 'Montgomery',
-    email: 'alexandra.montgomery.preview@avalon.local',
-    phone: '(415) 555-1101',
-    city: 'San Francisco',
-    zip: '94105',
-    tags: ['vip', 'recurring'],
-    intake_completed: true,
-    is_active: true,
-    source: 'website',
-    total_spent: 1840,
-    visit_count: 9,
-    last_visit: '2026-05-08',
-    created_at: '2026-02-01',
-  },
-  {
-    id: 'preview-client-2',
-    first_name: 'Maya',
-    last_name: 'Patel',
-    email: 'maya.patel.preview@avalon.local',
-    phone: '(415) 555-1102',
-    city: 'Marin',
-    zip: '94941',
-    tags: ['recurring'],
-    intake_completed: true,
-    is_active: true,
-    source: 'referral',
-    total_spent: 940,
-    visit_count: 4,
-    last_visit: '2026-04-28',
-    created_at: '2026-02-14',
-  },
-  {
-    id: 'preview-client-3',
-    first_name: 'Tyler',
-    last_name: 'Brooks-Wellington',
-    email: 'tyler.brooks-wellington.corporate@avalon.local',
-    phone: '(415) 555-1103',
-    city: 'Palo Alto',
-    zip: '94301',
-    tags: ['corporate', 'athlete'],
-    intake_completed: false,
-    is_active: true,
-    source: 'corporate',
-    total_spent: 2200,
-    visit_count: 11,
-    last_visit: '2026-05-02',
-    created_at: '2026-03-10',
-  },
-];
 
 function avatarColor(name) {
   const code = name.charCodeAt(0) % AVATAR_COLORS.length;
@@ -137,7 +84,8 @@ function formatCurrency(n) {
 }
 
 // ─── Add Client Modal ──────────────────────────────────────────────────────────
-function AddClientModal({ onClose, onAdd }) {
+// Local development helper retained for UI work; the live route does not mount it.
+export function AddClientModal({ onClose, onAdd }) {
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '',
     city: '', source: 'website', tags: [],
@@ -583,25 +531,15 @@ const Skeleton = () => (
   </div>
 );
 
-export default function Clients() {
+export function ClientsPreview() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
 
-  const [clients, setClients] = useState(() => {
-    const base = CLIENTS.length ? CLIENTS : PREVIEW_CLIENTS;
-    const quick = readQuickPatients(20).map(patientToClientShape);
-    const seen = new Set();
-    return [...quick, ...base].filter((client) => {
-      if (seen.has(client.id)) return false;
-      seen.add(client.id);
-      return true;
-    });
-  });
+  const [clients, setClients] = useState([]);
   const [search, setSearch] = useState('');
   const [tagFilter, setTagFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedClient, setSelectedClient] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
 
   // Derived list
   const filtered = useMemo(() => {
@@ -618,10 +556,6 @@ export default function Clients() {
       return matchSearch && matchTag && matchStatus;
     });
   }, [clients, search, tagFilter, statusFilter]);
-
-  function handleAdd(newClient) {
-    setClients(prev => [newClient, ...prev]);
-  }
 
   function handleToggleActive(id) {
     setClients(prev => prev.map(c => c.id === id ? { ...c, is_active: !c.is_active } : c));
@@ -732,13 +666,7 @@ export default function Clients() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          <QuickPatientAdd
-            context="admin"
-            source="Client roster"
-            triggerLabel="Add Client"
-            triggerClassName="flex min-h-[42px] items-center gap-2 rounded-lg bg-accent px-4 py-2.5 font-body text-sm font-semibold text-background transition-opacity hover:opacity-90"
-            onCreated={(patient) => handleAdd(patientToClientShape(patient))}
-          />
+          <span className="rounded-full border border-white/10 px-3 py-2 font-body text-[10px] uppercase tracking-[0.16em] text-white/45">Clinical CRM not connected</span>
         </motion.div>
 
         {/* Table */}
@@ -761,7 +689,8 @@ export default function Clients() {
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <User className="w-8 h-8 mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.2)' }} />
-              <p className="text-sm text-white">No clients match your filters.</p>
+              <p className="text-sm text-white">{search || tagFilter !== 'All' || statusFilter !== 'All' ? 'No live clients match your filters.' : 'Clinical CRM is not connected.'}</p>
+              {!search && tagFilter === 'All' && statusFilter === 'All' ? <p className="mx-auto mt-2 max-w-lg text-xs leading-relaxed text-white/45">No sample patient records are shown. Adding or changing patients stays disabled until Avalon’s compliant clinical source of record is connected.</p> : null}
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
@@ -884,15 +813,17 @@ export default function Clients() {
         )}
       </AnimatePresence>
 
-      {/* Add Client Modal */}
-      <AnimatePresence>
-        {showAddModal && (
-          <AddClientModal
-            onClose={() => setShowAddModal(false)}
-            onAdd={handleAdd}
-          />
-        )}
-      </AnimatePresence>
+    </AdminLayout>
+  );
+}
+
+export default function Clients() {
+  return (
+    <AdminLayout>
+      <OperationalSourceUnavailable
+        title="Clinical CRM unavailable"
+        description="The compliant clinical source of record is not connected. No patient count, sample records, loading simulation, or local patient mutations are shown."
+      />
     </AdminLayout>
   );
 }

@@ -15,26 +15,6 @@ const FIELD = 'min-h-12 w-full rounded-xl border border-foreground/[0.14] bg-for
 const LABEL = 'mb-2 block font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/46';
 const MONO = { fontFamily: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace", fontVariantNumeric: 'tabular-nums' };
 
-const DEMO_EVENT = {
-  id: 'demo-event-1', slug: 'after-hours-recovery-club', name: 'After Hours Recovery Club', status: 'presale',
-  capacity: 220, startsAt: '2026-08-22T19:00:00-07:00', endsAt: '2026-08-23T01:00:00-07:00',
-  venue: 'Fort Mason, San Francisco', exactAddress: '2 Marina Blvd, Building C', hostName: 'North Coast Social',
-  organizerEmail: 'joseph@avalonvitality.co', organizerStatus: 'active', clinicalLead: 'Dr. Maya Chen',
-  logistics: {
-    eventType: 'venue_company', companyLegalName: 'North Coast Social LLC', venueLegalName: 'Fort Mason Center for Arts & Culture', coiRequested: true,
-    expectedGuests: 220, requestedServiceCapacity: 36, furnitureNeeded: true, signageNeeded: true,
-    avalonBringItems: ['Extension cords & power strips', 'Treatment recliners', 'Linens', 'Privacy dividers', 'Directional signage', 'Waste & sharps stations'],
-  },
-  documents: { coiCount: 1, coiStatus: 'pending', floorPlanCount: 1, venuePhotoCount: 4, venueRequirementCount: 1 },
-  experienceTickets: [
-    { id: 'demo-ticket-1', name: 'Early Entry', description: 'Event entry before 9 PM.', priceCents: 6500, allocation: 80, sold: 68, active: true, priceLocked: true },
-    { id: 'demo-ticket-2', name: 'All Night Access', description: 'General event access and hospitality.', priceCents: 9500, allocation: 140, sold: 80, active: true, priceLocked: true },
-  ],
-  clinicalTickets: [
-    { id: 'demo-clinical-1', name: 'Recovery IV', description: 'Clinician-reviewed hydration service.', priceCents: 22500, allocation: 24, sold: 0, serviceId: 'recovery-iv', requiresGfe: true, backOnFloorMinutes: 45, active: true },
-  ],
-};
-
 function money(cents) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format((Number(cents) || 0) / 100);
 }
@@ -59,12 +39,12 @@ function Metric({ label, value, detail, Icon }) {
   );
 }
 
-function EventRail({ events, activeId, onSelect, onCreate }) {
+function EventRail({ events, activeId, onSelect, onCreate, canCreate }) {
   return (
     <aside className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div><p className="font-body text-[9px] font-bold uppercase tracking-[0.2em] text-foreground/38">Avalon Events</p><h2 className="mt-1 font-heading text-3xl uppercase">Pipeline</h2></div>
-        <button type="button" onClick={onCreate} className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background" aria-label="Create event"><Plus className="h-4 w-4" /></button>
+        <button type="button" onClick={onCreate} disabled={!canCreate} className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background disabled:cursor-not-allowed disabled:opacity-30" aria-label="Create event"><Plus className="h-4 w-4" /></button>
       </div>
       {events.map((event) => (
         <button key={event.id} type="button" onClick={() => onSelect(event.id)} className={`w-full rounded-[1.15rem] border p-4 text-left ${event.id === activeId ? 'border-foreground bg-foreground text-background' : 'border-foreground/[0.12] bg-foreground/[0.04] text-foreground'}`}>
@@ -149,8 +129,9 @@ function OrganizerAccess({ event, busy, onInvite }) {
 export default function EventsBackend() {
   const { authBackend, signOut } = useAuthStore();
   const navigate = useNavigate();
-  const [events, setEvents] = useState([DEMO_EVENT]);
-  const [activeId, setActiveId] = useState(DEMO_EVENT.id);
+  const [events, setEvents] = useState([]);
+  const [activeId, setActiveId] = useState('');
+  const [sourceStatus, setSourceStatus] = useState('loading');
   const [tab, setTab] = useState('approval');
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState('');
@@ -159,38 +140,45 @@ export default function EventsBackend() {
   useSeo({ title: 'Event Control — Avalon Vitality', description: 'Avalon event approval, pricing, clinical setup, and organizer access.', robots: 'noindex,nofollow,noarchive' });
 
   useEffect(() => {
-    if (authBackend === 'demo') return;
-    apiGet('/api/admin/events/management').then((data) => { setEvents(data.events || []); setActiveId((id) => data.events?.some((item) => item.id === id) ? id : data.events?.[0]?.id || ''); }).catch((error) => setNotice({ type: 'error', message: error.message }));
+    let cancelled = false;
+    setEvents([]);
+    setActiveId('');
+    setCreating(false);
+    if (authBackend === 'demo') {
+      setSourceStatus('unavailable');
+      setNotice({ type: 'error', message: 'Event management is unavailable in this session. Sign in with a connected Avalon Admin account.' });
+      return () => { cancelled = true; };
+    }
+    setSourceStatus('loading');
+    setNotice(null);
+    apiGet('/api/admin/events/management')
+      .then((data) => {
+        if (cancelled) return;
+        const nextEvents = Array.isArray(data?.events) ? data.events : [];
+        setEvents(nextEvents);
+        setActiveId(nextEvents[0]?.id || '');
+        setSourceStatus('ready');
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setSourceStatus('unavailable');
+        setNotice({ type: 'error', message: error.message || 'The live event source is unavailable.' });
+      });
+    return () => { cancelled = true; };
   }, [authBackend]);
 
   const active = useMemo(() => events.find((event) => event.id === activeId) || events[0], [events, activeId]);
-  const updateDemo = (payload) => {
-    if (payload.action === 'create_event') {
-      const created = { ...DEMO_EVENT, ...payload, id: `demo-${Date.now()}`, status: 'draft', experienceTickets: [], clinicalTickets: [], organizerEmail: '', organizerStatus: 'none', logistics: {}, documents: {} };
-      setEvents((current) => [...current, created]); setActiveId(created.id); setCreating(false); return;
-    }
-    setEvents((current) => current.map((event) => {
-      if (event.id !== active.id) return event;
-      if (payload.action === 'set_status') return { ...event, status: payload.status };
-      if (payload.action === 'save_tier') {
-        const key = payload.clinical ? 'clinicalTickets' : 'experienceTickets';
-        const saved = { ...payload, id: payload.tierId || `tier-${Date.now()}`, sold: event[key].find((item) => item.id === payload.tierId)?.sold || 0 };
-        return { ...event, [key]: payload.tierId ? event[key].map((item) => item.id === payload.tierId ? saved : item) : [...event[key], saved] };
-      }
-      if (payload.action === 'assign_organizer') return { ...event, organizerEmail: payload.email, organizerStatus: 'active' };
-      return event;
-    }));
-  };
   const run = async (key, payload, success) => {
+    if (sourceStatus !== 'ready') {
+      setNotice({ type: 'error', message: 'No live event source is connected. Changes are disabled.' });
+      return;
+    }
     setBusy(key); setNotice(null);
     try {
-      if (authBackend === 'demo') updateDemo(payload);
-      else {
-        const data = payload.action === 'assign_organizer'
-          ? await apiPost('/api/admin/events/organizer-invite', { containerId: active.id, email: payload.email })
-          : await apiPost('/api/admin/events/management', { ...payload, containerId: active?.id });
-        if (data.events) { setEvents(data.events); setActiveId((id) => data.events.some((item) => item.id === id) ? id : data.events[0]?.id || ''); }
-      }
+      const data = payload.action === 'assign_organizer'
+        ? await apiPost('/api/admin/events/organizer-invite', { containerId: active.id, email: payload.email })
+        : await apiPost('/api/admin/events/management', { ...payload, containerId: active?.id });
+      if (Array.isArray(data?.events)) { setEvents(data.events); setActiveId((id) => data.events.some((item) => item.id === id) ? id : data.events[0]?.id || ''); }
       setNotice({ type: 'success', message: success });
     } catch (error) { setNotice({ type: 'error', message: error.message || 'That event change could not be saved.' }); }
     finally { setBusy(''); }
@@ -214,7 +202,7 @@ export default function EventsBackend() {
       </header>
 
       <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:px-8">
-        <EventRail events={events} activeId={activeId} onSelect={(id) => { setActiveId(id); setCreating(false); }} onCreate={() => setCreating(true)} />
+        <EventRail events={events} activeId={activeId} onSelect={(id) => { setActiveId(id); setCreating(false); }} onCreate={() => setCreating(true)} canCreate={sourceStatus === 'ready'} />
         <section className="min-w-0">
           {creating ? <CreateEvent busy={busy === 'create'} onCancel={() => setCreating(false)} onCreate={(payload) => run('create', { action: 'create_event', ...payload }, 'Draft event created.')} /> : active ? <>
             <div className={`${SURFACE} p-5 md:p-6`}>
@@ -233,7 +221,7 @@ export default function EventsBackend() {
               {tab === 'clinical' ? <div className="space-y-4"><div className={`${SURFACE} flex items-start gap-3 p-4`}><Stethoscope className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><p className="font-body text-[12px] leading-relaxed text-foreground/56"><strong className="text-foreground">Avalon-only.</strong> These services, prices, eligibility rules, staffing requirements, clinical inventory, billing, and refunds are never editable by the organizer.</p></div><div className="grid gap-4 xl:grid-cols-2">{active.clinicalTickets.map((tier) => <TierEditor key={tier.id} tier={tier} clinical busy={busy === `clinical-${tier.id}`} onSave={(payload) => run(`clinical-${tier.id}`, { action: 'save_tier', ...payload }, 'Clinical service configuration saved.')} />)}<TierEditor clinical busy={busy === 'clinical-new'} onSave={(payload) => run('clinical-new', { action: 'save_tier', ...payload }, 'Clinical service tier created.')} /></div></div> : null}
               {tab === 'access' ? <OrganizerAccess event={active} busy={busy === 'invite'} onInvite={(email) => run('invite', { action: 'assign_organizer', email }, 'Organizer Event Hub access issued.')} /> : null}
             </div>
-          </> : <div className={`${SURFACE} p-8 text-center`}><Ticket className="mx-auto h-7 w-7 text-foreground/35" /><p className="mt-4 font-heading text-4xl uppercase">Create the first event.</p></div>}
+          </> : <div className={`${SURFACE} p-8 text-center`}><Ticket className="mx-auto h-7 w-7 text-foreground/35" /><p className="mt-4 font-heading text-4xl uppercase">{sourceStatus === 'loading' ? 'Loading live events.' : sourceStatus === 'ready' ? 'No events recorded.' : 'Event source unavailable.'}</p><p className="mx-auto mt-3 max-w-xl font-body text-sm leading-relaxed text-foreground/48">{sourceStatus === 'ready' ? 'This workspace has no event records yet. Create one only when the live event is ready to enter.' : sourceStatus === 'loading' ? 'Connecting to Avalon’s event source of record.' : 'No sample or locally invented events are shown. Live changes stay disabled until the event backend is connected.'}</p>{sourceStatus === 'ready' ? <button type="button" onClick={() => setCreating(true)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-5 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-background"><Plus className="h-4 w-4" />Create event</button> : null}</div>}
         </section>
       </div>
       <Link to="/admin" className="av-glass-card fixed bottom-4 left-4 flex h-11 w-11 items-center justify-center rounded-full border border-foreground/[0.14] bg-background/72 text-foreground/55 backdrop-blur-xl" aria-label="Back to admin"><ArrowLeft className="h-4 w-4" /></Link>

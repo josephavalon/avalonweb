@@ -1,8 +1,8 @@
 /**
  * Admin Booking Intake — /admin/bookings
  *
- * Supabase mode renders the live payments-backed bookings surface. Demo mode
- * keeps the local/Acuity preview table for non-production development.
+ * Supabase mode renders the live payments-backed bookings surface. Sessions
+ * without the live source fail closed and never substitute local records.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,60 +12,11 @@ import {
   ChevronDown, ExternalLink,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
-import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
-import { patientToAppointmentPreview } from '@/lib/clientIntakeStore';
 import { useAuthStore } from '@/lib/useAuthStore';
 import LiveAdminBookings from './LiveBookings';
 
 const EASE = [0.16, 1, 0.3, 1];
 const TZ = 'America/Los_Angeles';
-
-const fallbackDate = (days, hour, minute = 0) => {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  date.setHours(hour, minute, 0, 0);
-  return date.toISOString();
-};
-
-const LOCAL_PREVIEW_APPOINTMENTS = [
-  {
-    id: 'local-101',
-    firstName: 'Avery',
-    lastName: 'Stone',
-    type: 'Recovery IV',
-    datetime: fallbackDate(0, 14, 30),
-    duration: 60,
-    location: 'San Francisco · Hotel visit',
-    email: 'client.preview@avalon.local',
-    phone: '(415) 555-0101',
-    price: 250,
-    notes: 'Local preview appointment. Replace with scheduling API when live.',
-  },
-  {
-    id: 'local-102',
-    firstName: 'Maya',
-    lastName: 'Patel',
-    type: 'Hydration IV',
-    datetime: fallbackDate(1, 10, 0),
-    duration: 45,
-    location: 'Marin · Home visit',
-    email: 'client.two@avalon.local',
-    phone: '(415) 555-0102',
-    price: 150,
-  },
-  {
-    id: 'local-103',
-    firstName: 'Jordan',
-    lastName: 'Reed',
-    type: 'Launch / Group',
-    datetime: fallbackDate(2, 16, 0),
-    duration: 120,
-    location: 'Oakland · Office',
-    email: 'events@avalon.local',
-    phone: '(415) 555-0103',
-    price: 900,
-  },
-];
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 function fmtDate(iso) {
@@ -239,7 +190,7 @@ function ApptRow({ appt, defaultOpen = false }) {
 }
 
 /* ─── Main ───────────────────────────────────────────────────── */
-function AdminBookings() {
+export function AdminBookings() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -254,9 +205,7 @@ function AdminBookings() {
       const res = await fetch(`/api/scheduling-appointments?${params}`);
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
-        setAppointments(LOCAL_PREVIEW_APPOINTMENTS);
-        setLastRefreshed(new Date());
-        return;
+        throw new Error('The live scheduling source returned an invalid response.');
       }
       const data = await res.json();
       if (!res.ok) throw new Error('Failed to load appointments');
@@ -277,11 +226,6 @@ function AdminBookings() {
   });
 
   const upcomingCount = appointments.filter((a) => !a.canceled && new Date(a.datetime) >= new Date()).length;
-  const handleQuickPatient = (patient) => {
-    setAppointments((current) => [patientToAppointmentPreview(patient), ...current]);
-    setFilter('all');
-  };
-
   return (
     <AdminShell title="Visits">
       <div className="mx-auto w-full max-w-3xl space-y-6">
@@ -303,13 +247,6 @@ function AdminBookings() {
               </span>
             )}
             <div className="flex flex-wrap justify-end gap-2">
-              <QuickPatientAdd
-                context="admin"
-                source="Admin visits"
-                triggerLabel="Add Client"
-                triggerClassName="flex min-h-10 items-center gap-1.5 rounded-full bg-foreground px-3 font-body text-[10px] font-bold uppercase tracking-widest text-background transition-transform active:scale-[0.98]"
-                onCreated={handleQuickPatient}
-              />
               <button
                 type="button"
                 onClick={load}
@@ -391,9 +328,23 @@ function AdminBookings() {
   );
 }
 
+function BookingsUnavailable() {
+  return (
+    <AdminShell title="Visits">
+      <div className="mx-auto flex min-h-[28rem] max-w-2xl items-center justify-center px-5 py-12">
+        <div className="av-glass-card w-full rounded-[1.75rem] border border-foreground/[0.12] bg-background/62 p-8 text-center backdrop-blur-2xl md:p-12">
+          <Calendar className="mx-auto h-9 w-9 text-foreground/28" />
+          <p className="mt-5 font-heading text-4xl uppercase leading-none text-foreground">Booking source unavailable.</p>
+          <p className="mx-auto mt-4 max-w-lg font-body text-sm leading-relaxed text-foreground/50">No sample appointments or locally entered patient previews are shown. Booking actions remain disabled until a live Avalon Admin session is connected.</p>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
 // Supabase mode → live, payments-backed bookings (with balance collection).
-// Demo mode → the Acuity-backed preview table above.
+// Any other session fails closed rather than substituting local records.
 export default function AdminBookingsRoute() {
   const { authBackend } = useAuthStore();
-  return authBackend === 'supabase' ? <LiveAdminBookings /> : <AdminBookings />;
+  return authBackend === 'supabase' ? <LiveAdminBookings /> : <BookingsUnavailable />;
 }

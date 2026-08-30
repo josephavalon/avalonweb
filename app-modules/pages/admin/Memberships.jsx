@@ -12,7 +12,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Crown, Minus, Plus, RefreshCw } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { useSeo } from '@/lib/seo';
 
 const BG = 'hsl(var(--background))';
@@ -23,8 +25,6 @@ const FAINT = 'hsl(var(--foreground) / 0.24)';
 const CARD = 'hsl(var(--foreground) / 0.045)';
 const CARD_STRONG = 'hsl(var(--foreground) / 0.08)';
 const BORDER = 'hsl(var(--foreground) / 0.1)';
-
-const CACHE_KEY = 'av:admin:memberships:v1';
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -43,23 +43,6 @@ function tierColor(tier) {
   if (tier === 'Concierge') return 'hsl(38 88% 60%)'; // warn / gold
   if (tier === 'Vitality') return 'hsl(150 60% 55%)'; // accent / green
   return MUTED; // Essentials → dim
-}
-
-function readCache() {
-  try {
-    if (typeof sessionStorage === 'undefined') return null;
-    const raw = sessionStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed?.rows && Array.isArray(parsed.rows) ? parsed.rows : null;
-  } catch { return null; }
-}
-
-function writeCache(rows) {
-  try {
-    if (typeof sessionStorage === 'undefined') return;
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ rows, savedAt: Date.now() }));
-  } catch { /* quota or private mode — ignore */ }
 }
 
 function TierBadge({ tier }) {
@@ -305,17 +288,22 @@ export default function AdminMemberships() {
     robots: 'noindex,nofollow',
   });
 
-  const [rows, setRows] = useState(() => readCache());
-  const [loading, setLoading] = useState(!rows);
+  // Membership rows include names, contact details, subscription identifiers,
+  // and balances. Never retain that response in browser storage across users.
+  const [rows, setRows] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchRows = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setError(null);
     try {
       const data = await apiGet('/api/admin/memberships');
-      const next = Array.isArray(data?.rows) ? data.rows : [];
+      assertApiResponse(data, { arrays: ['rows'] }, 'Memberships returned an invalid response.');
+      if (!hasObjectRows(data.rows, ['stripeSubscriptionId'])) {
+        throw invalidApiResponse('Memberships returned invalid plan rows.');
+      }
+      const next = data.rows;
       setRows(next);
-      writeCache(next);
     } catch (err) {
       if (!silent) setError(err?.message || 'Could not load memberships.');
     } finally {
@@ -333,6 +321,17 @@ export default function AdminMemberships() {
   }, [rows]);
 
   const empty = !loading && !error && (!rows || rows.length === 0);
+
+  if (!loading && error && rows === null) {
+    return (
+      <AdminShell title="Memberships">
+        <OperationalSourceUnavailable
+          title="Membership source unavailable"
+          description="Active plans and credit balances could not be verified. No zeroed or sample membership totals are shown, and credit actions remain disabled until Stripe and the live membership source reconnect."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Memberships">

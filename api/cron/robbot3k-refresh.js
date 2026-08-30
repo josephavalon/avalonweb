@@ -3,6 +3,7 @@ import { getDefaultTenantId } from '../_supabase-server.js';
 import { getServiceClient } from '../_lib/supabase-auth.js';
 import { pacificClock, runRobBotRefresh } from '../_lib/robbot3k-core.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { requireBdDataReview } from '../_lib/bd-data-review-gate.js';
 
 function secretMatches(req) {
   const expected = String(process.env.CRON_SECRET || '');
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   if (!process.env.CRON_SECRET) return res.status(503).json({ error: 'Cron authentication is not configured.' });
   if (!secretMatches(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!requireBdDataReview(res)) return;
 
   const clock = pacificClock(new Date());
   // Vercel may schedule both 13:00 and 14:00 UTC. This makes exactly 6:00 AM

@@ -2,20 +2,22 @@
  * useInventoryData — full persistence layer for AdminInventory
  *
  * When VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set, all reads/writes
- * go to Supabase with optimistic UI + rollback on error.
- *
- * When creds are absent (local dev without .env.local), the hook falls back
- * to SEED_* data so the UI still renders. No code changes needed to switch.
+ * go to Supabase with optimistic UI + rollback on error. Without a complete
+ * live source, the hook fails closed with empty collections and no mutations.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, hasSupabase } from '../../../src/lib/supabase';
-import {
-  SEED_ITEMS,
-  SEED_FOLDERS,
-  SEED_TAGS,
-  DEFAULT_SETTINGS,
-} from '../../../src/data/inventorySeed';
+
+const EMPTY_SETTINGS = Object.freeze({
+  orgName: 'Avalon Vitality',
+  currency: 'USD',
+  lowThreshold: 'auto',
+  idPrefix: 'AV',
+  idCounter: 0,
+  emailAlerts: false,
+  alertEmail: '',
+});
 
 // ─── Transforms (camelCase ↔ snake_case) ──────────────────────────────────────
 
@@ -131,9 +133,11 @@ export function useInventoryData() {
   const [folders,         setFolders]         = useState([]);
   const [tags,            setTags]            = useState([]);
   const [trashedItems,    setTrashedItems]    = useState([]);
-  const [settings,        setSettings]        = useState(DEFAULT_SETTINGS);
+  const [settings,        setSettings]        = useState(EMPTY_SETTINGS);
   const [customFieldDefs, setCustomFieldDefs] = useState([]);
   const [loading,         setLoading]         = useState(true);
+  const [backendStatus,   setBackendStatus]   = useState(hasSupabase ? 'loading' : 'unavailable');
+  const [backendError,    setBackendError]    = useState(hasSupabase ? '' : 'The live inventory source is not configured.');
   const [toasts,          setToasts]          = useState([]);
 
   const loadingRef = useRef(false);
@@ -157,7 +161,7 @@ export function useInventoryData() {
       .from('folders')
       .select('*')
       .order('created_at', { ascending: true });
-    if (error) { if (import.meta.env?.DEV) console.error('loadFolders', error); return; }
+    if (error) throw error;
 
     // Compute item counts client-side after items are loaded
     setFolders(data.map(folderFromDb));
@@ -169,7 +173,7 @@ export function useInventoryData() {
       .from('items')
       .select('*, item_tags(tag_id)')
       .order('created_at', { ascending: true });
-    if (error) { if (import.meta.env?.DEV) console.error('loadItems', error); return; }
+    if (error) throw error;
 
     setItems(data.filter(r => !r.deleted_at).map(itemFromDb));
     setTrashedItems(data.filter(r => r.deleted_at).map(itemFromDb));
@@ -181,7 +185,7 @@ export function useInventoryData() {
       .from('tags')
       .select('*')
       .order('name', { ascending: true });
-    if (error) { if (import.meta.env?.DEV) console.error('loadTags', error); return; }
+    if (error) throw error;
     setTags(data.map(tagFromDb));
   }, []);
 
@@ -192,7 +196,8 @@ export function useInventoryData() {
       .select('*')
       .eq('id', 1)
       .single();
-    if (error || !data) return;
+    if (error) throw error;
+    if (!data) throw new Error('Inventory settings are unavailable.');
     setSettings(settingsFromDb(data));
   }, []);
 
@@ -202,7 +207,7 @@ export function useInventoryData() {
       .from('custom_field_definitions')
       .select('*')
       .order('sort_order', { ascending: true });
-    if (error) { if (import.meta.env?.DEV) console.error('loadCustomFieldDefs', error); return; }
+    if (error) throw error;
     setCustomFieldDefs(data.map(r => ({
       id:        r.id,
       name:      r.name,
@@ -216,20 +221,37 @@ export function useInventoryData() {
     if (loadingRef.current) return;
     loadingRef.current = true;
     setLoading(true);
-    await Promise.all([loadFolders(), loadItems(), loadTags(), loadSettings(), loadCustomFieldDefs()]);
-    setLoading(false);
-    loadingRef.current = false;
+    setBackendStatus('loading');
+    setBackendError('');
+    try {
+      await Promise.all([loadFolders(), loadItems(), loadTags(), loadSettings(), loadCustomFieldDefs()]);
+      setBackendStatus('ready');
+    } catch (error) {
+      setItems([]);
+      setFolders([]);
+      setTags([]);
+      setTrashedItems([]);
+      setCustomFieldDefs([]);
+      setSettings(EMPTY_SETTINGS);
+      setBackendStatus('unavailable');
+      setBackendError(error?.message || 'The live inventory source is unavailable.');
+    } finally {
+      setLoading(false);
+      loadingRef.current = false;
+    }
   }, [loadFolders, loadItems, loadTags, loadSettings, loadCustomFieldDefs]);
 
   // ── Initial load + realtime ────────────────────────────────────────────────
   useEffect(() => {
     if (!hasSupabase) {
-      // Seed fallback: deep-clone so mutations don't corrupt the seed arrays
-      setItems(SEED_ITEMS.map(i => ({ ...i, tags: [...(i.tags || [])] })));
-      setFolders(SEED_FOLDERS.map(f => ({ ...f })));
-      setTags(SEED_TAGS.map(t => ({ ...t })));
+      setItems([]);
+      setFolders([]);
+      setTags([]);
       setTrashedItems([]);
-      setSettings(DEFAULT_SETTINGS);
+      setCustomFieldDefs([]);
+      setSettings(EMPTY_SETTINGS);
+      setBackendStatus('unavailable');
+      setBackendError('The live inventory source is not configured.');
       setLoading(false);
       return;
     }
@@ -238,10 +260,10 @@ export function useInventoryData() {
 
     const channel = supabase
       .channel('inventory-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'items' },    () => loadItems())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'folders' },  () => loadFolders())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' },     () => loadTags())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'item_tags' },() => loadItems())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items' },    () => loadAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'folders' },  () => loadAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' },     () => loadAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'item_tags' },() => loadAll())
       .subscribe();
 
     return () => supabase.removeChannel(channel);
@@ -693,7 +715,7 @@ export function useInventoryData() {
   // ── Fetch activity history for an item ────────────────────────────────────
 
   async function fetchItemTransactions(itemId) {
-    if (!hasSupabase) return [];
+    if (!hasSupabase || backendStatus !== 'ready') return [];
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -715,6 +737,12 @@ export function useInventoryData() {
     }));
   }
 
+  const mutationsEnabled = hasSupabase && backendStatus === 'ready';
+  const mutationUnavailable = async () => {
+    toast('Inventory changes are disabled until the live source is connected.', 'error');
+    return null;
+  };
+
   // ─────────────────────────────────────────────────────────────────────────
   return {
     // State
@@ -725,42 +753,44 @@ export function useInventoryData() {
     settings,
     customFieldDefs,
     loading,
+    backendStatus,
+    backendError,
     toasts,
     dismissToast,
 
     // Item handlers
-    handleAddItem,
-    handleSaveItem,
-    handleUpdateQty,
-    handleDeleteItem,
-    handleRestoreItem,
-    handleDeletePermanent,
-    handleBulkDelete,
-    handleBulkMove,
+    handleAddItem: mutationsEnabled ? handleAddItem : mutationUnavailable,
+    handleSaveItem: mutationsEnabled ? handleSaveItem : mutationUnavailable,
+    handleUpdateQty: mutationsEnabled ? handleUpdateQty : mutationUnavailable,
+    handleDeleteItem: mutationsEnabled ? handleDeleteItem : mutationUnavailable,
+    handleRestoreItem: mutationsEnabled ? handleRestoreItem : mutationUnavailable,
+    handleDeletePermanent: mutationsEnabled ? handleDeletePermanent : mutationUnavailable,
+    handleBulkDelete: mutationsEnabled ? handleBulkDelete : mutationUnavailable,
+    handleBulkMove: mutationsEnabled ? handleBulkMove : mutationUnavailable,
 
     // Folder handlers
-    handleAddFolder,
-    handleEditFolder,
-    handleDeleteFolder,
+    handleAddFolder: mutationsEnabled ? handleAddFolder : mutationUnavailable,
+    handleEditFolder: mutationsEnabled ? handleEditFolder : mutationUnavailable,
+    handleDeleteFolder: mutationsEnabled ? handleDeleteFolder : mutationUnavailable,
 
     // Tag handlers
-    handleAddTag,
-    handleEditTag,
-    handleDeleteTag,
+    handleAddTag: mutationsEnabled ? handleAddTag : mutationUnavailable,
+    handleEditTag: mutationsEnabled ? handleEditTag : mutationUnavailable,
+    handleDeleteTag: mutationsEnabled ? handleDeleteTag : mutationUnavailable,
 
     // Custom field definition handlers
-    handleAddFieldDef,
-    handleEditFieldDef,
-    handleDeleteFieldDef,
+    handleAddFieldDef: mutationsEnabled ? handleAddFieldDef : mutationUnavailable,
+    handleEditFieldDef: mutationsEnabled ? handleEditFieldDef : mutationUnavailable,
+    handleDeleteFieldDef: mutationsEnabled ? handleDeleteFieldDef : mutationUnavailable,
 
     // Settings
-    handleUpdateSettings,
+    handleUpdateSettings: mutationsEnabled ? handleUpdateSettings : mutationUnavailable,
 
     // Queries
     fetchItemTransactions,
 
     // Utilities
     refreshAll: loadAll,
-    isLive: hasSupabase,
+    isLive: mutationsEnabled,
   };
 }

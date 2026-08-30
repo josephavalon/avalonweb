@@ -43,7 +43,7 @@ async function getDefaultTenantId(db) {
 }
 
 /**
- * Idempotent profile seed. The auth.users → profiles trigger normally lands a
+ * Insert-only profile seed. The auth.users → profiles trigger normally lands a
  * row, but it can race with the first authed API request (especially after an
  * OAuth signup, where Supabase fires the redirect immediately after creating
  * the auth user). Without a row, every protected endpoint that does
@@ -51,9 +51,9 @@ async function getDefaultTenantId(db) {
  * back to anonymous/default — or worse, 404s.
  *
  * This helper writes the missing row using the same defaults as the trigger,
- * keyed by auth user id. It is safe to call from inside getAuthedUser (which
- * runs on every API request) — the upsert is conditional on a profile lookup
- * having returned nothing, so the steady-state cost is one extra SELECT.
+ * keyed by auth user id. It never updates an existing row: role, status, and
+ * tenant are authoritative security state and must not be reset by first-touch
+ * bootstrap after an invite, deactivation, or concurrent trigger insert.
  *
  * Returns the profile row (role, tenant_id, status) the caller should use.
  */
@@ -72,14 +72,20 @@ export async function upsertProfileForUser(db, authUser, { source = 'auth_first_
     tenant_id: tenantId,
   };
   try {
-    // onConflict 'id' makes this a true no-op when the trigger already seeded
-    // the row; we only fill in NULLs we're authoritative for. Do NOT overwrite
-    // role here — an admin/staff promotion may have landed via a different code
-    // path (invite-accept) before this helper runs.
     const { data, error } = await db.from('profiles')
-      .upsert(row, { onConflict: 'id', ignoreDuplicates: false })
+      .insert(row)
       .select('role, tenant_id, status')
       .maybeSingle();
+    if (error?.code === '23505') {
+      // The auth trigger or another request won the insert race. Read the
+      // authoritative row; never turn the conflict into an update.
+      const { data: existing, error: existingError } = await db.from('profiles')
+        .select('role, tenant_id, status')
+        .eq('id', authUser.id)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      return existing || null;
+    }
     if (error) throw error;
     // Best-effort: surface the seed so we can spot churn / unexpected first-touches.
     try {
@@ -89,8 +95,8 @@ export async function upsertProfileForUser(db, authUser, { source = 'auth_first_
     } catch { /* ignore */ }
     return data || null;
   } catch (err) {
-    // Don't block the request — the caller will degrade to the default client
-    // role, which is the same behaviour as before this helper existed.
+    // The caller fails authentication closed when the authoritative profile
+    // cannot be created or read.
     try {
       console.warn('[supabase-auth] profile seed failed', {
         userId: authUser.id, code: err?.code || err?.name || 'profile_seed_failed',
@@ -144,19 +150,30 @@ export async function getAuthedUser(req) {
   let tenantId = null;
   let status = 'active';
   let profileRow = null;
-  try {
-    const { data: profile } = await db.from('profiles').select('role, tenant_id, status').eq('id', user.id).maybeSingle();
-    profileRow = profile || null;
-  } catch { /* no profile row → fall through to seed below */ }
+  const { data: profile, error: profileError } = await db.from('profiles')
+    .select('role, tenant_id, status')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (profileError) {
+    try {
+      console.warn('[supabase-auth] profile lookup failed', {
+        userId: user.id,
+        code: profileError?.code || profileError?.name || 'profile_lookup_failed',
+      });
+    } catch { /* ignore */ }
+    return null;
+  }
+  profileRow = profile || null;
   // Profile-seeding race: the auth.users trigger that seeds public.profiles can
   // be slightly behind the first authed API request after an OAuth signup. If
   // we got here with no row, synchronously upsert one so the rest of this
   // request — and every protected endpoint that joins on profiles — sees a
-  // valid identity. Idempotent: a steady-state miss is rare and the upsert is
-  // ON CONFLICT (id) DO UPDATE on null-able cols only.
+  // valid identity. A concurrent trigger insert is handled as a read-only
+  // conflict path; it never overwrites authoritative profile fields.
   if (!profileRow) {
     profileRow = await upsertProfileForUser(db, user, { source: 'getAuthedUser' });
   }
+  if (!profileRow) return null;
   if (profileRow?.role) role = profileRow.role;
   if (profileRow?.tenant_id) tenantId = profileRow.tenant_id;
   if (profileRow?.status) status = profileRow.status;

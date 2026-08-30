@@ -15,6 +15,7 @@ import {
 } from '../_lib/bd-crm-core.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { requireAdmin } from '../_lib/supabase-auth.js';
+import { requireBdDataReview } from '../_lib/bd-data-review-gate.js';
 
 const LIST_VIEWS = new Set(['companies', 'people', 'pipeline', 'tasks', 'lists']);
 const RECORD_TYPES = new Set(['company', 'person', 'opportunity']);
@@ -1037,6 +1038,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const authed = await requireAdmin(req, res);
   if (!authed) return;
+  if (!requireBdDataReview(res)) return;
   const { db, tenantId, user } = authed;
   if (!tenantId) return res.status(403).json({ error: 'Admin tenant is required.', code: 'tenant_required' });
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CreditCard, ArrowRight } from 'lucide-react';
+import { CreditCard, ArrowRight, ShieldCheck } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
-import QuickPatientAdd from '@/components/ops/QuickPatientAdd';
 import FirstSessionWelcome from '@/components/admin/FirstSessionWelcome';
 import { apiGet } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { useSeo } from '@/lib/seo';
 
@@ -48,27 +48,6 @@ function loadStateFromSummary(summary, err) {
   return hasActivity ? 'ready' : 'empty';
 }
 
-const FINANCE_CACHE_KEY = 'av:admin:financeSummary:v1';
-
-function readCachedSummary() {
-  try {
-    const raw = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(FINANCE_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    // Treat anything older than 10 minutes as stale enough to skip — still
-    // shown instantly while we revalidate, but we don't surface ancient data.
-    if (parsed && typeof parsed === 'object' && parsed.summary) return parsed.summary;
-    return null;
-  } catch { return null; }
-}
-
-function writeCachedSummary(summary) {
-  try {
-    if (typeof sessionStorage === 'undefined') return;
-    sessionStorage.setItem(FINANCE_CACHE_KEY, JSON.stringify({ summary, savedAt: Date.now() }));
-  } catch { /* quota or private mode — ignore */ }
-}
-
 export default function AdminEssentials() {
   useSeo({
     title: 'Admin — Avalon Vitality',
@@ -77,10 +56,10 @@ export default function AdminEssentials() {
   });
 
   const { user } = useAuthStore();
-  // Stale-while-revalidate: hydrate from sessionStorage so the KPI row paints
-  // numbers on the FIRST frame instead of a skeleton. Fetch fires in parallel
-  // and overwrites silently.
-  const [summary, setSummary] = useState(() => readCachedSummary());
+  // Finance responses can contain customer names, services, and balances.
+  // Keep them in memory only so a later user on a shared browser cannot see a
+  // previous admin's records before authentication revalidation completes.
+  const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -88,8 +67,20 @@ export default function AdminEssentials() {
     apiGet('/api/admin/finance/summary')
       .then((data) => {
         if (cancelled) return;
+        assertApiResponse(data, {
+          arrays: ['outstandingBalances.rows', 'payouts'],
+          objects: ['last30Days', 'depositsTaken', 'outstandingBalances', 'activeSubscriptions'],
+          numbers: [
+            'last30Days.count', 'last30Days.amount',
+            'depositsTaken.count', 'depositsTaken.amount',
+            'outstandingBalances.count', 'outstandingBalances.amount',
+            'activeSubscriptions.count',
+          ],
+        }, 'Finance returned an invalid summary response.');
+        if (!hasObjectRows(data.outstandingBalances.rows)) {
+          throw invalidApiResponse('Finance returned invalid outstanding-balance rows.');
+        }
         setSummary(data);
-        writeCachedSummary(data);
       })
       .catch((err) => { if (!cancelled) setError(err); });
     return () => { cancelled = true; };
@@ -103,12 +94,12 @@ export default function AdminEssentials() {
     <AdminShell title="Dashboard">
       {/* Two core jobs */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <QuickPatientAdd
-          context="admin"
-          source="Admin portal"
-          triggerLabel="Add Patient"
-          triggerClassName="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl border border-foreground/70 bg-foreground/[0.06] px-5 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground active:scale-[0.99]"
-        />
+        <Link
+          to="/admin/clients"
+          className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl border border-foreground/70 bg-foreground/[0.06] px-5 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground active:scale-[0.99]"
+        >
+          <ShieldCheck className="h-4 w-4" strokeWidth={1.9} /> Clinical Records
+        </Link>
         <Link
           to="/admin/bookings"
           className="flex min-h-[64px] w-full items-center justify-center gap-2.5 rounded-2xl border border-foreground/16 bg-foreground/[0.05] px-5 font-body text-xs font-black uppercase tracking-[0.14em] text-foreground transition-colors hover:border-foreground/32"

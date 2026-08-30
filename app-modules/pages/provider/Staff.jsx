@@ -6,6 +6,7 @@ import {
   ChevronRight, AlertTriangle,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { REQUESTS, NURSES } from '@/fixtures/commandMockData';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -356,7 +357,7 @@ const Skeleton = () => (
   </div>
 );
 
-export default function Staff() {
+function StaffPreview() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
 
@@ -489,4 +490,19 @@ export default function Staff() {
       </div>
     </AdminLayout>
   );
+}
+
+export default function Staff() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Staff source unavailable"
+          description="No sample nurses, assignments, credentials, kits, locations, or workforce metrics are shown. Staffing actions remain disabled until the verified workforce source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <StaffPreview />;
 }

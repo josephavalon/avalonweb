@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/PageTransitionMotion';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import PageShell from '@/components/admin/PageShell';
 import { REQUESTS } from '@/fixtures/commandMockData';
 import { ShieldCheck, AlertTriangle, Clock, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
@@ -445,7 +446,7 @@ function Detail({ label, value, accent }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export default function Invoicing() {
+function InvoicingPreview() {
   const { toast } = useToast();
   const [items, setItems] = useState(() => {
     const latest = readLastBooking();
@@ -557,4 +558,19 @@ export default function Invoicing() {
       </div>
     </AdminLayout>
   );
+}
+
+export default function Invoicing() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Clinical clearance source unavailable"
+          description="No sample patient requests, GFE status, clinician clearance, or local booking records are shown. Clearance actions remain disabled until the verified clinical source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <InvoicingPreview />;
 }

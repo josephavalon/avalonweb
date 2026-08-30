@@ -10,71 +10,12 @@ import {
   X,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPatch } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse, isResponseObject } from '@/lib/apiResponse';
 
 const BUTTON = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 font-body text-[10px] font-bold uppercase tracking-[0.13em] transition-colors disabled:cursor-not-allowed disabled:opacity-35';
 const PAGE_SIZE = 50;
-const PREVIEW_INVOICES = [
-  {
-    id: 'preview-invoice-identity-hold',
-    invoice_number: 'AV-20260829-EXAMPLE',
-    nurse_name: 'Example Contractor',
-    nurse_email: 'contractor@example.com',
-    status: 'quarantined',
-    identity_assurance: 'shared_door_roster_match',
-    delivery_status: 'sent',
-    receipt_storage_status: 'complete',
-    period_start: '2026-08-16',
-    period_end: '2026-08-29',
-    wages_cents: 72000,
-    reimbursements_cents: 6850,
-    total_cents: 78850,
-    submitted_at: '2026-08-29T15:42:00Z',
-    version: 1,
-    lines: [
-      { id: 'preview-line-1', line_type: 'shift', service_date: '2026-08-22' },
-      { id: 'preview-line-2', line_type: 'shift', service_date: '2026-08-28' },
-      { id: 'preview-line-3', line_type: 'expense', description: 'Parking' },
-    ],
-    receipts: [{ id: 'preview-receipt-1', fileName: 'receipt-1.pdf', scanStatus: 'quarantined', signedUrl: null }],
-    statusEvents: [
-      { id: 'preview-event-1', from_status: null, to_status: 'quarantined', invoice_version: 1, created_at: '2026-08-29T15:42:00Z' },
-    ],
-  },
-  {
-    id: 'preview-invoice-approved',
-    invoice_number: 'AV-20260815-SAMPLE',
-    nurse_name: 'Sample Nurse',
-    nurse_email: 'nurse@example.com',
-    status: 'approved',
-    identity_assurance: 'admin_verified_shared_door',
-    delivery_status: 'sent',
-    receipt_storage_status: 'none',
-    period_start: '2026-08-01',
-    period_end: '2026-08-15',
-    wages_cents: 96000,
-    reimbursements_cents: 0,
-    total_cents: 96000,
-    submitted_at: '2026-08-15T17:18:00Z',
-    review_note: 'Preview: identity verified against the contractor record.',
-    version: 3,
-    lines: [
-      { id: 'preview-line-4', line_type: 'shift', service_date: '2026-08-04' },
-      { id: 'preview-line-5', line_type: 'shift', service_date: '2026-08-12' },
-    ],
-    receipts: [],
-    statusEvents: [
-      { id: 'preview-event-2', from_status: 'submitted', to_status: 'approved', invoice_version: 3, created_at: '2026-08-16T18:20:00Z' },
-    ],
-  },
-];
-
-const PREVIEW_METRICS = {
-  submitted: 0,
-  quarantined: 1,
-  approvedCents: 96000,
-  paidCents: 0,
-};
 
 function money(cents) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -112,22 +53,42 @@ export default function NurseInvoices() {
     error: '',
     invoices: [],
     metrics: {},
-    preview: false,
     pagination: { offset: 0, limit: PAGE_SIZE, total: 0, hasMore: false, nextOffset: 0 },
   });
   const [inputs, setInputs] = useState({});
   const [busy, setBusy] = useState('');
 
   const loadPage = useCallback(async (offset = 0, append = false) => {
-    setState((current) => ({ ...current, loading: true, error: '' }));
+    setState((current) => append
+      ? { ...current, loading: true, error: '' }
+      : {
+          loading: true,
+          error: '',
+          invoices: [],
+          metrics: {},
+          pagination: { offset: 0, limit: PAGE_SIZE, total: 0, hasMore: false, nextOffset: 0 },
+        });
     try {
       const data = await apiGet(`/api/admin/nurse-invoices?limit=${PAGE_SIZE}&offset=${offset}`);
-      if (!Array.isArray(data?.invoices)) {
-        const invalid = new Error('Finance returned an invalid invoice response.');
-        invalid.code = 'invalid_invoice_response';
-        throw invalid;
-      }
-      const page = Array.isArray(data?.invoices) ? data.invoices : [];
+      assertApiResponse(data, {
+        arrays: ['invoices'],
+        objects: ['metrics', 'pagination'],
+        booleans: ['pagination.hasMore'],
+        numbers: [
+          'metrics.submitted', 'metrics.quarantined', 'metrics.approvedCents', 'metrics.paidCents',
+          'pagination.offset', 'pagination.limit', 'pagination.total', 'pagination.nextOffset',
+        ],
+      }, 'Finance returned an invalid invoice response.');
+      const validInvoices = hasObjectRows(data.invoices, ['id', 'invoice_number', 'status', 'version'])
+        && data.invoices.every((invoice) => (
+          Array.isArray(invoice.lines)
+          && Array.isArray(invoice.receipts)
+          && Array.isArray(invoice.statusEvents)
+          && isResponseObject(invoice.payload)
+          && Number.isFinite(Number(invoice.total_cents))
+        ));
+      if (!validInvoices) throw invalidApiResponse('Finance returned invalid invoice records.');
+      const page = data.invoices;
       setState((current) => {
         const combined = append ? [...current.invoices, ...page] : page;
         const unique = [...new Map(combined.map((invoice) => [invoice.id, invoice])).values()];
@@ -135,30 +96,18 @@ export default function NurseInvoices() {
           loading: false,
           error: '',
           invoices: unique,
-          metrics: data?.metrics || {},
-          preview: false,
-          pagination: data?.pagination || {
-            offset,
-            limit: PAGE_SIZE,
-            total: unique.length,
-            hasMore: false,
-            nextOffset: unique.length,
-          },
+          metrics: data.metrics,
+          pagination: data.pagination,
         };
       });
     } catch (error) {
-      if (import.meta.env.DEV && error?.code === 'invalid_invoice_response' && !append) {
-        setState({
-          loading: false,
-          error: '',
-          invoices: PREVIEW_INVOICES,
-          metrics: PREVIEW_METRICS,
-          preview: true,
-          pagination: { offset: 0, limit: PAGE_SIZE, total: PREVIEW_INVOICES.length, hasMore: false, nextOffset: PREVIEW_INVOICES.length },
-        });
-      } else {
-        setState((current) => ({ ...current, loading: false, error: error.message || 'Could not load nurse invoices.' }));
-      }
+      setState((current) => ({
+        ...current,
+        loading: false,
+        invoices: append ? current.invoices : [],
+        metrics: append ? current.metrics : {},
+        error: error.message || 'Could not load nurse invoices.',
+      }));
     }
   }, []);
 
@@ -167,10 +116,6 @@ export default function NurseInvoices() {
   useEffect(() => { load(); }, [load]);
 
   const transition = useCallback(async (invoice, status) => {
-    if (state.preview) {
-      setState((current) => ({ ...current, error: 'Preview invoices cannot be changed. Install the Finance migration and storage configuration first.' }));
-      return;
-    }
     const key = `${invoice.id}:${status}`;
     const values = inputs[invoice.id] || {};
     const paymentReference = String(values.paymentReference || '').trim();
@@ -196,7 +141,7 @@ export default function NurseInvoices() {
     } finally {
       setBusy('');
     }
-  }, [inputs, loadPage, state.preview]);
+  }, [inputs, loadPage]);
 
   const totals = useMemo(() => ({
     submitted: state.metrics.submitted ?? state.invoices.filter((row) => row.status === 'submitted').length,
@@ -211,6 +156,21 @@ export default function NurseInvoices() {
       [invoiceId]: { ...(current[invoiceId] || {}), [field]: value },
     }));
   };
+
+  if (!state.loading && state.error && state.invoices.length === 0 && !Object.keys(state.metrics).length) {
+    return (
+      <AdminShell title="Finance">
+        <OperationalSourceUnavailable
+          title="Nurse invoice source unavailable"
+          description="Submitted invoices and accounts-payable totals could not be verified. No zeroed or sample finance metrics are shown, and review and payment actions remain disabled until the live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
+
+  if (state.loading && state.invoices.length === 0 && !Object.keys(state.metrics).length) {
+    return <AdminShell title="Finance"><div className="flex min-h-[28rem] items-center justify-center text-foreground/45"><Loader2 className="h-5 w-5 animate-spin" /></div></AdminShell>;
+  }
 
   return (
     <AdminShell title="Finance">
@@ -233,7 +193,6 @@ export default function NurseInvoices() {
           <Metric label="Paid" value={money(totals.paidCents)} detail="Payment reference recorded" />
         </div>
 
-        {state.preview ? <p role="status" className="rounded-2xl border border-sky-300/20 bg-sky-300/[0.06] p-4 font-body text-sm text-sky-100">Local preview data is shown. No invoice, receipt, approval, or payment action can be saved from this screen.</p> : null}
         {state.error ? <p role="alert" className="rounded-2xl border border-red-400/20 bg-red-500/[0.08] p-4 font-body text-sm text-red-200">{state.error}</p> : null}
 
         <div className="grid gap-3">
@@ -244,6 +203,12 @@ export default function NurseInvoices() {
             const values = inputs[invoice.id] || {};
             const quarantined = invoice.status === 'quarantined';
             const identity = invoice.identity_assurance || invoice.identityAssurance || 'shared_door';
+            const expectedReceiptCount = Math.max(0, Math.floor(Number(invoice.payload?.receiptCount) || 0));
+            const receiptEvidenceReady = expectedReceiptCount === 0 || (
+              invoice.receipt_storage_status === 'complete'
+              && receipts.length >= expectedReceiptCount
+              && receipts.every((receipt) => (receipt.scanStatus || receipt.scan_status) === 'cleared')
+            );
             return (
               <article key={invoice.id} className="rounded-2xl border border-foreground/10 bg-background/52 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -265,6 +230,12 @@ export default function NurseInvoices() {
                 </div>
 
                 {invoice.review_note ? <p className="mt-3 rounded-xl bg-foreground/[0.035] p-3 font-body text-sm text-foreground/60">{invoice.review_note}</p> : null}
+
+                {expectedReceiptCount > 0 && !receiptEvidenceReady ? (
+                  <p role="alert" className="mt-3 rounded-xl border border-amber-300/24 bg-amber-300/[0.07] p-3 font-body text-sm text-amber-900">
+                    Receipt review required: {expectedReceiptCount} submitted file{expectedReceiptCount === 1 ? '' : 's'} must be fully stored and cleared before Finance can approve or pay this invoice.
+                  </p>
+                ) : null}
 
                 {statusEvents.length ? (
                   <details className="mt-3 rounded-xl border border-foreground/8 bg-foreground/[0.02] px-3 py-2">
@@ -315,11 +286,11 @@ export default function NurseInvoices() {
                       </label>
                     ) : <span />}
                     <div className="flex flex-wrap justify-end gap-2">
-                      {quarantined ? <button type="button" onClick={() => transition(invoice, 'submitted')} disabled={state.preview || busy !== ''} className={`${BUTTON} border-sky-300/24 bg-sky-300/[0.07] text-sky-200`}><Check className="h-3.5 w-3.5" />Verify identity</button> : null}
-                      {['submitted', 'correction_required'].includes(invoice.status) ? <button type="button" onClick={() => transition(invoice, 'approved')} disabled={state.preview || busy !== ''} className={`${BUTTON} border-foreground bg-foreground text-background`}><Check className="h-3.5 w-3.5" />Approve</button> : null}
-                      {invoice.status === 'submitted' ? <button type="button" onClick={() => transition(invoice, 'correction_required')} disabled={state.preview || busy !== ''} className={`${BUTTON} border-amber-300/24 text-amber-200`}>Request correction</button> : null}
-                      {['quarantined', 'submitted', 'correction_required'].includes(invoice.status) ? <button type="button" onClick={() => transition(invoice, 'rejected')} disabled={state.preview || busy !== ''} className={`${BUTTON} border-red-300/24 text-red-200`}><X className="h-3.5 w-3.5" />Reject</button> : null}
-                      {invoice.status === 'approved' ? <button type="button" onClick={() => transition(invoice, 'paid')} disabled={state.preview || busy !== ''} className={`${BUTTON} border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200`}>Mark paid</button> : null}
+                      {quarantined ? <button type="button" onClick={() => transition(invoice, 'submitted')} disabled={busy !== ''} className={`${BUTTON} border-sky-300/24 bg-sky-300/[0.07] text-sky-200`}><Check className="h-3.5 w-3.5" />Verify identity</button> : null}
+                      {['submitted', 'correction_required'].includes(invoice.status) ? <button type="button" onClick={() => transition(invoice, 'approved')} disabled={busy !== '' || !receiptEvidenceReady} className={`${BUTTON} border-foreground bg-foreground text-background`}><Check className="h-3.5 w-3.5" />Approve</button> : null}
+                      {invoice.status === 'submitted' ? <button type="button" onClick={() => transition(invoice, 'correction_required')} disabled={busy !== ''} className={`${BUTTON} border-amber-300/24 text-amber-200`}>Request correction</button> : null}
+                      {['quarantined', 'submitted', 'correction_required'].includes(invoice.status) ? <button type="button" onClick={() => transition(invoice, 'rejected')} disabled={busy !== ''} className={`${BUTTON} border-red-300/24 text-red-200`}><X className="h-3.5 w-3.5" />Reject</button> : null}
+                      {invoice.status === 'approved' ? <button type="button" onClick={() => transition(invoice, 'paid')} disabled={busy !== '' || !receiptEvidenceReady} className={`${BUTTON} border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200`}>Mark paid</button> : null}
                     </div>
                   </div>
                 ) : null}

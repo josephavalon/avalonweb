@@ -50,7 +50,6 @@ import {
 import { ADMIN_COMMAND_EASE as EASE, TODAY_LABEL, pill } from '@/lib/adminCommandUi.jsx';
 import { buildClinicalPlaceholderSnapshot } from '@/data/clinicalPlaceholderPolicy';
 import { buildEnterpriseArchitectureSnapshot } from '@/data/enterpriseArchitecture';
-import { SEED_ITEMS } from '@/data/inventorySeed';
 import { buildEnterpriseSpineSnapshot } from '@/lib/enterpriseSpine';
 import { buildNoApiCapabilitySnapshot } from '@/lib/noApiCapabilityGate';
 import {
@@ -4634,7 +4633,7 @@ function CommandScreen({ onSelectRequest }) {
 
       <OperatingDaySimulatorPanel />
 
-      <PreApiPhaseRoadmapPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <PreApiPhaseRoadmapPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
       <ProductionHealthcareCorePanel />
 
@@ -4648,17 +4647,17 @@ function CommandScreen({ onSelectRequest }) {
 
       <LocalRepositoryPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <LocalExecutionEnginePanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <LocalExecutionEnginePanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <LocalReliabilityPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <LocalReliabilityPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <LocalScalePanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <LocalScalePanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <LocalEnterpriseFinishPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <LocalEnterpriseFinishPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
       <DispatchBrainPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <SupplyBrainPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <SupplyBrainPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
       <ProviderCompetencyPanel requests={REQUESTS} nurses={NURSES} booking={latestRequest} />
 
@@ -4666,11 +4665,11 @@ function CommandScreen({ onSelectRequest }) {
 
       <ArrivalMissionPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <VisitCloseoutPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <VisitCloseoutPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <KitReconciliationPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <KitReconciliationPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
-      <PostVisitQualityPanel requests={REQUESTS} nurses={NURSES} inventory={SEED_ITEMS} booking={latestRequest} />
+      <PostVisitQualityPanel requests={REQUESTS} nurses={NURSES} inventory={INVENTORY} booking={latestRequest} />
 
       <OperatingSpinePanel requests={REQUESTS} latestBooking={lastBooking} onSelectRequest={onSelectRequest} />
 

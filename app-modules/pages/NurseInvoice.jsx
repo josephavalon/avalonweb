@@ -58,6 +58,10 @@ const CARD_CLASS =
 
 const ERROR_CLASS = 'font-body text-[13px] text-red-600 mt-1';
 
+// The server enforces the same closed state. Turn this on only in the code
+// change that connects the approved receipt-scanner worker end to end.
+const EXPENSE_REIMBURSEMENT_ENABLED = false;
+
 // computeInvoice reports codes, not prose. Anything unmapped falls back to a
 // plain instruction rather than leaking an identifier at a nurse.
 const ERROR_MESSAGES = {
@@ -90,12 +94,21 @@ function groupErrors(errors) {
   }
   return grouped;
 }
-
 function rowId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
   return `row-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+}
+
+function newSubmissionId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const value = Math.floor(Math.random() * 16);
+    return (char === 'x' ? value : (value & 0x3) | 0x8).toString(16);
+  });
 }
 
 const emptyShift = () => ({
@@ -111,6 +124,7 @@ const emptyShift = () => ({
 const emptyExpense = () => ({ id: rowId(), description: '', amount: '', receipt: null });
 
 const initialState = {
+  submissionId: newSubmissionId(),
   step: 'locked',
   token: '',
   nurseName: '',
@@ -206,7 +220,7 @@ function reducer(state, action) {
       return { ...state, token: '', step: 'locked', status: 'idle', error: action.error || '' };
 
     case 'reset':
-      return { ...initialState, shifts: [emptyShift()], token: state.token, step: 'form' };
+      return { ...initialState, submissionId: newSubmissionId(), shifts: [emptyShift()], token: state.token, step: 'form' };
 
     default:
       return state;
@@ -224,7 +238,7 @@ function toComputeInput(state) {
       shotCount: Number(row.shotCount || 0),
       gfeCount: Number(row.gfeCount || 0),
     })),
-    expenses: state.expenses.map((row) => ({
+    expenses: (EXPENSE_REIMBURSEMENT_ENABLED ? state.expenses : []).map((row) => ({
       description: row.description,
       amountCents: Math.round(Number(row.amount || 0) * 100),
     })),
@@ -284,12 +298,13 @@ export default function NurseInvoice() {
         value: {
           token,
           step: 'form',
+          submissionId: draft?.submissionId || newSubmissionId(),
           nurseName: draft?.nurseName || '',
           periodStart: draft?.periodStart || '',
           periodEnd: draft?.periodEnd || '',
           shifts: Array.isArray(draft?.shifts) && draft.shifts.length ? draft.shifts : [emptyShift()],
           nurseEmail: draft?.nurseEmail || '',
-          expenses: Array.isArray(draft?.expenses)
+          expenses: EXPENSE_REIMBURSEMENT_ENABLED && Array.isArray(draft?.expenses)
             ? draft.expenses.map((row) => ({ ...row, receipt: null }))
             : [],
         },
@@ -305,11 +320,14 @@ export default function NurseInvoice() {
       window.sessionStorage.setItem(
         INVOICE_DRAFT_KEY,
         JSON.stringify({
+          submissionId: state.submissionId,
           nurseName: state.nurseName,
           periodStart: state.periodStart,
           periodEnd: state.periodEnd,
           shifts: state.shifts,
-          expenses: state.expenses.map(({ receipt, ...rest }) => rest),
+          expenses: EXPENSE_REIMBURSEMENT_ENABLED
+            ? state.expenses.map(({ receipt, ...rest }) => rest)
+            : [],
           nurseEmail: state.nurseEmail,
         }),
       );
@@ -317,6 +335,7 @@ export default function NurseInvoice() {
       /* storage full or blocked — the form still works */
     }
   }, [
+    state.submissionId,
     state.token,
     state.nurseName,
     state.nurseEmail,
@@ -341,7 +360,7 @@ export default function NurseInvoice() {
 
   const nameError = state.showErrors && state.nurseName.trim().length < 2 ? 'Enter your name.' : '';
   const emailError = state.showErrors && !EMAIL_RE.test(state.nurseEmail.trim())
-    ? 'Enter the email address your copy should go to.'
+    ? 'Enter the work email used for your contractor profile.'
     : '';
   const periodStartError = state.showErrors && !state.periodStart ? 'Pick a start date.' : '';
   const periodEndError = state.showErrors && !state.periodEnd ? 'Pick an end date.' : '';
@@ -470,15 +489,18 @@ export default function NurseInvoice() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: state.token,
+          submissionId: state.submissionId,
           nurseName: state.nurseName,
           periodStart: state.periodStart,
           periodEnd: state.periodEnd,
           shifts: payload.shifts,
           expenses: payload.expenses,
           nurseEmail: state.nurseEmail.trim(),
-          receipts: state.expenses
-            .map((row, index) => (row.receipt ? { index, ...row.receipt } : null))
-            .filter(Boolean),
+          receipts: EXPENSE_REIMBURSEMENT_ENABLED
+            ? state.expenses
+                .map((row, index) => (row.receipt ? { index, ...row.receipt } : null))
+                .filter(Boolean)
+            : [],
           confirmed: true,
         }),
       });
@@ -494,6 +516,16 @@ export default function NurseInvoice() {
           type: 'status',
           status: 'idle',
           error: data?.error || 'Could not submit. Please try again.',
+        });
+        return;
+      }
+      if (response.status === 202 || data?.fullyDelivered !== true) {
+        // The invoice row and the same submission UUID remain in the draft so a
+        // receipt-storage retry cannot accidentally create a duplicate invoice.
+        dispatch({
+          type: 'status',
+          status: 'idle',
+          error: data?.warning || 'Your invoice is stored for Finance review, but one delivery step still needs attention.',
         });
         return;
       }
@@ -545,7 +577,7 @@ export default function NurseInvoice() {
                 </div>
                 <div className="mt-4">
                   <label className={invoiceLabelClass} htmlFor="invoice-email">
-                    Your email
+                    Work email
                   </label>
                   <input
                     id="invoice-email"
@@ -567,7 +599,7 @@ export default function NurseInvoice() {
                   />
                   <FieldError>{emailError}</FieldError>
                   <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
-                    Your copy of the invoice goes here.
+                    Used to match your contractor profile. Invoice details stay in Avalon Finance for admin review.
                   </p>
                 </div>
               </div>
@@ -646,14 +678,16 @@ export default function NurseInvoice() {
                 ) : null}
               </div>
 
-              <div className={CARD_CLASS}>
-                <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
-                  Expenses
-                </p>
+              {EXPENSE_REIMBURSEMENT_ENABLED ? (
+                <div className={CARD_CLASS}>
+                  <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
+                    Expenses
+                  </p>
                 <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
                   Reimbursed separately from your shift pay. Attach a receipt where you have one.
-                  Descriptions and receipts should show the purchase only — no names or health
-                  details.
+                  Descriptions and receipts should show the purchase only — no patient names or
+                  health details. Files are stored privately and remain quarantined until an
+                  approved scanner clears them for Finance review.
                 </p>
                 {state.expenses.length ? (
                   <div className="mt-4 grid gap-3">
@@ -682,7 +716,19 @@ export default function NurseInvoice() {
                     <Plus className="h-4 w-4" /> Add expense
                   </Button>
                 ) : null}
-              </div>
+                </div>
+              ) : (
+                <div className={CARD_CLASS}>
+                  <p className="font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
+                    Expense reimbursement
+                  </p>
+                  <p className="mt-2 font-body text-[14px] leading-[1.5] text-foreground/75">
+                    Receipt reimbursement is not available in this portal yet because the private
+                    receipt-scanning workflow is not connected. Submit shift pay only and contact
+                    Avalon Finance separately about an expense.
+                  </p>
+                </div>
+              )}
 
               {fieldErrors.form.includes('no_shifts') ? (
                 <p className={ERROR_CLASS}>Add at least one shift before reviewing.</p>
@@ -815,7 +861,7 @@ export default function NurseInvoice() {
             <div className={CARD_CLASS}>
               <CheckCircle2 className="h-10 w-10 text-emerald-600" strokeWidth={1.75} />
               <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[3rem] leading-[0.9]">
-                Invoice sent
+                {state.result?.deliveryStatus === 'sent' ? 'Invoice sent' : 'Invoice saved'}
               </h2>
               <p className="mt-4 av-mono text-[13px] text-foreground/60">
                 {state.result?.invoiceNumber}
@@ -824,8 +870,8 @@ export default function NurseInvoice() {
                 {formatCents(state.result?.grandTotalCents || 0)}
               </p>
               <p className="mt-4 font-body text-[14px] leading-[1.55] text-foreground/70">
-                A copy went to you, Aaron, Corey, Joseph and support. You'll be paid through Gusto
-                once it's approved.
+                {state.result?.warning
+                  || "Your invoice is stored in Avalon Finance and the internal review team was notified. Because this portal uses a shared door, an admin verifies identity before approval."}
               </p>
 
               <p className="mt-7 font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">
@@ -886,7 +932,9 @@ export default function NurseInvoice() {
         <div className="sticky bottom-0 z-10 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex max-w-3xl items-baseline justify-between gap-4 px-4 py-3">
             <span className="av-mono text-[12px] text-foreground/75">
-              {formatCents(computed.wagesCents)} + {formatCents(computed.reimbursementsCents)} exp
+              {EXPENSE_REIMBURSEMENT_ENABLED
+                ? `${formatCents(computed.wagesCents)} + ${formatCents(computed.reimbursementsCents)} exp`
+                : `${formatCents(computed.wagesCents)} wages`}
             </span>
             <span className="av-price text-[19px] font-semibold tabular-nums text-foreground">
               {formatCents(computed.grandTotalCents)}

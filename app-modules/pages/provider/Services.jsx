@@ -3,6 +3,7 @@ import {
   Phone, Mail, PlusCircle, Check, X, Calendar,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { MEMBERSHIPS, LEADS } from '@/fixtures/commandMockData';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -264,7 +265,7 @@ function LeadCard({ item, onStatusChange, toast }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function Services() {
+function ServicesPreview() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('memberships');
   const [leadFilter, setLeadFilter] = useState('all');
@@ -374,6 +375,21 @@ export default function Services() {
       )}
     </AdminLayout>
   );
+}
+
+export default function Services() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Service source unavailable"
+          description="No sample memberships, leads, proposals, contacts, or service status records are shown. Service actions remain disabled until the verified CRM source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <ServicesPreview />;
 }
 
 function EmptyState({ text }) {

@@ -24,6 +24,7 @@ import {
   Users,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet } from '@/lib/apiClient';
 
 const BG = 'hsl(var(--background))';
@@ -215,7 +216,7 @@ function RequestCard({ row, nursesById }) {
   );
 }
 
-export default function ShiftMarketplace() {
+function ShiftMarketplacePreview() {
   const [snap, setSnap] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -426,4 +427,19 @@ export default function ShiftMarketplace() {
       </div>
     </AdminShell>
   );
+}
+
+export default function ShiftMarketplace() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminShell title="Shift marketplace">
+        <OperationalSourceUnavailable
+          title="Shift marketplace unavailable"
+          description="No sample availability, rankings, pay estimates, offers, assignments, or response metrics are shown. Marketplace actions remain disabled until live scheduling, credential, inventory, and payroll sources are connected."
+        />
+      </AdminShell>
+    );
+  }
+
+  return <ShiftMarketplacePreview />;
 }

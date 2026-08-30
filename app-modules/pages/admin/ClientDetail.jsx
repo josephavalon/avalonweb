@@ -32,6 +32,7 @@ import {
 import AdminShell from '@/components/admin/AdminShell';
 import { useAuthStore } from '@/lib/useAuthStore';
 import { apiGet, apiPatch, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse, isResponseObject } from '@/lib/apiResponse';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -343,6 +344,19 @@ export default function ClientDetail() {
     setState((s) => ({ ...s, loading: true, error: '' }));
     try {
       const data = await apiGet(`/api/admin/clients/${encodeURIComponent(id)}`);
+      assertApiResponse(data, {
+        objects: ['client'],
+        arrays: ['appointments', 'creditLedger', 'paymentMethods', 'auditTrail'],
+        numbers: ['creditBalance'],
+        nullableObjects: ['subscription'],
+      }, 'Clinical returned an invalid patient response.');
+      if (!data.client.id
+        || !hasObjectRows(data.appointments)
+        || !hasObjectRows(data.creditLedger)
+        || !hasObjectRows(data.paymentMethods)
+        || !hasObjectRows(data.auditTrail)) {
+        throw invalidApiResponse('Clinical returned invalid patient records.');
+      }
       const next = buildFormFromClient(data?.client);
       initialRef.current = JSON.stringify(next);
       setForm(next);
@@ -372,6 +386,9 @@ export default function ClientDetail() {
     setSaveState({ status: 'saving', message: 'Saving…' });
     try {
       const updated = await apiPatch(`/api/admin/clients/${encodeURIComponent(id)}`, patch);
+      if (!isResponseObject(updated?.client) || !updated.client.id) {
+        throw invalidApiResponse('Clinical returned an invalid saved patient response.');
+      }
       const next = buildFormFromClient(updated?.client);
       initialRef.current = JSON.stringify(next);
       setForm(next);

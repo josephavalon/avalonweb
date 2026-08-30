@@ -8,6 +8,7 @@ import {
   suppressRobBotProspect,
 } from '../_lib/robbot3k-core.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { requireBdDataReview } from '../_lib/bd-data-review-gate.js';
 
 const STOP_EVENTS = new Set(['reply', 'replied', 'booking', 'booked', 'bounce', 'bounced', 'unsubscribe', 'unsubscribed', 'complaint']);
 const PROVIDER_PATTERN = /^[a-z0-9][a-z0-9_.-]{0,79}$/;
@@ -66,6 +67,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Webhook relay is not configured.' });
   }
   if (!authorized(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!requireBdDataReview(res)) return;
   const payload = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   if (Buffer.byteLength(JSON.stringify(payload), 'utf8') > 256 * 1024) return res.status(413).json({ error: 'Payload too large' });
   const kind = eventKind(payload);

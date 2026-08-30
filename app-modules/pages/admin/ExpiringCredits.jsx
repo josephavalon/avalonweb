@@ -16,6 +16,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Mail, RefreshCw, ArrowRight } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { apiGet } from '@/lib/apiClient';
 import { useSeo } from '@/lib/seo';
 
@@ -160,9 +162,11 @@ function useExpiringCredits() {
     if (!silent) setError(null);
     try {
       const data = await apiGet('/api/admin/expiring-credits');
-      const next = Array.isArray(data?.rows) ? data.rows : [];
+      assertApiResponse(data, { arrays: ['rows'], numbers: ['windowDays'] }, 'Credits returned an invalid response.');
+      if (!hasObjectRows(data.rows, ['grantId'])) throw invalidApiResponse('Credits returned invalid grant records.');
+      const next = data.rows;
       setRows(next);
-      if (Number.isFinite(data?.windowDays)) setWindowDays(data.windowDays);
+      setWindowDays(data.windowDays);
     } catch (err) {
       if (!silent) setError(err?.message || 'Could not load expiring credits.');
     } finally {
@@ -182,6 +186,15 @@ function useExpiringCredits() {
 export function CreditsExpiringSoon({ limit = 5 } = {}) {
   const { rows, windowDays, loading, error } = useExpiringCredits();
   const top = useMemo(() => (rows || []).slice(0, limit), [rows, limit]);
+
+  if (!loading && error && rows === null) {
+    return (
+      <OperationalSourceUnavailable
+        title="Credit source unavailable"
+        description="Expiring member credits could not be verified. No zeroed or sample credit count is shown, and outreach actions remain disabled until the live ledger reconnects."
+      />
+    );
+  }
 
   return (
     <section
@@ -269,6 +282,17 @@ export default function AdminExpiringCredits() {
     () => (rows || []).reduce((sum, r) => sum + Number(r.units || 0), 0),
     [rows]
   );
+
+  if (!loading && error && rows === null) {
+    return (
+      <AdminShell title="Expiring credits">
+        <OperationalSourceUnavailable
+          title="Credit source unavailable"
+          description="Expiring member credits could not be verified. No zeroed or sample credit count is shown, and outreach actions remain disabled until the live ledger reconnects."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Expiring credits">

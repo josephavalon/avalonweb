@@ -1517,68 +1517,20 @@ function ReportsView({ items, folders, tags }) {
 
           {/* ── Activity History ── */}
           {activeReport === 'activity' && (
-            <div className="space-y-3">
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-8 text-center">
+              <Activity className="mx-auto h-8 w-8 text-foreground/20" />
               <p className="font-body text-[10px] uppercase tracking-[0.16em] text-foreground/30">
                 {INVENTORY_CLINICAL_NOTE}
               </p>
-              {[
-                { action:'Qty updated',    item:'NAD+ 250mg vial',         detail:'Qty 10 → 8',                    by:'Joseph L.',    at:'2026-05-19 14:22', Icon:RefreshCw,  cls:'text-blue-400' },
-                { action:'Item added',     item:'IV Start Kit',            detail:'Added to IV Supplies',           by:'Joseph L.',    at:'2026-05-19 09:14', Icon:Plus,       cls:'text-emerald-400' },
-                { action:'Low stock',      item:'Vitamin C 50ml',          detail:'Qty 3 / Min 4',                  by:'System',       at:'2026-05-18 08:00', Icon:AlertTriangle, cls:'text-amber-400' },
-                { action:'Expiry alert',   item:'Epinephrine 1mg/ml',      detail:'Exp 2026-05-18',                 by:'System',       at:'2026-05-17 08:00', Icon:AlertCircle, cls:'text-red-400' },
-                { action:'Item edited',    item:'IV Bag — 1L Normal Saline', detail:'Supplier updated',             by:'Joseph L.',    at:'2026-05-16 16:45', Icon:Edit,       cls:'text-foreground/50' },
-                { action:'Folder created', item:'IV Supplies',             detail:'Created under Avalon Vitality',  by:'Joseph L.',    at:'2026-05-14 11:30', Icon:FolderPlus, cls:'text-foreground/50' },
-              ].map((ev, i) => (
-                <div key={i} className="flex gap-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-4">
-                  <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] ${ev.cls}`}><ev.Icon className="h-3.5 w-3.5" /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-body text-xs font-semibold text-foreground/80">{ev.action} — <span className="text-foreground">{ev.item}</span></p>
-                        <p className="font-body text-[11px] text-foreground/40">{ev.detail}</p>
-                      </div>
-                      <span className="shrink-0 font-body text-[10px] text-foreground/30">{ev.at}</span>
-                    </div>
-                    <p className="mt-1 font-body text-[10px] text-foreground/30">By {ev.by}</p>
-                  </div>
-                </div>
-              ))}
+              <p className="mt-3 font-body text-sm text-foreground/42">No live activity feed is connected for this report.</p>
             </div>
           )}
 
           {/* ── Transactions ── */}
           {activeReport === 'txn' && (
-            <div className="overflow-x-auto rounded-2xl border border-foreground/[0.08]">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-foreground/[0.08] bg-foreground/[0.02]">
-                    {['Date','Item','Type','Qty Change','New Qty','User'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left font-body text-[10px] uppercase tracking-wider text-foreground/35">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { date:'2026-05-19', item:'NAD+ 250mg vial',        type:'Used',      delta:-2, newQty:8,  user:'Joseph L.' },
-                    { date:'2026-05-19', item:'IV Start Kit',           type:'Received',  delta:+2, newQty:6,  user:'Joseph L.' },
-                    { date:'2026-05-18', item:'Vitamin C 50ml',         type:'Used',      delta:-1, newQty:3,  user:'Stephanie W.' },
-                    { date:'2026-05-17', item:'B12 IM vial',            type:'Received',  delta:+6, newQty:18, user:'Joseph L.' },
-                    { date:'2026-05-16', item:'Epinephrine 1mg/ml',     type:'Used',      delta:-1, newQty:4,  user:'Stephanie W.' },
-                    { date:'2026-05-15', item:'Glutathione 600mg vial', type:'Received',  delta:+8, newQty:14, user:'Joseph L.' },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02]">
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/45">{row.date}</td>
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/80">{row.item}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`rounded-full px-2 py-0.5 font-body text-[10px] font-semibold ${row.type === 'Received' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-blue-500/15 text-blue-400'}`}>{row.type}</span>
-                      </td>
-                      <td className={`px-4 py-2.5 font-body text-xs font-semibold ${row.delta > 0 ? 'text-emerald-400' : 'text-blue-400'}`}>{row.delta > 0 ? '+' : ''}{row.delta}</td>
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{row.newQty}</td>
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/45">{row.user}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-8 text-center">
+              <ArrowUpDown className="mx-auto h-8 w-8 text-foreground/20" />
+              <p className="mt-3 font-body text-sm text-foreground/42">No live transaction ledger is connected for this report.</p>
             </div>
           )}
 
@@ -1645,35 +1597,9 @@ function ReportsView({ items, folders, tags }) {
 
           {/* ── User Activity ── */}
           {activeReport === 'users' && (
-            <div className="overflow-x-auto rounded-2xl border border-foreground/[0.08]">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-foreground/[0.08] bg-foreground/[0.02]">
-                    {['User','Actions','Items Edited','Last Active'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left font-body text-[10px] uppercase tracking-wider text-foreground/35">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { name:'Joseph L.',   actions:12, edited:8, last:'2026-05-19' },
-                    { name:'Stephanie W.',actions:7,  edited:4, last:'2026-05-18' },
-                    { name:'System',      actions:6,  edited:0, last:'2026-05-19' },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b border-foreground/[0.05] hover:bg-foreground/[0.02]">
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground/[0.08] font-body text-[11px] text-foreground/60">{row.name[0]}</div>
-                          <span className="font-body text-xs text-foreground/80">{row.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{row.actions}</td>
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/60">{row.edited}</td>
-                      <td className="px-4 py-2.5 font-body text-xs text-foreground/45">{row.last}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-8 text-center">
+              <User className="mx-auto h-8 w-8 text-foreground/20" />
+              <p className="mt-3 font-body text-sm text-foreground/42">No live user-activity summary is connected for this report.</p>
             </div>
           )}
 
@@ -2285,11 +2211,11 @@ function CSVImportModal({ folders, onClose, onImport }) {
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function AdminInventory() {
-  // ── Persistence layer (Supabase when creds set, seed data fallback) ──────────
+  // ── Persistence layer (live Supabase source only; unavailable fails closed) ─
   const {
     items, folders, tags, trashedItems, settings,
     customFieldDefs,
-    loading, toasts, dismissToast,
+    loading, backendStatus, backendError, toasts, dismissToast,
     handleAddItem,
     handleSaveItem,
     handleUpdateQty,
@@ -2488,9 +2414,24 @@ export default function AdminInventory() {
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="flex h-10 w-10 animate-spin items-center justify-center rounded-xl border-2 border-foreground/10 border-t-foreground/60" />
-            <p className="font-body text-xs text-foreground/30">
-              {isLive ? 'Loading inventory…' : 'Starting inventory…'}
+            <p className="font-body text-xs text-foreground/30">Loading live inventory…</p>
+          </div>
+        </div>
+      </AdminShell>
+    );
+  }
+
+  if (backendStatus !== 'ready' || !isLive) {
+    return (
+      <AdminShell title="Inventory">
+        <div className="mx-auto flex min-h-[28rem] max-w-2xl items-center justify-center px-5 py-12">
+          <div className="av-glass-card w-full rounded-[1.75rem] border border-foreground/[0.12] bg-background/62 p-8 text-center backdrop-blur-2xl md:p-12">
+            <Package className="mx-auto h-9 w-9 text-foreground/28" />
+            <p className="mt-5 font-heading text-4xl uppercase leading-none text-foreground">Inventory source unavailable.</p>
+            <p className="mx-auto mt-4 max-w-lg font-body text-sm leading-relaxed text-foreground/50">
+              No sample stock, transactions, alerts, or activity are shown. Inventory changes remain disabled until the live inventory database is connected and verified.
             </p>
+            {backendError ? <p className="mt-4 font-body text-xs text-foreground/38">{backendError}</p> : null}
           </div>
         </div>
       </AdminShell>
@@ -2628,7 +2569,7 @@ export default function AdminInventory() {
               {visibleItems.length === 0 && (
                 <div className="flex flex-col items-center justify-center gap-3 py-24">
                   <Package className="h-10 w-10 text-foreground/15" />
-                  <p className="font-body text-sm text-foreground/30">{search || filterStatus !== 'all' || filterTag || filterCategory ? 'No items match your filters.' : 'No items here.'}</p>
+                  <p className="font-body text-sm text-foreground/30">{search || filterStatus !== 'all' || filterTag || filterCategory ? 'No live items match your filters.' : 'No live inventory records yet.'}</p>
                 </div>
               )}
 

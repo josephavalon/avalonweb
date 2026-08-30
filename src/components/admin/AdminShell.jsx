@@ -93,7 +93,7 @@ const NAV_LIVE = [
           { label: 'Transactions', to: soon('Transactions') },
           { label: 'Deposits', to: soon('Deposits') },
           { label: 'Outstanding Balances', to: soon('Outstanding Balances') },
-          { label: 'Customer invoices', to: soon('Customer Invoices') },
+          { label: 'Customer invoices', to: soon('Invoices') },
           { label: 'Refunds', to: '/admin/refunds' },
           { label: 'Chargebacks', to: soon('Chargebacks') },
         ],
@@ -182,6 +182,7 @@ const NAV_LIVE = [
   },
   {
     label: 'Operations', icon: ShieldCheck, children: [
+      { label: 'Scheduling', to: '/admin/scheduling' },
       { label: 'Team', to: '/admin/team' },
       {
         label: 'Clinical', children: [
@@ -216,8 +217,8 @@ const NAV_LIVE = [
       },
       { label: 'GFE', to: '/admin/gfe' },
       { label: 'Acuity', href: ACUITY_URL, external: true },
-      // Shift marketplace removed from the admin sidebar per launch punch-list.
-      { label: 'Inventory', to: '/admin/inventory' },
+      // The legacy shift marketplace stays hidden; Scheduling is the durable,
+      // credential-gated operational workflow.
       { label: 'Tools', to: soon('Tools') },
     ],
   },
@@ -247,7 +248,7 @@ const NAV_PREVIEW = [
 
 const NAV = [
   ...NAV_LIVE,
-  ...(import.meta.env.VITE_ADMIN_PREVIEW === '1' ? NAV_PREVIEW : []),
+  ...(!import.meta.env.PROD && import.meta.env.VITE_ADMIN_PREVIEW === '1' ? NAV_PREVIEW : []),
 ];
 
 // Filter the nav to what the signed-in role may open. Staff see only the

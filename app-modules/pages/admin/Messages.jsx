@@ -16,6 +16,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Send, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Phone, Mail, MessageSquare, Inbox as InboxIcon } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { InboxPanel } from './Inbox';
 
 const BG = 'hsl(var(--background))';
@@ -50,13 +51,16 @@ export default function Messages() {
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
+  const [clientsUnavailable, setClientsUnavailable] = useState(false);
 
   const loadClients = useCallback(async () => {
     try {
       const data = await apiGet('/api/admin/bookings');
+      assertApiResponse(data, { arrays: ['bookings'] }, 'Communications returned an invalid client response.');
+      if (!hasObjectRows(data.bookings)) throw invalidApiResponse('Communications returned invalid client records.');
       const seen = new Set();
       const list = [];
-      for (const b of (Array.isArray(data?.bookings) ? data.bookings : [])) {
+      for (const b of data.bookings) {
         const phone = (b.customerPhone || '').trim();
         const email = (b.customerEmail || '').trim();
         const key = `${phone}|${email}`;
@@ -65,7 +69,11 @@ export default function Messages() {
         list.push({ name: b.customerName && b.customerName !== '—' ? b.customerName : (email || phone), phone, email });
       }
       setClients(list);
-    } catch { /* leave empty — manual entry still works */ }
+      setClientsUnavailable(false);
+    } catch {
+      setClients([]);
+      setClientsUnavailable(true);
+    }
   }, []);
 
   useEffect(() => { loadClients(); }, [loadClients]);
@@ -141,6 +149,11 @@ export default function Messages() {
           </div>
 
           {/* Recipient */}
+          {clientsUnavailable ? (
+            <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2 font-body text-xs text-amber-700">
+              <AlertCircle className="h-4 w-4 shrink-0" /> Client suggestions are unavailable. Enter a verified recipient manually.
+            </div>
+          ) : null}
           <label className="flex flex-col gap-1">
             <span className="font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>{isEmail ? 'To (email)' : 'To (phone)'}</span>
             <input

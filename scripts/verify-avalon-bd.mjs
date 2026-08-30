@@ -151,6 +151,23 @@ assert.match(migration, /foreign key \(tenant_id, company_id\) references public
 assert.match(migration, /alter table public\.robbot3k_prospects add column if not exists company_id uuid/);
 assert.match(migration, /alter table public\.robbot3k_prospects add column if not exists person_id uuid/);
 assert.match(migration, /alter table public\.robbot3k_prospects add column if not exists opportunity_id uuid/);
+for (const [table, constraint] of [
+  ['bd_companies', 'bd_companies_created_agent_fk'],
+  ['bd_companies', 'bd_companies_updated_agent_fk'],
+  ['robbot3k_prospects', 'robbot3k_prospects_bd_company_fk'],
+  ['robbot3k_prospects', 'robbot3k_prospects_bd_person_fk'],
+  ['robbot3k_prospects', 'robbot3k_prospects_bd_opportunity_fk'],
+]) {
+  const guard = new RegExp(
+    `if not exists \\(\\s*select 1\\s*from pg_constraint\\s*where conrelid = 'public\\.${table}'::regclass`
+      + `\\s*and conname = '${constraint}'\\s*\\) then\\s*alter table public\\.${table}\\s*add constraint ${constraint}`,
+  );
+  assert.match(
+    migration,
+    guard,
+    `${constraint} must be guarded by its name and owning table before ADD CONSTRAINT`,
+  );
+}
 assert.match(migration, /Document metadata only\. Storage\/upload remains unconnected/);
 assert.match(migration, /transcript extraction and recording storage are not connected/);
 assert.match(migration, /requirements jsonb not null default '\[\]'::jsonb/);
@@ -339,5 +356,15 @@ assert.match(robbotEndpoint, /reconcileRobBotProspectToBd\(db, tenantId, user\?\
 assert.match(robbotEndpoint, /researchRecordRetained: true/);
 assert.match(robbotEndpoint, /manual_prospect_saved_crm_migration_required/);
 assert.match(robbotEndpoint, /if \(\/\(\?:public\\\.\)\?bd_/);
+
+const adminUi = readFileSync(new URL('../app-modules/pages/admin/AvalonBD.jsx', import.meta.url), 'utf8');
+assert.doesNotMatch(adminUi, /setSourceStatus\('preview'\)/, 'a live CRM failure must never activate sample records');
+for (const retiredFixture of [
+  'Empire Artist Group', 'Civic Health Collective', 'Harbor House Hotels',
+  'Fog City Fitness', 'Summit Live', 'Northstar Robotics',
+]) {
+  assert.ok(!adminUi.includes(retiredFixture), `retired fixture must not ship: ${retiredFixture}`);
+}
+assert.match(adminUi, /No sample data has been substituted/, 'the unavailable state must be explicit and truthful');
 
 console.log('Avalon BD CRM verification passed.');

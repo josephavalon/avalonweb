@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Archive, Download, Loader2, Pencil, Plus, RefreshCw, Search, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { authedFetch, apiGet, apiPatch, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { getOsCapability } from '@/data/osCapabilities';
 
 const STATUS_OPTIONS = ['active', 'draft', 'pending', 'approved', 'blocked', 'complete'];
@@ -110,6 +112,8 @@ function IntegrationPanel({ provider }) {
     setState((current) => ({ ...current, loading: true, error: '' }));
     try {
       const response = await apiGet(`/api/os/v1/integrations/${provider}`);
+      assertApiResponse(response, { objects: ['data', 'data.adapter'], arrays: ['data.jobs', 'data.operations'] }, 'Integration returned an invalid response.');
+      if (!hasObjectRows(response.data.jobs)) throw invalidApiResponse('Integration returned invalid job records.');
       setState({ loading: false, error: '', data: response.data });
     } catch (error) {
       setState({ loading: false, error: error.message || 'Could not load integration.', data: null });
@@ -118,7 +122,7 @@ function IntegrationPanel({ provider }) {
   useEffect(() => { load(); }, [load]);
 
   const run = async (operation) => {
-    setState((current) => ({ ...current, loading: true, error: '' }));
+    setState({ loading: true, error: '', data: null });
     try {
       const payload = { operation, idempotencyKey: makeKey(operation) };
       if (operation === 'import') payload.csv = csv;
@@ -136,11 +140,19 @@ function IntegrationPanel({ provider }) {
       }
       await load();
     } catch (error) {
-      setState((current) => ({ ...current, loading: false, error: error.message || 'Operation failed.' }));
+      setState({ loading: false, error: error.message || 'Operation failed.', data: null });
     }
   };
 
   if (state.loading && !state.data) return <div className="rounded-2xl p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  if (state.error && !state.data) {
+    return (
+      <OperationalSourceUnavailable
+        title="Integration source unavailable"
+        description="Adapter health and job history could not be verified. No placeholder status is shown, and import, export, sync, retry, and disconnect actions remain disabled."
+      />
+    );
+  }
   const adapter = state.data?.adapter;
   return (
     <section className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
@@ -185,12 +197,14 @@ function ReportPanel({ capability }) {
   const reportType = REPORT_TYPES[capability.slug] || 'custom';
   const [state, setState] = useState({ loading: true, saving: false, error: '', data: null });
   const load = useCallback(async () => {
-    setState((current) => ({ ...current, loading: true, error: '' }));
+    setState({ loading: true, saving: false, error: '', data: null });
     try {
       const response = await apiGet(`/api/os/v1/reports?type=${reportType}`);
+      assertApiResponse(response, { objects: ['data', 'data.totals'], arrays: ['data.rows'] }, 'Reports returned an invalid response.');
+      if (!hasObjectRows(response.data.rows)) throw invalidApiResponse('Reports returned invalid ledger records.');
       setState({ loading: false, saving: false, error: '', data: response.data });
     } catch (error) {
-      setState((current) => ({ ...current, loading: false, saving: false, error: error.message || 'Could not generate report.' }));
+      setState({ loading: false, saving: false, error: error.message || 'Could not generate report.', data: null });
     }
   }, [reportType]);
   useEffect(() => { load(); }, [load]);
@@ -201,11 +215,22 @@ function ReportPanel({ capability }) {
       await apiPost('/api/os/v1/reports', { report_type: reportType, idempotencyKey: makeKey('report') });
       setState((current) => ({ ...current, saving: false }));
     } catch (error) {
-      setState((current) => ({ ...current, saving: false, error: error.message || 'Could not save report snapshot.' }));
+      setState({ loading: false, saving: false, error: error.message || 'Could not save report snapshot.', data: null });
     }
   };
 
+  if (state.loading && !state.data) {
+    return <div className="rounded-2xl p-5" style={{ background: CARD, border: `1px solid ${BORDER}` }}><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  }
   const totals = state.data?.totals || {};
+  if (!state.loading && state.error && !state.data) {
+    return (
+      <OperationalSourceUnavailable
+        title="Report source unavailable"
+        description="The ledger-derived report could not be verified. No zeroed totals are shown, and snapshot actions remain disabled until the live source reconnects."
+      />
+    );
+  }
   return (
     <section className="rounded-2xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -222,19 +247,34 @@ function ReportPanel({ capability }) {
 export default function OsCapability() {
   const { capability: slug } = useParams();
   const capability = getOsCapability(slug);
-  const [state, setState] = useState({ loading: true, error: '', records: [], total: 0 });
+  const [state, setState] = useState({ loading: true, error: '', records: [], total: 0, verified: false });
   const [search, setSearch] = useState('');
   const [editor, setEditor] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     if (!capability) return;
-    setState((current) => ({ ...current, loading: true, error: '' }));
+    setState({ loading: true, error: '', records: [], total: 0, verified: false });
     try {
       const response = await apiGet(`/api/os/v1/capabilities/${capability.slug}?pageSize=100&search=${encodeURIComponent(search)}`);
-      setState({ loading: false, error: '', records: response.data.records || [], total: response.data.pagination?.total || 0 });
+      assertApiResponse(response, {
+        objects: ['data', 'data.pagination'],
+        arrays: ['data.records'],
+        numbers: ['data.pagination.total'],
+        booleans: ['data.pagination.hasMore'],
+      }, 'Avalon OS returned an invalid workspace response.');
+      if (!hasObjectRows(response.data.records, ['id', 'version'])) {
+        throw invalidApiResponse('Avalon OS returned invalid workspace records.');
+      }
+      setState({ loading: false, error: '', records: response.data.records, total: response.data.pagination.total, verified: true });
     } catch (error) {
-      setState((current) => ({ ...current, loading: false, error: error.message || 'Could not load this workspace.' }));
+      setState({
+        loading: false,
+        error: error.message || 'Could not load this workspace.',
+        records: [],
+        total: 0,
+        verified: false,
+      });
     }
   }, [capability, search]);
 
@@ -272,6 +312,27 @@ export default function OsCapability() {
 
   if (!capability) {
     return <AdminShell title="Avalon OS"><div className="rounded-2xl border border-foreground/15 p-8 font-body">Unknown capability.</div></AdminShell>;
+  }
+
+  if (state.loading && !state.verified) {
+    return (
+      <AdminShell title={capability.label}>
+        <div className="flex min-h-[28rem] items-center justify-center text-foreground/45">
+          <Loader2 className="h-5 w-5 animate-spin" />
+        </div>
+      </AdminShell>
+    );
+  }
+
+  if (!state.loading && state.error && !state.verified) {
+    return (
+      <AdminShell title={capability.label}>
+        <OperationalSourceUnavailable
+          title="Workspace source unavailable"
+          description="Records and totals could not be verified. No zeroed metrics, empty-state claims, exports, or record actions are shown until the live Avalon OS source reconnects."
+        />
+      </AdminShell>
+    );
   }
 
   return (

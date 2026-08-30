@@ -1,13 +1,15 @@
 // Admin → Team & User Settings (/admin/team). Admin-only.
 // View staff + pending invites, invite new staff (email/SMS), change tier,
 // deactivate/reactivate, and reset passwords. Live data via /api/admin/team/*;
-// demo mode (no Supabase) shows a read-only mock roster.
+// sessions without that source fail closed with an empty, read-only state.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyRound, Loader2, Mail, MoreHorizontal, Plus, RefreshCw, Shield, Trash2, UserCheck, X,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -99,12 +101,12 @@ function Banner({ kind, children, onClose }) {
 
 export default function TeamSettings() {
   const { user, authBackend } = useAuthStore();
-  const isDemo = authBackend !== 'supabase';
-  const canManageTeam = isDemo || user?.role === 'admin';
+  const sourceUnavailable = authBackend !== 'supabase';
 
   const [members, setMembers] = useState([]);
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
 
@@ -113,15 +115,26 @@ export default function TeamSettings() {
   const [group, setGroup] = useState('admin'); // visual grouping toggle
 
   const load = useCallback(async () => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setSourceReady(false);
+    if (sourceUnavailable) {
+      setMembers([]);
+      setInvites([]);
+      setLoading(false);
+      return;
+    }
     try {
-      const data = await teamClient.list(isDemo);
-      setMembers(data?.members || []);
-      setInvites(data?.invites || []);
+      const data = await teamClient.list(false);
+      assertApiResponse(data, { arrays: ['members', 'invites'] }, 'Team returned an invalid roster response.');
+      if (!hasObjectRows(data.members) || !hasObjectRows(data.invites)) {
+        throw invalidApiResponse('Team returned invalid roster records.');
+      }
+      setMembers(data.members);
+      setInvites(data.invites);
+      setSourceReady(true);
     } catch (err) {
       setError(err?.message || 'Could not load the team.');
     } finally { setLoading(false); }
-  }, [isDemo]);
+  }, [sourceUnavailable]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -134,6 +147,8 @@ export default function TeamSettings() {
   // "Deactivated" section.
   const activeMembers = useMemo(() => members.filter((m) => m.status !== 'inactive'), [members]);
   const deactivatedMembers = useMemo(() => members.filter((m) => m.status === 'inactive'), [members]);
+  const verifiedUnavailable = sourceUnavailable || (!loading && !sourceReady);
+  const canManageTeam = !verifiedUnavailable && sourceReady && user?.role === 'admin';
 
   const actions = canManageTeam ? (
     <Button onClick={() => setInviteOpen(true)} className="gap-2">
@@ -144,15 +159,15 @@ export default function TeamSettings() {
   return (
     <AdminShell title="Team">
       <PageShell embedded subtitle="Manage who can access the Avalon admin console." action={actions}>
-        {isDemo && (
-          <Banner kind="success">
-            Demo mode — fully interactive with a sample roster. Changes are local and reset when you reload.
-          </Banner>
-        )}
         <Banner kind="error" onClose={() => setError(null)}>{error}</Banner>
         <Banner kind="success" onClose={() => setNotice(null)}>{notice}</Banner>
 
-        {loading ? (
+        {verifiedUnavailable ? (
+          <OperationalSourceUnavailable
+            title="Team source unavailable"
+            description="No sample staff, pending invitations, local account changes, or false empty roster are shown. Team management stays disabled until the live team source is verified."
+          />
+        ) : loading ? (
           <div className="flex items-center gap-2 py-16 text-foreground/50"><Loader2 className="h-4 w-4 animate-spin" /> Loading team…</div>
         ) : (
           <>
@@ -216,7 +231,7 @@ export default function TeamSettings() {
                       </div>
                       {canManageTeam && (
                         <div className="flex items-center gap-2">
-                          <InviteRowActions invite={inv} isDemo={isDemo} onDone={(msg) => { setNotice(msg); load(); }} onErr={setError} />
+                          <InviteRowActions invite={inv} isDemo={false} onDone={(msg) => { setNotice(msg); load(); }} onErr={setError} />
                         </div>
                       )}
                     </div>
@@ -255,7 +270,7 @@ export default function TeamSettings() {
       {inviteOpen && canManageTeam && (
         <InviteDialog
           open={inviteOpen}
-          isDemo={isDemo}
+          isDemo={false}
           onClose={() => setInviteOpen(false)}
           onDone={(msg) => { setInviteOpen(false); setNotice(msg); load(); }}
           onErr={setError}
@@ -264,7 +279,7 @@ export default function TeamSettings() {
       {manage && canManageTeam && (
         <ManageDialog
           member={manage}
-          isDemo={isDemo}
+          isDemo={false}
           adminCount={adminCount}
           currentUserId={user?.id}
           onClose={() => setManage(null)}

@@ -30,11 +30,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Admin release contracts
+        run: npm run verify:admin-release
+
       - name: Go-live integration verification
         run: npm run verify:prod
         env:
-          API_BASE_URL: https://snooches.avalonvitality.co
-          PUBLIC_SITE_URL: https://snooches.avalonvitality.co
+          API_BASE_URL: https://www.avalonvitality.co
+          PUBLIC_SITE_URL: https://www.avalonvitality.co
           AVALON_ENABLE_LIVE_API: 'true'
           VITE_AVALON_ENABLE_LIVE_API: 'true'
           VITE_AUTH_GOOGLE_ENABLED: ${{ vars.VITE_AUTH_GOOGLE_ENABLED || 'false' }}
@@ -58,12 +61,12 @@ jobs:
           ACUITY_DEFAULT_TYPE_ID: ${{ secrets.ACUITY_DEFAULT_TYPE_ID }}
           ACUITY_TYPE_HYDRATION: ${{ secrets.ACUITY_TYPE_HYDRATION }}
           ACUITY_TYPE_MEMBERSHIP: ${{ secrets.ACUITY_TYPE_MEMBERSHIP }}
-          PASSWORD_RESET_REDIRECT_TO: https://snooches.avalonvitality.co/account/new-password
+          PASSWORD_RESET_REDIRECT_TO: https://www.avalonvitality.co/account/new-password
 
       - name: Hosted admin endpoint smoke
         run: npm run verify:hosted-admin-endpoints
         env:
-          API_BASE_URL: https://snooches.avalonvitality.co
+          API_BASE_URL: https://www.avalonvitality.co
 
       - name: Build
         run: npm run build

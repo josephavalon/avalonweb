@@ -46,7 +46,7 @@ function memoryCheck(key, windowMs, max) {
 // KV-backed limiter — uses INCR + EXPIRE for atomic counting.
 // Upstash/Vercel KV REST: POST to /pipeline with an array of commands.
 // ---------------------------------------------------------------------------
-async function kvCheck(key, windowMs, max) {
+async function kvCheck(key, windowMs, max, { failClosed = false } = {}) {
   const windowSec = Math.ceil(windowMs / 1000);
   try {
     const res = await fetch(`${KV_URL}/pipeline`, {
@@ -71,6 +71,15 @@ async function kvCheck(key, windowMs, max) {
       reset: Date.now() + (pttl > 0 ? pttl : windowMs),
     };
   } catch (err) {
+    if (failClosed) {
+      console.warn('[rate-limit] persistent limiter unavailable', safeLogContext(err, 'rate_limit_kv_unavailable'));
+      return {
+        ok: false,
+        remaining: 0,
+        reset: Date.now() + windowMs,
+        unavailable: true,
+      };
+    }
     // Fail-open to memory — do not block legitimate traffic on KV outage.
     // Vercel's runtime logs pick this up via console.warn without provider
     // messages or request context.
@@ -86,8 +95,16 @@ async function kvCheck(key, windowMs, max) {
  * @param {number}   opts.max        Max requests allowed in the window.
  * @returns {Promise<{ok: boolean, remaining: number, reset: number}>}
  */
-export async function checkRateLimit({ key, windowMs, max }) {
-  if (KV_ENABLED) return kvCheck(key, windowMs, max);
+export async function checkRateLimit({ key, windowMs, max, failClosed = false }) {
+  if (KV_ENABLED) return kvCheck(key, windowMs, max, { failClosed });
+  if (failClosed) {
+    return {
+      ok: false,
+      remaining: 0,
+      reset: Date.now() + windowMs,
+      unavailable: true,
+    };
+  }
   return memoryCheck(key, windowMs, max);
 }
 

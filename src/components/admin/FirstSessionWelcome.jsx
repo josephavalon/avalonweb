@@ -3,12 +3,12 @@ import { UserPlus, CalendarCheck, CreditCard, Settings, Users, BookOpen, ArrowRi
 
 const CARDS_BY_ROLE = {
   admin: [
-    { icon: UserPlus,      title: 'Add your first patient',  copy: 'Capture a patient record while you wait for the first booking to land.',           to: '/admin/bookings' },
+    { icon: UserPlus,      title: 'Open clinical records',   copy: 'Review the connected clinical workspace. Local-only patient intake stays disabled.', to: '/admin/clients' },
     { icon: Users,         title: 'Invite your team',         copy: 'Set up staff and admin teammates so collections and scheduling can run in parallel.', to: '/admin/team' },
-    { icon: Settings,      title: 'Configure integrations',   copy: 'Confirm Stripe, Acuity, and Resend are wired before the first paid visit.',         to: '/admin/credentials' },
+    { icon: Settings,      title: 'Open scheduling',          copy: 'Create and publish credential-gated shifts after the live operations source is ready.', to: '/admin/scheduling' },
   ],
   staff: [
-    { icon: UserPlus,      title: 'Add a patient',            copy: 'Quick-add a patient when ops needs a record before the visit.',                     to: '/admin/bookings' },
+    { icon: UserPlus,      title: 'Open clinical records',    copy: 'Review records from the connected clinical source of truth.',                       to: '/admin/clients' },
     { icon: CalendarCheck, title: 'See today’s bookings',copy: 'Open the live booking queue to see what is ready to collect.',                      to: '/admin/bookings' },
     { icon: CreditCard,    title: 'Open finance view',        copy: 'Run the live finance summary for revenue and balances.',                            to: '/admin/finance' },
   ],

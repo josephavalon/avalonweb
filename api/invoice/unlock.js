@@ -30,12 +30,19 @@ export default async function handler(req, res) {
   }
 
   const ip = clientIp(req);
-  const perIp = await checkRateLimit({ key: `invoice-unlock:${ip}`, ...PER_IP });
+  const failClosed = process.env.VERCEL_ENV === 'production';
+  const perIp = await checkRateLimit({ key: `invoice-unlock:${ip}`, ...PER_IP, failClosed });
+  if (perIp.unavailable) {
+    return res.status(503).json({ error: 'Invoice access is temporarily unavailable.' });
+  }
   if (!perIp.ok) {
     res.setHeader('Retry-After', Math.max(1, Math.ceil((perIp.reset - Date.now()) / 1000)));
     return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
   }
-  const global = await checkRateLimit({ key: 'invoice-unlock:global', ...GLOBAL });
+  const global = await checkRateLimit({ key: 'invoice-unlock:global', ...GLOBAL, failClosed });
+  if (global.unavailable) {
+    return res.status(503).json({ error: 'Invoice access is temporarily unavailable.' });
+  }
   if (!global.ok) {
     res.setHeader('Retry-After', Math.max(1, Math.ceil((global.reset - Date.now()) / 1000)));
     return res.status(429).json({ error: 'Too many attempts. Please try again later.' });

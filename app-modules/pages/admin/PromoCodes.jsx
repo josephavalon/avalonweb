@@ -9,6 +9,8 @@ import {
   Archive, Loader2, Percent, Plus, RefreshCw, Tag, X,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import PageShell from '@/components/admin/PageShell';
 import { Button } from '@/components/ui/button';
 import {
@@ -274,6 +276,7 @@ function CreateDialog({ open, onClose, onDone, onErr }) {
 export default function PromoCodes() {
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -281,10 +284,13 @@ export default function PromoCodes() {
   const [busyId, setBusyId] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setSourceReady(false);
     try {
       const data = await apiGet('/api/admin/promo-codes');
-      setCodes(Array.isArray(data?.codes) ? data.codes : []);
+      assertApiResponse(data, { arrays: ['codes'] }, 'Promotions returned an invalid response.');
+      if (!hasObjectRows(data.codes)) throw invalidApiResponse('Promotions returned invalid records.');
+      setCodes(data.codes);
+      setSourceReady(true);
     } catch (err) {
       setError(err?.message || 'Could not load promo codes.');
     } finally { setLoading(false); }
@@ -322,6 +328,17 @@ export default function PromoCodes() {
     () => 'Stripe is the source of truth. Codes are immediately redeemable at the Stripe checkout discount field.',
     [],
   );
+
+  if (!loading && !sourceReady) {
+    return (
+      <AdminShell title="Promo codes">
+        <OperationalSourceUnavailable
+          title="Promotion source unavailable"
+          description="Active promotion codes could not be verified with Stripe. No empty or sample code list is shown, and creation and archive actions remain disabled until the live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Promo codes">

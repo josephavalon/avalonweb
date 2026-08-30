@@ -76,12 +76,36 @@ create table if not exists public.bd_agent_identities (
   unique (tenant_id, agent_key)
 );
 
-alter table public.bd_companies
-  add constraint bd_companies_created_agent_fk
-  foreign key (tenant_id, created_by_agent_id) references public.bd_agent_identities(tenant_id, id) on delete restrict;
-alter table public.bd_companies
-  add constraint bd_companies_updated_agent_fk
-  foreign key (tenant_id, updated_by_agent_id) references public.bd_agent_identities(tenant_id, id) on delete restrict;
+-- These foreign keys are added after bd_agent_identities exists. Catalog
+-- checks are scoped to both constraint name and owning table so a normal rerun
+-- cannot collide with the named constraints and cannot be fooled by the same
+-- constraint name on another relation.
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.bd_companies'::regclass
+      and conname = 'bd_companies_created_agent_fk'
+  ) then
+    alter table public.bd_companies
+      add constraint bd_companies_created_agent_fk
+      foreign key (tenant_id, created_by_agent_id)
+      references public.bd_agent_identities(tenant_id, id) on delete restrict;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.bd_companies'::regclass
+      and conname = 'bd_companies_updated_agent_fk'
+  ) then
+    alter table public.bd_companies
+      add constraint bd_companies_updated_agent_fk
+      foreign key (tenant_id, updated_by_agent_id)
+      references public.bd_agent_identities(tenant_id, id) on delete restrict;
+  end if;
+end $$;
 
 create table if not exists public.bd_agent_permissions (
   id uuid primary key default gen_random_uuid(),
@@ -517,15 +541,44 @@ create unique index if not exists bd_agent_mutations_request_unique_idx
 alter table public.robbot3k_prospects add column if not exists company_id uuid;
 alter table public.robbot3k_prospects add column if not exists person_id uuid;
 alter table public.robbot3k_prospects add column if not exists opportunity_id uuid;
-alter table public.robbot3k_prospects
-  add constraint robbot3k_prospects_bd_company_fk
-  foreign key (tenant_id, company_id) references public.bd_companies(tenant_id, id) on delete restrict;
-alter table public.robbot3k_prospects
-  add constraint robbot3k_prospects_bd_person_fk
-  foreign key (tenant_id, person_id) references public.bd_people(tenant_id, id) on delete restrict;
-alter table public.robbot3k_prospects
-  add constraint robbot3k_prospects_bd_opportunity_fk
-  foreign key (tenant_id, opportunity_id) references public.bd_opportunities(tenant_id, id) on delete restrict;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.robbot3k_prospects'::regclass
+      and conname = 'robbot3k_prospects_bd_company_fk'
+  ) then
+    alter table public.robbot3k_prospects
+      add constraint robbot3k_prospects_bd_company_fk
+      foreign key (tenant_id, company_id)
+      references public.bd_companies(tenant_id, id) on delete restrict;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.robbot3k_prospects'::regclass
+      and conname = 'robbot3k_prospects_bd_person_fk'
+  ) then
+    alter table public.robbot3k_prospects
+      add constraint robbot3k_prospects_bd_person_fk
+      foreign key (tenant_id, person_id)
+      references public.bd_people(tenant_id, id) on delete restrict;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.robbot3k_prospects'::regclass
+      and conname = 'robbot3k_prospects_bd_opportunity_fk'
+  ) then
+    alter table public.robbot3k_prospects
+      add constraint robbot3k_prospects_bd_opportunity_fk
+      foreign key (tenant_id, opportunity_id)
+      references public.bd_opportunities(tenant_id, id) on delete restrict;
+  end if;
+end $$;
 
 create index if not exists robbot3k_prospects_bd_company_idx
   on public.robbot3k_prospects (tenant_id, company_id) where company_id is not null;

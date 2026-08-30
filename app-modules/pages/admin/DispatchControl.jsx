@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { NURSES, REQUESTS } from '@/fixtures/commandMockData';
 import {
@@ -306,7 +307,7 @@ function SettingsPanel({ tower }) {
   );
 }
 
-export default function DispatchControl() {
+function DispatchControlPreview() {
   const [tower, setTower] = useState(() => buildDispatchControlTower({
     requests: REQUESTS,
     appointments: APPOINTMENTS,
@@ -522,4 +523,11 @@ export default function DispatchControl() {
       </PageShell>
     </AdminShell>
   );
+}
+
+export default function DispatchControl() {
+  if (import.meta.env.PROD) {
+    return <AdminShell title="Dispatch"><OperationalSourceUnavailable title="Dispatch source unavailable" description="No sample shifts, nurse offers, replies, assignments, routes, or dispatch metrics are shown. Dispatch actions remain disabled until live scheduling and credential sources are connected." /></AdminShell>;
+  }
+  return <DispatchControlPreview />;
 }

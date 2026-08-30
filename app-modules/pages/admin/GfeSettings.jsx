@@ -11,7 +11,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2, AlertCircle, CheckCircle2, Stethoscope, Save } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, isResponseObject } from '@/lib/apiResponse';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -55,7 +57,13 @@ export default function GfeSettings() {
     setLoading(true);
     try {
       const data = await apiGet('/api/admin/gfe/settings');
-      setSettings(data?.settings || null);
+      assertApiResponse(data, {
+        objects: ['settings'],
+        booleans: ['settings.mobile', 'settings.plan', 'settings.events'],
+        arrays: ['settings.examIds'],
+        numbers: ['settings.clinicId'],
+      }, 'GFE returned an invalid settings response.');
+      setSettings(data.settings);
     } catch {
       setResult({ tone: 'error', message: 'Could not load GFE settings.' });
     } finally {
@@ -70,7 +78,7 @@ export default function GfeSettings() {
     setResult(null);
     try {
       const data = await apiPost('/api/admin/gfe/settings', next);
-      if (data?.ok) {
+      if (data?.ok === true && isResponseObject(data.settings)) {
         setSettings(data.settings);
         setResult({ tone: 'success', message: 'Saved.' });
       } else {
@@ -142,9 +150,10 @@ export default function GfeSettings() {
               </div>
             </>
           ) : (
-            <div className="rounded-2xl px-4 py-10 text-center" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-              <p className="font-body text-sm" style={{ color: MUTED }}>Could not load settings.</p>
-            </div>
+            <OperationalSourceUnavailable
+              title="GFE source unavailable"
+              description="GFE policy settings could not be verified. No default policy state is shown, and policy changes remain disabled until the live source reconnects."
+            />
           )}
         </div>
       </div>

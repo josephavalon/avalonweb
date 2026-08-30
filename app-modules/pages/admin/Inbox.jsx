@@ -11,7 +11,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Send, Loader2, RefreshCw, MessageSquare, Mail, ArrowLeft, Inbox as InboxIcon } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse, isResponseObject } from '@/lib/apiResponse';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -86,6 +88,7 @@ function Bubble({ msg }) {
 export function InboxPanel() {
   const [threads, setThreads] = useState([]);
   const [loadingThreads, setLoadingThreads] = useState(true);
+  const [threadsReady, setThreadsReady] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [activeThread, setActiveThread] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -98,8 +101,13 @@ export function InboxPanel() {
   const loadThreads = useCallback(async () => {
     try {
       const data = await apiGet('/api/admin/communications/threads');
-      setThreads(Array.isArray(data?.threads) ? data.threads : []);
+      assertApiResponse(data, { arrays: ['threads'] }, 'Inbox returned an invalid thread response.');
+      if (!hasObjectRows(data.threads)) throw invalidApiResponse('Inbox returned invalid thread records.');
+      setThreads(data.threads);
+      setThreadsReady(true);
     } catch {
+      setThreads([]);
+      setThreadsReady(false);
       setError('Could not load conversations.');
     } finally {
       setLoadingThreads(false);
@@ -110,9 +118,15 @@ export function InboxPanel() {
     if (!id) return;
     try {
       const data = await apiGet(`/api/admin/communications/thread?threadId=${encodeURIComponent(id)}`);
-      setActiveThread(data?.thread || null);
-      setMessages(Array.isArray(data?.messages) ? data.messages : []);
+      assertApiResponse(data, { arrays: ['messages'], objects: ['thread'] }, 'Inbox returned an invalid conversation response.');
+      if (!hasObjectRows(data.messages) || !isResponseObject(data.thread) || !data.thread.id) {
+        throw invalidApiResponse('Inbox returned invalid conversation records.');
+      }
+      setActiveThread(data.thread);
+      setMessages(data.messages);
     } catch {
+      setActiveThread(null);
+      setMessages([]);
       setError('Could not load this conversation.');
     }
   }, []);
@@ -167,6 +181,15 @@ export function InboxPanel() {
   }, [reply, activeThread, sending, loadThread, loadThreads]);
 
   const isEmail = activeThread?.channel === 'email';
+
+  if (!loadingThreads && !threadsReady) {
+    return (
+      <OperationalSourceUnavailable
+        title="Inbox source unavailable"
+        description="Conversation threads and unread status could not be verified. No empty or sample inbox is shown, and reply actions remain disabled until the live communications source reconnects."
+      />
+    );
+  }
 
   return (
       <div className="flex h-[74vh] min-h-0 overflow-hidden rounded-2xl border" style={{ background: BG, color: TEXT, borderColor: BORDER }}>

@@ -17,9 +17,9 @@ import {
   DollarSign,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import PageShell from '@/components/admin/PageShell';
 import { REQUESTS } from '@/fixtures/commandMockData';
-import { SEED_ITEMS } from '@/data/inventorySeed';
 import {
   ACUITY_BOUNDARY_ITEMS,
   ACUITY_OPERATING_CONTRACT,
@@ -311,7 +311,7 @@ function CloseoutDock({ dock, onSweep }) {
   );
 }
 
-export default function AcuityControl() {
+function AcuityControlPreview() {
   const [state, setState] = useState(() => buildAcuityControlTower(REQUESTS));
   const [dock, setDock] = useState(() => buildVisitCloseoutDock());
   const [note, setNote] = useState('');
@@ -353,7 +353,7 @@ export default function AcuityControl() {
   };
 
   const handleCloseoutSweep = () => {
-    const result = runVisitCloseoutSweep({ inventory: SEED_ITEMS });
+    const result = runVisitCloseoutSweep({ inventory: [] });
     setDock(result.dock);
     setState(buildAcuityControlTower(REQUESTS));
     setNote(`Closeout proof queued ${result.actions.length}`);
@@ -480,4 +480,18 @@ export default function AcuityControl() {
       </PageShell>
     </AdminShell>
   );
+}
+
+export default function AcuityControl() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminShell title="Acuity">
+        <OperationalSourceUnavailable
+          title="Acuity source unavailable"
+          description="No simulated visits, patients, handoffs, inventory, or completion metrics are shown in production. Controls remain disabled until the live Acuity integration is connected."
+        />
+      </AdminShell>
+    );
+  }
+  return <AcuityControlPreview />;
 }

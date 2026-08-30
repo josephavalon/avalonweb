@@ -10,7 +10,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save, MessageSquare, BellRing } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -348,7 +350,9 @@ export default function LiveAdminBookings() {
     setState((s) => ({ ...s, loading: true, error: '' }));
     try {
       const data = await apiGet('/api/admin/bookings');
-      setState({ loading: false, error: '', bookings: Array.isArray(data?.bookings) ? data.bookings : [] });
+      assertApiResponse(data, { arrays: ['bookings'] }, 'Bookings returned an invalid response.');
+      if (!hasObjectRows(data.bookings)) throw invalidApiResponse('Bookings returned invalid records.');
+      setState({ loading: false, error: '', bookings: data.bookings });
     } catch (err) {
       setState({ loading: false, error: 'Could not load bookings.', bookings: [] });
     }
@@ -462,6 +466,17 @@ export default function LiveAdminBookings() {
 
   const { loading, error, bookings } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
+
+  if (!loading && error) {
+    return (
+      <AdminShell title="Live Bookings">
+        <OperationalSourceUnavailable
+          title="Booking source unavailable"
+          description="Bookings and balances could not be verified. No zeroed or sample booking totals are shown, and payment, messaging, editing, and deletion actions remain disabled until the live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Live Bookings">

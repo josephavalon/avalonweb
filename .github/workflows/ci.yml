@@ -47,6 +47,9 @@ jobs:
       - name: Avalon OS environment isolation contract
         run: npm run test:os-env
 
+      - name: Admin release contracts
+        run: npm run verify:admin-release
+
       - name: Build
         run: npm run build
         env:

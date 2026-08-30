@@ -5,6 +5,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, CheckCircle2, RotateCcw, X, Mail } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import PageShell from '@/components/admin/PageShell';
 import { Button } from '@/components/ui/button';
 import {
@@ -195,23 +197,29 @@ export default function SupportTickets() {
   const [rows, setRows] = useState([]);
   const [openCount, setOpenCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [tableMissing, setTableMissing] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [target, setTarget] = useState(null); // { row, action }
 
   const load = useCallback(async (which) => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setSourceReady(false);
     try {
       const data = await apiGet(`/api/admin/support-tickets?status=${which}`);
-      setRows(data?.tickets || []);
-      setTableMissing(data?.tablePresent === false);
+      assertApiResponse(data, { arrays: ['tickets'], booleans: ['tablePresent'] }, 'Support returned an invalid response.');
+      if (!hasObjectRows(data.tickets)) throw invalidApiResponse('Support returned invalid ticket records.');
+      setRows(data.tickets);
+      setTableMissing(!data.tablePresent);
+      setSourceReady(data.tablePresent);
       if (which === 'open') {
-        setOpenCount((data?.tickets || []).length);
+        setOpenCount(data.tickets.length);
       } else {
         try {
           const openData = await apiGet('/api/admin/support-tickets?status=open');
-          setOpenCount((openData?.tickets || []).length);
+          assertApiResponse(openData, { arrays: ['tickets'], booleans: ['tablePresent'] }, 'Support returned an invalid count response.');
+          if (!hasObjectRows(openData.tickets)) throw invalidApiResponse('Support returned invalid count records.');
+          setOpenCount(openData.tickets.length);
         } catch { /* badge is cosmetic */ }
       }
     } catch (err) {
@@ -238,6 +246,17 @@ export default function SupportTickets() {
   }, [load, tab]);
 
   const empty = useMemo(() => !loading && rows.length === 0, [loading, rows]);
+
+  if (!loading && (!sourceReady || tableMissing)) {
+    return (
+      <AdminShell title="Support tickets">
+        <OperationalSourceUnavailable
+          title="Support source unavailable"
+          description="Support tickets and their status could not be verified. No clear queue or sample tickets are shown, and resolution actions remain disabled until the secure live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Support tickets">

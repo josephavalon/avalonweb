@@ -77,4 +77,14 @@ for (const field of ['role', 'status', 'tenant_id', 'must_change_password']) {
 assert.match(migration, /raise exception 'Profile authority fields cannot be changed/);
 assert.match(migration, /clear_own_password_rotation_flag/);
 
+const serverAuth = fs.readFileSync(new URL('../api/_lib/supabase-auth.js', import.meta.url), 'utf8');
+assert.match(serverAuth, /\.insert\(row\)/,
+  'first-touch profile bootstrap must be insert-only');
+assert.doesNotMatch(serverAuth, /\.upsert\(row/,
+  'first-touch auth must never overwrite role, status, or tenant');
+assert.match(serverAuth, /if \(profileError\)[\s\S]*?return null;/,
+  'profile lookup errors must fail authentication closed');
+assert.match(serverAuth, /error\?\.code === '23505'[\s\S]*?\.select\('role, tenant_id, status'\)/,
+  'a concurrent profile insert must resolve by reading the authoritative row');
+
 console.log('Admin cross-portal QA passed: New Customer, Returning, Admin, and Nurse.');

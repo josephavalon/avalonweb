@@ -55,14 +55,32 @@ create table if not exists public.nurse_invoices (
   updated_at timestamptz not null default now(),
   check (period_end >= period_start),
   check (total_cents = wages_cents + reimbursements_cents),
+  constraint nurse_invoices_tenant_id_id_key unique (tenant_id, id),
   unique (tenant_id, submission_id),
   unique (tenant_id, invoice_number)
 );
 
+-- Composite parent identity is required so every child relationship can prove
+-- that its invoice belongs to the same tenant. The catalog guard also upgrades
+-- a schema created by an earlier draft of this migration without failing on a
+-- normal rerun.
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.nurse_invoices'::regclass
+      and conname = 'nurse_invoices_tenant_id_id_key'
+  ) then
+    alter table public.nurse_invoices
+      add constraint nurse_invoices_tenant_id_id_key unique (tenant_id, id);
+  end if;
+end $$;
+
 create table if not exists public.nurse_invoice_lines (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  invoice_id uuid not null references public.nurse_invoices(id) on delete cascade,
+  invoice_id uuid not null,
   line_type text not null check (line_type in ('shift', 'expense')),
   service_code text,
   service_date date,
@@ -73,13 +91,16 @@ create table if not exists public.nurse_invoice_lines (
   pricing_snapshot jsonb not null default '{}'::jsonb,
   sort_order integer not null check (sort_order >= 0),
   created_at timestamptz not null default now(),
-  unique (invoice_id, sort_order)
+  unique (invoice_id, sort_order),
+  constraint nurse_invoice_lines_invoice_tenant_fk
+    foreign key (tenant_id, invoice_id)
+    references public.nurse_invoices(tenant_id, id) on delete cascade
 );
 
 create table if not exists public.nurse_invoice_receipts (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  invoice_id uuid not null references public.nurse_invoices(id) on delete cascade,
+  invoice_id uuid not null,
   receipt_index integer not null check (receipt_index >= 0 and receipt_index < 20),
   storage_path text not null,
   file_name text not null,
@@ -93,8 +114,51 @@ create table if not exists public.nurse_invoice_receipts (
   scanner_reference text,
   created_at timestamptz not null default now(),
   unique (invoice_id, receipt_index),
-  unique (tenant_id, storage_path)
+  unique (tenant_id, storage_path),
+  constraint nurse_invoice_receipts_invoice_tenant_fk
+    foreign key (tenant_id, invoice_id)
+    references public.nurse_invoices(tenant_id, id) on delete cascade
 );
+
+-- Existing installations may already have the original invoice_id-only
+-- foreign keys. Keep those harmless constraints in place and add the stronger
+-- tenant-aware relationships. NOT VALID minimizes the initial lock; the
+-- immediate validation fails closed if historical rows cross tenant bounds.
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.nurse_invoice_lines'::regclass
+      and conname = 'nurse_invoice_lines_invoice_tenant_fk'
+  ) then
+    alter table public.nurse_invoice_lines
+      add constraint nurse_invoice_lines_invoice_tenant_fk
+      foreign key (tenant_id, invoice_id)
+      references public.nurse_invoices(tenant_id, id)
+      on delete cascade
+      not valid;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.nurse_invoice_receipts'::regclass
+      and conname = 'nurse_invoice_receipts_invoice_tenant_fk'
+  ) then
+    alter table public.nurse_invoice_receipts
+      add constraint nurse_invoice_receipts_invoice_tenant_fk
+      foreign key (tenant_id, invoice_id)
+      references public.nurse_invoices(tenant_id, id)
+      on delete cascade
+      not valid;
+  end if;
+end $$;
+
+alter table public.nurse_invoice_lines
+  validate constraint nurse_invoice_lines_invoice_tenant_fk;
+alter table public.nurse_invoice_receipts
+  validate constraint nurse_invoice_receipts_invoice_tenant_fk;
 
 create index if not exists nurse_invoices_review_queue_idx
   on public.nurse_invoices (tenant_id, status, submitted_at desc);
@@ -134,15 +198,38 @@ drop policy if exists "nurse invoice receipts admin read" on public.nurse_invoic
 create table if not exists public.nurse_invoice_status_events (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  invoice_id uuid not null references public.nurse_invoices(id) on delete cascade,
+  invoice_id uuid not null,
   from_status text,
   to_status text not null,
   invoice_version integer not null,
   actor_profile_id uuid references public.profiles(id) on delete set null,
   review_note text,
   payment_reference text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint nurse_invoice_status_events_invoice_tenant_fk
+    foreign key (tenant_id, invoice_id)
+    references public.nurse_invoices(tenant_id, id) on delete cascade
 );
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.nurse_invoice_status_events'::regclass
+      and conname = 'nurse_invoice_status_events_invoice_tenant_fk'
+  ) then
+    alter table public.nurse_invoice_status_events
+      add constraint nurse_invoice_status_events_invoice_tenant_fk
+      foreign key (tenant_id, invoice_id)
+      references public.nurse_invoices(tenant_id, id)
+      on delete cascade
+      not valid;
+  end if;
+end $$;
+
+alter table public.nurse_invoice_status_events
+  validate constraint nurse_invoice_status_events_invoice_tenant_fk;
 
 create index if not exists nurse_invoice_status_events_invoice_idx
   on public.nurse_invoice_status_events (tenant_id, invoice_id, created_at desc);

@@ -87,7 +87,18 @@ export async function authedFetch(path, options = {}, _retried = false) {
 
   const text = await res.text();
   let body = null;
-  try { body = text ? JSON.parse(text) : null; } catch { body = { error: text }; }
+  let invalidJson = false;
+  try { body = text ? JSON.parse(text) : null; } catch { invalidJson = true; }
+
+  // Every endpoint consumed by this client has a JSON contract. A proxy,
+  // rewrite, or local server can otherwise answer 200 with HTML/JavaScript and
+  // pages may mistake the missing fields for a verified empty queue.
+  if (res.ok && invalidJson) {
+    const err = new Error('The connected service returned an invalid response.');
+    err.status = 502;
+    err.body = { code: 'invalid_api_response' };
+    throw err;
+  }
 
   if (!res.ok) {
     const message = typeof body?.error === 'string' ? body.error : body?.error?.message;

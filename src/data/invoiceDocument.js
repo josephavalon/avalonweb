@@ -24,7 +24,6 @@ export function escapeHtml(str = '') {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
-
 const MONO = "font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;";
 const CELL = 'padding: 6px 10px; border-bottom: 1px solid #e6e0d6; font-size: 13px;';
 const NUM = `${CELL} ${MONO} text-align: right; white-space: nowrap;`;
@@ -37,6 +36,7 @@ export function buildInvoiceDocumentHtml({
   computed,
   submittedAt,
   receiptCount = 0,
+  receiptsStoredPrivately = false,
 }) {
   const shiftRows = computed.shiftLines
     .map(
@@ -116,7 +116,9 @@ export function buildInvoiceDocumentHtml({
     </table>
 
     ${receiptCount ? `<p style="${MONO} font-size: 12px; color: #2b211b; margin: 0 0 16px;">
-      ${receiptCount} receipt${receiptCount === 1 ? '' : 's'} attached to this email.
+      ${receiptCount} receipt${receiptCount === 1 ? '' : 's'} ${receiptsStoredPrivately
+        ? 'stored privately in Avalon Finance and quarantined pending an approved file scan; files are not attached to this email.'
+        : 'included with this invoice.'}
     </p>` : ''}
 
     <p style="font-size: 11px; color: #6e6258; line-height: 1.6; margin-top: 24px; border-top: 1px solid #d9d2c8; padding-top: 12px;">

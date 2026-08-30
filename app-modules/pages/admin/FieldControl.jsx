@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { REQUESTS } from '@/fixtures/commandMockData';
 import {
@@ -280,7 +281,7 @@ function ProofPanel({ tower }) {
   );
 }
 
-export default function FieldControl() {
+function FieldControlPreview() {
   const [tower, setTower] = useState(() => buildFieldVisitControlTower({
     requests: REQUESTS,
     appointments: APPOINTMENTS,
@@ -476,4 +477,11 @@ export default function FieldControl() {
       </PageShell>
     </AdminShell>
   );
+}
+
+export default function FieldControl() {
+  if (import.meta.env.PROD) {
+    return <AdminShell title="Field"><OperationalSourceUnavailable title="Field source unavailable" description="No sample visits, patient locations, field messages, incidents, or closeout records are shown. Field actions remain disabled until the live visit source is connected." /></AdminShell>;
+  }
+  return <FieldControlPreview />;
 }

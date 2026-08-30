@@ -20,7 +20,6 @@ import {
   List,
   ListTodo,
   MessageSquare,
-  Phone,
   Plus,
   Search,
   Sparkles,
@@ -29,7 +28,9 @@ import {
   X,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPatch, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 
 const PIPELINE_STAGES = [
   'New',
@@ -51,143 +52,6 @@ const BD_NAV = [
   { id: 'people', label: 'People', icon: ContactRound, to: '/admin/bd/people' },
   { id: 'tasks', label: 'Tasks', icon: ListTodo, to: '/admin/bd/tasks' },
   { id: 'rob-bot', label: 'Rob Bot', icon: Bot, to: '/admin/robbot3k' },
-];
-
-const COMPANIES = [
-  {
-    id: 'company-empire',
-    name: 'Empire Artist Group',
-    type: 'Record Label',
-    location: 'San Francisco, CA',
-    owner: 'Rob',
-    stage: 'Discovery',
-    openValue: 60000,
-    fitScore: 94,
-    lastTouch: '2h ago',
-    nextAction: 'Send activation plan',
-    nextActionDate: 'Today',
-    primaryContact: 'Maya Chen',
-    description: 'Independent music company exploring quarterly artist wellness and travel support.',
-    source: 'Founder referral',
-    tags: ['Artists', 'Warm'],
-  },
-  {
-    id: 'company-civic',
-    name: 'Civic Health Collective',
-    type: 'Corporate',
-    location: 'San Francisco, CA',
-    owner: 'Rob',
-    stage: 'Engaged',
-    openValue: 32000,
-    fitScore: 91,
-    lastTouch: 'Yesterday',
-    nextAction: 'Review reply',
-    nextActionDate: 'Today',
-    primaryContact: 'Eli Thompson',
-    description: 'AI health company evaluating an on-site recovery benefit for its San Francisco team.',
-    source: 'Rob Bot discovery',
-    tags: ['AI', 'Employer'],
-  },
-  {
-    id: 'company-harbor',
-    name: 'Harbor House Hotels',
-    type: 'Hotel',
-    location: 'San Francisco, CA',
-    owner: 'Joseph',
-    stage: 'Proposal',
-    openValue: 48000,
-    fitScore: 88,
-    lastTouch: '3d ago',
-    nextAction: 'Confirm pilot scope',
-    nextActionDate: 'Tomorrow',
-    primaryContact: 'Nina Patel',
-    description: 'Boutique hospitality group interested in concierge wellness for premium guests.',
-    source: 'Partner introduction',
-    tags: ['Hospitality', 'Pilot'],
-  },
-  {
-    id: 'company-fog-city',
-    name: 'Fog City Fitness',
-    type: 'Fitness',
-    location: 'San Francisco, CA',
-    owner: 'Rob',
-    stage: 'Contacted',
-    openValue: 18000,
-    fitScore: 82,
-    lastTouch: '5d ago',
-    nextAction: 'Follow up',
-    nextActionDate: 'Today',
-    primaryContact: 'Marcus Reed',
-    description: 'Premium training club with a strong executive and endurance membership base.',
-    source: 'Bay Area Atlas',
-    tags: ['Fitness'],
-  },
-  {
-    id: 'company-summit',
-    name: 'Summit Live',
-    type: 'Festival',
-    location: 'Oakland, CA',
-    owner: 'Joseph',
-    stage: 'Researching',
-    openValue: 75000,
-    fitScore: 86,
-    lastTouch: 'Not contacted',
-    nextAction: 'Map buyer',
-    nextActionDate: 'Aug 31',
-    primaryContact: 'Unconfirmed',
-    description: 'Regional event producer with multiple fall music properties.',
-    source: 'Bay Area Atlas',
-    tags: ['Events', 'Research'],
-  },
-  {
-    id: 'company-northstar',
-    name: 'Northstar Robotics',
-    type: 'Corporate',
-    location: 'San Francisco, CA',
-    owner: 'Rob',
-    stage: 'New',
-    openValue: 24000,
-    fitScore: 79,
-    lastTouch: 'Not contacted',
-    nextAction: 'Verify contact',
-    nextActionDate: 'Sep 1',
-    primaryContact: 'Alex Rivera',
-    description: 'Robotics employer with an active workplace experience program.',
-    source: 'Rob Bot discovery',
-    tags: ['Employer', 'New'],
-  },
-];
-
-const PEOPLE = [
-  { id: 'person-maya', name: 'Maya Chen', companyId: 'company-empire', company: 'Empire Artist Group', title: 'VP, Artist Relations', relationship: 'Warm', decisionMaker: true, owner: 'Rob', lastContact: '2h ago', nextAction: 'Send activation plan', email: 'maya@example.com', phone: '+1 (415) 555-0148', location: 'San Francisco, CA', notes: 'Primary buyer. Values discreet, tour-ready service.' },
-  { id: 'person-eli', name: 'Eli Thompson', companyId: 'company-civic', company: 'Civic Health Collective', title: 'Chief People Officer', relationship: 'Engaged', decisionMaker: true, owner: 'Rob', lastContact: 'Yesterday', nextAction: 'Review reply', email: 'eli@example.com', phone: '+1 (415) 555-0112', location: 'San Francisco, CA', notes: 'Asked for a pilot outline for 80 local employees.' },
-  { id: 'person-nina', name: 'Nina Patel', companyId: 'company-harbor', company: 'Harbor House Hotels', title: 'VP, Guest Experience', relationship: 'Warm', decisionMaker: true, owner: 'Joseph', lastContact: '3d ago', nextAction: 'Confirm pilot scope', email: 'nina@example.com', phone: '+1 (415) 555-0172', location: 'San Francisco, CA', notes: 'Wants a premium, low-friction guest experience.' },
-  { id: 'person-marcus', name: 'Marcus Reed', companyId: 'company-fog-city', company: 'Fog City Fitness', title: 'Founder', relationship: 'New', decisionMaker: true, owner: 'Rob', lastContact: '5d ago', nextAction: 'Follow up', email: 'marcus@example.com', phone: '+1 (415) 555-0125', location: 'San Francisco, CA', notes: 'Warm signal through an Avalon member.' },
-  { id: 'person-alex', name: 'Alex Rivera', companyId: 'company-northstar', company: 'Northstar Robotics', title: 'Workplace Experience', relationship: 'Unverified', decisionMaker: false, owner: 'Rob', lastContact: 'Not contacted', nextAction: 'Verify contact', email: 'alex@example.com', phone: '', location: 'San Francisco, CA', notes: 'Publicly listed role. Email still requires verification.' },
-];
-
-const OPPORTUNITIES = [
-  { id: 'opp-empire', name: 'Quarterly artist wellness', companyId: 'company-empire', company: 'Empire Artist Group', contacts: ['person-maya'], owner: 'Rob', type: 'Artist Wellness', stage: 'Discovery', value: 60000, probability: 45, fitScore: 94, priority: 'High', nextAction: 'Send activation plan', nextActionDate: 'Today', source: 'Founder referral' },
-  { id: 'opp-civic', name: 'SF employee recovery pilot', companyId: 'company-civic', company: 'Civic Health Collective', contacts: ['person-eli'], owner: 'Rob', type: 'Employee Wellness', stage: 'Engaged', value: 32000, probability: 35, fitScore: 91, priority: 'High', nextAction: 'Review reply', nextActionDate: 'Today', source: 'Rob Bot discovery' },
-  { id: 'opp-harbor', name: 'Concierge wellness pilot', companyId: 'company-harbor', company: 'Harbor House Hotels', contacts: ['person-nina'], owner: 'Joseph', type: 'Hospitality Partnership', stage: 'Proposal', value: 48000, probability: 65, fitScore: 88, priority: 'High', nextAction: 'Confirm pilot scope', nextActionDate: 'Tomorrow', source: 'Partner introduction' },
-  { id: 'opp-fog-city', name: 'Member recovery series', companyId: 'company-fog-city', company: 'Fog City Fitness', contacts: ['person-marcus'], owner: 'Rob', type: 'Strategic Partnership', stage: 'Contacted', value: 18000, probability: 20, fitScore: 82, priority: 'Medium', nextAction: 'Follow up', nextActionDate: 'Today', source: 'Bay Area Atlas' },
-  { id: 'opp-summit', name: 'Fall festival wellness', companyId: 'company-summit', company: 'Summit Live', contacts: [], owner: 'Joseph', type: 'Event Wellness', stage: 'Researching', value: 75000, probability: 15, fitScore: 86, priority: 'High', nextAction: 'Map buyer', nextActionDate: 'Aug 31', source: 'Bay Area Atlas' },
-  { id: 'opp-northstar', name: 'Workplace recovery day', companyId: 'company-northstar', company: 'Northstar Robotics', contacts: ['person-alex'], owner: 'Rob', type: 'Corporate Wellness', stage: 'New', value: 24000, probability: 10, fitScore: 79, priority: 'Medium', nextAction: 'Verify contact', nextActionDate: 'Sep 1', source: 'Rob Bot discovery' },
-];
-
-const TASKS = [
-  { id: 'task-1', title: 'Send sample activation plan', company: 'Empire Artist Group', opportunity: 'Quarterly artist wellness', owner: 'Rob', due: 'Today, 2:00 PM', priority: 'High', status: 'open', source: 'Call follow-up', createdBy: 'Rob' },
-  { id: 'task-2', title: 'Respond to employee pilot question', company: 'Civic Health Collective', opportunity: 'SF employee recovery pilot', owner: 'Rob', due: 'Today, 4:00 PM', priority: 'High', status: 'open', source: 'Reply detected', createdBy: 'Rob Bot 3000' },
-  { id: 'task-3', title: 'Follow up with Marcus', company: 'Fog City Fitness', opportunity: 'Member recovery series', owner: 'Rob', due: 'Today, 5:00 PM', priority: 'Medium', status: 'open', source: 'Sequence due', createdBy: 'Rob Bot 3000' },
-  { id: 'task-4', title: 'Confirm pilot locations', company: 'Harbor House Hotels', opportunity: 'Concierge wellness pilot', owner: 'Joseph', due: 'Tomorrow', priority: 'Medium', status: 'open', source: 'Manual', createdBy: 'Joseph' },
-  { id: 'task-5', title: 'Identify Summit Live buyer', company: 'Summit Live', opportunity: 'Fall festival wellness', owner: 'Joseph', due: 'Aug 31', priority: 'Medium', status: 'open', source: 'Research recommendation', createdBy: 'Rob Bot 3000' },
-];
-
-const ACTIVITIES = [
-  { id: 'activity-1', time: '10:42 AM', type: 'Call', title: 'Discovery call completed', detail: 'Maya confirmed interest in quarterly artist wellness activations.', actor: 'Rob', record: 'Empire Artist Group' },
-  { id: 'activity-2', time: '9:18 AM', type: 'Rob Bot Action', title: 'Reply classified', detail: 'Positive reply detected. Automated follow-up stopped for human review.', actor: 'Rob Bot 3000', record: 'Civic Health Collective' },
-  { id: 'activity-3', time: '8:54 AM', type: 'Research', title: 'Opportunity enriched', detail: 'Official event schedule and organizer details added with 86% confidence.', actor: 'Rob Bot 3000', record: 'Summit Live' },
-  { id: 'activity-4', time: 'Yesterday', type: 'Proposal', title: 'Pilot proposal shared', detail: 'Guest recovery pilot scoped for two San Francisco properties.', actor: 'Joseph', record: 'Harbor House Hotels' },
 ];
 
 const VIEW_COPY = {
@@ -450,7 +314,7 @@ function IconButton({ label, children, onClick, className = '' }) {
 function SourceNotice({ status }) {
   if (status === 'live') return <Pill tone="green" icon={CheckCircle2}>CRM connected</Pill>;
   if (status === 'checking') return <Pill icon={Circle}>Checking CRM</Pill>;
-  return <Pill tone="amber" icon={AlertCircle}>Preview data · not synced</Pill>;
+  return <Pill tone="amber" icon={AlertCircle}>CRM unavailable</Pill>;
 }
 
 function WorkspaceNav({ active }) {
@@ -473,29 +337,6 @@ function WorkspaceNav({ active }) {
         );
       })}
     </nav>
-  );
-}
-
-function MetricStrip({ opportunities }) {
-  const open = opportunities.filter((item) => !['Won', 'Lost'].includes(item.stage));
-  const data = [
-    { label: 'Open pipeline', value: money(open.reduce((sum, item) => sum + item.value, 0), true), note: `${open.length} opportunities` },
-    { label: 'Priority opportunities', value: open.filter((item) => item.priority === 'High').length, note: '3 need action' },
-    { label: 'Calls this week', value: 3, note: '1 awaiting confirmation' },
-    { label: 'Actions due today', value: 4, note: '1 overdue' },
-  ];
-  return (
-    <div className="grid divide-y divide-stone-200 border-y border-stone-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
-      {data.map((item) => (
-        <div key={item.label} className="px-1 py-4 sm:px-5 first:pl-1">
-          <p className="text-[11px] font-medium text-stone-500">{item.label}</p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-[24px] font-semibold tracking-[-0.04em] text-stone-950">{item.value}</span>
-            <span className="text-[10px] text-stone-400">{item.note}</span>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -535,110 +376,6 @@ function AttentionRow({ icon: Icon, tone, title, meta, action, onOpen }) {
       <span className="shrink-0 text-[11px] font-medium text-stone-400 transition group-hover:text-stone-900">{action}</span>
       <ChevronRight className="h-3.5 w-3.5 shrink-0 text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-stone-600" />
     </button>
-  );
-}
-
-function HomeView({ opportunities, activities, onOpen, onNavigate }) {
-  return (
-    <div className="space-y-7">
-      <MetricStrip opportunities={opportunities} />
-
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-        <section>
-          <SectionHeader title="Needs attention" meta="4 today" action="View tasks" onAction={() => onNavigate('/admin/bd/tasks')} />
-          <div>
-            <AttentionRow icon={MessageSquare} tone="blue" title="Civic Health Collective replied" meta="Eli asked whether Avalon can support 80 employees on site." action="Review" onOpen={() => onOpen({ type: 'company', id: 'company-civic' })} />
-            <AttentionRow icon={Phone} tone="violet" title="Empire follow-up due after discovery" meta="Send the sample activation plan by 2:00 PM." action="Open" onOpen={() => onOpen({ type: 'company', id: 'company-empire' })} />
-            <AttentionRow icon={Clock3} tone="amber" title="Fog City follow-up is due" meta="No reply after the first approved outreach touch." action="Review" onOpen={() => onOpen({ type: 'company', id: 'company-fog-city' })} />
-            <AttentionRow icon={Sparkles} tone="stone" title="7 Rob Bot recommendations await approval" meta="Every record includes evidence, fit rationale, and exact outreach copy." action="Review queue" onOpen={() => onNavigate('/admin/robbot3k')} />
-          </div>
-        </section>
-
-        <section>
-          <SectionHeader title="Upcoming Rob calls" meta="This week" action="Open pipeline" onAction={() => onNavigate('/admin/bd/pipeline')} />
-          <div className="space-y-0">
-            {[
-              { day: '30', month: 'AUG', title: 'Harbor House Hotels', time: '11:00 AM · Nina Patel' },
-              { day: '01', month: 'SEP', title: 'Civic Health Collective', time: '2:30 PM · Eli Thompson' },
-              { day: '03', month: 'SEP', title: 'Empire Artist Group', time: '10:00 AM · Maya Chen' },
-            ].map((item) => (
-              <div key={`${item.day}-${item.title}`} className="flex items-center gap-3 border-b border-stone-100 py-3 last:border-b-0">
-                <span className="w-9 shrink-0 text-center">
-                  <span className="block text-[9px] font-semibold tracking-[0.12em] text-stone-400">{item.month}</span>
-                  <span className="block text-[16px] font-semibold text-stone-900">{item.day}</span>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] font-medium text-stone-900">{item.title}</span>
-                  <span className="block truncate text-[10px] text-stone-500">{item.time}</span>
-                </span>
-                <ArrowUpRight className="h-3.5 w-3.5 text-stone-300" />
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-        <section>
-          <SectionHeader title="Priority opportunities" meta="Sorted by next action" action="View pipeline" onAction={() => onNavigate('/admin/bd/pipeline')} />
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px] border-collapse text-left">
-              <thead>
-                <tr className="text-[10px] font-medium uppercase tracking-[0.08em] text-stone-400">
-                  <th className="py-3 pr-4">Opportunity</th>
-                  <th className="px-4 py-3">Stage</th>
-                  <th className="px-4 py-3">Value</th>
-                  <th className="px-4 py-3">Fit</th>
-                  <th className="py-3 pl-4">Next action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {opportunities.filter((item) => item.priority === 'High').slice(0, 4).map((opportunity) => (
-                  <tr key={opportunity.id} onClick={() => onOpen({ type: 'opportunity', id: opportunity.id })} className="cursor-pointer border-t border-stone-100 text-[12px] transition hover:bg-stone-50/80">
-                    <td className="py-3 pr-4">
-                      <span className="block font-medium text-stone-900">{opportunity.name}</span>
-                      <span className="block text-[10px] text-stone-500">{opportunity.company}</span>
-                    </td>
-                    <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-[10px] font-medium ring-1 ring-inset ${toneForStage(opportunity.stage)}`}>{opportunity.stage}</span></td>
-                    <td className="px-4 py-3 font-medium text-stone-800">{money(opportunity.value)}</td>
-                    <td className="px-4 py-3"><span className="font-semibold text-stone-800">{opportunity.fitScore}</span><span className="text-stone-400">/100</span></td>
-                    <td className="py-3 pl-4"><span className="block text-stone-700">{opportunity.nextAction}</span><span className="block text-[10px] text-stone-400">{opportunity.nextActionDate}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section>
-          <SectionHeader title="Recent activity" meta="Human + agent" />
-          <div className="pt-1">
-            {activities.slice(0, 4).map((activity) => (
-              <div key={activity.id} className="relative flex gap-3 py-3 before:absolute before:bottom-0 before:left-[5px] before:top-6 before:w-px before:bg-stone-200 last:before:hidden">
-                <span className="relative z-10 mt-1 h-[11px] w-[11px] shrink-0 rounded-full border-2 border-white bg-stone-300 ring-1 ring-stone-200" />
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-stone-900">{activity.title}</p>
-                  <p className="mt-0.5 text-[10px] leading-4 text-stone-500">{activity.record} · {activity.actor}</p>
-                  <p className="mt-1 text-[10px] text-stone-400">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <div className="border-y border-stone-200 py-4">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-3 text-[11px] text-stone-500">
-          <span className="font-semibold text-stone-900">Avalon BD loop</span>
-          {['Discover', 'Research', 'CRM', 'Outreach', 'Rob Call', 'CRM', 'Follow-up', 'Proposal', 'Close'].map((item, index) => (
-            <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
-              {index > 0 ? <ArrowRight className="h-3 w-3 text-stone-300" /> : null}
-              <span>{item}</span>
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -1162,13 +899,22 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
     }
     setLoading(true);
     apiGet(`/api/admin/bd?view=record&recordType=${encodeURIComponent(selection.type)}&id=${encodeURIComponent(selection.id)}`)
-      .then((payload) => { if (active) setContext(payload); })
+      .then((payload) => {
+        assertApiResponse(payload, {
+          objects: ['record', 'relationships', 'runtime'],
+          arrays: [
+            'relationships.companies', 'relationships.people', 'relationships.opportunities',
+            'timeline', 'tasks', 'notes', 'files', 'callIntelligence', 'mutationHistory',
+          ],
+        }, 'Avalon BD returned an invalid record response.');
+        if (active) setContext(payload);
+      })
       .catch(() => { if (active) setLoadError('This connected CRM record could not be loaded.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [selection, sourceStatus]);
 
-  if (!selection || (preview && !fallbackRecord)) return null;
+  if (sourceStatus !== 'live' || !selection || (preview && !fallbackRecord)) return null;
 
   const relationshipCompanies = preview ? (fallbackCompany ? [fallbackCompany] : []) : (context?.relationships?.companies || []).map(normalizeCompanyRecord);
   const companyFromContext = selection.type === 'company' && context?.record
@@ -1365,7 +1111,7 @@ function CreatePanel({ initialType = 'Company', onClose, onCreate, onOpenRobBotC
         setNotice('This record could not be created. Try again.');
         return;
       }
-      setNotice(sourceStatus === 'live' ? `${type} created.` : `${type} added to this preview session only.`);
+      setNotice(sourceStatus === 'live' ? `${type} created.` : 'Connected CRM data is unavailable.');
       setForm({});
     });
   };
@@ -1432,13 +1178,16 @@ function SearchPalette({ companies, people, opportunities, sourceStatus, onClose
       apiGet(`/api/admin/bd?view=search&q=${encodeURIComponent(value)}`)
         .then((payload) => {
           if (!active) return;
+          assertApiResponse(payload, {
+            arrays: ['companies', 'people', 'opportunities', 'notes', 'activities', 'tasks'],
+          }, 'Avalon BD returned an invalid search response.');
           const companyNames = new Map(companies.map((item) => [item.id, item.name]));
-          const companyRows = Array.isArray(payload?.companies) ? payload.companies : [];
-          const peopleRows = Array.isArray(payload?.people) ? payload.people : [];
-          const opportunityRows = Array.isArray(payload?.opportunities) ? payload.opportunities : [];
-          const noteRows = Array.isArray(payload?.notes) ? payload.notes : [];
-          const activityRows = Array.isArray(payload?.activities) ? payload.activities : [];
-          const taskRows = Array.isArray(payload?.tasks) ? payload.tasks : [];
+          const companyRows = payload.companies;
+          const peopleRows = payload.people;
+          const opportunityRows = payload.opportunities;
+          const noteRows = payload.notes;
+          const activityRows = payload.activities;
+          const taskRows = payload.tasks;
           setLiveResults([
             ...companyRows.map((row) => {
               const item = normalizeCompanyRecord(row);
@@ -1506,7 +1255,7 @@ function SearchPalette({ companies, people, opportunities, sourceStatus, onClose
           {searchStatus === 'error' ? <div className="px-3 py-10 text-center text-[11px] text-red-600">Connected CRM search is unavailable. Try again.</div> : null}
           {searchStatus !== 'loading' && searchStatus !== 'error' && results.length === 0 ? <div className="px-3 py-10 text-center text-[11px] text-stone-400">{sourceStatus === 'live' && value.length < 2 ? 'Enter at least 2 characters to search the full CRM.' : 'No matching CRM records.'}</div> : null}
         </div>
-        <div className="border-t border-stone-100 bg-stone-50 px-4 py-2 text-[9px] text-stone-400">{sourceStatus === 'live' ? 'Connected keyword search · records, notes, activities, and tasks' : 'Preview search is local to these sample records.'}</div>
+        <div className="border-t border-stone-100 bg-stone-50 px-4 py-2 text-[9px] text-stone-400">{sourceStatus === 'live' ? 'Connected keyword search · records, notes, activities, and tasks' : 'Connected CRM search is unavailable.'}</div>
       </div>
     </div>
   );
@@ -1530,7 +1279,13 @@ async function fetchBdCollection(view, key) {
   const rows = [];
   for (let offset = 0; ; offset += 200) {
     const payload = await apiGet(`/api/admin/bd?view=${encodeURIComponent(view)}&limit=200&offset=${offset}`);
-    if (!Array.isArray(payload?.[key])) throw new Error('bd_collection_invalid');
+    assertApiResponse(payload, {
+      arrays: [key],
+      objects: ['pagination'],
+      booleans: ['pagination.hasMore'],
+      numbers: ['pagination.limit', 'pagination.offset', 'pagination.total', 'pagination.nextOffset'],
+    }, 'Avalon BD returned an invalid collection response.');
+    if (!hasObjectRows(payload[key])) throw invalidApiResponse('Avalon BD returned invalid CRM records.');
     rows.push(...payload[key]);
     if (!payload.pagination?.hasMore) break;
   }
@@ -1561,15 +1316,15 @@ export default function AvalonBD() {
 
   useEffect(() => {
     let active = true;
-    const activatePreview = () => {
+    const markUnavailable = () => {
       if (!active) return;
-      setCompanies(COMPANIES);
-      setPeople(PEOPLE);
-      setOpportunities(OPPORTUNITIES);
-      setTasks(TASKS);
-      setActivities(ACTIVITIES);
+      setCompanies([]);
+      setPeople([]);
+      setOpportunities([]);
+      setTasks([]);
+      setActivities([]);
       setDashboard(null);
-      setSourceStatus('preview');
+      setSourceStatus('error');
     };
     Promise.all([
       apiGet('/api/admin/bd?view=dashboard'),
@@ -1579,12 +1334,23 @@ export default function AvalonBD() {
       fetchBdCollection('tasks', 'tasks'),
     ])
       .then(([dashboardPayload, companyRows, peopleRows, opportunityRows, taskRows]) => {
+        assertApiResponse(dashboardPayload, {
+          objects: ['summary', 'runtime'],
+          arrays: [
+            'priorityOpportunities', 'repliesRequiringAction', 'overdueTasks', 'followUpsDue',
+            'upcomingCalls', 'newDiscoveries', 'recentlyChangedOpportunities',
+          ],
+          numbers: [
+            'summary.openPipelineCents', 'summary.openOpportunities', 'summary.priorityOpportunities',
+            'summary.callsThisWeek', 'summary.actionsDueToday', 'summary.overdueActions',
+          ],
+        }, 'Avalon BD returned an invalid dashboard response.');
         const valid = Array.isArray(companyRows)
           && Array.isArray(peopleRows)
           && Array.isArray(opportunityRows)
           && Array.isArray(taskRows);
         if (!active || !valid) {
-          activatePreview();
+          markUnavailable();
           return;
         }
         const workspace = hydrateWorkspace(
@@ -1601,7 +1367,7 @@ export default function AvalonBD() {
         setActivities([]);
         setSourceStatus('live');
       })
-      .catch(activatePreview);
+      .catch(markUnavailable);
     return () => { active = false; };
   }, []);
 
@@ -1609,11 +1375,11 @@ export default function AvalonBD() {
     const onKey = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setSearchOpen(true);
+        if (sourceStatus === 'live') setSearchOpen(true);
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
         event.preventDefault();
-        setCreateOpen(true);
+        if (sourceStatus === 'live') setCreateOpen(true);
       }
       if (event.key === 'Escape') {
         setSearchOpen(false);
@@ -1622,16 +1388,16 @@ export default function AvalonBD() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [sourceStatus]);
 
   const moveOpportunity = async (id, stage) => {
+    if (sourceStatus !== 'live') return;
     const current = opportunities.find((item) => item.id === id);
     if (!current || current.stage === stage) return;
     setOpportunities((items) => items.map((item) => item.id === id ? { ...item, stage } : item));
     setCompanies((items) => items.map((item) => item.id === current.companyId ? { ...item, stage } : item));
     setActivities((items) => [{ id: `activity-${Date.now()}`, time: 'Just now', type: 'Status Change', title: `${current.name} moved to ${stage}`, detail: `Pipeline stage changed from ${current.stage} to ${stage}.`, actor: 'Rob', record: current.company }, ...items]);
-    if (sourceStatus === 'live') {
-      try {
+    try {
         const response = await apiPatch('/api/admin/bd', {
           action: 'change_pipeline_stage',
           id,
@@ -1648,20 +1414,19 @@ export default function AvalonBD() {
         const nextOpportunities = opportunities.map((item) => item.id === id ? returned : item);
         setOpportunities(nextOpportunities);
         setCompanies((items) => deriveCompanyRollups(items, people, nextOpportunities));
-      } catch {
-        setOpportunities((items) => items.map((item) => item.id === id ? current : item));
-        setCompanies((items) => deriveCompanyRollups(items, people, opportunities));
-      }
+    } catch {
+      setOpportunities((items) => items.map((item) => item.id === id ? current : item));
+      setCompanies((items) => deriveCompanyRollups(items, people, opportunities));
     }
   };
 
   const toggleTask = async (id) => {
+    if (sourceStatus !== 'live') return;
     const current = tasks.find((item) => item.id === id);
     if (!current || current.status === 'cancelled') return;
     const nextStatus = current.status === 'completed' ? 'open' : 'completed';
     setTasks((items) => items.map((item) => item.id === id ? { ...item, status: nextStatus } : item));
-    if (sourceStatus === 'live') {
-      try {
+    try {
         const response = await apiPatch('/api/admin/bd', { action: nextStatus === 'completed' ? 'complete_task' : 'update_task', id, expectedVersion: current.version, patch: { status: nextStatus } });
         if (response?.record) {
           const normalized = normalizeTaskRecord(response.record);
@@ -1674,9 +1439,8 @@ export default function AvalonBD() {
           };
           setTasks((items) => items.map((item) => item.id === id ? returned : item));
         }
-      } catch {
-        setTasks((items) => items.map((item) => item.id === id ? current : item));
-      }
+    } catch {
+      setTasks((items) => items.map((item) => item.id === id ? current : item));
     }
   };
 
@@ -1753,21 +1517,14 @@ export default function AvalonBD() {
       }
       return true;
     }
-    const id = `${type.toLowerCase()}-${Date.now()}`;
-    if (type === 'Company') {
-      setCompanies((items) => [{ id, name: form.name.trim(), type: form.type || 'Other', website: form.website || '', location: '', owner: 'Rob', stage: 'New', openValue: 0, fitScore: 0, lastTouch: 'Not contacted', nextAction: 'Add contact', nextActionDate: 'Unscheduled', primaryContact: 'Unassigned', description: '', source: 'Manual entry', tags: ['Manual'] }, ...items]);
-    } else if (type === 'Opportunity') {
-      const company = companies.find((item) => item.name.toLowerCase() === String(form.company || '').trim().toLowerCase());
-      setOpportunities((items) => [{ id, name: form.name.trim(), companyId: company?.id || '', company: form.company || 'Unlinked', contacts: [], owner: 'Rob', type: 'Other', stage: 'New', value: Number(String(form.value || '').replace(/[^0-9.]/g, '')) || 0, probability: 10, fitScore: 0, priority: 'Medium', nextAction: 'Qualify opportunity', nextActionDate: 'Unscheduled', source: 'Manual entry' }, ...items]);
-    } else if (type === 'Task') {
-      setTasks((items) => [{ id, title: form.name.trim(), company: form.company || 'Unlinked', opportunity: '', owner: 'Rob', due: form.due || 'Unscheduled', priority: 'Medium', status: 'open', source: 'Manual', createdBy: 'Rob' }, ...items]);
-    } else {
-      setActivities((items) => [{ id, time: 'Just now', type: 'Note', title: 'Note added', detail: form.name.trim(), actor: 'Rob', record: form.company || 'Unlinked' }, ...items]);
-    }
-    return true;
+    return false;
   };
 
-  const startCreate = (type = 'Company') => { setCreateType(type); setCreateOpen(true); };
+  const startCreate = (type = 'Company') => {
+    if (sourceStatus !== 'live') return;
+    setCreateType(type);
+    setCreateOpen(true);
+  };
 
   const closeRecord = () => {
     const linkedRecord = recordFromPath(pathname);
@@ -1792,6 +1549,25 @@ export default function AvalonBD() {
     setCompanies((items) => deriveCompanyRollups(items, people, nextOpportunities));
   };
 
+  if (sourceStatus !== 'live') {
+    return (
+      <AdminShell title="Avalon BD">
+        {sourceStatus === 'checking' ? (
+          <div className="mx-auto flex min-h-[28rem] max-w-2xl items-center justify-center px-5 py-12">
+            <div className="av-glass-card w-full rounded-[1.75rem] border border-foreground/[0.12] bg-background/62 p-8 text-center backdrop-blur-2xl md:p-12">
+              <p className="font-body text-sm text-foreground/50">Verifying the live Avalon BD source…</p>
+            </div>
+          </div>
+        ) : (
+          <OperationalSourceUnavailable
+            title="Avalon BD source unavailable"
+            description="Companies, people, opportunities, tasks, and dashboard totals could not be verified. No empty or sample CRM views are shown, and all search, create, edit, and pipeline actions remain disabled until the live source reconnects."
+          />
+        )}
+      </AdminShell>
+    );
+  }
+
   return (
     <AdminShell title="Avalon BD" fullBleed>
       <div className="avalon-bd-workspace flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-stone-900">
@@ -1800,15 +1576,15 @@ export default function AvalonBD() {
             <div className="min-w-0 overflow-x-auto"><WorkspaceNav active={view} /></div>
             <div className="hidden shrink-0 items-center gap-2 lg:flex">
               <SourceNotice status={sourceStatus} />
-              <button type="button" onClick={() => setSearchOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 text-[11px] font-medium text-stone-500 hover:border-stone-300 hover:text-stone-900"><Search className="h-3.5 w-3.5" /> Search <span className="ml-1 rounded border border-stone-200 px-1.5 py-0.5 text-[9px] text-stone-400"><Command className="-mt-px inline h-2.5 w-2.5" />K</span></button>
-              <button type="button" onClick={() => startCreate(view === 'people' ? 'Person' : view === 'tasks' ? 'Task' : view === 'pipeline' ? 'Opportunity' : 'Company')} className="inline-flex h-9 items-center gap-2 rounded-lg bg-stone-950 px-3.5 text-[11px] font-semibold text-white hover:bg-black"><Plus className="h-3.5 w-3.5" /> New</button>
+              <button type="button" onClick={() => setSearchOpen(true)} disabled={sourceStatus !== 'live'} className="inline-flex h-9 items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 text-[11px] font-medium text-stone-500 hover:border-stone-300 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-40"><Search className="h-3.5 w-3.5" /> Search <span className="ml-1 rounded border border-stone-200 px-1.5 py-0.5 text-[9px] text-stone-400"><Command className="-mt-px inline h-2.5 w-2.5" />K</span></button>
+              <button type="button" onClick={() => startCreate(view === 'people' ? 'Person' : view === 'tasks' ? 'Task' : view === 'pipeline' ? 'Opportunity' : 'Company')} disabled={sourceStatus !== 'live'} className="inline-flex h-9 items-center gap-2 rounded-lg bg-stone-950 px-3.5 text-[11px] font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"><Plus className="h-3.5 w-3.5" /> New</button>
             </div>
           </div>
         </div>
-        {sourceStatus === 'preview' ? (
-          <div role="status" className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-[10px] font-medium text-amber-800 md:px-7">
+        {sourceStatus === 'error' ? (
+          <div role="alert" className="flex items-center gap-2 border-b border-red-200 bg-red-50 px-4 py-2 text-[10px] font-medium text-red-800 md:px-7">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            Preview data only — these sample CRM records are not synced or stored. Connected actions and outreach remain disabled.
+            Avalon BD could not load its connected records. No sample data has been substituted; create and edit actions are disabled.
           </div>
         ) : null}
 
@@ -1816,12 +1592,12 @@ export default function AvalonBD() {
           <div className="mx-auto w-full max-w-[1560px] px-4 py-6 md:px-7 md:py-8">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">{copy.eyebrow}</p><h2 className="mt-1 text-[26px] font-semibold tracking-[-0.045em] text-stone-950 md:text-[32px]">{copy.title}</h2></div>
-              <div className="flex items-center gap-2 lg:hidden"><IconButton label="Search" onClick={() => setSearchOpen(true)}><Search className="h-4 w-4" /></IconButton><button type="button" onClick={() => startCreate(view === 'people' ? 'Person' : view === 'tasks' ? 'Task' : view === 'pipeline' ? 'Opportunity' : 'Company')} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-stone-950 px-3 text-[10px] font-semibold text-white"><Plus className="h-3.5 w-3.5" /> New</button></div>
+              <div className="flex items-center gap-2 lg:hidden"><IconButton label="Search" onClick={() => { if (sourceStatus === 'live') setSearchOpen(true); }}><Search className="h-4 w-4" /></IconButton><button type="button" onClick={() => startCreate(view === 'people' ? 'Person' : view === 'tasks' ? 'Task' : view === 'pipeline' ? 'Opportunity' : 'Company')} disabled={sourceStatus !== 'live'} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-stone-950 px-3 text-[10px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Plus className="h-3.5 w-3.5" /> New</button></div>
             </div>
 
             {view === 'home' && sourceStatus === 'live' ? <LiveHomeView dashboard={dashboard} onOpen={setSelection} onNavigate={navigate} /> : null}
-            {view === 'home' && sourceStatus === 'preview' ? <HomeView opportunities={opportunities} activities={activities} onOpen={setSelection} onNavigate={navigate} /> : null}
             {view === 'home' && sourceStatus === 'checking' ? <div className="border-y border-stone-200 py-16 text-center text-[11px] text-stone-400">Loading connected Avalon BD records…</div> : null}
+            {view === 'home' && sourceStatus === 'error' ? <div className="border-y border-stone-200 py-16 text-center text-[11px] text-stone-500">Connected CRM data is unavailable. Retry after the database configuration is restored.</div> : null}
             {view === 'pipeline' ? <PipelineView opportunities={opportunities} onMove={moveOpportunity} onOpen={setSelection} /> : null}
             {view === 'companies' ? <CompaniesView companies={companies} onOpen={setSelection} /> : null}
             {view === 'people' ? <PeopleView people={people} onOpen={setSelection} /> : null}

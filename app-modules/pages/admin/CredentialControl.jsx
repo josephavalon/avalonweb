@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { NURSES, REQUESTS } from '@/fixtures/commandMockData';
 import {
@@ -298,7 +299,7 @@ function ContractPanel({ tower }) {
   );
 }
 
-export default function CredentialControl() {
+function CredentialControlPreview() {
   const [tower, setTower] = useState(() => buildCredentialControlTower({
     nurses: NURSES,
     staff: STAFF,
@@ -528,4 +529,11 @@ export default function CredentialControl() {
       </PageShell>
     </AdminShell>
   );
+}
+
+export default function CredentialControl() {
+  if (import.meta.env.PROD) {
+    return <AdminShell title="Credentials"><OperationalSourceUnavailable title="Credential source unavailable" description="No sample clinicians, licenses, checks, overrides, or clearance metrics are shown. Credential actions remain disabled until the verified source is connected." /></AdminShell>;
+  }
+  return <CredentialControlPreview />;
 }

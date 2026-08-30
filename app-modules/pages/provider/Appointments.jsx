@@ -5,6 +5,7 @@ import {
   MapPin, CheckCircle, AlertTriangle, Activity, Droplets, Syringe, Package,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import PageShell from '@/components/admin/PageShell';
 import {
   REQUESTS,
@@ -695,7 +696,7 @@ const Skeleton = () => (
   </div>
 );
 
-export default function Appointments() {
+function AppointmentsPreview() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 600); return () => clearTimeout(t); }, []);
 
@@ -803,4 +804,19 @@ export default function Appointments() {
       </AnimatePresence>
     </AdminLayout>
   );
+}
+
+export default function Appointments() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Appointment source unavailable"
+          description="No sample patients, requests, services, locations, or visit status records are shown. Appointment actions remain disabled until the live scheduling source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <AppointmentsPreview />;
 }

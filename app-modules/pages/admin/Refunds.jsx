@@ -9,6 +9,8 @@ import {
   AlertTriangle, CheckCircle2, Loader2, Receipt, ShieldCheck, ThumbsDown, X,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import PageShell from '@/components/admin/PageShell';
 import { Button } from '@/components/ui/button';
 import {
@@ -307,6 +309,7 @@ export default function Refunds() {
   const [tab, setTab] = useState('open');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [tableMissing, setTableMissing] = useState(false);
@@ -314,11 +317,14 @@ export default function Refunds() {
   const [busyId, setBusyId] = useState('');
 
   const load = useCallback(async (which = tab) => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setSourceReady(false);
     try {
       const data = await apiGet(`/api/admin/refunds?status=${encodeURIComponent(which)}`);
-      setRequests(data?.requests || []);
-      setTableMissing(Boolean(data?.tableMissing));
+      assertApiResponse(data, { arrays: ['requests'], booleans: ['tableMissing'] }, 'Refunds returned an invalid response.');
+      if (!hasObjectRows(data.requests)) throw invalidApiResponse('Refunds returned invalid request records.');
+      setRequests(data.requests);
+      setTableMissing(data.tableMissing);
+      setSourceReady(!data.tableMissing);
     } catch (err) {
       setError(err?.message || 'Could not load refund requests.');
     } finally { setLoading(false); }
@@ -359,6 +365,17 @@ export default function Refunds() {
     if (tab === 'approved') return 'No approved refunds yet.';
     return 'No denied requests.';
   }, [loading, requests.length, tab]);
+
+  if (!loading && (!sourceReady || tableMissing)) {
+    return (
+      <AdminShell title="Refunds">
+        <OperationalSourceUnavailable
+          title="Refund source unavailable"
+          description="Refund requests could not be verified. No clear queue or sample requests are shown, and approval and denial actions remain disabled until the live refund and Stripe sources reconnect."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Refunds">

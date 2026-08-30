@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, CreditCard, Loader2, RefreshCw, Tag, TrendingUp, WalletCards } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 
 const CARD = 'hsl(var(--foreground) / 0.045)';
 const CARD_STRONG = 'hsl(var(--foreground) / 0.075)';
@@ -52,31 +54,50 @@ function DiscountBadge({ row }) {
 
 export default function FinanceControl() {
   const [state, setState] = useState({ loading: true, error: '', data: null });
-  const [discountState, setDiscountState] = useState({ loading: true, error: '', rows: [] });
+  const [discountState, setDiscountState] = useState({ loading: true, error: '', rows: null });
   const [tab, setTab] = useState('summary');
 
   const load = useCallback(async () => {
-    setState((current) => ({ ...current, loading: true, error: '' }));
-    setDiscountState((current) => ({ ...current, loading: true, error: '' }));
+    setState({ loading: true, error: '', data: null });
+    setDiscountState({ loading: true, error: '', rows: null });
     const [summaryResult, discountResult] = await Promise.allSettled([
       apiGet('/api/admin/finance/summary'),
       apiGet('/api/admin/discounts'),
     ]);
 
     if (summaryResult.status === 'fulfilled') {
-      setState({ loading: false, error: '', data: summaryResult.value });
+      try {
+        const summary = assertApiResponse(summaryResult.value, {
+          arrays: ['outstandingBalances.rows', 'payouts'],
+          objects: ['last30Days', 'depositsTaken', 'outstandingBalances', 'activeSubscriptions'],
+          numbers: [
+            'last30Days.count', 'last30Days.amount',
+            'depositsTaken.count', 'depositsTaken.amount',
+            'outstandingBalances.count', 'outstandingBalances.amount',
+            'activeSubscriptions.count',
+          ],
+        }, 'Finance returned an invalid summary response.');
+        if (!hasObjectRows(summary.outstandingBalances.rows) || !hasObjectRows(summary.payouts)) {
+          throw invalidApiResponse('Finance returned invalid summary records.');
+        }
+        setState({ loading: false, error: '', data: summary });
+      } catch {
+        setState({ loading: false, error: 'Could not verify finance summary.', data: null });
+      }
     } else {
       setState({ loading: false, error: 'Could not load finance summary.', data: null });
     }
 
     if (discountResult.status === 'fulfilled') {
-      setDiscountState({
-        loading: false,
-        error: '',
-        rows: Array.isArray(discountResult.value?.discounts) ? discountResult.value.discounts : [],
-      });
+      try {
+        const discounts = assertApiResponse(discountResult.value, { arrays: ['discounts'] }, 'Finance returned an invalid discount response.');
+        if (!hasObjectRows(discounts.discounts)) throw invalidApiResponse('Finance returned invalid discount records.');
+        setDiscountState({ loading: false, error: '', rows: discounts.discounts });
+      } catch {
+        setDiscountState({ loading: false, error: 'Could not verify discount redemptions.', rows: null });
+      }
     } else {
-      setDiscountState({ loading: false, error: 'Could not load discount redemptions.', rows: [] });
+      setDiscountState({ loading: false, error: 'Could not load discount redemptions.', rows: null });
     }
   }, []);
 
@@ -87,6 +108,36 @@ export default function FinanceControl() {
   const discountRows = discountState.rows || [];
   const fullCompCount = discountRows.filter((row) => row.fullComp).length;
   const discountTotal = discountRows.reduce((sum, row) => sum + Number(row.amountDiscount || 0), 0);
+
+  if (!state.loading && state.error && state.data === null) {
+    return (
+      <AdminShell title="Finance">
+        <OperationalSourceUnavailable
+          title="Finance source unavailable"
+          description="Finance totals, payouts, balances, and collections could not be verified. No zeroed or sample finance metrics are shown, and finance actions remain disabled until the live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
+
+  if (state.loading && state.data === null) {
+    return <AdminShell title="Finance"><div className="flex min-h-[28rem] items-center justify-center text-foreground/45"><Loader2 className="h-5 w-5 animate-spin" /></div></AdminShell>;
+  }
+
+  if (tab === 'discounts' && discountState.loading) {
+    return <AdminShell title="Finance"><div className="flex min-h-[28rem] items-center justify-center text-foreground/45"><Loader2 className="h-5 w-5 animate-spin" /></div></AdminShell>;
+  }
+
+  if (tab === 'discounts' && discountState.error && discountState.rows === null) {
+    return (
+      <AdminShell title="Finance">
+        <OperationalSourceUnavailable
+          title="Discount source unavailable"
+          description="Discount redemptions and totals could not be verified. No zeroed metrics or empty-state claims are shown until the live Stripe source reconnects."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell

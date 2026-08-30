@@ -12,11 +12,15 @@
     },
     {
       "path": "/api/cron/robbot3k-morning",
-      "schedule": "0 13,14 * * *"
+      "schedule": "0,15,30,45 13,14 * * *"
     },
     {
       "path": "/api/cron/robbot3k-execute",
-      "schedule": "*/30 15-23 * * 1-5"
+      "schedule": "*/30 0,1,16-23 * * *"
+    },
+    {
+      "path": "/api/cron/nurse-invoice-notifications",
+      "schedule": "*/15 * * * *"
     }
   ],
   "redirects": [

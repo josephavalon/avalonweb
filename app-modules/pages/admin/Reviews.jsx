@@ -8,9 +8,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, EyeOff, Loader2, RefreshCw, Star } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import PageShell from '@/components/admin/PageShell';
 import { Button } from '@/components/ui/button';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 
 function Banner({ kind, children, onClose }) {
   if (!children) return null;
@@ -74,16 +76,20 @@ const SCOPES = [
 export default function Reviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [scope, setScope] = useState('submitted');
   const [busyId, setBusyId] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setSourceReady(false);
     try {
       const data = await apiGet(`/api/admin/reviews?scope=${encodeURIComponent(scope)}`);
-      setReviews(Array.isArray(data?.reviews) ? data.reviews : []);
+      assertApiResponse(data, { arrays: ['reviews'] }, 'Reviews returned an invalid response.');
+      if (!hasObjectRows(data.reviews)) throw invalidApiResponse('Reviews returned invalid records.');
+      setReviews(data.reviews);
+      setSourceReady(true);
     } catch (err) {
       const msg = err?.message || 'Could not load reviews.';
       // Surface the migration_required code with a friendly nudge.
@@ -124,6 +130,21 @@ export default function Reviews() {
       : null;
     return { total, approved, candidates, avg };
   }, [reviews]);
+
+  if (!loading && !sourceReady) {
+    return (
+      <AdminShell title="Reviews">
+        <OperationalSourceUnavailable
+          title="Review source unavailable"
+          description="Customer reviews and moderation status could not be verified. No zeroed metrics, clear queue, or sample reviews are shown, and moderation actions remain disabled until the live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
+
+  if (loading && !sourceReady) {
+    return <AdminShell title="Reviews"><div className="flex min-h-[28rem] items-center justify-center text-foreground/45"><Loader2 className="h-5 w-5 animate-spin" /></div></AdminShell>;
+  }
 
   return (
     <AdminShell title="Reviews">

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { NURSES } from '@/fixtures/commandMockData';
 import {
   buildTrainingControlTower,
@@ -165,7 +166,7 @@ function Guardrails({ tower }) {
   );
 }
 
-export default function TrainingControl() {
+function TrainingControlPreview() {
   const [tower, setTower] = useState(buildTower);
   const [view, setView] = useState('nurses');
   const [note, setNote] = useState('');
@@ -305,4 +306,11 @@ export default function TrainingControl() {
       </PageShell>
     </AdminShell>
   );
+}
+
+export default function TrainingControl() {
+  if (import.meta.env.PROD) {
+    return <AdminShell title="Training"><OperationalSourceUnavailable title="Training source unavailable" description="No sample clinicians, modules, completions, reviews, or readiness metrics are shown. Training actions remain disabled until the verified learning source is connected." /></AdminShell>;
+  }
+  return <TrainingControlPreview />;
 }

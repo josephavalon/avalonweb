@@ -7,6 +7,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Loader2, ShieldOff, UserX, X } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import PageShell from '@/components/admin/PageShell';
 import { Button } from '@/components/ui/button';
 import {
@@ -232,24 +234,30 @@ export default function DeletionRequests() {
   const [rows, setRows] = useState([]);
   const [openCount, setOpenCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [migrationMissing, setMigrationMissing] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [target, setTarget] = useState(null); // { row, action }
 
   const load = useCallback(async (which) => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setSourceReady(false);
     try {
       const data = await apiGet(`/api/admin/deletion-requests?status=${which}`);
-      setRows(data?.requests || []);
-      setMigrationMissing(data?.resolutionColumnsPresent === false);
+      assertApiResponse(data, { arrays: ['requests'], booleans: ['resolutionColumnsPresent'] }, 'Deletion requests returned an invalid response.');
+      if (!hasObjectRows(data.requests)) throw invalidApiResponse('Deletion requests returned invalid records.');
+      setRows(data.requests);
+      setMigrationMissing(!data.resolutionColumnsPresent);
+      setSourceReady(data.resolutionColumnsPresent);
       // Keep an authoritative open-count for the tab badge regardless of view.
       if (which === 'open') {
-        setOpenCount((data?.requests || []).length);
+        setOpenCount(data.requests.length);
       } else {
         try {
           const openData = await apiGet('/api/admin/deletion-requests?status=open');
-          setOpenCount((openData?.requests || []).length);
+          assertApiResponse(openData, { arrays: ['requests'], booleans: ['resolutionColumnsPresent'] }, 'Deletion requests returned an invalid count response.');
+          if (!hasObjectRows(openData.requests)) throw invalidApiResponse('Deletion requests returned invalid count records.');
+          setOpenCount(openData.requests.length);
         } catch { /* badge is cosmetic */ }
       }
     } catch (err) {
@@ -284,6 +292,17 @@ export default function DeletionRequests() {
   }, [load, tab]);
 
   const empty = useMemo(() => !loading && rows.length === 0, [loading, rows]);
+
+  if (!loading && (!sourceReady || migrationMissing)) {
+    return (
+      <AdminShell title="Deletion requests">
+        <OperationalSourceUnavailable
+          title="Deletion-request source unavailable"
+          description="Account deletion requests and their resolution state could not be verified. No clear queue or sample requests are shown, and anonymize and denial actions remain disabled until the live source reconnects."
+        />
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Deletion requests">

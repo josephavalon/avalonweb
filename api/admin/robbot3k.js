@@ -14,6 +14,7 @@ import {
 import { executeDueOutreach } from '../_lib/robbot3k-execution.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { requireAdmin } from '../_lib/supabase-auth.js';
+import { requireBdDataReview } from '../_lib/bd-data-review-gate.js';
 
 const ACTIONS = new Set([
   'refresh', 'update_settings', 'create_manual_prospect', 'update_prospect', 'approve', 'hold', 'reject', 'revoke',
@@ -23,6 +24,7 @@ const ACTIONS = new Set([
 function migrationVersion(error, fallback = '046') {
   const code = String(error?.code || '').toLowerCase();
   const message = String(error?.message || '').toLowerCase();
+  if (code === '42703' && (message.includes('global_pause') || message.includes('approved_sender_settings'))) return '049';
   const missing = code === '42p01' || code === 'pgrst205'
     || (message.includes('does not exist') && (message.includes('robbot3k_') || /(?:public\.)?bd_[a-z_]+/.test(message)));
   if (!missing) return null;
@@ -37,8 +39,14 @@ function failure(res, error, fallback = 'robbot3k_request_failed') {
     return res.status(503).json({
       error: migration === '048'
         ? 'Avalon BD database migration 048 is required.'
+        : migration === '049'
+          ? 'RobBot3K safety-controls migration 049 is required.'
         : 'RobBot3K database migration 046 is required.',
-      code: migration === '048' ? 'avalon_bd_migration_required' : 'robbot3k_migration_required',
+      code: migration === '048'
+        ? 'avalon_bd_migration_required'
+        : migration === '049'
+          ? 'robbot3k_safety_migration_required'
+          : 'robbot3k_migration_required',
     });
   }
   const status = Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500;
@@ -51,12 +59,21 @@ function failure(res, error, fallback = 'robbot3k_request_failed') {
 export default async function handler(req, res) {
   const authed = await requireAdmin(req, res);
   if (!authed) return;
+  if (!requireBdDataReview(res)) return;
   const { db, tenantId, user } = authed;
   if (!tenantId) return res.status(403).json({ error: 'Admin tenant is required.', code: 'tenant_required' });
 
   if (req.method === 'GET') {
     try {
-      const dashboard = await listRobBotDashboard(db, tenantId, { limit: req.query?.limit, offset: req.query?.offset });
+      const dashboard = await listRobBotDashboard(db, tenantId, {
+        limit: req.query?.limit,
+        offset: req.query?.offset,
+        stage: req.query?.stage,
+        segment: req.query?.segment,
+        priority: req.query?.priority,
+        emailStatus: req.query?.emailStatus || req.query?.email_status,
+        search: req.query?.search || req.query?.query,
+      });
       await writeAuditEvent(db, {
         tenantId,
         actorProfileId: user?.id || null,
@@ -95,7 +112,13 @@ export default async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         settings,
-        config: { liveSendEnabled: false, providerConnected: false, sendMode: 'dry_run' },
+        config: {
+          liveSendEnabled: false,
+          providerConnected: false,
+          sendMode: 'dry_run',
+          globalPause: settings.globalPause,
+          sendWindow: 'Monday-Friday, 9:00 AM-5:00 PM America/Los_Angeles',
+        },
         message: 'RobBot3K sender settings saved. No outreach provider is connected.',
       });
     }

@@ -16,11 +16,9 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/crm', // preview-only patients/customer surface
   '/admin/bookings', // billing — ready to collect
   '/admin/finance', // billing — payments
-  '/admin/inventory',
   '/admin/team',
   '/admin/email-templates', // editable customer email templates
   '/admin/promo-codes', // Stripe-of-record promo code management
-  '/admin/shift-marketplace', // read-only nurse shift offer board (preview mode)
   '/admin/refunds', // member refund requests — Stripe-issued
   '/admin/deletion-requests', // member account-deletion requests (anonymize)
   '/admin/expiring-credits', // members with visit credits about to expire
@@ -40,13 +38,12 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/messages',
   '/admin/bookings',
   '/admin/finance',
+  '/admin/scheduling', // admin-only credential-gated workforce scheduling
   '/admin/nurse-invoices', // contractor pay review (admin-only)
-  '/admin/inventory',
   '/admin/team',
   '/admin/gfe', // GFE policy toggles (admin-only)
   '/admin/email-templates', // editable customer email templates
   '/admin/promo-codes', // Stripe-of-record promo code management
-  '/admin/shift-marketplace', // read-only nurse shift offer board
   '/admin/refunds', // member refund requests
   '/admin/deletion-requests', // member account-deletion requests
   '/admin/expiring-credits', // members with credits about to expire
@@ -64,6 +61,10 @@ function normalizeAdminPath(path = '') {
 }
 
 function adminPreviewEnabled() {
+  // Preview-only operational surfaces contain local simulations and must never
+  // become reachable in a production bundle, even if an environment variable
+  // is accidentally copied from a review deployment.
+  if (import.meta.env?.PROD) return false;
   return import.meta.env?.VITE_ADMIN_PREVIEW === '1';
 }
 

@@ -5,6 +5,7 @@ import {
   Zap, AlertCircle, FileText, Bell, Save, RotateCcw,
 } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { useToast } from '@/components/ui/use-toast';
 import { HUBSPOT_PLACEHOLDER as ATTIO_PLACEHOLDER, isHubspotConfigured as isAttioConfigured } from '@/lib/hubspotPlaceholder';
 import {
@@ -496,7 +497,7 @@ function NurseAlertSettings({ toast }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function Settings() {
+function SettingsPreview() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
@@ -658,4 +659,19 @@ export default function Settings() {
       )}
     </AdminLayout>
   );
+}
+
+export default function Settings() {
+  if (import.meta.env.PROD) {
+    return (
+      <AdminLayout>
+        <OperationalSourceUnavailable
+          title="Operations settings source unavailable"
+          description="No sample launch switches, alert preferences, integrations, or availability states are shown. Settings remain disabled until a verified server-side configuration source is connected."
+        />
+      </AdminLayout>
+    );
+  }
+
+  return <SettingsPreview />;
 }

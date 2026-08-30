@@ -30,8 +30,10 @@ import {
   XCircle,
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
+import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import PageShell from '@/components/admin/PageShell';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 
 const TABS = [
   { key: 'research', label: 'Needs research' },
@@ -60,116 +62,7 @@ const EMPTY_MANUAL_PROSPECT = {
   notes: '',
   priority: 2,
   sourceVerified: false,
-  isTestRecord: false,
 };
-
-const PREVIEW_PROSPECTS = [
-  {
-    id: 'preview-mission-bay',
-    organization: 'Mission Bay AI Studio — Example',
-    segment: 'AI employer',
-    priority: 'High',
-    status: 'needs_research',
-    confidence: 42,
-    evidence: [
-      { label: 'Atlas match: San Francisco employer', source: 'Regional Opportunity Atlas', official: false },
-    ],
-    source: { label: 'Bay Area Opportunity Atlas', url: 'https://avbaeg826.netlify.app' },
-    contact: { name: '', role: 'People Operations', email: '' },
-    emailStatus: 'Not found',
-    manualVerified: false,
-    sequence: DEFAULT_TOUCHES,
-    nextAction: 'Confirm the SF office and find a relevant decision-maker.',
-  },
-  {
-    id: 'preview-civic-health',
-    organization: 'Civic Health Collective — Example',
-    segment: 'Health technology',
-    priority: 'High',
-    status: 'ready_for_review',
-    confidence: 86,
-    evidence: [
-      { label: 'Official team page lists a San Francisco office', url: 'https://example.com/company/team', source: 'Official company site', official: true },
-      { label: 'Recent employer wellness program announcement', url: 'https://example.com/company/news', source: 'Official company newsroom', official: true },
-    ],
-    source: { label: 'Bay Area Opportunity Atlas', url: 'https://avbaeg826.netlify.app' },
-    contact: { name: 'Maya Chen', role: 'Head of People', email: 'maya.chen@example.com' },
-    emailStatus: 'Needs manual verification',
-    manualVerified: false,
-    sequence: [
-      {
-        order: 1,
-        delayDays: 0,
-        label: 'Introduction',
-        subject: 'A recovery day for the Civic Health team',
-        body: 'Hi Maya,\n\nI saw Civic Health Collective is growing its San Francisco team. Avalon brings clinician-led IV hydration and recovery services directly to Bay Area workplaces and events.\n\nWould a short conversation about an on-site team recovery day be useful? If so, you can choose a time here: {{calendly_url}}\n\nBest,\nAvalon Vitality',
-      },
-      {
-        order: 2,
-        delayDays: 3,
-        label: 'Useful follow-up',
-        subject: 'Re: A recovery day for the Civic Health team',
-        body: 'Hi Maya,\n\nA little more context: Avalon handles the clinical team, supplies, consent flow, and on-site logistics. Your team chooses the format and timing.\n\nIf this belongs with someone else, I would appreciate the redirect. Otherwise, here is a time link: {{calendly_url}}\n\nBest,\nAvalon Vitality',
-      },
-      {
-        order: 3,
-        delayDays: 7,
-        label: 'Scheduling option',
-        subject: 'Two ways Avalon can support Civic Health',
-        body: 'Hi Maya,\n\nThe two formats employers usually start with are a focused office recovery block or a larger team-event activation. I can bring a one-page plan for either option to a 15-minute call.\n\nChoose a time if helpful: {{calendly_url}}\n\nBest,\nAvalon Vitality',
-      },
-      {
-        order: 4,
-        delayDays: 14,
-        label: 'Close the loop',
-        subject: 'Closing the loop — Avalon Vitality',
-        body: 'Hi Maya,\n\nI will close the loop after this note. If on-site recovery services become relevant later, I would be glad to help.\n\nFor now, here is the scheduling link one last time: {{calendly_url}}\n\nBest,\nAvalon Vitality',
-      },
-    ],
-    nextAction: 'Human verifies the address and approves the exact four messages.',
-  },
-  {
-    id: 'preview-northstar',
-    organization: 'Northstar Robotics — Example',
-    segment: 'Robotics employer',
-    priority: 'Medium',
-    status: 'active',
-    confidence: 91,
-    evidence: [
-      { label: 'Official careers page lists San Francisco', url: 'https://example.com/careers', source: 'Official company site', official: true },
-    ],
-    source: { label: 'Bay Area Opportunity Atlas', url: 'https://avbaeg826.netlify.app' },
-    contact: { name: 'Alex Rivera', role: 'Workplace Experience', email: 'alex.rivera@example.com' },
-    emailStatus: 'Manually verified',
-    manualVerified: true,
-    sequence: DEFAULT_TOUCHES.map((touch) => ({
-      ...touch,
-      subject: touch.order === 1 ? 'On-site recovery for Northstar Robotics' : 'Re: On-site recovery for Northstar Robotics',
-      body: `Hi Alex,\n\nThis is preview copy for touch ${touch.order}. The live record will contain the exact approved message and scheduling link.\n\nBest,\nAvalon Vitality`,
-    })),
-    currentTouch: 2,
-    nextDueAt: '2026-08-31T16:00:00Z',
-    nextAction: 'Touch 2 is due in the configured sending window.',
-  },
-  {
-    id: 'preview-pacific-design',
-    organization: 'Pacific Design Forum — Example',
-    segment: 'Event partner',
-    priority: 'Low',
-    status: 'replied',
-    confidence: 78,
-    evidence: [
-      { label: 'Official event calendar and organizer page', url: 'https://example.com/events', source: 'Official event site', official: true },
-    ],
-    source: { label: 'Bay Area Opportunity Atlas', url: 'https://avbaeg826.netlify.app' },
-    contact: { name: 'Jordan Lee', role: 'Partnerships', email: 'jordan.lee@example.com' },
-    emailStatus: 'Manually verified',
-    manualVerified: true,
-    sequence: DEFAULT_TOUCHES,
-    stopReason: 'Reply received — automated follow-up stopped.',
-    nextAction: 'Human owns the conversation.',
-  },
-];
 
 const BUTTON = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 font-body text-[10px] font-semibold uppercase tracking-[0.15em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/55 disabled:cursor-not-allowed disabled:opacity-35';
 const FIELD = 'min-h-11 w-full rounded-xl border border-foreground/12 bg-background/48 px-3 font-body text-[12px] text-foreground outline-none placeholder:text-foreground/30 focus:border-foreground/35 focus-visible:ring-2 focus-visible:ring-foreground/25';
@@ -241,6 +134,7 @@ function normalizeSenderSettings(value = {}) {
     providerConnected: typeof providerConnected === 'boolean' ? providerConnected : undefined,
     providerStatus: text(value.providerStatus || value.provider_status),
     providerConnectUrl: text(value.providerConnectUrl || value.provider_connect_url),
+    globalPause: value.globalPause ?? value.global_pause ?? true,
   };
 }
 
@@ -291,7 +185,6 @@ function normalizeProspect(item, index = 0) {
       : { label: text(sourceValue?.label || sourceValue?.name || item?.sourceKind || item?.source_kind, 'Atlas research').replace(/_/g, ' '), url: text(sourceValue?.url || item?.sourceUrl || item?.source_url) },
     sourceKind,
     manualEntry: item?.manualEntry === true || item?.manual_entry === true || sourceKind === 'manual',
-    isTestRecord: item?.isTestRecord === true || item?.is_test_record === true,
     opportunityContext: text(item?.opportunityContext || item?.opportunity_context || item?.researchSummary || item?.research_summary),
     manualNotes: text(item?.manualNotes || item?.manual_notes),
     contact: {
@@ -313,21 +206,6 @@ function normalizeProspect(item, index = 0) {
     personId: item?.personId || item?.person_id || crmValue.personId || crmValue.person_id || null,
     opportunityId: item?.opportunityId || item?.opportunity_id || crmValue.opportunityId || crmValue.opportunity_id || null,
   };
-}
-
-function previewEligible(error) {
-  const bodyCode = text(error?.body?.code || error?.body?.error?.code).toLowerCase();
-  const combined = `${text(error?.message)} ${JSON.stringify(error?.body || {})}`.toLowerCase();
-  if (['42p01', 'migration_required', 'robbot3k_not_configured', 'config_missing', 'configuration_missing'].includes(bodyCode)) return true;
-  return [
-    'migration required',
-    'migration is missing',
-    'configuration missing',
-    'missing configuration',
-    'not configured',
-    'relation "robbot',
-    'table "robbot',
-  ].some((phrase) => combined.includes(phrase));
 }
 
 function countsFor(prospects) {
@@ -423,35 +301,36 @@ function EngineMap({ config }) {
   );
 }
 
-function SafetyPanel({ config, run, preview }) {
+function SafetyPanel({ config, run }) {
   const providerConnected = config?.providerConnected !== false;
   const live = providerConnected && (config?.liveSendEnabled === true || text(config?.sendMode).toLowerCase() === 'live');
-  const modeLabel = !providerConnected
+  const globallyPaused = config?.globalPause !== false;
+  const modeLabel = globallyPaused
+    ? 'Globally paused · no sends'
+    : !providerConnected
     ? 'Provider not connected · dry run'
     : live
       ? 'Live send enabled'
       : 'Dry run · live send off';
   return (
-    <section className={`rounded-xl border p-4 ${live ? 'border-emerald-300/24 bg-emerald-300/[0.05]' : 'border-amber-300/24 bg-amber-300/[0.05]'}`} aria-label="Outreach safety status">
+    <section className={`rounded-xl border p-4 ${live && !globallyPaused ? 'border-emerald-300/24 bg-emerald-300/[0.05]' : 'border-amber-300/24 bg-amber-300/[0.05]'}`} aria-label="Outreach safety status">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${live ? 'border-emerald-300/24 text-emerald-200' : 'border-amber-300/24 text-amber-200'}`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${live && !globallyPaused ? 'border-emerald-300/24 text-emerald-200' : 'border-amber-300/24 text-amber-200'}`}>
             <ShieldCheck className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-body text-[9px] font-semibold uppercase tracking-[0.22em] text-foreground/50">Human-gated sending</p>
-              <span className={`rounded-full border px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.16em] ${live ? 'border-emerald-300/25 text-emerald-200' : 'border-amber-300/25 text-amber-200'}`}>
+              <span className={`rounded-full border px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.16em] ${live && !globallyPaused ? 'border-emerald-300/25 text-emerald-200' : 'border-amber-300/25 text-amber-200'}`}>
                 {modeLabel}
               </span>
-              {preview ? <span className="rounded-full border border-sky-300/25 bg-sky-300/[0.07] px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.16em] text-sky-200">Preview data</span> : null}
             </div>
             <p className="mt-2 max-w-3xl font-body text-[12px] leading-relaxed text-foreground/62">
-              {live
-                ? 'Only individually approved prospects can send inside the configured window. Research, drafts, and verified contact details remain human decisions.'
+              {live && !globallyPaused
+                ? 'Only individually approved prospects can send Monday-Friday, 9:00 AM-5:00 PM Pacific. Research, drafts, and verified contact details remain human decisions.'
                 : 'RobBot3K can research, prepare exact drafts, and simulate due work. No email leaves Avalon until live sending is explicitly configured.'}
             </p>
-            {preview ? <p className="mt-2 font-body text-[11px] font-semibold text-sky-200/80">The database/configuration is not installed. Local edits reset on reload; all save and outreach actions are disabled.</p> : null}
           </div>
         </div>
         <dl className="grid shrink-0 grid-cols-2 gap-x-6 gap-y-2 font-body text-[10px] lg:text-right">
@@ -479,7 +358,7 @@ function validateSenderSettings(settings) {
   return errors;
 }
 
-function SenderSettingsPanel({ settings, config, preview, saving, onSave }) {
+function SenderSettingsPanel({ settings, config, saving, onSave }) {
   const [expanded, setExpanded] = useState(false);
   const [form, setForm] = useState(() => normalizeSenderSettings(settings));
   const [errors, setErrors] = useState({});
@@ -508,6 +387,7 @@ function SenderSettingsPanel({ settings, config, preview, saving, onSave }) {
       replyToEmail: form.replyToEmail.trim().toLowerCase(),
       calendlyUrl: form.calendlyUrl.trim(),
       physicalPostalAddress: form.postalAddress.trim(),
+      globalPause: form.globalPause !== false,
     });
   };
 
@@ -554,6 +434,11 @@ function SenderSettingsPanel({ settings, config, preview, saving, onSave }) {
             )}
           </div>
 
+          <label className="mb-4 flex min-h-12 cursor-pointer items-start gap-2 rounded-xl border border-amber-300/18 bg-amber-300/[0.04] px-3 py-3 font-body text-[10px] leading-relaxed text-foreground/55">
+            <input type="checkbox" checked={form.globalPause !== false} onChange={(event) => setField('globalPause', event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-white" />
+            <span><strong className="font-semibold text-foreground/72">Pause all outreach.</strong> Keep this checked until the sender, provider, approvals, and live-send gate are deliberately ready. Dry-run research remains available.</span>
+          </label>
+
           <div className="grid gap-3 md:grid-cols-2">
             <label>
               <span className={LABEL}>Sender display name</span>
@@ -585,7 +470,7 @@ function SenderSettingsPanel({ settings, config, preview, saving, onSave }) {
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <p className="font-body text-[10px] text-foreground/40">Saving settings does not enable live outreach. Provider connection and the server-side live-send gate remain separate.</p>
-            <button type="submit" disabled={preview || saving} title={preview ? 'Preview settings cannot be saved.' : undefined} className={`${BUTTON} border-foreground bg-foreground text-background`}>
+            <button type="submit" disabled={saving} className={`${BUTTON} border-foreground bg-foreground text-background`}>
               <Save className="h-3.5 w-3.5" aria-hidden="true" />{saving ? 'Saving…' : 'Save sender settings'}
             </button>
           </div>
@@ -606,7 +491,7 @@ function validateManualProspect(form) {
   return errors;
 }
 
-function ManualProspectPanel({ preview, saving, onCreate }) {
+function ManualProspectPanel({ saving, onCreate }) {
   const [expanded, setExpanded] = useState(true);
   const [form, setForm] = useState(EMPTY_MANUAL_PROSPECT);
   const [errors, setErrors] = useState({});
@@ -701,20 +586,16 @@ function ManualProspectPanel({ preview, saving, onCreate }) {
             </label>
           </div>
 
-          <div className="mt-4 grid gap-2 lg:grid-cols-2">
+          <div className="mt-4">
             <label className="flex min-h-12 cursor-pointer items-start gap-2 rounded-xl border border-foreground/10 bg-background/38 px-3 py-3 font-body text-[10px] leading-relaxed text-foreground/55">
               <input type="checkbox" checked={form.sourceVerified} onChange={(event) => setField('sourceVerified', event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-white" />
               <span><strong className="font-semibold text-foreground/72">Source checked.</strong> I reviewed the company or recipient’s first-party source. If unchecked, the record stays in Needs research and cannot be approved.</span>
-            </label>
-            <label className="flex min-h-12 cursor-pointer items-start gap-2 rounded-xl border border-foreground/10 bg-background/38 px-3 py-3 font-body text-[10px] leading-relaxed text-foreground/55">
-              <input type="checkbox" checked={form.isTestRecord} onChange={(event) => setField('isTestRecord', event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-white" />
-              <span><strong className="font-semibold text-foreground/72">Test record.</strong> Clearly label this contact as an internal outreach test rather than a live prospect.</span>
             </label>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-foreground/8 pt-4">
             <p className="max-w-3xl font-body text-[10px] leading-relaxed text-foreground/42">A name can enter research before an email is known. Adding a contact only prepares research and draft copy; email verification and approval remain separate human actions, and this form cannot send.</p>
-            <button type="submit" disabled={preview || saving} title={preview ? 'Preview data cannot be saved.' : undefined} className={`${BUTTON} border-foreground bg-foreground text-background`}>
+            <button type="submit" disabled={saving} className={`${BUTTON} border-foreground bg-foreground text-background`}>
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />{saving ? 'Adding…' : 'Add to research queue'}
             </button>
           </div>
@@ -724,7 +605,7 @@ function ManualProspectPanel({ preview, saving, onCreate }) {
   );
 }
 
-function ApprovalGate({ prospect, form }) {
+function ApprovalGate({ prospect, form, senderReady }) {
   const emailPresent = /.+@.+\..+/.test(form.contact.email.trim());
   const draftReady = form.sequence.length === 4 && form.sequence.every((touch) => touch.subject.trim() && touch.body.trim());
   const gates = [
@@ -732,9 +613,10 @@ function ApprovalGate({ prospect, form }) {
     { label: 'Contact email', ready: emailPresent },
     { label: 'Human verified', ready: prospect.manualVerified },
     { label: '4 exact drafts', ready: draftReady },
+    { label: 'Sender settings', ready: senderReady },
   ];
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Approval requirements">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label="Approval requirements">
       {gates.map((gate) => (
         <div key={gate.label} className={`rounded-lg border px-3 py-2 ${gate.ready ? 'border-emerald-300/18 bg-emerald-300/[0.045]' : 'border-foreground/10 bg-background/42'}`}>
           <div className="flex items-center gap-1.5">
@@ -808,7 +690,7 @@ function SequenceEditor({ sequence, onChange, disabled }) {
   );
 }
 
-function ProspectCard({ prospect, preview, busy, onAction }) {
+function ProspectCard({ prospect, busy, onAction, settings }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [manualCheck, setManualCheck] = useState(false);
@@ -829,10 +711,16 @@ function ProspectCard({ prospect, preview, busy, onAction }) {
   const updateSequence = (sequence) => setForm((current) => ({ ...current, sequence }));
   const draftReady = form.sequence.length === 4 && form.sequence.every((touch) => touch.subject.trim() && touch.body.trim());
   const emailPresent = /.+@.+\..+/.test(form.contact.email.trim());
-  const canApprove = prospect.officialEvidence && emailPresent && prospect.manualVerified && draftReady && !preview;
+  const senderReady = Boolean(
+    settings?.displayName?.trim()
+    && settings?.fromEmail?.trim()
+    && settings?.replyToEmail?.trim()
+    && settings?.calendlyUrl?.trim()
+    && settings?.postalAddress?.trim()
+  );
+  const canApprove = prospect.officialEvidence && emailPresent && prospect.manualVerified && draftReady && senderReady;
   const stage = stageFor(prospect.status);
   const actionBusy = busy.startsWith(`${prospect.id}:`);
-  const disabledTitle = preview ? 'Preview data cannot be saved or sent.' : undefined;
   const payload = { contact: form.contact, sequence: form.sequence };
   const crmTarget = prospect.opportunityId
     ? `/admin/bd/pipeline/${prospect.opportunityId}`
@@ -865,7 +753,6 @@ function ProspectCard({ prospect, preview, busy, onAction }) {
               <span className="rounded-full border border-foreground/10 bg-background/45 px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.15em] text-foreground/50">{statusLabel(prospect)}</span>
               <span className="rounded-full border border-foreground/10 bg-background/45 px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.15em] text-foreground/50">{prospect.segment}</span>
               {prospect.manualEntry ? <span className="rounded-full border border-sky-300/20 bg-sky-300/[0.05] px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.15em] text-sky-200">Manual source</span> : null}
-              {prospect.isTestRecord ? <span className="rounded-full border border-violet-300/20 bg-violet-300/[0.05] px-2 py-1 font-body text-[9px] font-semibold uppercase tracking-[0.15em] text-violet-200">Test record</span> : null}
             </div>
             <h2 className="mt-3 font-heading text-3xl uppercase leading-none tracking-tight text-foreground md:text-4xl">{prospect.organization}</h2>
             <p className="mt-2 max-w-3xl font-body text-[11px] leading-relaxed text-foreground/48">{prospect.nextAction || (stage === 'research' ? 'Research the organization and relevant contact before review.' : 'Review the record and choose the next human-controlled action.')}</p>
@@ -903,7 +790,7 @@ function ProspectCard({ prospect, preview, busy, onAction }) {
         </div>
 
         <div className="mt-4">
-          <ApprovalGate prospect={prospect} form={form} />
+          <ApprovalGate prospect={prospect} form={form} senderReady={senderReady} />
         </div>
 
         {prospect.stopReason ? <div className="mt-4 rounded-lg border border-foreground/10 bg-background/40 px-3 py-2.5 font-body text-[11px] text-foreground/55"><Ban className="mr-2 inline h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" />{prospect.stopReason}</div> : null}
@@ -917,40 +804,40 @@ function ProspectCard({ prospect, preview, busy, onAction }) {
           {crmTarget ? <button type="button" onClick={() => navigate(crmTarget)} className={`${BUTTON} border-violet-300/22 bg-violet-300/[0.06] text-violet-200`}><Link2 className="h-3.5 w-3.5" aria-hidden="true" />Open CRM record</button> : null}
 
           {!prospect.manualVerified && (
-            <button type="button" onClick={() => onAction('update_prospect', prospect, { ...payload, updateKind: 'verify-email', manualConfirmation: true })} disabled={preview || actionBusy || !emailPresent || !manualCheck} title={disabledTitle || (!manualCheck ? 'Confirm the manual email check first.' : undefined)} className={`${BUTTON} border-sky-300/22 bg-sky-300/[0.07] text-sky-200`}>
+            <button type="button" onClick={() => onAction('update_prospect', prospect, { ...payload, updateKind: 'verify-email', manualConfirmation: true })} disabled={actionBusy || !emailPresent || !manualCheck} title={!manualCheck ? 'Confirm the manual email check first.' : undefined} className={`${BUTTON} border-sky-300/22 bg-sky-300/[0.07] text-sky-200`}>
               <UserCheck className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" />Verify email
             </button>
           )}
 
           {stage === 'review' || stage === 'research' ? (
-            <button type="button" onClick={() => onAction('approve', prospect, payload)} disabled={!canApprove || actionBusy} title={disabledTitle || (!canApprove ? 'Official evidence, a contact email, human verification, and all four drafts are required.' : undefined)} className={`${BUTTON} border-emerald-300/24 bg-emerald-300/[0.09] text-emerald-200`}>
+            <button type="button" onClick={() => onAction('approve', prospect, payload)} disabled={!canApprove || actionBusy} title={disabledTitle || (!canApprove ? 'Official evidence, sender settings, a contact email, human verification, and all four drafts are required.' : undefined)} className={`${BUTTON} border-emerald-300/24 bg-emerald-300/[0.09] text-emerald-200`}>
               <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />Approve 4-touch sequence
             </button>
           ) : null}
 
           {stage === 'approved' ? (
             <>
-              <button type="button" onClick={() => onAction('revoke', prospect)} disabled={preview || actionBusy} title={disabledTitle} className={`${BUTTON} border-amber-300/22 bg-amber-300/[0.06] text-amber-200`}><CirclePause className="h-3.5 w-3.5" aria-hidden="true" />Revoke</button>
-              <button type="button" onClick={() => onAction('mark_reply', prospect)} disabled={preview || actionBusy} title={disabledTitle} className={`${BUTTON} border-sky-300/22 bg-sky-300/[0.06] text-sky-200`}><MessageCircleReply className="h-3.5 w-3.5" aria-hidden="true" />Mark reply</button>
-              <button type="button" onClick={() => { setBookingOpen((value) => !value); setBookingError(''); }} disabled={preview || actionBusy} title={disabledTitle} className={`${BUTTON} border-emerald-300/22 bg-emerald-300/[0.07] text-emerald-200`} aria-expanded={bookingOpen}><CalendarCheck className="h-3.5 w-3.5" aria-hidden="true" />Book call</button>
+              <button type="button" onClick={() => onAction('revoke', prospect)} disabled={actionBusy} className={`${BUTTON} border-amber-300/22 bg-amber-300/[0.06] text-amber-200`}><CirclePause className="h-3.5 w-3.5" aria-hidden="true" />Revoke</button>
+              <button type="button" onClick={() => onAction('mark_reply', prospect)} disabled={actionBusy} className={`${BUTTON} border-sky-300/22 bg-sky-300/[0.06] text-sky-200`}><MessageCircleReply className="h-3.5 w-3.5" aria-hidden="true" />Mark reply</button>
+              <button type="button" onClick={() => { setBookingOpen((value) => !value); setBookingError(''); }} disabled={actionBusy} className={`${BUTTON} border-emerald-300/22 bg-emerald-300/[0.07] text-emerald-200`} aria-expanded={bookingOpen}><CalendarCheck className="h-3.5 w-3.5" aria-hidden="true" />Book call</button>
             </>
           ) : null}
 
           {stage !== 'stopped' ? (
             <>
-              <button type="button" onClick={() => onAction('hold', prospect)} disabled={preview || actionBusy} title={disabledTitle} className={`${BUTTON} border-foreground/12 bg-background/42 text-foreground/55 hover:text-foreground`}><CirclePause className="h-3.5 w-3.5" aria-hidden="true" />Hold</button>
-              <button type="button" onClick={() => onAction('reject', prospect)} disabled={preview || actionBusy} title={disabledTitle} className={`${BUTTON} border-foreground/12 bg-background/42 text-foreground/55 hover:text-foreground`}><XCircle className="h-3.5 w-3.5" aria-hidden="true" />Reject</button>
+              <button type="button" onClick={() => onAction('hold', prospect)} disabled={actionBusy} className={`${BUTTON} border-foreground/12 bg-background/42 text-foreground/55 hover:text-foreground`}><CirclePause className="h-3.5 w-3.5" aria-hidden="true" />Hold</button>
+              <button type="button" onClick={() => onAction('reject', prospect)} disabled={actionBusy} className={`${BUTTON} border-foreground/12 bg-background/42 text-foreground/55 hover:text-foreground`}><XCircle className="h-3.5 w-3.5" aria-hidden="true" />Reject</button>
             </>
           ) : null}
 
-          <button type="button" onClick={() => onAction('suppress', prospect)} disabled={preview || actionBusy || text(prospect.status).toLowerCase() === 'suppressed'} title={disabledTitle} className={`${BUTTON} border-red-300/20 bg-red-300/[0.05] text-red-200`}><Ban className="h-3.5 w-3.5" aria-hidden="true" />Suppress</button>
+          <button type="button" onClick={() => onAction('suppress', prospect)} disabled={actionBusy || text(prospect.status).toLowerCase() === 'suppressed'} className={`${BUTTON} border-red-300/20 bg-red-300/[0.05] text-red-200`}><Ban className="h-3.5 w-3.5" aria-hidden="true" />Suppress</button>
         </div>
 
         {stage === 'approved' && bookingOpen ? (
           <form onSubmit={submitBooking} className="mt-3 grid gap-2 rounded-lg border border-emerald-300/20 bg-emerald-300/[0.045] p-3 sm:grid-cols-[minmax(190px,0.8fr)_minmax(220px,1.2fr)_auto] sm:items-end">
             <label><span className={`${LABEL} text-emerald-100/65`}>Call date and time *</span><input type="datetime-local" required min={futureLocalDateTime(1)} value={booking.scheduledAt} onChange={(event) => setBooking((current) => ({ ...current, scheduledAt: event.target.value }))} className={FIELD} /></label>
             <label><span className={`${LABEL} text-emerald-100/65`}>Booking URL · optional</span><input type="url" value={booking.bookingUrl} onChange={(event) => setBooking((current) => ({ ...current, bookingUrl: event.target.value }))} placeholder="https://calendly.com/…" className={FIELD} /></label>
-            <button type="submit" disabled={preview || actionBusy || !booking.scheduledAt} className={`${BUTTON} border-emerald-200 bg-emerald-200 text-stone-950`}>{actionBusy ? 'Saving…' : 'Confirm booking'}</button>
+            <button type="submit" disabled={actionBusy || !booking.scheduledAt} className={`${BUTTON} border-emerald-200 bg-emerald-200 text-stone-950`}>{actionBusy ? 'Saving…' : 'Confirm booking'}</button>
             {bookingError ? <p role="alert" className="font-body text-[10px] text-red-200 sm:col-span-3">{bookingError}</p> : <p className="font-body text-[9px] leading-relaxed text-emerald-100/55 sm:col-span-3">A required future time is saved to Home. Booking stops the remaining outreach sequence.</p>}
           </form>
         ) : null}
@@ -974,7 +861,7 @@ function ProspectCard({ prospect, preview, busy, onAction }) {
                   <label><span className={LABEL}>Role</span><input value={form.contact.role} onChange={(event) => updateContact('role', event.target.value)} className={FIELD} placeholder="People, events, workplace…" /></label>
                   <label className="sm:col-span-2 xl:col-span-1"><span className={LABEL}>Contact email</span><input type="email" value={form.contact.email} onChange={(event) => updateContact('email', event.target.value)} className={FIELD} placeholder="name@company.com" autoComplete="off" /></label>
                 </div>
-                <button type="button" onClick={() => onAction('update_prospect', prospect, { ...payload, updateKind: 'draft' })} disabled={preview || actionBusy} title={disabledTitle} className={`${BUTTON} mt-3 w-full border-foreground/18 bg-foreground text-background`}><Save className="h-3.5 w-3.5" aria-hidden="true" />Save contact & drafts</button>
+                <button type="button" onClick={() => onAction('update_prospect', prospect, { ...payload, updateKind: 'draft' })} disabled={actionBusy} className={`${BUTTON} mt-3 w-full border-foreground/18 bg-foreground text-background`}><Save className="h-3.5 w-3.5" aria-hidden="true" />Save contact & drafts</button>
               </div>
               {prospect.manualNotes ? (
                 <div className="rounded-xl border border-violet-300/14 bg-violet-300/[0.035] p-3">
@@ -999,20 +886,23 @@ function ProspectCard({ prospect, preview, busy, onAction }) {
 export default function RobBot3K() {
   const [prospects, setProspects] = useState([]);
   const [stats, setStats] = useState({});
+  const [stageCounts, setStageCounts] = useState(null);
+  const [facets, setFacets] = useState({ segments: [], emailStatuses: ['Manually verified', 'Needs manual verification', 'Not found'] });
   const [config, setConfig] = useState({ liveSendEnabled: false, providerConnected: false });
   const [settings, setSettings] = useState(() => normalizeSenderSettings());
   const [run, setRun] = useState({});
   const [activeTab, setActiveTab] = useState('review');
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [segment, setSegment] = useState('all');
   const [priority, setPriority] = useState('all');
   const [emailStatus, setEmailStatus] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [sourceReady, setSourceReady] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState(null);
-  const [preview, setPreview] = useState(false);
   const [pagination, setPagination] = useState({ limit: PAGE_LIMIT, offset: 0, total: 0, hasMore: false });
 
   const applyData = useCallback((data, { append = false } = {}) => {
@@ -1037,6 +927,13 @@ export default function RobBot3K() {
       setPagination({ limit: PAGE_LIMIT, offset: 0, total: data.prospects.length, hasMore: false });
     }
     if (data?.stats) setStats(data.stats);
+    if (data?.stageCounts) setStageCounts(data.stageCounts);
+    if (data?.facets) {
+      setFacets({
+        segments: Array.isArray(data.facets.segments) ? data.facets.segments : [],
+        emailStatuses: Array.isArray(data.facets.emailStatuses) ? data.facets.emailStatuses : ['Manually verified', 'Needs manual verification', 'Not found'],
+      });
+    }
     if (data?.settings) setSettings(normalizeSenderSettings(data.settings));
     if (data?.config || typeof data?.liveSendEnabled === 'boolean') {
       setConfig({
@@ -1056,50 +953,64 @@ export default function RobBot3K() {
     }
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
   const load = useCallback(async ({ quiet = false, offset = 0, append = false } = {}) => {
     if (append) setLoadingMore(true);
     else if (!quiet) setLoading(true);
     if (!append) setError('');
     try {
-      const data = await apiGet(`/api/admin/robbot3k?scope=all&limit=${PAGE_LIMIT}&offset=${Math.max(0, Number(offset) || 0)}`);
-      if (!Array.isArray(data?.prospects)) {
-        const invalid = new Error('RobBot3K returned an invalid dashboard response.');
-        invalid.body = { code: 'invalid_dashboard_response' };
-        throw invalid;
+      const params = new URLSearchParams({
+        scope: 'all',
+        stage: activeTab,
+        limit: String(PAGE_LIMIT),
+        offset: String(Math.max(0, Number(offset) || 0)),
+      });
+      if (debouncedQuery) params.set('search', debouncedQuery);
+      if (segment !== 'all') params.set('segment', segment);
+      if (priority !== 'all') params.set('priority', priority);
+      if (emailStatus !== 'all') params.set('emailStatus', emailStatus);
+      const data = await apiGet(`/api/admin/robbot3k?${params.toString()}`);
+      assertApiResponse(data, {
+        arrays: ['prospects', 'runs', 'facets.segments', 'facets.emailStatuses'],
+        objects: ['pagination', 'stats', 'stageCounts', 'facets', 'run', 'config', 'settings'],
+        booleans: ['pagination.hasMore', 'config.liveSendEnabled', 'config.providerConnected', 'settings.globalPause'],
+        numbers: [
+          'pagination.limit', 'pagination.offset', 'pagination.total',
+          'stats.researchedToday', 'stats.readyForReview', 'stats.dueToday', 'stats.activeSequences',
+          'stats.repliesToday', 'stats.totalReplies', 'stats.callsBookedToday', 'stats.totalCallsBooked',
+          'stageCounts.research', 'stageCounts.review', 'stageCounts.approved', 'stageCounts.stopped',
+        ],
+      }, 'RobBot3K returned an invalid dashboard response.');
+      if (!hasObjectRows(data.prospects) || !hasObjectRows(data.runs)) {
+        throw invalidApiResponse('RobBot3K returned invalid queue records.');
       }
-      setPreview(false);
       applyData(data || {}, { append });
+      setSourceReady(true);
     } catch (requestError) {
-      const localPreviewResponse = import.meta.env.DEV
-        && text(requestError?.body?.code).toLowerCase() === 'invalid_dashboard_response';
-      if (!append && (previewEligible(requestError) || localPreviewResponse)) {
-        const normalized = PREVIEW_PROSPECTS.map(normalizeProspect);
-        setProspects(normalized);
-        setPagination({ limit: PAGE_LIMIT, offset: 0, total: normalized.length, hasMore: false });
-        setStats(derivedStats(normalized));
-        setConfig({ liveSendEnabled: false, providerConnected: false, configured: false });
-        setSettings(normalizeSenderSettings({ providerConnected: false, providerStatus: 'Provider disconnected' }));
-        setRun({ lastRefreshAt: null, lastExecuteAt: null });
-        setPreview(true);
-        setNotice({ tone: 'preview', message: 'Preview data is shown because the RobBot3K database/configuration is not installed.' });
-      } else if (append) {
+      if (append) {
         setNotice({ tone: 'error', message: requestError?.message || 'The next 100 prospects could not be loaded.' });
       } else {
+        setSourceReady(false);
+        setProspects([]);
+        setStats({});
+        setStageCounts({ research: 0, review: 0, approved: 0, stopped: 0 });
+        setFacets({ segments: [], emailStatuses: [] });
+        setPagination({ limit: PAGE_LIMIT, offset: 0, total: 0, hasMore: false });
         setError(requestError?.message || 'RobBot3K could not load its outreach queue.');
       }
     } finally {
       if (append) setLoadingMore(false);
       else setLoading(false);
     }
-  }, [applyData]);
+  }, [activeTab, applyData, debouncedQuery, emailStatus, priority, segment]);
 
   useEffect(() => { load(); }, [load]);
 
   const action = useCallback(async (actionName, prospect, payload = {}) => {
-    if (preview) {
-      setNotice({ tone: 'preview', message: 'Preview data cannot be saved or sent. Install the RobBot3K migration/configuration first.' });
-      return;
-    }
     const busyKey = prospect ? `${prospect.id}:${actionName}` : actionName;
     setBusy(busyKey);
     setNotice(null);
@@ -1139,6 +1050,8 @@ export default function RobBot3K() {
       if (actionName === 'create_manual_prospect' && data?.prospect) {
         setActiveTab(stageFor(data.prospect.status));
         if (data.created) setPagination((current) => ({ ...current, total: current.total + 1 }));
+      } else if (data?.prospect) {
+        await load({ quiet: true, offset: 0, append: false });
       }
       const messageByAction = {
         refresh: 'Atlas research refreshed. New findings remain unapproved.',
@@ -1162,12 +1075,12 @@ export default function RobBot3K() {
     } finally {
       setBusy('');
     }
-  }, [applyData, config?.liveSendEnabled, load, preview]);
+  }, [applyData, config?.liveSendEnabled, load]);
 
-  const counts = useMemo(() => countsFor(prospects), [prospects]);
+  const counts = useMemo(() => stageCounts || countsFor(prospects), [prospects, stageCounts]);
   const computedStats = useMemo(() => ({ ...derivedStats(prospects), ...stats }), [prospects, stats]);
-  const segments = useMemo(() => [...new Set(prospects.map((prospect) => prospect.segment).filter(Boolean))].sort(), [prospects]);
-  const emailStatuses = useMemo(() => [...new Set(prospects.map((prospect) => prospect.emailStatus).filter(Boolean))].sort(), [prospects]);
+  const segments = useMemo(() => facets.segments, [facets.segments]);
+  const emailStatuses = useMemo(() => facets.emailStatuses, [facets.emailStatuses]);
   const visibleProspects = useMemo(() => {
     const lowered = query.trim().toLowerCase();
     return prospects.filter((prospect) => {
@@ -1184,6 +1097,26 @@ export default function RobBot3K() {
   const globalBusy = busy === 'refresh' || busy === 'run_due_outreach';
   const live = config?.providerConnected !== false && (config?.liveSendEnabled === true || text(config?.sendMode).toLowerCase() === 'live');
 
+  if (!sourceReady) {
+    return (
+      <AdminShell title="RobBot3K">
+        {loading ? (
+          <div className="mx-auto flex min-h-[28rem] max-w-2xl items-center justify-center px-5 py-12">
+            <div className="av-glass-card w-full rounded-[1.75rem] border border-foreground/[0.12] bg-background/62 p-8 text-center backdrop-blur-2xl md:p-12">
+              <RefreshCw className="mx-auto h-6 w-6 animate-spin text-foreground/35" strokeWidth={1.6} aria-hidden="true" />
+              <p className="mt-4 font-body text-sm text-foreground/50">Verifying the live BD source…</p>
+            </div>
+          </div>
+        ) : (
+          <OperationalSourceUnavailable
+            title="RobBot3K source unavailable"
+            description="The live prospect queue, settings, provider status, safety state, and outcome metrics could not be verified. No zeroed engine state or default controls are shown, and all research and outreach actions remain disabled until the source reconnects."
+          />
+        )}
+      </AdminShell>
+    );
+  }
+
   return (
     <AdminShell title="RobBot3K">
       <PageShell
@@ -1193,11 +1126,11 @@ export default function RobBot3K() {
         subtitle="An event-driven BD engine that turns verified market signals into a ranked morning queue, human-approved outreach, and qualified discovery calls."
         action={(
           <div className="flex w-full flex-wrap gap-2 md:w-auto">
-            <button type="button" onClick={() => action('refresh')} disabled={preview || globalBusy} title={preview ? 'Preview data cannot refresh.' : undefined} className={`${BUTTON} flex-1 border-foreground/16 bg-background/50 text-foreground/68 hover:text-foreground md:flex-none`}>
+            <button type="button" onClick={() => action('refresh')} disabled={globalBusy} className={`${BUTTON} flex-1 border-foreground/16 bg-background/50 text-foreground/68 hover:text-foreground md:flex-none`}>
               <RefreshCw className={`h-3.5 w-3.5 ${busy === 'refresh' ? 'animate-spin' : ''}`} strokeWidth={1.8} aria-hidden="true" />
               {busy === 'refresh' ? 'Researching…' : 'Run research now'}
             </button>
-            <button type="button" onClick={() => action('run_due_outreach')} disabled={preview || globalBusy} title={preview ? 'Preview data cannot execute.' : undefined} className={`${BUTTON} flex-1 border-foreground bg-foreground text-background md:flex-none`}>
+            <button type="button" onClick={() => action('run_due_outreach')} disabled={globalBusy} className={`${BUTTON} flex-1 border-foreground bg-foreground text-background md:flex-none`}>
               <Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={1.6} aria-hidden="true" />
               {busy === 'run_due_outreach' ? 'Running…' : live ? 'Run due outreach' : 'Run due dry test'}
             </button>
@@ -1225,25 +1158,23 @@ export default function RobBot3K() {
           </section>
 
           {notice ? (
-            <div role="status" className={`rounded-xl border px-4 py-3 font-body text-[11px] ${notice.tone === 'error' ? 'border-red-300/24 bg-red-300/[0.05] text-red-200' : notice.tone === 'preview' ? 'border-sky-300/24 bg-sky-300/[0.05] text-sky-200' : 'border-emerald-300/24 bg-emerald-300/[0.05] text-emerald-200'}`}>
+            <div role="status" className={`rounded-xl border px-4 py-3 font-body text-[11px] ${notice.tone === 'error' ? 'border-red-300/24 bg-red-300/[0.05] text-red-200' : 'border-emerald-300/24 bg-emerald-300/[0.05] text-emerald-200'}`}>
               {notice.message}
             </div>
           ) : null}
 
-          <SafetyPanel config={config} run={run} preview={preview} />
+          <SafetyPanel config={config} run={run} />
 
           <EngineMap config={config} />
 
           <SenderSettingsPanel
             settings={settings}
             config={config}
-            preview={preview}
             saving={busy === 'update_settings'}
             onSave={(nextSettings) => action('update_settings', null, { settings: nextSettings })}
           />
 
           <ManualProspectPanel
-            preview={preview}
             saving={busy === 'create_manual_prospect'}
             onCreate={(prospect) => action('create_manual_prospect', null, { prospect })}
           />
@@ -1287,7 +1218,7 @@ export default function RobBot3K() {
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-foreground/8 pt-3 font-body text-[9px] font-semibold uppercase tracking-[0.15em] text-foreground/38">
               <span>{prospects.length.toLocaleString()} loaded of {Math.max(pagination.total, prospects.length).toLocaleString()}</span>
-              <span>{PAGE_LIMIT} records per page · filters apply to loaded records</span>
+              <span>{PAGE_LIMIT} records per page · server-filtered queue</span>
             </div>
           </section>
 
@@ -1303,7 +1234,7 @@ export default function RobBot3K() {
             </div>
           ) : visibleProspects.length ? (
             <div className="space-y-3" role="tabpanel" aria-label={TABS.find((tab) => tab.key === activeTab)?.label}>
-              {visibleProspects.map((prospect) => <ProspectCard key={prospect.id} prospect={prospect} preview={preview} busy={busy} onAction={action} />)}
+              {visibleProspects.map((prospect) => <ProspectCard key={prospect.id} prospect={prospect} busy={busy} onAction={action} settings={settings} />)}
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-foreground/12 bg-background/38 p-8 text-center">
