@@ -52,6 +52,11 @@ const tables = [
 for (const table of tables) {
   assert.match(migration, new RegExp(`create table if not exists public\\.${table}\\s*\\(`), `061 must create ${table}`);
 }
+const firstExecutableStatement = migration.split('\n')
+  .map((line) => line.trim())
+  .find((line) => line && !line.startsWith('--'));
+assert.equal(firstExecutableStatement, 'begin;', '061 must begin with an explicit transaction for SQL Editor application');
+assert.match(migration, /\ncommit;\s*$/, '061 must commit only after every schema, trigger, function, ACL, and comment statement');
 assert.match(migration, /migration_050_required/);
 assert.match(migration, /migration_051_required/);
 assert.doesNotMatch(migration, /^\s*[a-z_][a-z0-9_]*:\s*do\s+\$\$/im, '061 contains an invalid labelled DO statement');
@@ -114,6 +119,7 @@ assert.match(migration, /approved_guide_version_is_immutable/, 'approved nurse g
 for (const name of [
   'decline_operational_shift',
   'counter_operational_shift_offer',
+  'claim_operational_shift',
   'start_nurse_shift_run',
   'record_nurse_time_event',
   'record_nurse_step_event',

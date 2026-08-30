@@ -5,6 +5,8 @@
 -- consumes persisted evidence and fails closed when an owner has not supplied
 -- an authoritative fact.
 
+begin;
+
 do $$
 begin
   if to_regclass('public.operational_shifts') is null
@@ -1662,6 +1664,7 @@ $$;
 
 revoke all on function public.decline_operational_shift(uuid, uuid, uuid, uuid, integer) from public, anon, authenticated;
 revoke all on function public.counter_operational_shift_offer(uuid, uuid, uuid, uuid, integer, uuid, jsonb) from public, anon, authenticated;
+revoke all on function public.claim_operational_shift(uuid, uuid, uuid, uuid, integer) from public, anon, authenticated;
 revoke all on function public.start_nurse_shift_run(uuid, uuid, uuid, uuid, integer) from public, anon, authenticated;
 revoke all on function public.record_nurse_time_event(uuid, uuid, uuid, text, uuid, timestamptz, text, jsonb) from public, anon, authenticated;
 revoke all on function public.record_nurse_step_event(uuid, uuid, uuid, text, text, text, uuid, timestamptz, jsonb) from public, anon, authenticated;
@@ -1670,6 +1673,7 @@ revoke all on function public.close_nurse_shift_run(uuid, uuid, uuid, integer) f
 
 grant execute on function public.decline_operational_shift(uuid, uuid, uuid, uuid, integer) to service_role;
 grant execute on function public.counter_operational_shift_offer(uuid, uuid, uuid, uuid, integer, uuid, jsonb) to service_role;
+grant execute on function public.claim_operational_shift(uuid, uuid, uuid, uuid, integer) to service_role;
 grant execute on function public.start_nurse_shift_run(uuid, uuid, uuid, uuid, integer) to service_role;
 grant execute on function public.record_nurse_time_event(uuid, uuid, uuid, text, uuid, timestamptz, text, jsonb) to service_role;
 grant execute on function public.record_nurse_step_event(uuid, uuid, uuid, text, text, text, uuid, timestamptz, jsonb) to service_role;
@@ -1694,3 +1698,5 @@ comment on table public.mobile_shift_step_events is
   'Append-only nurse operational step resolutions. Clinical content remains in the source record.';
 comment on table public.shift_exceptions is
   'Structured nurse issues and emergency paths with human ownership and immutable original nurse report.';
+
+commit;
