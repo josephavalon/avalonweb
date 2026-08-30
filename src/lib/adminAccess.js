@@ -49,7 +49,6 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/expiring-credits', // members with credits about to expire
   '/admin/reviews', // post-visit NPS + review moderation
   '/admin/bd', // B2B system of record (admin-only)
-  '/admin/robbot3k', // permission-gated business development operator (admin-only)
   '/admin/support-tickets', // public support queue
   '/admin/reconciliation', // renewals / acuity sync / payment failures
   '/admin/os', // persisted Avalon OS beta capability workspaces
@@ -79,7 +78,7 @@ function matchesAllowList(path, allowList) {
   if (allowList.includes(path)) return true;
   // `/admin` is the dashboard route, not a wildcard for every admin child.
   // Treating it as a prefix would silently grant staff access to admin-only
-  // surfaces such as RobBot3K.
+  // future automation surfaces.
   return allowList.some((entry) => entry !== '/admin' && path.startsWith(`${entry}/`));
 }
 

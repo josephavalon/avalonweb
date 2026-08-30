@@ -9,18 +9,17 @@ import {
   normalizeOpportunityInput,
   normalizePersonInput,
   normalizeBdTags,
-  reconcileRobBotProspectToBd,
   recordBdMutation,
   requireBdUuid,
 } from '../_lib/bd-crm-core.js';
+import { requireBdCrmEnabled } from '../_lib/bd-crm-gate.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { requireAdmin } from '../_lib/supabase-auth.js';
-import { requireBdDataReview } from '../_lib/bd-data-review-gate.js';
 
 const LIST_VIEWS = new Set(['companies', 'people', 'pipeline', 'tasks', 'lists']);
 const RECORD_TYPES = new Set(['company', 'person', 'opportunity']);
 const ACTIVITY_TYPES = new Set([
-  'email', 'call', 'meeting', 'dm', 'note', 'research', 'rob_bot_action',
+  'email', 'call', 'meeting', 'dm', 'note', 'research',
   'proposal', 'follow_up', 'status_change', 'file', 'internal_comment', 'task',
 ]);
 const PRIORITIES = new Set(['low', 'normal', 'high', 'urgent']);
@@ -31,7 +30,7 @@ const REOPEN_PROBABILITY = Object.freeze({
 const POST_ACTIONS = new Set([
   'create_company', 'create_person', 'create_opportunity', 'create_activity',
   'create_task', 'add_note', 'register_file_metadata', 'create_list',
-  'add_list_item', 'record_call', 'reconcile_prospect', 'merge_records',
+  'add_list_item', 'record_call', 'merge_records',
 ]);
 const PATCH_ACTIONS = new Set([
   'update_company', 'update_person', 'update_opportunity', 'change_pipeline_stage',
@@ -224,7 +223,7 @@ async function dashboard(db, tenantId) {
   const now = new Date();
   const pacificToday = pacificDayWindow(now);
   const weekEnd = new Date(now.getTime() + 7 * 86400000).toISOString();
-  const [opportunities, dueTasks, overdueTasks, replies, calls, discoveries, recentChanges] = await Promise.all([
+  const [opportunities, dueTasks, overdueTasks, meetings, recentChanges] = await Promise.all([
     selectAll(db, 'bd_opportunities', 'id, name, company_id, owner_profile_id, pipeline_stage, expected_value_cents, weighted_value_cents, priority, fit_score, next_action, next_action_date, updated_at', tenantId,
       (query) => query.is('deleted_at', null).not('pipeline_stage', 'in', '(won,lost)').order('updated_at', { ascending: false })),
     db.from('bd_tasks').select('*').eq('tenant_id', tenantId).is('deleted_at', null)
@@ -233,41 +232,24 @@ async function dashboard(db, tenantId) {
     db.from('bd_tasks').select('*').eq('tenant_id', tenantId).is('deleted_at', null)
       .in('status', ['open', 'in_progress']).lt('due_at', pacificToday.start)
       .order('due_at', { ascending: true }).limit(25),
-    db.from('robbot3k_prospects').select('id, organization, name, contact_name, opportunity_id, updated_at')
-      .eq('tenant_id', tenantId).eq('status', 'replied').order('updated_at', { ascending: false }).limit(25),
-    db.from('robbot3k_meetings').select('id, prospect_id, scheduled_at, provider, status')
-      .eq('tenant_id', tenantId).eq('status', 'scheduled').gte('scheduled_at', now.toISOString())
-      .lte('scheduled_at', weekEnd).order('scheduled_at', { ascending: true }).limit(25),
-    db.from('robbot3k_prospects').select('id, organization, name, fit_summary, priority, opportunity_id, updated_at')
-      .eq('tenant_id', tenantId).in('status', ['research', 'ready'])
-      .order('updated_at', { ascending: false }).limit(25),
+    db.from('bd_activities').select('id, occurred_at, content, source, company_id, primary_person_id, opportunity_id')
+      .eq('tenant_id', tenantId).eq('activity_type', 'meeting')
+      .gte('occurred_at', now.toISOString()).lte('occurred_at', weekEnd)
+      .order('occurred_at', { ascending: true }).limit(25),
     db.from('bd_opportunities').select('id, name, company_id, owner_profile_id, pipeline_stage, priority, fit_score, next_action, updated_at')
       .eq('tenant_id', tenantId).is('deleted_at', null).order('updated_at', { ascending: false }).limit(15),
   ]);
-  for (const result of [dueTasks, overdueTasks, replies, calls, discoveries, recentChanges]) if (result.error) throw result.error;
-  const callRows = calls.data || [];
-  const prospectIds = [...new Set(callRows.map((call) => call.prospect_id).filter(Boolean))];
-  let callProspects = [];
-  if (prospectIds.length) {
-    const prospectResult = await db.from('robbot3k_prospects')
-      .select('id, organization, name, contact_name, contact_role, company_id, person_id, opportunity_id')
-      .eq('tenant_id', tenantId).in('id', prospectIds);
-    if (prospectResult.error) throw prospectResult.error;
-    callProspects = prospectResult.data || [];
-  }
-  const prospectById = new Map(callProspects.map((prospect) => [prospect.id, prospect]));
-  const upcomingCalls = callRows.map((call) => {
-    const prospect = prospectById.get(call.prospect_id);
-    return {
-      ...call,
-      organization: prospect?.organization || prospect?.name || null,
-      contact_name: prospect?.contact_name || null,
-      contact_role: prospect?.contact_role || null,
-      company_id: prospect?.company_id || null,
-      person_id: prospect?.person_id || null,
-      opportunity_id: prospect?.opportunity_id || null,
-    };
-  });
+  for (const result of [dueTasks, overdueTasks, meetings, recentChanges]) if (result.error) throw result.error;
+  const upcomingCalls = (meetings.data || []).map((meeting) => ({
+    ...meeting,
+    scheduled_at: meeting.occurred_at,
+    provider: meeting.source || 'manual',
+    status: 'scheduled',
+    organization: null,
+    contact_name: null,
+    contact_role: null,
+    person_id: meeting.primary_person_id || null,
+  }));
   const openPipelineCents = opportunities.reduce((sum, item) => sum + Number(item.expected_value_cents || 0), 0);
   const priority = opportunities.filter((item) => ['high', 'urgent'].includes(item.priority))
     .sort((a, b) => Number(b.fit_score || 0) - Number(a.fit_score || 0)).slice(0, 25);
@@ -279,22 +261,22 @@ async function dashboard(db, tenantId) {
       openPipelineCents,
       openOpportunities: opportunities.length,
       priorityOpportunities: priority.length,
-      callsThisWeek: (calls.data || []).length,
+      callsThisWeek: upcomingCalls.length,
       actionsDueToday: (dueTasks.data || []).length,
       overdueActions: (overdueTasks.data || []).length,
     },
     priorityOpportunities: priority.map((row) => withOwnerName(row, ownerNames)),
-    repliesRequiringAction: replies.data || [],
+    repliesRequiringAction: [],
     followUpsDue: (dueTasks.data || []).map((row) => withOwnerName(row, ownerNames)),
     overdueTasks: (overdueTasks.data || []).map((row) => withOwnerName(row, ownerNames)),
     upcomingCalls,
-    newDiscoveries: discoveries.data || [],
+    newDiscoveries: [],
     recentlyChangedOpportunities: (recentChanges.data || []).map((row) => withOwnerName(row, ownerNames)),
     runtime: {
       callTranscriptExtraction: 'not_connected',
       fileStorage: 'not_connected',
       agentRecordQandA: 'not_connected',
-      outreachExecution: 'separate_human_gated_robbot_workflow',
+      outreachExecution: 'not_connected',
     },
   };
 }
@@ -457,11 +439,14 @@ async function getRecordContext(db, tenantId, recordType, rawId) {
     files,
     callIntelligence: calls,
     mutationHistory: mutations.data || [],
-    runtime: { fileStorage: 'not_connected', transcriptExtraction: 'not_connected', askRobBot: 'not_connected' },
+    runtime: { fileStorage: 'not_connected', transcriptExtraction: 'not_connected', recordQandA: 'not_connected' },
   };
 }
 
 async function insertRecord(db, tenantId, actorProfileId, table, objectType, row, action) {
+  // These are separate service-role requests, not one database transaction.
+  // A mutation-history failure can occur after the business row has committed;
+  // autonomous Agent BD writes stay disabled until a transactional RPC exists.
   const result = await db.from(table).insert({
     ...row, tenant_id: tenantId, created_by: actorProfileId,
     updated_by: actorProfileId,
@@ -510,6 +495,18 @@ async function createCompany(db, tenantId, actorProfileId, input) {
 
 async function createPerson(db, tenantId, actorProfileId, input) {
   const row = normalizePersonInput(input);
+  if (row.company_id) {
+    const companyResult = await db.from('bd_companies').select('id')
+      .eq('tenant_id', tenantId).eq('id', row.company_id).is('deleted_at', null).maybeSingle();
+    if (companyResult.error) throw companyResult.error;
+    if (!companyResult.data) {
+      throw new BdInputError(
+        'Selected company is not an active Avalon BD company.',
+        'person_company_invalid',
+        409,
+      );
+    }
+  }
   row.source = 'manual';
   row.owner_profile_id = await validateOwnerProfile(db, tenantId, actorProfileId, row.owner_profile_id || actorProfileId);
   return insertRecord(db, tenantId, actorProfileId, 'bd_people', 'person', row, 'create_person');
@@ -929,19 +926,18 @@ async function assertNoArchiveDependencies(db, tenantId, recordType, id) {
       ['bd_activities', 'company_id', false], ['bd_tasks', 'company_id', true],
       ['bd_notes', 'company_id', true], ['bd_files', 'company_id', true],
       ['bd_list_items', 'company_id', false], ['bd_call_ingestions', 'company_id', false],
-      ['robbot3k_prospects', 'company_id', false],
     ],
     person: [
       ['bd_opportunity_people', 'person_id', false], ['bd_activities', 'primary_person_id', false],
       ['bd_activity_people', 'person_id', false], ['bd_tasks', 'person_id', true],
       ['bd_notes', 'person_id', true], ['bd_files', 'person_id', true],
-      ['bd_list_items', 'person_id', false], ['robbot3k_prospects', 'person_id', false],
+      ['bd_list_items', 'person_id', false],
     ],
     opportunity: [
       ['bd_opportunity_people', 'opportunity_id', false], ['bd_activities', 'opportunity_id', false],
       ['bd_tasks', 'opportunity_id', true], ['bd_notes', 'opportunity_id', true],
       ['bd_files', 'opportunity_id', true], ['bd_list_items', 'opportunity_id', false],
-      ['bd_call_ingestions', 'opportunity_id', false], ['robbot3k_prospects', 'opportunity_id', false],
+      ['bd_call_ingestions', 'opportunity_id', false],
     ],
   }[recordType] || [];
   for (const [table, column, hasSoftDelete] of dependencies) {
@@ -951,7 +947,7 @@ async function assertNoArchiveDependencies(db, tenantId, recordType, id) {
     if (result.error) throw result.error;
     if ((result.data || []).length) {
       throw new BdInputError(
-        'Archive blocked because this record still has active relationships or RobBot links. Reassign, merge, or archive the linked records first.',
+        'Archive blocked because this record still has active relationships. Reassign, merge, or archive the linked records first.',
         'archive_dependencies_active',
         409,
       );
@@ -1018,10 +1014,7 @@ async function handlePost(db, tenantId, actorProfileId, body) {
     if (result.error) throw result.error;
     return { merge: result.data };
   }
-  return {
-    ...(await reconcileRobBotProspectToBd(db, tenantId, actorProfileId, body.prospectId)),
-    message: 'Discovery reconciled into Avalon BD. No outreach was sent and no outreach approval was granted.',
-  };
+  throw new BdInputError('Unknown Avalon BD action.', 'action_invalid');
 }
 
 async function handlePatch(db, tenantId, actorProfileId, body) {
@@ -1038,7 +1031,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const authed = await requireAdmin(req, res);
   if (!authed) return;
-  if (!requireBdDataReview(res)) return;
+  if (!requireBdCrmEnabled(res)) return;
   const { db, tenantId, user } = authed;
   if (!tenantId) return res.status(403).json({ error: 'Admin tenant is required.', code: 'tenant_required' });
 
@@ -1069,13 +1062,13 @@ export default async function handler(req, res) {
     await writeAuditEvent(db, {
       tenantId, actorProfileId: user.id, action: `admin_bd_${String(body.action || 'mutation')}`,
       entityType: 'avalon_bd', phiTouched: false,
-      payload: { action: body.action, recordId: result.record?.id || result.opportunity?.id || result.prospectLinks?.opportunity_id || null },
+      payload: { action: body.action, recordId: result.record?.id || result.opportunity?.id || null },
     });
     return res.status(req.method === 'POST' ? 201 : 200).json({ ok: true, ...result });
   } catch (error) {
     console.warn('[admin/bd] failed', safeLogContext(error, 'admin_bd_failed'));
     if (missingMigration(error)) {
-      return res.status(503).json({ error: 'Avalon BD database migration 048 is required.', code: 'migration_required' });
+      return res.status(503).json({ error: 'Avalon BD database migration 064 is required.', code: 'migration_required' });
     }
     if (error instanceof BdInputError || (Number(error?.status) >= 400 && Number(error?.status) < 500)) {
       return res.status(Number(error.status) || 400).json({ error: error.message, code: error.code || 'bd_request_rejected' });
@@ -1090,7 +1083,7 @@ export default async function handler(req, res) {
         bd_merge_version_conflict: 'A merge record changed. Refresh both records and review again.',
         bd_merge_same_record: 'Choose two different records to merge.',
         bd_merge_admin_required: 'An active Avalon admin must perform this merge.',
-        bd_merge_opportunity_collision: 'Merge blocked: both companies have the same active RobBot opportunity.',
+        bd_merge_person_company_mismatch: 'Both people must be linked to the same company before they can be merged.',
         bd_merge_person_collision: 'Merge blocked: both companies have the same active name-only contact.',
         bd_merge_opportunity_person_collision: 'Merge blocked: both people are linked to the same opportunity.',
         bd_merge_activity_person_collision: 'Merge blocked: both people appear on the same activity.',

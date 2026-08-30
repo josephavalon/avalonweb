@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
-  ArrowRight,
   ArrowUpRight,
   Bot,
   Building2,
@@ -51,7 +50,6 @@ const BD_NAV = [
   { id: 'companies', label: 'Companies', icon: Building2, to: '/admin/bd/companies' },
   { id: 'people', label: 'People', icon: ContactRound, to: '/admin/bd/people' },
   { id: 'tasks', label: 'Tasks', icon: ListTodo, to: '/admin/bd/tasks' },
-  { id: 'rob-bot', label: 'Rob Bot', icon: Bot, to: '/admin/robbot3k' },
 ];
 
 const VIEW_COPY = {
@@ -403,14 +401,12 @@ function EmptyRows({ children }) {
 }
 
 function LiveHomeView({ dashboard, onOpen, onNavigate }) {
-  const replies = dashboard?.repliesRequiringAction || [];
   const overdue = dashboard?.overdueTasks || [];
   const followUps = dashboard?.followUpsDue || [];
-  const discoveries = dashboard?.newDiscoveries || [];
   const calls = dashboard?.upcomingCalls || [];
   const priority = dashboard?.priorityOpportunities || [];
   const recent = dashboard?.recentlyChangedOpportunities || [];
-  const attentionCount = replies.length + overdue.length + followUps.length + discoveries.length;
+  const attentionCount = overdue.length + followUps.length;
   const openTaskRecord = (task) => {
     const opportunityId = task.opportunity_id || task.opportunityId;
     const personId = task.person_id || task.personId;
@@ -419,10 +415,6 @@ function LiveHomeView({ dashboard, onOpen, onNavigate }) {
     else if (personId) onOpen({ type: 'person', id: personId });
     else if (companyId) onOpen({ type: 'company', id: companyId });
     else onNavigate('/admin/bd/tasks');
-  };
-  const prospectName = (prospectId) => {
-    const prospect = [...replies, ...discoveries].find((item) => item.id === prospectId);
-    return prospect?.organization || prospect?.name || 'Scheduled discovery call';
   };
   return (
     <div className="space-y-7">
@@ -434,24 +426,18 @@ function LiveHomeView({ dashboard, onOpen, onNavigate }) {
             {overdue.slice(0, 4).map((task) => (
               <AttentionRow key={`overdue-${task.id}`} icon={AlertCircle} tone="red" title={`Overdue · ${task.title}`} meta={`${task.company || task.opportunity || 'Linked CRM record'} · Due ${task.due}`} action="Open record" onOpen={() => openTaskRecord(task)} />
             ))}
-            {replies.slice(0, 3).map((reply) => (
-              <AttentionRow key={`reply-${reply.id}`} icon={MessageSquare} tone="blue" title={`${reply.organization || reply.name || 'Prospect'} replied`} meta={reply.contact_name ? `Reply from ${reply.contact_name} needs a human response.` : 'Reply needs a human response.'} action="Review" onOpen={() => reply.opportunity_id ? onOpen({ type: 'opportunity', id: reply.opportunity_id }) : onNavigate('/admin/robbot3k')} />
-            ))}
             {followUps.slice(0, 4).map((task) => (
               <AttentionRow key={`task-${task.id}`} icon={Clock3} tone="amber" title={`Due today · ${task.title}`} meta={`${task.company || task.opportunity || 'Linked CRM record'} · ${task.due}`} action="Open record" onOpen={() => openTaskRecord(task)} />
             ))}
-            {discoveries.slice(0, 3).map((item) => (
-              <AttentionRow key={`discovery-${item.id}`} icon={Sparkles} tone="stone" title={item.organization || item.name || 'New Rob Bot discovery'} meta={item.fit_summary || 'Research is ready for human review.'} action="Review queue" onOpen={() => onNavigate('/admin/robbot3k')} />
-            ))}
-            {attentionCount === 0 ? <EmptyRows>No overdue tasks, replies, due-today follow-ups, or new discoveries need attention.</EmptyRows> : null}
+            {attentionCount === 0 ? <EmptyRows>No overdue tasks or due-today follow-ups need attention.</EmptyRows> : null}
           </div>
         </section>
         <section>
-          <SectionHeader title="Upcoming Rob calls" meta="Next 7 days" action="Open pipeline" onAction={() => onNavigate('/admin/bd/pipeline')} />
+          <SectionHeader title="Upcoming meetings" meta="Next 7 days" action="Open pipeline" onAction={() => onNavigate('/admin/bd/pipeline')} />
           <div>
             {calls.map((call) => {
               const scheduled = new Date(call.scheduled_at);
-              const title = call.organization || call.contact_name || prospectName(call.prospect_id);
+              const title = call.organization || call.contact_name || call.content || 'Scheduled meeting';
               const contact = call.organization && call.contact_name ? call.contact_name : '';
               const row = (
                 <>
@@ -464,7 +450,7 @@ function LiveHomeView({ dashboard, onOpen, onNavigate }) {
                 ? <button key={call.id} type="button" onClick={() => onOpen({ type: 'opportunity', id: call.opportunity_id })} className="flex w-full items-center gap-3 border-b border-stone-100 py-3 text-left last:border-b-0 hover:bg-stone-50">{row}</button>
                 : <div key={call.id} className="flex items-center gap-3 border-b border-stone-100 py-3 last:border-b-0">{row}</div>;
             })}
-            {calls.length === 0 ? <EmptyRows>No discovery calls are scheduled in the next 7 days.</EmptyRows> : null}
+            {calls.length === 0 ? <EmptyRows>No meetings are scheduled in the next 7 days.</EmptyRows> : null}
           </div>
         </section>
       </div>
@@ -561,7 +547,7 @@ function PipelineView({ opportunities, onMove, onOpen }) {
           </div>
         </div>
       </div>
-      {mode === 'table' ? <PipelineTable opportunities={opportunities} onOpen={onOpen} /> : (
+      {opportunities.length === 0 ? <EmptyRows>No opportunities are recorded yet. Use New to create the first pipeline record.</EmptyRows> : mode === 'table' ? <PipelineTable opportunities={opportunities} onOpen={onOpen} /> : (
         <div className="-mx-4 overflow-x-auto px-4 pb-4 md:-mx-7 md:px-7">
           <div className="flex min-w-max items-start gap-3">
             {PIPELINE_STAGES.map((stage) => {
@@ -628,6 +614,7 @@ function CompaniesView({ companies, onOpen }) {
                 <td className="py-3 pl-3"><span className="block text-stone-700">{company.nextAction}</span><span className="text-[9px] text-stone-400">{company.nextActionDate}</span></td>
               </tr>
             ))}
+            {rows.length === 0 ? <tr><td colSpan="9"><EmptyRows>No companies match this view.</EmptyRows></td></tr> : null}
           </tbody>
         </table>
       </div>
@@ -657,6 +644,7 @@ function PeopleView({ people, onOpen }) {
                 <td className="py-3 pl-3 text-stone-700">{person.nextAction}</td>
               </tr>
             ))}
+            {rows.length === 0 ? <tr><td colSpan="8"><EmptyRows>No people match this view.</EmptyRows></td></tr> : null}
           </tbody>
         </table>
       </div>
@@ -686,6 +674,7 @@ function TasksView({ tasks, onToggle }) {
       <section>
         <SectionHeader title="Open tasks" meta={`${open.length} remaining`} />
         <div>{open.map(render)}</div>
+        {open.length === 0 && done.length === 0 ? <EmptyRows>No tasks are recorded yet. Use New to create the first task.</EmptyRows> : null}
         {done.length ? <><div className="mt-7"><SectionHeader title="Completed" meta={`${done.length}`} /></div><div>{done.map(render)}</div></> : null}
       </section>
       <aside className="border-l border-stone-200 pl-0 xl:pl-6">
@@ -952,7 +941,7 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
   const calls = preview ? [] : (context?.callIntelligence || []);
   const mutations = preview ? [] : (context?.mutationHistory || []);
   const timeline = preview
-    ? activities.map((item) => ({ ...item, occurredAt: item.time, isAgent: String(item.actor).includes('Bot') }))
+    ? activities.map((item) => ({ ...item, occurredAt: item.time, isAgent: item.isAgent === true }))
     : [
         ...(context?.timeline || []).map((item) => ({
           id: `activity-${item.id}`,
@@ -1045,10 +1034,9 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
                 </section>
               ) : null}
               <section className="rounded-xl border border-stone-200 bg-stone-50/70 p-4">
-                <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2"><span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-stone-900 text-white"><Sparkles className="h-3.5 w-3.5" /></span><div><h3 className="text-[12px] font-semibold text-stone-900">Agent and audit context</h3><p className="text-[9px] text-stone-400">Persisted attribution only · Ask Rob Bot staged</p></div></div>{latestMutation?.confidence != null ? <Pill tone="green">{Math.round(Number(latestMutation.confidence) * 100)}% confidence</Pill> : null}</div>
+                <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2"><span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-stone-900 text-white"><Sparkles className="h-3.5 w-3.5" /></span><div><h3 className="text-[12px] font-semibold text-stone-900">Audit context</h3><p className="text-[9px] text-stone-400">Persisted mutation attribution</p></div></div>{latestMutation?.confidence != null ? <Pill tone="green">{Math.round(Number(latestMutation.confidence) * 100)}% confidence</Pill> : null}</div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2"><div><p className="text-[9px] font-medium uppercase tracking-[0.08em] text-stone-400">Next action</p><p className="mt-1 text-[11px] leading-5 text-stone-700">{company?.nextAction || opportunity?.nextAction || person?.nextAction || 'No next action recorded.'}</p></div><div><p className="text-[9px] font-medium uppercase tracking-[0.08em] text-stone-400">Latest mutation</p><p className="mt-1 text-[11px] leading-5 text-stone-700">{latestMutation ? `${labelCase(latestMutation.action)} · ${latestMutation.model_used || (latestMutation.agent_identity_id ? 'Agent' : 'Human operator')}` : 'No mutation attribution recorded.'}</p></div></div>
-                <div className="mt-4 flex gap-2"><input disabled placeholder="Ask Rob Bot is not connected yet" className="h-9 min-w-0 flex-1 rounded-lg border border-stone-200 bg-stone-100 px-3 text-[11px] text-stone-400" /><button type="button" disabled className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-stone-200 px-3 text-[10px] font-medium text-stone-500"><Bot className="h-3.5 w-3.5" /> Staged</button></div>
-                <p className="mt-2 text-[10px] text-amber-700">Record Q&amp;A is staged. No request is sent from this control.</p>
+                <p className="mt-3 text-[10px] text-stone-500">This panel reports saved attribution only. It does not run automated work.</p>
               </section>
             </div>
           ) : null}
@@ -1079,7 +1067,7 @@ const CREATE_FIELDS = {
   Person: [
     { key: 'name', label: 'Full name', placeholder: 'First and last name', required: true },
     { key: 'email', label: 'Email', placeholder: 'name@company.com', type: 'email' },
-    { key: 'company', label: 'Company', placeholder: 'Search or add a company' },
+    { key: 'companyId', label: 'Company', companySelector: true },
     { key: 'title', label: 'Title', placeholder: 'Role or title' },
   ],
   Opportunity: [
@@ -1098,10 +1086,31 @@ const CREATE_FIELDS = {
   ],
 };
 
-function CreatePanel({ initialType = 'Company', onClose, onCreate, onOpenRobBotContact, sourceStatus }) {
+function personCompanyOptions(companies = []) {
+  const nameCounts = new Map();
+  for (const company of companies) {
+    const key = String(company.name || '').trim().toLowerCase();
+    nameCounts.set(key, (nameCounts.get(key) || 0) + 1);
+  }
+  return companies.map((company) => {
+    const name = String(company.name || 'Unnamed company').trim();
+    const duplicate = (nameCounts.get(name.toLowerCase()) || 0) > 1;
+    const qualifiers = [company.normalized_domain || company.normalizedDomain, company.location]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+    const fallback = `ID ${String(company.id || '').slice(0, 8)}`;
+    return {
+      id: company.id,
+      label: duplicate ? `${name} · ${(qualifiers.length ? qualifiers : [fallback]).join(' · ')}` : name,
+    };
+  }).sort((left, right) => left.label.localeCompare(right.label));
+}
+
+function CreatePanel({ initialType = 'Company', companies = [], onClose, onCreate, sourceStatus }) {
   const [type, setType] = useState(initialType);
   const [form, setForm] = useState({});
   const [notice, setNotice] = useState('');
+  const companyOptions = useMemo(() => personCompanyOptions(companies), [companies]);
   useEffect(() => { setType(initialType); setForm({}); setNotice(''); }, [initialType]);
   const submit = (event) => {
     event.preventDefault();
@@ -1123,27 +1132,29 @@ function CreatePanel({ initialType = 'Company', onClose, onCreate, onOpenRobBotC
         <div className="mt-6 flex flex-wrap gap-1 rounded-xl bg-stone-100 p-1">
           {Object.keys(CREATE_FIELDS).map((item) => <button key={item} type="button" onClick={() => { setType(item); setForm({}); setNotice(''); }} className={`h-8 flex-1 rounded-lg px-2 text-[10px] font-medium ${type === item ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'}`}>{item}</button>)}
         </div>
-        {type === 'Person' ? (
-          <div className="mt-7">
-            <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
-              <div className="flex items-start gap-3">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-stone-900 text-white"><Bot className="h-4 w-4" /></span>
-                <div>
-                  <h3 className="text-[12px] font-semibold text-stone-900">Add through Rob Bot intake</h3>
-                  <p className="mt-1 text-[10px] leading-4 text-stone-500">Avalon uses one manual contact intake. Enter a name, email, company, source, and opportunity context once; Rob Bot then adds it to the same research and approval queue without sending.</p>
-                </div>
-              </div>
-              <button type="button" onClick={onOpenRobBotContact} className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-stone-950 px-4 text-[11px] font-semibold text-white hover:bg-black"><ContactRound className="h-3.5 w-3.5" /> Open contact intake <ArrowRight className="h-3.5 w-3.5" /></button>
-            </div>
-            <p className="mt-3 text-[9px] leading-4 text-stone-400">This avoids a second contact store and preserves duplicate checks, source evidence, email verification, and human approval in one flow.</p>
-          </div>
-        ) : (
         <form onSubmit={submit} className="mt-7 space-y-4">
-          {CREATE_FIELDS[type].map((field) => <label key={field.key} className="block"><span className="mb-1.5 block text-[10px] font-medium text-stone-500">{field.label}{field.required ? ' *' : ''}</span>{field.multiline ? <textarea value={form[field.key] || ''} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} required={field.required} className="min-h-28 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-[12px] text-stone-900 outline-none placeholder:text-stone-300 focus:border-stone-500" /> : <input type={field.type || 'text'} value={form[field.key] || ''} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} required={field.required} className="h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-[12px] text-stone-900 outline-none placeholder:text-stone-300 focus:border-stone-500" />}</label>)}
+          {CREATE_FIELDS[type].map((field) => (
+            <label key={field.key} className="block">
+              <span className="mb-1.5 block text-[10px] font-medium text-stone-500">{field.label}{field.required ? ' *' : ''}</span>
+              {field.companySelector ? (
+                <select
+                  value={form.companyId || ''}
+                  onChange={(event) => setForm((current) => ({ ...current, companyId: event.target.value }))}
+                  className="h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-[12px] text-stone-900 outline-none focus:border-stone-500"
+                >
+                  <option value="">Unlinked</option>
+                  {companyOptions.map((company) => <option key={company.id} value={company.id}>{company.label}</option>)}
+                </select>
+              ) : field.multiline ? (
+                <textarea value={form[field.key] || ''} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} required={field.required} className="min-h-28 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-[12px] text-stone-900 outline-none placeholder:text-stone-300 focus:border-stone-500" />
+              ) : (
+                <input type={field.type || 'text'} value={form[field.key] || ''} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} required={field.required} className="h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-[12px] text-stone-900 outline-none placeholder:text-stone-300 focus:border-stone-500" />
+              )}
+            </label>
+          ))}
           <button type="submit" className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-stone-950 px-4 text-[11px] font-semibold text-white transition hover:bg-black"><Plus className="h-3.5 w-3.5" /> Create {type.toLowerCase()}</button>
           {notice ? <p className="text-center text-[10px] font-medium text-emerald-700">{notice}</p> : null}
         </form>
-        )}
       </div>
     </div>
   );
@@ -1445,12 +1456,12 @@ export default function AvalonBD() {
   };
 
   const createRecord = async (type, form) => {
-    if (type === 'Person') {
-      navigate('/admin/robbot3k#manual-prospect-title');
-      return true;
-    }
     if (sourceStatus === 'live') {
-      const linkedCompany = companies.find((item) => item.name.toLowerCase() === String(form.company || '').trim().toLowerCase());
+      const selectedCompanyId = type === 'Person' ? String(form.companyId || '').trim() : '';
+      const linkedCompany = type === 'Person'
+        ? companies.find((item) => item.id === selectedCompanyId)
+        : companies.find((item) => item.name.toLowerCase() === String(form.company || '').trim().toLowerCase());
+      if (selectedCompanyId && !linkedCompany) return false;
       const numericValue = Number(String(form.value || '').replace(/[^0-9.]/g, '')) || 0;
       const dueDate = form.due ? new Date(form.due) : null;
       if (dueDate && Number.isNaN(dueDate.getTime())) return false;
@@ -1463,6 +1474,17 @@ export default function AvalonBD() {
             name: form.name.trim(),
             companyType: supportedTypes.includes(form.type) ? form.type : 'Other',
             website: form.website || null,
+            source: 'manual',
+          },
+        };
+      } else if (type === 'Person') {
+        request = {
+          action: 'create_person',
+          person: {
+            fullName: form.name.trim(),
+            email: form.email || null,
+            companyId: selectedCompanyId || null,
+            title: form.title || null,
             source: 'manual',
           },
         };
@@ -1504,6 +1526,12 @@ export default function AvalonBD() {
       try {
         const response = await apiPost('/api/admin/bd', request);
         if (type === 'Company' && response?.record) setCompanies((items) => [{ ...normalizeCompanyRecord(response.record), stage: 'No opportunity' }, ...items]);
+        if (type === 'Person' && response?.record) {
+          const created = { ...normalizePersonRecord(response.record), company: linkedCompany?.name || 'Unlinked' };
+          const nextPeople = [created, ...people];
+          setPeople(nextPeople);
+          setCompanies((items) => deriveCompanyRollups(items, nextPeople, opportunities));
+        }
         if (type === 'Opportunity' && response?.record) {
           const created = { ...normalizeOpportunityRecord(response.record), company: linkedCompany.name };
           const nextOpportunities = [created, ...opportunities];
@@ -1607,7 +1635,7 @@ export default function AvalonBD() {
       </div>
 
       {selection ? <RecordPanel selection={selection} companies={companies} people={people} opportunities={opportunities} activities={activities} sourceStatus={sourceStatus} onOpportunityUpdated={applyReturnedOpportunity} onClose={closeRecord} /> : null}
-      {createOpen ? <CreatePanel initialType={createType} sourceStatus={sourceStatus} onCreate={createRecord} onOpenRobBotContact={() => { setCreateOpen(false); navigate('/admin/robbot3k#manual-prospect-title'); }} onClose={() => setCreateOpen(false)} /> : null}
+      {createOpen ? <CreatePanel initialType={createType} companies={companies} sourceStatus={sourceStatus} onCreate={createRecord} onClose={() => setCreateOpen(false)} /> : null}
       {searchOpen ? <SearchPalette companies={companies} people={people} opportunities={opportunities} sourceStatus={sourceStatus} onClose={() => setSearchOpen(false)} onOpen={setSelection} /> : null}
     </AdminShell>
   );

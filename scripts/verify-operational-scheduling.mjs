@@ -145,12 +145,16 @@ for (const legacyPath of ['/provider/today', '/provider/dashboard', '/provider/d
 assert.match(routes, /path="\/provider\/reports"[\s\S]{0,220}<Navigate to="\/provider\/invoices"/, 'legacy invented reports must redirect to live invoices');
 assert.doesNotMatch(routes, /const NurseShift =|const NurseDashboard =|const ProviderReports =/, 'fixture provider screens must not be bundled as routes');
 assert.match(routes, /path="\/admin\/scheduling" element=\{<RequireAuth allowedRoles=\{\['admin'\]\}/);
-for (const preserved of ['/admin/login', '/admin/bd/*', '/admin/robbot3k']) {
+for (const preserved of ['/admin/login', '/admin/bd/*']) {
   assert.ok(routes.includes(`path="${preserved}"`), `preserve existing route ${preserved}`);
 }
+assert.doesNotMatch(routes, /path="\/admin\/robbot3k"|AdminRobBot3K|pages\/admin\/RobBot3K/,
+  'BD-only release must not restore the RobBot3K route or import');
+assert.doesNotMatch(adminShell, /\/admin\/robbot3k|RobBot3K|Rob Bot/,
+  'BD-only release must not restore RobBot3K navigation');
 assert.match(routes, /classList\.toggle\('av-admin-cream', adminCream\)/, 'Admin cream theme must remain enabled');
 assert.match(adminShell, /label: 'Scheduling', to: '\/admin\/scheduling'/);
-assert.match(adminShell, /label: 'BD'/);
+assert.match(adminShell, /label: 'Avalon BD', to: '\/admin\/bd'/);
 assert.match(adminShell, /label: 'Finance'/);
 assert.match(adminAccess, /LIVE_ADMIN_ROUTES[\s\S]*'\/admin\/scheduling'/);
 const staffRoutes = adminAccess.match(/STAFF_ROUTES = Object\.freeze\(\[([\s\S]*?)\]\);/)?.[1] || '';
