@@ -11,9 +11,130 @@ do $$
 begin
   if to_regclass('public.operational_shifts') is null
      or to_regclass('public.operational_shift_assignments') is null then
-    raise exception using errcode = 'P0001', message = 'migration_050_required';
+    raise exception using errcode = 'P0001', message = 'nurse_operational_bootstrap_required';
   end if;
-  if to_regclass('public.provider_route_days') is null then
+  if to_regclass('public.provider_route_days') is null
+     or to_regclass('public.provider_route_day_stops') is null then
+    raise exception using errcode = 'P0001', message = 'migration_051_required';
+  end if;
+  if not exists (
+    select 1
+    from pg_constraint constraint_definition
+    where constraint_definition.conrelid = 'public.provider_route_days'::regclass
+      and constraint_definition.conname = 'provider_route_days_tenant_id_id_key'
+      and constraint_definition.contype = 'u'
+      and constraint_definition.convalidated
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.conkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.conrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'id']::text[]
+  ) or not exists (
+    select 1
+    from pg_constraint constraint_definition
+    where constraint_definition.conrelid = 'public.provider_route_days'::regclass
+      and constraint_definition.conname = 'provider_route_days_tenant_id_id_provider_key'
+      and constraint_definition.contype = 'u'
+      and constraint_definition.convalidated
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.conkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.conrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'id', 'provider_profile_id']::text[]
+  ) or not exists (
+    select 1
+    from pg_constraint constraint_definition
+    where constraint_definition.conrelid = 'public.provider_route_day_stops'::regclass
+      and constraint_definition.conname = 'provider_route_day_stops_tenant_id_id_key'
+      and constraint_definition.contype = 'u'
+      and constraint_definition.convalidated
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.conkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.conrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'id']::text[]
+  ) or not exists (
+    select 1
+    from pg_constraint constraint_definition
+    where constraint_definition.conrelid = 'public.provider_route_days'::regclass
+      and constraint_definition.conname = 'provider_route_days_provider_tenant_fk'
+      and constraint_definition.contype = 'f'
+      and constraint_definition.convalidated
+      and constraint_definition.confrelid = 'public.provider_profiles'::regclass
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.conkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.conrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'provider_profile_id']::text[]
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.confkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.confrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'id']::text[]
+  ) or not exists (
+    select 1
+    from pg_constraint constraint_definition
+    where constraint_definition.conrelid = 'public.provider_route_day_stops'::regclass
+      and constraint_definition.conname = 'provider_route_day_stops_route_provider_tenant_fk'
+      and constraint_definition.contype = 'f'
+      and constraint_definition.convalidated
+      and constraint_definition.confrelid = 'public.provider_route_days'::regclass
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.conkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.conrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'route_day_id', 'assigned_provider_profile_id']::text[]
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.confkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.confrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'id', 'provider_profile_id']::text[]
+  ) or not exists (
+    select 1
+    from pg_constraint constraint_definition
+    where constraint_definition.conrelid = 'public.provider_route_day_stops'::regclass
+      and constraint_definition.conname = 'provider_route_day_stops_appointment_tenant_fk'
+      and constraint_definition.contype = 'f'
+      and constraint_definition.convalidated
+      and constraint_definition.confrelid = 'public.appointments'::regclass
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.conkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.conrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'appointment_id']::text[]
+      and (
+        select array_agg(attribute.attname::text order by key_column.ordinality)
+        from unnest(constraint_definition.confkey)
+          with ordinality as key_column(attnum, ordinality)
+        join pg_attribute attribute
+          on attribute.attrelid = constraint_definition.confrelid
+         and attribute.attnum = key_column.attnum
+      ) = array['tenant_id', 'id']::text[]
+  ) then
     raise exception using errcode = 'P0001', message = 'migration_051_required';
   end if;
   if to_regclass('public.provider_profiles') is null

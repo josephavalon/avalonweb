@@ -57,8 +57,28 @@ const firstExecutableStatement = migration.split('\n')
   .find((line) => line && !line.startsWith('--'));
 assert.equal(firstExecutableStatement, 'begin;', '061 must begin with an explicit transaction for SQL Editor application');
 assert.match(migration, /\ncommit;\s*$/, '061 must commit only after every schema, trigger, function, ACL, and comment statement');
-assert.match(migration, /migration_050_required/);
+assert.match(migration, /nurse_operational_bootstrap_required/);
+assert.doesNotMatch(migration, /migration_050_required/);
 assert.match(migration, /migration_051_required/);
+const prerequisiteBlock = migration.slice(0, migration.indexOf('-- Offer decisions'));
+assert.match(
+  prerequisiteBlock,
+  /to_regclass\('public\.provider_route_days'\)[\s\S]*?to_regclass\('public\.provider_route_day_stops'\)/,
+  '061 must require both route tables before schema changes',
+);
+for (const constraint of [
+  'provider_route_days_tenant_id_id_key',
+  'provider_route_days_tenant_id_id_provider_key',
+  'provider_route_day_stops_tenant_id_id_key',
+  'provider_route_days_provider_tenant_fk',
+  'provider_route_day_stops_route_provider_tenant_fk',
+  'provider_route_day_stops_appointment_tenant_fk',
+]) {
+  assert.ok(prerequisiteBlock.includes(`conname = '${constraint}'`), `061 must preflight ${constraint}`);
+}
+assert.match(prerequisiteBlock, /constraint_definition\.convalidated/);
+assert.match(prerequisiteBlock, /array\['tenant_id', 'route_day_id', 'assigned_provider_profile_id'\]::text\[\]/);
+assert.match(prerequisiteBlock, /array\['tenant_id', 'id', 'provider_profile_id'\]::text\[\]/);
 assert.doesNotMatch(migration, /^\s*[a-z_][a-z0-9_]*:\s*do\s+\$\$/im, '061 contains an invalid labelled DO statement');
 
 const rlsBlock = migration.slice(
