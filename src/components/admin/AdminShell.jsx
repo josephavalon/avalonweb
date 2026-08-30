@@ -19,6 +19,7 @@ import {
   Menu,
   MessageSquare,
   Package,
+  ShoppingBag,
   Settings,
   ShieldCheck,
   Stethoscope,
@@ -45,6 +46,7 @@ const soon = osCapabilityPath;
 const NAV_LIVE = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/admin' },
   { label: 'Bookings', icon: CalendarCheck, to: '/admin/bookings' },
+  { label: 'Catalog', icon: ShoppingBag, to: '/admin/catalog' },
   {
     label: 'Clinical', icon: Users, children: [
       { label: 'Patient records', to: '/admin/clients' },

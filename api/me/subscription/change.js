@@ -89,6 +89,21 @@ function prorationExplanation(proration, resolved, invoice) {
   return renewalStr ? `${base}, when it renews at ${renewalStr}.` : `${base}.`;
 }
 
+function customPricingSummary(plan) {
+  if (!plan?.custom || !plan.quote) return null;
+  return {
+    displayName: plan.displayName,
+    billing: plan.billing,
+    term: plan.term,
+    peopleCount: plan.peopleCount,
+    sessionsPerPerson: plan.sessionsPerPerson,
+    visitsPerCycle: plan.visitsPerCycle,
+    monthlyPriceDollars: plan.quote.monthlyPriceDollars,
+    periodPriceDollars: plan.quote.periodPriceDollars,
+    effectiveMonthlyDollars: plan.quote.effectiveMonthlyDollars,
+  };
+}
+
 export default async function handler(req, res) {
   // PHI-free front door: refuse before any Supabase/Stripe/Acuity write.
   if (blockFrontDoorPhiRoute(req, res, 'Subscription change')) return;
@@ -101,9 +116,9 @@ export default async function handler(req, res) {
   const { targetPlan, action = 'preview', custom } = (req.body && typeof req.body === 'object') ? req.body : {};
   const isCustom = String(targetPlan || '').trim().toLowerCase() === 'custom';
 
-  // Resolve to a plan descriptor: either a fixed portal tier OR a custom plan
-  // (custom-priced subscription created at signup). The custom branch trusts
-  // the client price the same way create-checkout-session does, but bounds it.
+  // Resolve fixed portal tiers or rebuild a custom quote from stable catalog
+  // keys. Custom calculation happens before auth/Stripe and never reads a
+  // client-authored amount.
   let plan;
   if (isCustom) {
     try {
@@ -162,6 +177,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         targetPlan: plan.id,
+        pricing: customPricingSummary(plan),
         proration,
         explanation: prorationExplanation(proration, resolved, invoice),
       });
@@ -203,7 +219,8 @@ export default async function handler(req, res) {
         subscriptionId: subscription.id,
         ...(plan.custom ? {
           custom: true,
-          monthlyCents: plan.monthlyCents,
+          recurringPriceCents: plan.recurringPriceCents,
+          monthlyPriceCents: plan.monthlyPriceCents,
           visitsPerCycle: plan.visitsPerCycle,
           billing: plan.billing,
         } : {}),
@@ -213,6 +230,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       targetPlan: plan.id,
+      pricing: customPricingSummary(plan),
       subscription: {
         id: updated.id,
         status: updated.status,

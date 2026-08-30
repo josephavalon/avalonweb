@@ -1,4 +1,5 @@
 import { IM_SHOTS, IV_ADDONS, IV_SESSIONS, PACKAGES } from '../../src/data/catalog.js';
+import { calculateCustomPlanQuote } from '../../src/lib/customPlanPricing.js';
 
 function normalize(value = '') {
   return String(value)
@@ -162,7 +163,7 @@ function priceForItem(item = {}) {
   if (label.includes('nad') && label.includes('500')) return 500;
   if (label.includes('nad') && label.includes('250')) return 350;
   if (label.includes('cbd') && label.includes('review plus')) return 450;
-  if (label.includes('cbd') && label.includes('132')) return 650;
+  if (label.includes('cbd') && label.includes('132')) return 450;
   if (label.includes('cbd') && label.includes('99')) return 350;
   if (label.includes('cbd') && label.includes('66')) return 300;
   if (label.includes('cbd') && label.includes('33')) return 250;
@@ -195,25 +196,39 @@ export function sanitizeCheckoutItems(items = []) {
 export function sanitizeCheckoutMembership(membership = null) {
   if (!membership) return null;
   const key = normalize(membership.name || '');
+  // Custom checkout carries only stable therapy/add-on keys and quantities.
+  // Rebuild the recurring charge from the official catalog before auth or any
+  // payment-provider call. Legacy price hints are accepted only when they
+  // exactly equal this server quote; a mismatch fails closed.
+  if (key === 'custom') {
+    const quote = calculateCustomPlanQuote({
+      ...membership,
+      plan: membership.plan,
+      billing: membership.term || membership.billing,
+    });
+    return {
+      custom: true,
+      id: 'custom',
+      name: 'custom',
+      displayName: quote.displayName,
+      planName: quote.planName,
+      price: quote.periodPriceDollars,
+      monthlyPrice: quote.monthlyPriceDollars,
+      billing: quote.billing,
+      term: quote.term,
+      commitmentMonths: quote.commitmentMonths,
+      peopleCount: quote.peopleCount,
+      sessionsPerPerson: quote.sessionsPerPerson,
+      visitsPerCycle: quote.visitsPerCycle,
+      plan: quote.plan,
+    };
+  }
   const termKey = normalize(membership.term || membership.billing || 'monthly');
   const term = MEMBERSHIP_TERMS[termKey] || MEMBERSHIP_TERMS.monthly;
   const monthlyPrice = MEMBERSHIP_PRICE_BY_NAME.get(key);
   const price = monthlyPrice == null ? null : Math.max(0, Math.round(monthlyPrice * term.months * (1 - term.discount)));
   // Visit-credits granted per cycle. Clamp 1–32, default 1 (back-compat).
   const visitsPerCycle = Math.max(1, Math.min(32, Math.floor(Number(membership.visitsPerCycle) || 1)));
-  if (price == null && key === 'custom') {
-    const proposed = Number(membership.price);
-    if (Number.isFinite(proposed) && proposed >= 150 && proposed <= 10000) {
-      return {
-        ...membership,
-        price: proposed,
-        billing: term.billing,
-        term: term.key,
-        commitmentMonths: term.commitmentMonths,
-        visitsPerCycle,
-      };
-    }
-  }
   if (price == null) {
     throw Object.assign(new Error(`Unknown membership: ${membership.name || 'membership'}`), { status: 400 });
   }

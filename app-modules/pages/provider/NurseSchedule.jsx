@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CheckCircle2, FileText, Loader2, MapPin, RefreshCw, Users } from 'lucide-react';
+import { CalendarDays, CheckCircle2, FileText, Loader2, MapPin, RefreshCw, Stethoscope, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
@@ -11,6 +11,7 @@ import { useSeo } from '@/lib/seo';
 const FILTERS = [['today', 'Today'], ['upcoming', 'Upcoming'], ['events', 'Events'], ['open', 'Open'], ['history', 'History']];
 const PROVIDER_NAV_ITEMS = [
   { label: 'Shifts', to: '/provider/shifts', icon: CalendarDays },
+  { label: 'Services', to: '/provider/services', icon: Stethoscope },
   { label: 'Invoices', to: '/provider/invoices', icon: FileText },
 ];
 const SHIFT_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
@@ -96,7 +97,7 @@ export default function NurseSchedule() {
             description="Your assigned and available shifts could not be verified. No queue records are shown, and shift actions remain disabled until the live source reconnects."
           />
         </section>
-        <MobileNavBar items={PROVIDER_NAV_ITEMS} columns={2} maxWidth="shift" mobileOnly={false} ariaLabel="Provider operations" />
+        <MobileNavBar items={PROVIDER_NAV_ITEMS} columns={3} maxWidth="shift" mobileOnly={false} ariaLabel="Provider operations" />
       </main>
     );
   }
@@ -120,7 +121,7 @@ export default function NurseSchedule() {
           {!state.loading && !rows.length ? <p className="rounded-3xl border border-dashed border-foreground/15 p-10 text-center text-sm text-foreground/45">No shifts in this view.</p> : null}
         </div>
       </section>
-      <MobileNavBar items={PROVIDER_NAV_ITEMS} columns={2} maxWidth="shift" mobileOnly={false} ariaLabel="Provider operations" />
+      <MobileNavBar items={PROVIDER_NAV_ITEMS} columns={3} maxWidth="shift" mobileOnly={false} ariaLabel="Provider operations" />
     </main>
   );
 }

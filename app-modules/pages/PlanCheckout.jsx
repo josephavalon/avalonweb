@@ -9,6 +9,8 @@ import { apiGet } from '@/lib/apiClient';
 import { resolveGfeRequirement } from '@/lib/bookingLifecycle';
 import AddressAutocomplete from '@/components/store/AddressAutocomplete';
 import EmbeddedStripeCheckout from '@/components/checkout/EmbeddedStripeCheckout';
+import { PLAN_BILLING_TERMS } from '@/config/subscriptionTiers';
+import { calculateCustomPlanQuote } from '@/lib/customPlanPricing';
 
 // Dedicated membership checkout — intentionally separate from the one-time
 // 5-step /book flow. The customer picks one recurring day/time (their standing
@@ -17,12 +19,7 @@ import EmbeddedStripeCheckout from '@/components/checkout/EmbeddedStripeCheckout
 const TZ = 'America/Los_Angeles';
 const money = (v) => `$${Math.round(Number(v || 0)).toLocaleString()}`;
 
-const TERMS = {
-  monthly: { label: 'Monthly', months: 1, discount: 0, billing: 'monthly' },
-  'three-month': { label: '3 months', months: 3, discount: 0.05, billing: 'three-month' },
-  'six-month': { label: '6 months', months: 6, discount: 0.08, billing: 'six-month' },
-  annual: { label: '12 months', months: 12, discount: 0.15, billing: 'annual' },
-};
+const TERMS = PLAN_BILLING_TERMS;
 
 const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -47,6 +44,27 @@ function formatSlotLabel(iso) {
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
   return `${h}:${min} ${ampm}`;
+}
+
+function parsePlanParam(raw) {
+  if (!raw) return null;
+  const candidates = [raw];
+  try {
+    const decoded = decodeURIComponent(raw);
+    if (decoded !== raw) candidates.push(decoded);
+  } catch {
+    // URLSearchParams normally decodes this already; the fallback supports old
+    // builder links that encoded the JSON before assigning the query value.
+  }
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (Array.isArray(parsed) || (parsed && Array.isArray(parsed.people))) return parsed;
+    } catch {
+      // Try the next representation, then fail closed back to the builder.
+    }
+  }
+  return null;
 }
 
 // Section header — icon chip + Bebas title, the same grammar as /subscription.
@@ -119,24 +137,25 @@ export default function PlanCheckout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const monthly = Math.max(0, Number(searchParams.get('price')) || 0);
   const termKey = searchParams.get('term') || 'monthly';
   const term = TERMS[termKey] || TERMS.monthly;
-  const protocol = searchParams.get('protocol') || 'recovery';
-  const sessions = Math.max(1, Number(searchParams.get('sessions')) || 1);
-  const peopleCount = Math.max(1, Math.min(4, Number(searchParams.get('people')) || 1));
-  // The manifest is JSON-encoded then URI-encoded by the builder. Decode lazily;
-  // a malformed param shouldn't break checkout (we just hide the per-person list).
-  const peopleManifest = useMemo(() => {
-    const raw = searchParams.get('plan');
-    if (!raw) return [];
+  const rawPlan = searchParams.get('plan');
+  const planQuote = useMemo(() => {
+    const plan = parsePlanParam(rawPlan);
+    if (!plan) return null;
     try {
-      const decoded = JSON.parse(decodeURIComponent(raw));
-      return Array.isArray(decoded) ? decoded : [];
-    } catch (err) {
-      return [];
+      return calculateCustomPlanQuote({ plan, billing: termKey });
+    } catch {
+      return null;
     }
-  }, [searchParams]);
+  }, [rawPlan, termKey]);
+  const stablePlanManifest = planQuote?.plan || [];
+  const peopleManifest = planQuote?.people || [];
+  const peopleCount = planQuote?.peopleCount || 1;
+  const sessions = planQuote?.sessionsPerPerson || 1;
+  const monthly = planQuote?.monthlyPriceDollars || 0;
+  const perPeriodTotal = planQuote?.periodPriceDollars || 0;
+  const protocol = peopleManifest[0]?.visits?.[0]?.protocol || 'recovery';
   const isMultiPerson = peopleCount > 1;
 
   // Per-visit breakdown (mixed-IV plans). Each person's monthly visits, itemized
@@ -151,16 +170,13 @@ export default function PlanCheckout() {
     if (!visitBreakdown.length) return '';
     const lines = visitBreakdown.map(({ label, visits }) => {
       const vs = visits.map((v, i) => {
-        const adds = (v.addons || []).map((a) => `${a.qty}× ${a.label}`).join(', ');
+        const adds = (v.addons || []).map((a) => `${a.quantity}× ${a.label}`).join(', ');
         return `Visit ${i + 1}: ${v.therapyLabel || 'IV'}${adds ? ` + ${adds}` : ''}`;
       }).join('; ');
       return (isMultiPerson ? `${label} — ` : '') + vs;
     });
     return `PLAN VISITS (per month)\n${lines.join('\n')}`;
   }, [visitBreakdown, isMultiPerson]);
-
-  // Per-period charge: monthly × term months × (1 − discount). Monthly = monthly.
-  const perPeriodTotal = Math.round(monthly * term.months * (1 - term.discount));
 
   useSeo({
     title: 'Start your plan — Avalon Vitality',
@@ -255,10 +271,11 @@ export default function PlanCheckout() {
   }), [serverProfile]);
   const gfeOnFile = Boolean(loggedIn && serverProfile?.gfe && !profileGfe.required);
 
-  // No plan price → bounce back to the builder.
+  // Missing/invalid stable manifest → bounce back to the builder. Never
+  // rescue an old link by trusting its `price` query parameter.
   useEffect(() => {
-    if (!monthly) navigate('/subscription', { replace: true });
-  }, [monthly, navigate]);
+    if (!planQuote) navigate('/subscription', { replace: true });
+  }, [planQuote, navigate]);
 
   useEffect(() => {
     if (!date) return;
@@ -302,11 +319,8 @@ export default function PlanCheckout() {
     && combinedConsent
     && !submitting;
 
-  // Visits the plan grants each cycle = sum of every person's visits, else
-  // sessions × people. Used for display and sent to the checkout API.
-  const visitsPerCycle = peopleManifest.length
-    ? peopleManifest.reduce((sum, person) => sum + (Array.isArray(person.visits) ? person.visits.length : 0), 0)
-    : sessions * peopleCount;
+  // Display only. Checkout derives the credit grant again from the manifest.
+  const visitsPerCycle = planQuote?.visitsPerCycle || 0;
 
   // Logged in with every required detail already prefilled → collapse the form
   // into a one-line "details on file" summary; they can expand to edit.
@@ -331,7 +345,11 @@ export default function PlanCheckout() {
         body: JSON.stringify({
           mode: 'payment',
           checkoutUiMode: 'embedded',
-          membership: { name: 'custom', price: perPeriodTotal, billing: term.billing, visitsPerCycle },
+          membership: {
+            name: 'custom',
+            billing: term.billing,
+            plan: stablePlanManifest,
+          },
           contact: {
             firstName: contact.firstName.trim(),
             lastName: contact.lastName.trim(),
@@ -371,8 +389,6 @@ export default function PlanCheckout() {
             notes: planNote,
             recurring: true,
             recurringTerm: term.billing,
-            peopleCount,
-            peopleManifest,
             // Returning, signed-in patient with a valid GFE already on file →
             // the clinical review is satisfied; the backend logs it and skips a
             // new exam (the required intake fields are still sent).
@@ -508,7 +524,7 @@ export default function PlanCheckout() {
                   {peopleManifest.map((person) => (
                     <div key={person.id} className="flex items-center justify-between gap-2 font-body text-sm">
                       <span className="text-foreground/82"><span className="mr-2 font-black uppercase tracking-[0.06em] text-foreground/60">{person.label}</span>{person.therapyLabel || 'IV pending'}</span>
-                      <span className="font-semibold text-foreground/72">{money(person.monthly)}/mo</span>
+                      <span className="font-semibold text-foreground/72">{money(person.monthlyPriceDollars)}/mo</span>
                     </div>
                   ))}
                 </div>
