@@ -16,6 +16,7 @@
 
 import Stripe from 'stripe';
 import { safeStripeMetadata } from '../_lib/safe-stripe.js';
+import { calculateCustomPlanQuote } from '../../src/lib/customPlanPricing.js';
 
 export const PORTAL_PLAN_MAP = {
   essentials: {
@@ -62,47 +63,32 @@ export function customPlanRecurringInterval(billing) {
 }
 
 /**
- * Validate + normalize a client-supplied custom plan body. Mirrors the trust
- * model in /api/create-checkout-session (the price is client-supplied and
- * trusted, but bounded/sanitized). Returns a normalized plan descriptor or
- * throws an Error with .code/.status for the endpoint to surface as a 400.
+ * Build a custom plan from its allowlisted therapy/add-on manifest before auth
+ * or Stripe is touched. The browser never chooses `monthlyCents`; that legacy
+ * property below is populated exclusively from the canonical server quote and
+ * retained only because resolveTargetPrice already consumes that name.
  */
 export function normalizeCustomPlan(custom = {}) {
-  const c = (custom && typeof custom === 'object') ? custom : {};
-
-  // Price: accept either priceDollars or priceCents. Bound to a sane range so a
-  // bad client can't create a $0 or absurd subscription.
-  let cents = null;
-  if (Number.isFinite(Number(c.priceCents))) {
-    cents = Math.round(Number(c.priceCents));
-  } else if (Number.isFinite(Number(c.priceDollars))) {
-    cents = Math.round(Number(c.priceDollars) * 100);
-  }
-  if (!Number.isFinite(cents) || cents <= 0) {
-    throw Object.assign(new Error('priceDollars must be greater than 0'), { code: 'price_invalid', status: 400 });
-  }
-  // Cap at $100,000/period — a guard rail, not a business limit.
-  cents = Math.min(cents, 100000 * 100);
-
-  const visitsPerCycle = Math.max(1, Math.floor(Number(c.visitsPerCycle) || 0));
-  if (!(visitsPerCycle >= 1)) {
-    throw Object.assign(new Error('visitsPerCycle must be at least 1'), { code: 'visits_invalid', status: 400 });
-  }
-
-  const billing = String(c.billing || 'monthly').trim().toLowerCase();
-  const allowedBilling = new Set(['monthly', 'three-month', 'six-month', 'annual']);
-  const safeBilling = allowedBilling.has(billing) ? billing : 'monthly';
-
-  const name = String(c.name || 'Custom').trim().slice(0, 80) || 'Custom';
-
+  const quote = calculateCustomPlanQuote({
+    ...(custom && typeof custom === 'object' ? custom : {}),
+    plan: custom?.plan,
+    billing: custom?.term || custom?.billing,
+  });
   return {
     custom: true,
     id: 'custom',
-    monthlyCents: cents,
-    visitsPerCycle,
-    billing: safeBilling,
-    displayName: `${name} Plan`,
-    planName: `${name} Plan`,
+    monthlyCents: quote.periodPriceCents,
+    monthlyPriceCents: quote.monthlyPriceCents,
+    recurringPriceCents: quote.periodPriceCents,
+    visitsPerCycle: quote.visitsPerCycle,
+    peopleCount: quote.peopleCount,
+    sessionsPerPerson: quote.sessionsPerPerson,
+    billing: quote.billing,
+    term: quote.term,
+    displayName: quote.displayName,
+    planName: quote.planName,
+    plan: quote.plan,
+    quote,
   };
 }
 
@@ -117,11 +103,10 @@ export function normalizeCustomPlan(custom = {}) {
  */
 export async function resolveTargetPrice(stripe, plan) {
   // ── Custom-priced plan branch ────────────────────────────────────────────
-  // Signup creates custom subscriptions (inline price_data, custom monthly
-  // price + visits_per_cycle). A custom-plan member changing their plan can't
-  // map onto the 3 fixed tiers, so we build a fresh inline price here. The
-  // recurring interval is derived the SAME way fulfillment builds it at signup
-  // (api/_checkout-fulfillment.js#planRecurringInterval).
+  // Signup creates custom subscriptions (inline price_data plus visit credits).
+  // A custom-plan member changing their plan can't map onto the 3 fixed tiers,
+  // so we build a fresh inline price here from the server-derived recurring
+  // period amount. Cadence mirrors fulfillment at signup.
   if (plan.custom) {
     const monthlyCents = Math.round(plan.monthlyCents);
     const recurring = customPlanRecurringInterval(plan.billing);

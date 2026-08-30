@@ -189,7 +189,6 @@ for (const relativePath of [
   'app-modules/pages/provider/Accounting.jsx',
   'app-modules/pages/provider/Appointments.jsx',
   'app-modules/pages/provider/Communications.jsx',
-  'app-modules/pages/provider/Services.jsx',
   'app-modules/pages/provider/Staff.jsx',
   'app-modules/pages/provider/Invoicing.jsx',
   'app-modules/pages/provider/Settings.jsx',
@@ -277,6 +276,46 @@ requireText('app-modules/pages/provider/NurseSchedule.jsx', [
 ]);
 requireText('app-modules/pages/provider/NurseInvoices.jsx', [
   "{ arrays: ['invoices'] }",
+]);
+
+forbid('app-modules/pages/provider/Services.jsx', [
+  "@/fixtures/commandMockData",
+  'MEMBERSHIPS',
+  'LEADS',
+  'internal_cost',
+  'margin',
+  'base_price',
+  'Follow the current clinician-authorized protocol',
+]);
+requireText('app-modules/pages/provider/Services.jsx', [
+  "apiGet('/api/me/catalog?audience=nurse')",
+  "payload.source !== 'live'",
+  'SAFE_NURSE_KEYS',
+  'normalizeNurseCatalog',
+  '!instructions',
+  'No cached menu, pricing, costs, or sample protocols are shown.',
+  "{ label: 'Services', to: '/provider/services'",
+]);
+requireText('src/pages/ConsumerMenu.jsx', [
+  "fetch('/api/catalog?audience=client'",
+  "payload.source !== 'live'",
+  'VITE_CATALOG_PUBLIC_CUTOVER',
+  'if (!PUBLIC_CATALOG_CUTOVER) return undefined;',
+  'SAFE_CLIENT_KEYS',
+  'priceCents <= 0',
+  'no stale menu is being shown',
+]);
+requireText('.env.example', [
+  'VITE_CATALOG_PUBLIC_CUTOVER=false',
+]);
+forbid('src/lib/eventsApi.js', [
+  "import { fallbackList, fallbackEvent } from './eventsFallback'",
+]);
+requireText('src/lib/eventsApi.js', [
+  'if (!import.meta.env.DEV) return null;',
+  "await import('./eventsFallback')",
+  'export function fetchEventSync()',
+  'return null;',
 ]);
 
 if (failures.length) {

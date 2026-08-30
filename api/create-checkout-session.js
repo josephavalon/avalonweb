@@ -413,6 +413,9 @@ function checkoutIdempotencyKey({ mode, storageMode = 'supabase-v1', contact = {
       name: membership.name || '',
       billing: membership.billing || 'monthly',
       price: Number(membership.price || 0),
+      peopleCount: Number(membership.peopleCount || 1),
+      visitsPerCycle: Number(membership.visitsPerCycle || 1),
+      plan: membership.plan || null,
     } : null,
     creditRedemption: creditRedemption ? {
       units: Number(creditRedemption.units || 0),
@@ -609,7 +612,12 @@ export default async function handler(req, res) {
     const cartPeopleCount = items
       .filter((item) => item.type === 'iv')
       .reduce((sum, item) => sum + checkoutItemQuantity(item), 0);
-    const peopleCount = Math.max(1, Math.min(4, Math.floor(Number(appointment.peopleCount || appointment.people || cartPeopleCount || guestCount || 1))));
+    // Custom memberships carry a server-normalized manifest, so its derived
+    // people count outranks every browser-authored appointment hint. One-time
+    // bookings retain the prior cart/appointment fallback behavior.
+    const peopleCount = Math.max(1, Math.min(4, Math.floor(Number(
+      membership?.peopleCount || appointment.peopleCount || appointment.people || cartPeopleCount || guestCount || 1,
+    ))));
     const isGroupVisit = /event/i.test(`${appointmentOrderType} ${appointment.locationType || ''}`) || guestCount > 1;
     const planMonthlyCents = membership ? Math.max(0, dollarsToCents(membership.price)) : 0;
     const requestedCredits = requestedCreditUnits(rawCreditRedemption);

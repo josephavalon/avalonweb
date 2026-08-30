@@ -24,7 +24,11 @@ import SessionBuilder from '@/components/store/SessionBuilder';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import { apiPost } from '@/lib/apiClient';
 import { SUBSCRIPTION_COMMITMENT_SHORT } from '@/lib/subscription';
-import { PLAN_VISIT_CREDIT, PLAN_ADDON_DISCOUNT, planTierDiscountRate } from '@/config/subscriptionTiers';
+import {
+  PLAN_BILLING_TERMS,
+  PLAN_VISIT_CREDIT,
+} from '@/config/subscriptionTiers';
+import { calculateCustomPlanQuote } from '@/lib/customPlanPricing';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -50,12 +54,7 @@ const SESSION_OPTIONS = [1, 2, 3, 4];
 
 // Terms. Monthly is the low-friction default; 6mo (-8%) and 12mo (-15%) come
 // from the web store, 3mo (-5%) is the owner-approved default. One source here.
-const TERMS = [
-  { key: 'monthly', label: 'Monthly', months: 1, discount: 0 },
-  { key: 'three-month', label: '3 months', months: 3, discount: 0.05 },
-  { key: 'six-month', label: '6 months', months: 6, discount: 0.08 },
-  { key: 'annual', label: '12 months', months: 12, discount: 0.15 },
-];
+const TERMS = Object.values(PLAN_BILLING_TERMS);
 
 const money = (value) => `$${Math.round(Number(value || 0)).toLocaleString()}`;
 
@@ -947,6 +946,20 @@ export default function Subscription() {
     return { ...m, person: p, index, label: personLabelFor(p, index) };
   });
   const peopleCount = peopleBreakdown.length;
+
+  // This is the complete pricing contract sent to checkout and self-service
+  // plan changes: no labels, totals, discounts, or prices. The server resolves
+  // these stable keys against the official catalog and applies the shared plan
+  // constants independently before auth or Stripe.
+  const stablePlanManifest = peopleBreakdown.map((row) => ({
+    visits: row.visits.map((visit) => ({
+      therapyKey: visit.therapyKey,
+      ivQty: Object.fromEntries(Object.entries(visit.ivQty || {}).filter(([, quantity]) => Number(quantity) > 0)),
+      imQty: Object.fromEntries(Object.entries(visit.imQty || {}).filter(([, quantity]) => Number(quantity) > 0)),
+    })),
+  }));
+  const planQuote = calculateCustomPlanQuote({ plan: stablePlanManifest, billing: term.key });
+
   // Plan economics under the Visit Credit model:
   //   planBase      = Σ (people's visits × $250)  — the membership price.
   //   monthlyRetail = Σ max(VISIT_CREDIT, cart)   — base + premium upgrades.
@@ -954,12 +967,11 @@ export default function Subscription() {
   // PLAN INCENTIVE on top: tier discount scales with sessions (10/15/17%)
   // applied to planBase; flat PLAN_ADDON_DISCOUNT on upgrades/add-ons. The
   // discounted `monthly` is what we show, deposit from, and bill via Stripe.
-  const monthlyRetail = peopleBreakdown.reduce((sum, row) => sum + row.total, 0);
-  const planBase = peopleBreakdown.reduce((sum, row) => sum + row.base, 0);
-  const upgradesTotal = monthlyRetail - planBase;
-  const tierDiscountRate = planTierDiscountRate(sessions);
-  const planSavings = Math.round(planBase * tierDiscountRate + upgradesTotal * PLAN_ADDON_DISCOUNT);
-  const monthly = Math.max(0, monthlyRetail - planSavings);
+  const monthlyRetail = planQuote.monthlyRetailDollars;
+  const planBase = planQuote.monthlyCoveredDollars;
+  const upgradesTotal = planQuote.monthlyUpgradeDollars;
+  const planSavings = planQuote.monthlySavingsDollars;
+  const monthly = planQuote.monthlyPriceDollars;
   const baseMonthly = peopleBreakdown.find((r) => r.person.id === activePersonId)?.total || 0;
   // Roster rows for the "YOUR SESSION" builder. Plans show a per-person monthly.
   const sessionPeople = peopleBreakdown.map((row) => ({
@@ -970,8 +982,8 @@ export default function Subscription() {
     priceLabel: `${money(row.total)}/mo`,
     filled: Boolean(row.therapy),
   }));
-  const upfrontTotal = Math.round(monthly * term.months * (1 - term.discount));
-  const perMonth = Math.round(upfrontTotal / term.months);
+  const upfrontTotal = planQuote.periodPriceDollars;
+  const perMonth = planQuote.effectiveMonthlyDollars;
   const addOnCount = visits.reduce(
     (sum, v) =>
       sum +
@@ -995,114 +1007,57 @@ export default function Subscription() {
 
   const startPlan = () => {
     // Plans use their OWN checkout (/plan → subscription mode + membership Acuity
-    // type), intentionally NOT the one-time 5-step /book flow. The plan manifest
-    // carries each person's protocol so /plan can render a per-person summary
-    // and /api/create-checkout-session can scale the $50 deposit per person.
-    // Each person now carries a `visits` array so per-visit IV detail flows to
-    // checkout (Phase B wires display/Acuity). The legacy top-level fields
-    // (therapyKey/ivPrice/ivQty/imQty) are kept from visit 0 for back-compat
-    // with PlanCheckout's per-person summary.
-    const planManifest = peopleBreakdown.map((row) => {
-      const v0 = row.visits[0] || makeVisit();
-      const { option: v0opt } = findTherapy(v0.therapyKey);
-      // Per-person discount mirrors the plan-level math: tier % on credit base,
-      // PLAN_ADDON_DISCOUNT on the rest. Keeps PlanCheckout's per-person sum
-      // consistent with the discounted total Stripe charges.
-      const personSavings = Math.round(row.base * tierDiscountRate + (row.total - row.base) * PLAN_ADDON_DISCOUNT);
-      const personMonthly = Math.max(0, row.total - personSavings);
-      return {
-        id: row.person.id,
-        label: row.label,
-        name: row.person.name || '',
-        dob: row.person.dob || '',
-        therapyKey: v0.therapyKey,
-        therapyLabel: v0opt?.label || '',
-        ivPrice: Number(v0opt?.price || VITAMIN_IV_PRICE),
-        monthly: personMonthly,
-        monthlyRetail: row.total,
-        savings: personSavings,
-        // Visit Credit economics for this person (membership base vs upgrades).
-        base: row.base,
-        upgrades: row.upgrades,
-        ivQty: v0.ivQty || {},
-        imQty: v0.imQty || {},
-        visits: row.visits.map((v) => {
-          const { option } = findTherapy(v.therapyKey);
-          // Resolve add-on labels here (the builder has the catalog) so checkout
-          // + the nurse-facing Acuity note can itemize without re-importing it.
-          const addons = [
-            ...IV_ADDON_ITEMS.filter((it) => (v.ivQty?.[it.key] || 0) > 0).map((it) => ({ label: it.label, qty: v.ivQty[it.key] })),
-            ...IM_ADDON_ITEMS.filter((it) => (v.imQty?.[it.key] || 0) > 0).map((it) => ({ label: it.label, qty: v.imQty[it.key] })),
-          ];
-          // Per-visit Visit Credit verdict so checkout can show Included vs the
-          // premium difference without re-deriving the credit math.
-          const { included, upgrade } = visitCredit(v);
-          return {
-            therapyKey: v.therapyKey,
-            therapyLabel: option?.label || '',
-            ivPrice: Number(option?.price || VITAMIN_IV_PRICE),
-            credit: VISIT_CREDIT,
-            included,
-            upgrade,
-            ivQty: v.ivQty || {},
-            imQty: v.imQty || {},
-            addons,
-          };
-        }),
-      };
-    });
+    // type), intentionally NOT the one-time 5-step /book flow. Query state is
+    // limited to stable catalog keys, quantities, and the billing term; /plan
+    // rebuilds display values and the API independently rebuilds the charge.
     const params = new URLSearchParams({
-      price: String(Math.round(monthly)),
       term: term.key,
-      protocol: therapyOption?.protocol || 'recovery',
-      sessions: String(sessions),
-      people: String(peopleCount),
+      plan: JSON.stringify(stablePlanManifest),
     });
-    // Always pass the manifest now (even single-person) so per-visit detail
-    // flows to /plan. PlanCheckout tolerates the extra `visits` field.
-    params.set('plan', encodeURIComponent(JSON.stringify(planManifest)));
     navigate(`/plan?${params.toString()}`);
   };
 
   // ── Change-mode: proration preview + commit ───────────────────────────────
-  // The custom plan the builder describes (computed monthly + total visits per
-  // cycle + term) is sent to /api/me/subscription/change as targetPlan:'custom'.
-  // Total visits per cycle = sessions × people on the plan (matches the
-  // per-cycle credit grant). The recurring price the change uses is the SAME
-  // periodic charge PlanRail shows: monthly for monthly term, the upfront total
-  // for committed terms.
-  const visitsPerCycle = Math.max(1, sessions * peopleCount);
-  const changePriceDollars = term.key === 'monthly' ? Math.round(monthly) : Math.round(upfrontTotal);
-  const planNameForChange = `${peopleCount > 1 ? `${peopleCount}-person` : 'Custom'} ${sessions}×`;
+  // The API receives the same price-free manifest, then returns the canonical
+  // recurring amount used for Stripe's proration preview.
+  const visitsPerCycle = planQuote.visitsPerCycle;
+  const changePriceDollars = planQuote.periodPriceDollars;
+  const planNameForChange = planQuote.displayName.replace(/ Plan$/, '');
 
   const buildCustomBody = () => ({
-    priceDollars: changePriceDollars,
-    visitsPerCycle,
-    name: planNameForChange,
     billing: term.key,
+    plan: stablePlanManifest,
   });
 
   const previewChange = async () => {
-    setChangePanel({ status: 'loading', proration: null });
+    const request = buildCustomBody();
+    setChangePanel({ status: 'loading', proration: null, request });
     try {
       const data = await apiPost('/api/me/subscription/change', {
         targetPlan: 'custom',
         action: 'preview',
-        custom: buildCustomBody(),
+        custom: request,
       });
-      setChangePanel({ status: 'preview', proration: data?.proration || null });
+      setChangePanel({
+        status: 'preview',
+        proration: data?.proration || null,
+        pricing: data?.pricing || null,
+        explanation: data?.explanation || '',
+        request,
+      });
     } catch (err) {
       setChangePanel({ status: 'error', error: err?.body?.error || err?.message || 'Could not preview the change.' });
     }
   };
 
   const commitChange = async () => {
+    const request = changePanel?.request || buildCustomBody();
     setChangePanel((p) => ({ ...(p || {}), status: 'committing' }));
     try {
       await apiPost('/api/me/subscription/change', {
         targetPlan: 'custom',
         action: 'commit',
-        custom: buildCustomBody(),
+        custom: request,
       });
       navigate('/members/memberships');
     } catch (err) {
@@ -1113,7 +1068,9 @@ export default function Subscription() {
   // In change mode the primary CTA opens the proration preview; otherwise it's
   // the normal checkout hand-off.
   const onPrimaryCta = isChangeMode ? previewChange : startPlan;
-  const primaryCtaLabel = isChangeMode ? 'Update my plan' : 'Continue to checkout';
+  const confirmedChangePrice = changePanel?.pricing?.periodPriceDollars ?? changePriceDollars;
+  const confirmedChangeVisits = changePanel?.pricing?.visitsPerCycle ?? visitsPerCycle;
+  const confirmedChangeName = changePanel?.pricing?.displayName?.replace(/ Plan$/, '') || planNameForChange;
 
   const rail = (
     <PlanRail
@@ -1397,7 +1354,7 @@ export default function Subscription() {
                 <div className="border-b border-foreground/10 px-5 py-4">
                   <p className="font-heading text-xl uppercase leading-none tracking-normal text-foreground">Update your plan</p>
                   <p className="mt-1.5 font-body text-[13px] font-semibold text-foreground/55">
-                    {planNameForChange} · {visitsPerCycle} {visitsPerCycle === 1 ? 'visit' : 'visits'} / cycle · {money(changePriceDollars)}{term.key === 'monthly' ? '/mo' : ` per ${term.label.toLowerCase()}`}
+                    {confirmedChangeName} · {confirmedChangeVisits} {confirmedChangeVisits === 1 ? 'visit' : 'visits'} / cycle · {money(confirmedChangePrice)}{term.key === 'monthly' ? '/mo' : ` per ${term.label.toLowerCase()}`}
                   </p>
                 </div>
 
@@ -1427,7 +1384,7 @@ export default function Subscription() {
                         </div>
                       </div>
                       <p className="mt-3 font-body text-[12px] font-semibold text-foreground/52">
-                        Then {money(changePriceDollars)}{term.key === 'monthly' ? '/mo' : ` per ${term.label.toLowerCase()}`} at your next renewal. Cancel or change anytime.
+                        {changePanel.explanation || `Then ${money(confirmedChangePrice)}${term.key === 'monthly' ? '/mo' : ` per ${term.label.toLowerCase()}`} at your next renewal. Cancel or change anytime.`}
                       </p>
                     </>
                   )}

@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, FileText, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, CalendarDays, FileText, Loader2, Plus, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiGet } from '@/lib/apiClient';
 import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
+import MobileNavBar from '@/components/navigation/MobileNavBar';
 import { useSeo } from '@/lib/seo';
 
 const money = (cents) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(cents || 0) / 100);
+const PROVIDER_NAV_ITEMS = [
+  { label: 'Shifts', to: '/provider/shifts', icon: CalendarDays },
+  { label: 'Services', to: '/provider/services', icon: Stethoscope },
+  { label: 'Invoices', to: '/provider/invoices', icon: FileText },
+];
 
 export default function NurseInvoices() {
   useSeo({
@@ -31,19 +37,20 @@ export default function NurseInvoices() {
 
   if (!state.loading && state.error) {
     return (
-      <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+      <main className="min-h-dvh bg-background px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 text-foreground">
         <section className="mx-auto max-w-4xl">
           <OperationalSourceUnavailable
             title="Invoice source unavailable"
             description="Your submitted invoices could not be verified. No invoice records are shown, and invoice-history actions remain disabled until the live source reconnects."
           />
         </section>
+        <MobileNavBar items={PROVIDER_NAV_ITEMS} columns={3} maxWidth="shift" mobileOnly={false} ariaLabel="Provider operations" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+    <main className="min-h-dvh bg-background px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 text-foreground">
       <section className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between gap-3"><Link to="/provider/shifts" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em]"><ArrowLeft className="h-4 w-4" />Shifts</Link><Link to="/invoice" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-5 text-xs font-bold uppercase tracking-[0.14em] text-background"><Plus className="h-4 w-4" />New invoice</Link></div>
         <div className="mt-10"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/45">Contractor pay</p><h1 className="font-heading text-5xl uppercase">Invoices</h1></div>
@@ -54,6 +61,7 @@ export default function NurseInvoices() {
           {!state.loading && !state.invoices.length ? <div className="rounded-3xl border border-dashed border-foreground/15 p-10 text-center"><FileText className="mx-auto h-6 w-6 text-foreground/35" /><p className="mt-3 text-sm text-foreground/50">No submitted invoices yet.</p></div> : null}
         </div>
       </section>
+      <MobileNavBar items={PROVIDER_NAV_ITEMS} columns={3} maxWidth="shift" mobileOnly={false} ariaLabel="Provider operations" />
     </main>
   );
 }

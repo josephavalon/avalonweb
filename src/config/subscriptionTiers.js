@@ -22,6 +22,50 @@ export function planTierDiscountRate(sessions) {
   return 0.17; // 3+ visits
 }
 
+// Billing-term discounts are part of the price, so the browser builder and
+// server-side checkout/change handlers must read the same immutable manifest.
+// `price` for a custom plan is the charge for one of these recurring periods;
+// `monthly` still has a three-month commitment but recurs every month.
+export const PLAN_BILLING_TERMS = Object.freeze({
+  monthly: Object.freeze({
+    key: 'monthly',
+    label: 'Monthly',
+    months: 1,
+    discount: 0,
+    billing: 'monthly',
+    commitmentMonths: 3,
+  }),
+  'three-month': Object.freeze({
+    key: 'three-month',
+    label: '3 months',
+    months: 3,
+    discount: 0.05,
+    billing: 'three-month',
+    commitmentMonths: 3,
+  }),
+  'six-month': Object.freeze({
+    key: 'six-month',
+    label: '6 months',
+    months: 6,
+    discount: 0.08,
+    billing: 'six-month',
+    commitmentMonths: 6,
+  }),
+  annual: Object.freeze({
+    key: 'annual',
+    label: '12 months',
+    months: 12,
+    discount: 0.15,
+    billing: 'annual',
+    commitmentMonths: 12,
+  }),
+});
+
+export function getPlanBillingTerm(value) {
+  const key = String(value || '').trim().toLowerCase();
+  return PLAN_BILLING_TERMS[key] || null;
+}
+
 export const SUBSCRIPTION_TIERS = [
   {
     key: 'starter',

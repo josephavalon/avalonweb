@@ -6,6 +6,7 @@
  * Run:  node scripts/verify-events-core.mjs
  */
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   unitPriceForQty, computeOrderLines, salesWindowOpen, isCountedAgainstCapacity,
   HOLD_MINUTES, WAITLIST_CLAIM_HOURS,
@@ -123,6 +124,24 @@ console.log('\n[5] constants');
 check('15-minute hold, 4-hour waitlist claim (blueprint)', () => {
   assert.equal(HOLD_MINUTES, 15);
   assert.equal(WAITLIST_CLAIM_HOURS, 4);
+});
+
+console.log('\n[6] admin tier and public fallback boundaries');
+const eventManagementSource = fs.readFileSync(new URL('../api/admin/events/management.js', import.meta.url), 'utf8');
+const eventsApiSource = fs.readFileSync(new URL('../src/lib/eventsApi.js', import.meta.url), 'utf8');
+check('clinical tier save scopes the service to the event tenant', () => {
+  assert.match(eventManagementSource, /serviceQuery = tenantScoped\(serviceQuery, container\.tenant_id\)/);
+  assert.match(eventManagementSource, /tenantScoped\(db\.from\('event_tiers'\)\.update/);
+});
+check('clinical tier save never mutates the global event service', () => {
+  assert.doesNotMatch(eventManagementSource, /from\('event_services'\)\.update/);
+  assert.match(eventManagementSource, /catalog_service_rule_mismatch/);
+});
+check('synthetic event fallback is development-only and dynamically loaded', () => {
+  assert.doesNotMatch(eventsApiSource, /^import .*eventsFallback/m);
+  assert.match(eventsApiSource, /if \(!import\.meta\.env\.DEV\) return null;/);
+  assert.match(eventsApiSource, /await import\('\.\/eventsFallback'\)/);
+  assert.match(eventsApiSource, /export function fetchEventSync\(\) \{\s*return null;/);
 });
 
 console.log(`\n${process.exitCode ? 'FAIL' : 'PASS'} — ${passed} checks passed`);

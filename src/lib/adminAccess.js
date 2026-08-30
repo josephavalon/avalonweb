@@ -37,6 +37,7 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/inbox',
   '/admin/messages',
   '/admin/bookings',
+  '/admin/catalog', // centralized offering source of truth (admin-only)
   '/admin/finance',
   '/admin/scheduling', // admin-only credential-gated workforce scheduling
   '/admin/nurse-invoices', // contractor pay review (admin-only)

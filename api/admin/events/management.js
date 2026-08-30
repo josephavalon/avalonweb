@@ -28,6 +28,10 @@ function iso(value) {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
+function tenantScoped(query, tenantId) {
+  return tenantId ? query.eq('tenant_id', tenantId) : query.is('tenant_id', null);
+}
+
 async function payload(db, tenantId) {
   let query = db.from('event_containers').select('*').order('created_at', { ascending: false });
   if (tenantId) query = query.eq('tenant_id', tenantId);
@@ -141,20 +145,27 @@ export default async function handler(req, res) {
       let service = null;
       if (clinical) {
         const serviceRef = text(body.serviceId, 120);
-        const serviceQuery = db.from('event_services').select('*').eq('active', true);
+        let serviceQuery = db.from('event_services').select('*').eq('active', true);
+        serviceQuery = tenantScoped(serviceQuery, container.tenant_id);
         const { data } = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(serviceRef)
           ? await serviceQuery.eq('id', serviceRef).maybeSingle()
           : await serviceQuery.eq('slug', serviceRef).maybeSingle();
         if (!data) return res.status(400).json({ error: 'Choose an active Avalon clinical service.' });
         service = data;
-        const servicePatch = {
-          default_price_cents: priceCents,
-          back_on_floor_minutes: count(body.backOnFloorMinutes, { nullable: true, max: 1440 }),
-          requires_gfe: body.requiresGfe !== false,
-        };
-        if (servicePatch.back_on_floor_minutes === undefined) return res.status(400).json({ error: 'Enter a valid back-on-floor estimate.' });
-        const { error } = await db.from('event_services').update(servicePatch).eq('id', service.id);
-        if (error) throw error;
+        const requestedBackOnFloor = count(body.backOnFloorMinutes, { nullable: true, max: 1440 });
+        if (requestedBackOnFloor === undefined) return res.status(400).json({ error: 'Enter a valid back-on-floor estimate.' });
+        if (requestedBackOnFloor != null && requestedBackOnFloor !== service.back_on_floor_minutes) {
+          return res.status(409).json({
+            error: 'Clinical timing is managed in the Avalon Catalog. Refresh this event before saving.',
+            code: 'catalog_service_rule_mismatch',
+          });
+        }
+        if (typeof body.requiresGfe === 'boolean' && body.requiresGfe !== Boolean(service.requires_gfe)) {
+          return res.status(409).json({
+            error: 'Clinical eligibility rules are managed in the Avalon Catalog. Refresh this event before saving.',
+            code: 'catalog_service_rule_mismatch',
+          });
+        }
       }
 
       const tierPatch = {
@@ -164,7 +175,7 @@ export default async function handler(req, res) {
         active: body.active !== false,
       };
       const result = tierId
-        ? await db.from('event_tiers').update(tierPatch).eq('id', tierId).eq('container_id', container.id)
+        ? await tenantScoped(db.from('event_tiers').update(tierPatch).eq('id', tierId).eq('container_id', container.id), container.tenant_id)
         : await db.from('event_tiers').insert({ ...tierPatch, tenant_id: container.tenant_id, container_id: container.id });
       if (result.error) throw result.error;
       await writeAuditEvent(db, { tenantId: container.tenant_id, actorProfileId: authed.user?.id || null, action: clinical ? 'event_admin_clinical_tier' : 'event_admin_experience_tier', entityType: 'event_tier', entityId: tierId || null, payload: { container_id: container.id, price_locked: tierPatch.price_locked } });

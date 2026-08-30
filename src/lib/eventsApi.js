@@ -4,7 +4,11 @@
  * is the only way client pages talk to the events backend.
  */
 
-import { fallbackList, fallbackEvent } from './eventsFallback';
+async function devFallbackEvent(slug) {
+  if (!import.meta.env.DEV) return null;
+  const { fallbackEvent } = await import('./eventsFallback');
+  return fallbackEvent(slug);
+}
 
 async function getJson(url) {
   const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -29,16 +33,16 @@ export async function fetchEvent(slug) {
     const { event } = await getJson(`/api/events/catalog?slug=${encodeURIComponent(slug)}`);
     if (event) return event;
   } catch {
-    // Fall through to fallback lookup.
+    // Local development may load the isolated synthetic fixture below.
   }
-  return fallbackEvent(slug);
+  return devFallbackEvent(slug);
 }
 
-// Synchronous first-paint path. Returns the in-bundle fallback if one exists.
-// EventPage seeds its state from this so we can render instantly, then calls
-// fetchEventFresh() to reconcile with the server.
-export function fetchEventSync(slug) {
-  return fallbackEvent(slug);
+// Production has no synchronous synthetic first paint. EventPage starts in a
+// loading state and reconciles only with the live endpoint. The development
+// fallback stays behind the dynamic import above and is absent from live JS.
+export function fetchEventSync() {
+  return null;
 }
 
 // Background revalidator. Same as fetchEvent but never returns fallback on error —
