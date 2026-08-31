@@ -16,6 +16,7 @@ import {
 import AdminShell from '@/components/admin/AdminShell';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet } from '@/lib/apiClient';
+import { assertApiResponse } from '@/lib/apiResponse';
 import { PAYOPS_FINANCE_CORE_ENABLED } from '@/lib/payOpsFinanceCore';
 import { useAuthStore } from '@/lib/useAuthStore';
 
@@ -88,9 +89,10 @@ export default function FinanceControl() {
     setState((current) => ({ ...current, loading: true, error: '' }));
     try {
       const summary = await apiGet('/api/admin/finance/summary');
-      if (!summary?.clientRevenue || !summary?.nursePayOps || !summary?.inventoryCosts) {
-        throw new Error('Finance returned an invalid domain summary.');
-      }
+      assertApiResponse(summary, {
+        objects: ['clientRevenue', 'nursePayOps', 'inventoryCosts'],
+        strings: ['clientRevenue.status', 'nursePayOps.status', 'inventoryCosts.status', 'inventoryCosts.sourceStatus'],
+      }, 'Finance returned an invalid domain summary.');
       setState({ loading: false, error: '', summary });
     } catch (error) {
       setState({ loading: false, error: error.message || 'Could not load finance domains.', summary: null });
