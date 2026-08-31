@@ -1,19 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  BriefcaseBusiness,
-  CheckCircle2,
   Clock3,
   FileText,
   Loader2,
   RefreshCw,
-  Settings,
-  Stethoscope,
   WalletCards,
 } from 'lucide-react';
 import MobileNavBar from '@/components/navigation/MobileNavBar';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet } from '@/lib/apiClient';
 import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
+import { nursePortalNav } from '@/lib/nursePortalNav';
 import { useSeo } from '@/lib/seo';
 
 const TERMINAL_RUN_STATUSES = new Set(['completed', 'closed', 'time_submitted', 'paid', 'cancelled']);
@@ -28,15 +25,6 @@ const formatDateTime = (value, fallback = 'Not recorded') => {
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? DATE_TIME_FORMATTER.format(date) : fallback;
 };
-
-function nurseNav(activeShiftId = '') {
-  return [
-    { label: 'Work', to: '/provider/shifts', icon: BriefcaseBusiness },
-    ...(activeShiftId ? [{ label: 'Shift', to: `/provider/shifts/${encodeURIComponent(activeShiftId)}`, icon: Stethoscope, primary: true }] : []),
-    { label: 'Time & Pay', to: '/provider/invoices', icon: FileText, exact: true },
-    { label: 'Me', to: '/provider/settings', icon: Settings },
-  ];
-}
 
 function recordedMinutes(record) {
   const stored = Number(record?.approved_minutes ?? record?.recorded_minutes ?? record?.duration_minutes);
@@ -81,12 +69,8 @@ function TimeRecord({ record }) {
 
 function InvoiceRecord({ invoice }) {
   const invoiceStatus = text(invoice.status).toLowerCase() || 'pending';
-  const paidProof = invoiceStatus === 'paid' && Boolean(invoice.paid_at) && Boolean(invoice.payment_reference);
-  const paymentStatus = paidProof
-    ? 'paid'
-    : invoiceStatus === 'paid'
-      ? 'reconciliation_required'
-      : invoice.payout_status || invoice.payment_status || (['approved', 'payment_ready'].includes(invoiceStatus) ? invoiceStatus : 'not_submitted');
+  const paymentStatus = text(invoice.canonical_payment_status).toLowerCase()
+    || (invoiceStatus === 'paid' ? 'reconciliation_required' : 'not_settled');
   return (
     <article className="rounded-3xl border border-foreground/10 bg-foreground/[0.035] p-5">
       <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
@@ -100,8 +84,7 @@ function InvoiceRecord({ invoice }) {
         <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/35">Invoice review</p><span className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.11em] ${statusTone(invoiceStatus)}`}>{labelCase(invoiceStatus)}</span></div>
         <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/35">Payment</p><span className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.11em] ${statusTone(paymentStatus)}`}>{labelCase(paymentStatus)}</span></div>
       </div>
-      {paidProof ? <p className="mt-3 flex items-center gap-2 text-xs text-emerald-800"><CheckCircle2 className="h-4 w-4" />Stored Finance confirmation · {formatDateTime(invoice.paid_at)}</p> : null}
-      {invoiceStatus === 'paid' && !paidProof ? <p className="mt-3 text-xs leading-relaxed text-red-700">A paid label exists without a stored paid time and payment reference. This record remains in reconciliation review and is not represented as paid.</p> : null}
+      {paymentStatus === 'reconciliation_required' ? <p className="mt-3 text-xs leading-relaxed text-red-700">A legacy paid label exists without reconciled provider settlement evidence. This record remains in reconciliation review and is not represented as paid.</p> : null}
       {invoice.review_note ? <p className="mt-3 text-sm leading-relaxed text-foreground/60">{invoice.review_note}</p> : null}
     </article>
   );
@@ -144,7 +127,7 @@ export default function NurseInvoices() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const navItems = useMemo(() => nurseNav(state.activeShiftId), [state.activeShiftId]);
+  const navItems = useMemo(() => nursePortalNav(state.activeShiftId), [state.activeShiftId]);
 
   if (!state.loading && state.error) {
     return (
@@ -155,7 +138,7 @@ export default function NurseInvoices() {
             description="Your actual-time, invoice-review, and payout records could not be verified. No amounts or payment status are shown until the persisted Finance source reconnects."
           />
         </section>
-        <MobileNavBar items={nurseNav()} columns={3} maxWidth="shift" mobileOnly={false} ariaLabel="Nurse work" />
+        <MobileNavBar items={nursePortalNav()} columns={4} maxWidth="shift" mobileOnly={false} ariaLabel="Nurse work" />
       </main>
     );
   }
@@ -164,7 +147,7 @@ export default function NurseInvoices() {
     <main className="min-h-dvh bg-background px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-8 text-foreground">
       <section className="mx-auto max-w-4xl">
         <header className="flex flex-wrap items-end justify-between gap-3">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/45">Nurse portal</p><h1 className="font-heading text-5xl uppercase">Time & Pay</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-foreground/55">Actual clock records, review status, and payment status remain separate. Paid appears only after stored Finance confirmation.</p></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/45">Nurse portal</p><h1 className="font-heading text-5xl uppercase">Time & Pay</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-foreground/55">Actual clock records, review status, and payment status remain separate. Settled appears only after provider evidence and reconciliation agree.</p></div>
           <button type="button" onClick={load} className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/15" aria-label="Refresh Time & Pay"><RefreshCw className={`h-4 w-4 ${state.loading ? 'animate-spin' : ''}`} /></button>
         </header>
 

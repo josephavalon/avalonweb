@@ -10,7 +10,7 @@ import {
 
 assert.deepEqual(OS_ADAPTER_OPERATIONS, ['health', 'import', 'export', 'sync', 'retry', 'disconnect']);
 
-for (const provider of ['acuity', 'stripe', 'supabase', 'resend', 'quo', 'hubspot', 'mercury', 'quickbooks', 'gusto', 'nursys', 'qualiphy']) {
+for (const provider of ['acuity', 'stripe', 'supabase', 'resend', 'quo', 'hubspot', 'mercury', 'gusto', 'nursys', 'qualiphy']) {
   const adapter = getOsAdapter(provider);
   assert.equal(adapter.provider, provider);
   const health = adapterHealth(adapter);
@@ -18,6 +18,8 @@ for (const provider of ['acuity', 'stripe', 'supabase', 'resend', 'quo', 'hubspo
   assert.ok(['sandbox', 'manual'].includes(health.mode));
   assert.equal(typeof health.action, 'string');
 }
+
+assert.equal(getOsAdapter('quickbooks'), null, 'QuickBooks must not remain an active Avalon OS adapter.');
 
 assert.equal(getOsAdapter('unknown'), null);
 assert.equal(validateManualImport({}).valid, false);

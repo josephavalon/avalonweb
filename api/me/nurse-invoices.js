@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     // auth/profile id. Never fall back to a matching email: shared-door intake
     // email is self-asserted until an administrator links the row.
     const result = await authed.db.from('nurse_invoices')
-      .select('id,invoice_number,status,period_start,period_end,wages_cents,reimbursements_cents,total_cents,currency,submitted_at,reviewed_at,review_note,paid_at,payment_reference,identity_assurance,version')
+      .select('id,invoice_number,status,period_start,period_end,wages_cents,reimbursements_cents,total_cents,currency,submitted_at,reviewed_at,review_note,identity_assurance,payable_id,settlement_evidence_status,legacy_payment_classification,version')
       .eq('tenant_id', authed.tenantId)
       .eq('nurse_profile_id', authed.user.id)
       .order('submitted_at', { ascending: false })
@@ -68,7 +68,12 @@ export default async function handler(req, res) {
     if (timeResult.error) {
       if (isNurseWorkflowMigrationError(timeResult.error)) {
         return res.status(200).json({
-          invoices: result.data || [],
+          invoices: (result.data || []).map((invoice) => ({
+            ...invoice,
+            canonical_payment_status: invoice.status === 'paid'
+              ? (invoice.settlement_evidence_status === 'provider_confirmed' ? 'SETTLED' : 'RECONCILIATION_REQUIRED')
+              : 'NOT_SETTLED',
+          })),
           timeRecords: [],
           timeRecordsStatus: 'unavailable',
         });
@@ -100,7 +105,12 @@ export default async function handler(req, res) {
     for (const event of eventResult.data || []) eventsByRun.get(event.shift_run_id)?.push(event);
     const shiftsById = new Map((shiftResult.data || []).map((shift) => [shift.id, shift]));
     return res.status(200).json({
-      invoices: result.data || [],
+      invoices: (result.data || []).map((invoice) => ({
+        ...invoice,
+        canonical_payment_status: invoice.status === 'paid'
+          ? (invoice.settlement_evidence_status === 'provider_confirmed' ? 'SETTLED' : 'RECONCILIATION_REQUIRED')
+          : 'NOT_SETTLED',
+      })),
       timeRecords: runs.map((run) => summarizeTime(run, eventsByRun.get(run.id) || [], shiftsById.get(run.shift_id))),
       timeRecordsStatus: 'available',
     });

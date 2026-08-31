@@ -38,6 +38,9 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/messages',
   '/admin/bookings',
   '/admin/finance',
+  '/admin/payables', // contractor PayOps queue (admin shell + finance role enforced server-side)
+  '/admin/inventory-costs', // supplies and inventory cost evidence (admin + finance role server-side)
+  '/admin/inventory', // shared typed stock and nurse-kit custody (admin-only)
   '/admin/scheduling', // admin-only credential-gated workforce scheduling
   '/admin/nurse-invoices', // contractor pay review (admin-only)
   '/admin/team',

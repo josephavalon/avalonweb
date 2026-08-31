@@ -81,8 +81,7 @@ const NAV_LIVE = [
         ],
       },
       {
-        label: 'Revenue & Payments', children: [
-          { label: 'Nurse invoices', to: '/admin/nurse-invoices' },
+        label: 'Client Revenue · Stripe', children: [
           { label: 'Revenue Dashboard', to: soon('Revenue Dashboard') },
           { label: 'Sales', to: soon('Sales') },
           { label: 'Memberships', to: soon('Memberships') },
@@ -95,6 +94,14 @@ const NAV_LIVE = [
           { label: 'Customer invoices', to: soon('Invoices') },
           { label: 'Refunds', to: '/admin/refunds' },
           { label: 'Chargebacks', to: soon('Chargebacks') },
+        ],
+      },
+      {
+        label: 'Nurse PayOps', children: [
+          { label: '1099 Payables', to: '/admin/payables' },
+          { label: 'Nurse invoice review', to: '/admin/nurse-invoices' },
+          { label: 'W-2 Payroll', to: soon('W-2 Payroll') },
+          { label: 'Avalon nurse-pay subledger', to: soon('Avalon nurse-pay subledger') },
         ],
       },
       {
@@ -111,7 +118,6 @@ const NAV_LIVE = [
           { label: 'Chart of Accounts', to: soon('Chart of Accounts') },
           { label: 'Closing Periods', to: soon('Closing Periods') },
           { label: 'Mercury', to: soon('Mercury') },
-          { label: 'QuickBooks', to: soon('QuickBooks') },
         ],
       },
       {
@@ -132,14 +138,14 @@ const NAV_LIVE = [
       },
       {
         label: 'Inventory Finance', children: [
-          { label: 'Inventory Value', to: soon('Inventory Value') },
-          { label: 'COGS', to: soon('COGS') },
-          { label: 'Purchase Orders', to: soon('Purchase Orders') },
+          { label: 'Inventory Value', to: '/admin/inventory-costs' },
+          { label: 'COGS', to: '/admin/inventory-costs' },
+          { label: 'Purchase Orders', to: '/admin/inventory' },
           { label: 'Vendor Spend', to: soon('Vendor Spend') },
           { label: 'Inventory Turnover', to: soon('Inventory Turnover') },
-          { label: 'Expired Inventory', to: soon('Expired Inventory') },
-          { label: 'Shrinkage', to: soon('Shrinkage') },
-          { label: 'Cost Analysis', to: soon('Cost Analysis') },
+          { label: 'Expired Inventory', to: '/admin/inventory-costs' },
+          { label: 'Shrinkage', to: '/admin/inventory-costs' },
+          { label: 'Cost Analysis', to: '/admin/inventory-costs' },
         ],
       },
       {
@@ -211,7 +217,7 @@ const NAV_LIVE = [
               { label: 'Training', to: soon('Training') },
             ],
           },
-          { label: 'Clinical Inventory', to: soon('Clinical Inventory') },
+          { label: 'Clinical Inventory', to: '/admin/inventory' },
         ],
       },
       { label: 'GFE', to: '/admin/gfe' },

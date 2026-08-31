@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
-  FileText,
   Loader2,
   MapPin,
   RefreshCw,
   Save,
-  Settings,
   ShieldCheck,
   Stethoscope,
   UserRound,
@@ -17,6 +14,7 @@ import MobileNavBar from '@/components/navigation/MobileNavBar';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, authedFetch } from '@/lib/apiClient';
 import { assertApiResponse } from '@/lib/apiResponse';
+import { nursePortalNav } from '@/lib/nursePortalNav';
 import { useSeo } from '@/lib/seo';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -47,15 +45,6 @@ const asNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 const resourceState = () => ({ status: 'loading', error: '', version: null, updatedAt: '', saved: false });
-
-function nurseNav(activeShiftId = '') {
-  return [
-    { label: 'Work', to: '/provider/shifts', icon: BriefcaseBusiness },
-    ...(activeShiftId ? [{ label: 'Shift', to: `/provider/shifts/${encodeURIComponent(activeShiftId)}`, icon: Stethoscope, primary: true }] : []),
-    { label: 'Time & Pay', to: '/provider/invoices', icon: FileText },
-    { label: 'Me', to: '/provider/settings', icon: Settings, exact: true },
-  ];
-}
 
 function resourceFrom(data, key) {
   assertApiResponse(data, { objects: [key] }, `${labelCase(key)} returned an invalid response.`);
@@ -192,7 +181,7 @@ export default function NurseWorkSettings() {
     ...(Array.isArray(resources.service_preferences.value?.available_modalities) ? resources.service_preferences.value.available_modalities : []),
     ...(Array.isArray(resources.service_preferences.value?.modalities) ? resources.service_preferences.value.modalities : []),
   ])];
-  const navItems = nurseNav(activeShiftId);
+  const navItems = nursePortalNav(activeShiftId);
   const allUnavailable = Object.values(resources).every((resource) => resource.status === 'unavailable');
 
   return (

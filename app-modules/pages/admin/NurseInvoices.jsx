@@ -118,12 +118,7 @@ export default function NurseInvoices() {
   const transition = useCallback(async (invoice, status) => {
     const key = `${invoice.id}:${status}`;
     const values = inputs[invoice.id] || {};
-    const paymentReference = String(values.paymentReference || '').trim();
     const reviewNote = String(values.reviewNote || '').trim();
-    if (status === 'paid' && !paymentReference) {
-      setState((current) => ({ ...current, error: 'Add the Gusto, ACH, check, or payout reference before marking an invoice paid.' }));
-      return;
-    }
     setBusy(key);
     setState((current) => ({ ...current, error: '' }));
     try {
@@ -132,7 +127,6 @@ export default function NurseInvoices() {
         status,
         expectedVersion: invoice.version,
         reviewNote,
-        paymentReference,
       });
       setInputs((current) => ({ ...current, [invoice.id]: {} }));
       await loadPage(0, false);
@@ -190,7 +184,7 @@ export default function NurseInvoices() {
           <Metric label="Submitted" value={totals.submitted} detail="Ready for finance review" />
           <Metric label="Identity hold" value={totals.quarantined} detail="Shared-door or unmatched identity" />
           <Metric label="Approved" value={money(totals.approvedCents)} detail="Approved accounts payable" />
-          <Metric label="Paid" value={money(totals.paidCents)} detail="Payment reference recorded" />
+          <Metric label="Legacy paid claims" value={money(totals.paidCents)} detail="Reference-only rows require reconciliation" />
         </div>
 
         {state.error ? <p role="alert" className="rounded-2xl border border-red-400/20 bg-red-500/[0.08] p-4 font-body text-sm text-red-200">{state.error}</p> : null}
@@ -216,7 +210,7 @@ export default function NurseInvoices() {
                     <div className="flex flex-wrap items-center gap-2">
                       <FileText className="h-4 w-4 text-foreground/48" />
                       <h2 className="font-body text-sm font-semibold">{invoice.invoice_number}</h2>
-                      <span className="rounded-full border border-foreground/10 px-2 py-1 font-body text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/58">{statusLabel(invoice.status)}</span>
+                      <span className="rounded-full border border-foreground/10 px-2 py-1 font-body text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/58">{statusLabel(invoice.legacy_paid_claim ? invoice.canonical_payment_status : invoice.status)}</span>
                       {quarantined ? <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/22 bg-amber-300/[0.05] px-2 py-1 font-body text-[9px] font-bold uppercase tracking-[0.12em] text-amber-200"><ShieldAlert className="h-3 w-3" />Identity hold</span> : null}
                     </div>
                     <p className="mt-2 font-body text-sm text-foreground/58">{invoice.nurse_name} · {invoice.nurse_email}</p>
@@ -230,6 +224,12 @@ export default function NurseInvoices() {
                 </div>
 
                 {invoice.review_note ? <p className="mt-3 rounded-xl bg-foreground/[0.035] p-3 font-body text-sm text-foreground/60">{invoice.review_note}</p> : null}
+
+                {invoice.legacy_paid_claim ? (
+                  <p role="alert" className="mt-3 rounded-xl border border-amber-300/24 bg-amber-300/[0.07] p-3 font-body text-sm text-amber-900">
+                    Legacy paid claim — reconciliation required. A typed payment reference is not provider settlement evidence.
+                  </p>
+                ) : null}
 
                 {expectedReceiptCount > 0 && !receiptEvidenceReady ? (
                   <p role="alert" className="mt-3 rounded-xl border border-amber-300/24 bg-amber-300/[0.07] p-3 font-body text-sm text-amber-900">
@@ -274,23 +274,17 @@ export default function NurseInvoices() {
                 ) : null}
 
                 {['quarantined', 'submitted', 'approved', 'correction_required'].includes(invoice.status) ? (
-                  <div className="mt-4 grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.65fr)_auto] lg:items-end">
+                  <div className="mt-4 grid gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                     <label>
                       <span className="mb-1 block font-body text-[9px] font-bold uppercase tracking-[0.14em] text-foreground/40">Review note</span>
                       <input value={values.reviewNote || ''} onChange={(event) => setInput(invoice.id, 'reviewNote', event.target.value)} placeholder={quarantined ? 'How identity was verified' : 'Correction or approval note'} className="min-h-10 w-full rounded-xl border border-foreground/10 bg-background px-3 font-body text-sm outline-none focus:border-foreground/35" />
                     </label>
-                    {invoice.status === 'approved' ? (
-                      <label>
-                        <span className="mb-1 block font-body text-[9px] font-bold uppercase tracking-[0.14em] text-foreground/40">Payment reference</span>
-                        <input value={values.paymentReference || ''} onChange={(event) => setInput(invoice.id, 'paymentReference', event.target.value)} placeholder="Gusto / ACH / check reference" className="min-h-10 w-full rounded-xl border border-foreground/10 bg-background px-3 font-body text-sm outline-none focus:border-foreground/35" />
-                      </label>
-                    ) : <span />}
                     <div className="flex flex-wrap justify-end gap-2">
                       {quarantined ? <button type="button" onClick={() => transition(invoice, 'submitted')} disabled={busy !== ''} className={`${BUTTON} border-sky-300/24 bg-sky-300/[0.07] text-sky-200`}><Check className="h-3.5 w-3.5" />Verify identity</button> : null}
                       {['submitted', 'correction_required'].includes(invoice.status) ? <button type="button" onClick={() => transition(invoice, 'approved')} disabled={busy !== '' || !receiptEvidenceReady} className={`${BUTTON} border-foreground bg-foreground text-background`}><Check className="h-3.5 w-3.5" />Approve</button> : null}
                       {invoice.status === 'submitted' ? <button type="button" onClick={() => transition(invoice, 'correction_required')} disabled={busy !== ''} className={`${BUTTON} border-amber-300/24 text-amber-200`}>Request correction</button> : null}
                       {['quarantined', 'submitted', 'correction_required'].includes(invoice.status) ? <button type="button" onClick={() => transition(invoice, 'rejected')} disabled={busy !== ''} className={`${BUTTON} border-red-300/24 text-red-200`}><X className="h-3.5 w-3.5" />Reject</button> : null}
-                      {invoice.status === 'approved' ? <button type="button" onClick={() => transition(invoice, 'paid')} disabled={busy !== '' || !receiptEvidenceReady} className={`${BUTTON} border-emerald-300/25 bg-emerald-300/[0.08] text-emerald-200`}>Mark paid</button> : null}
+                      {invoice.status === 'approved' ? <span className="max-w-sm rounded-xl border border-foreground/10 bg-foreground/[0.025] px-3 py-2 font-body text-[10px] leading-relaxed text-foreground/48">Approved invoices move through PayOps payable, payout, provider, and reconciliation states. They cannot be marked paid here.</span> : null}
                     </div>
                   </div>
                 ) : null}

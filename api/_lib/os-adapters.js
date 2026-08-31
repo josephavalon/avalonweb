@@ -6,7 +6,6 @@ const PROVIDERS = Object.freeze({
   quo: { label: 'Quo', mode: 'sandbox', required: ['QUO_API_KEY', 'QUO_FROM_NUMBER'] },
   hubspot: { label: 'HubSpot', mode: 'sandbox', required: ['HUBSPOT_ACCESS_TOKEN', 'HUBSPOT_PORTAL_ID'] },
   mercury: { label: 'Mercury', mode: 'manual', required: [] },
-  quickbooks: { label: 'QuickBooks', mode: 'manual', required: [] },
   gusto: { label: 'Gusto', mode: 'manual', required: [] },
   nursys: { label: 'Nursys', mode: 'manual', required: [] },
   qualiphy: { label: 'Qualiphy', mode: 'sandbox', required: ['QUALIPHY_API_KEY'] },
@@ -27,8 +26,8 @@ export function adapterHealth(adapter) {
       provider: adapter.provider,
       label: adapter.label,
       mode: 'manual',
-      status: 'healthy',
-      action: 'Use validated import/export files; no provider credential is required.',
+      status: 'action_required',
+      action: 'Manual review is required. This state is not provider health or proof of completion.',
       missing: [],
     };
   }
