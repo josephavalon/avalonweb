@@ -2,6 +2,33 @@ import { requireRole } from '../_lib/supabase-auth.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import { isNurseWorkflowMigrationError, NURSE_ROLES, resolveNurseProvider } from '../_lib/nurse-workflow.js';
 
+const BASE_INVOICE_COLUMNS = 'id,invoice_number,status,period_start,period_end,wages_cents,reimbursements_cents,total_cents,currency,submitted_at,reviewed_at,review_note,paid_at,payment_reference,identity_assurance,version';
+const PAYOPS_INVOICE_COLUMNS = `${BASE_INVOICE_COLUMNS},payable_id,settlement_evidence_status,legacy_payment_classification`;
+
+function payOpsInvoiceColumnsUnavailable(error) {
+  const code = String(error?.code || '').trim();
+  const message = String(error?.message || '').toLowerCase();
+  return ['42703', 'PGRST200', 'PGRST204'].includes(code)
+    && /payable_id|settlement_evidence_status|legacy_payment_classification/.test(message);
+}
+
+async function loadInvoices(authed) {
+  const query = (columns) => authed.db.from('nurse_invoices')
+    .select(columns)
+    .eq('tenant_id', authed.tenantId)
+    .eq('nurse_profile_id', authed.user.id)
+    .order('submitted_at', { ascending: false })
+    .limit(100);
+
+  const current = await query(PAYOPS_INVOICE_COLUMNS);
+  if (!current.error || !payOpsInvoiceColumnsUnavailable(current.error)) return current;
+
+  // Code may reach production before migration 067. Preserve the existing
+  // Time & Pay route during that short release window while keeping every new
+  // PayOps field fail-closed and visibly unreconciled.
+  return query(BASE_INVOICE_COLUMNS);
+}
+
 function summarizeTime(run, events, shift) {
   const ordered = [...events].sort((a, b) => Date.parse(a.occurred_at) - Date.parse(b.occurred_at));
   let breakStartedAt = null;
@@ -52,12 +79,7 @@ export default async function handler(req, res) {
     // The canonical 047 schema links contractor invoices to the authenticated
     // auth/profile id. Never fall back to a matching email: shared-door intake
     // email is self-asserted until an administrator links the row.
-    const result = await authed.db.from('nurse_invoices')
-      .select('id,invoice_number,status,period_start,period_end,wages_cents,reimbursements_cents,total_cents,currency,submitted_at,reviewed_at,review_note,paid_at,payment_reference,identity_assurance,version')
-      .eq('tenant_id', authed.tenantId)
-      .eq('nurse_profile_id', authed.user.id)
-      .order('submitted_at', { ascending: false })
-      .limit(100);
+    const result = await loadInvoices(authed);
     if (result.error) throw result.error;
     const timeResult = await authed.db.from('mobile_shift_runs')
       .select('id,shift_id,status,started_at,clocked_in_at,clocked_out_at,closed_at')
@@ -68,7 +90,12 @@ export default async function handler(req, res) {
     if (timeResult.error) {
       if (isNurseWorkflowMigrationError(timeResult.error)) {
         return res.status(200).json({
-          invoices: result.data || [],
+          invoices: (result.data || []).map((invoice) => ({
+            ...invoice,
+            canonical_payment_status: invoice.status === 'paid'
+              ? (invoice.settlement_evidence_status === 'provider_confirmed' ? 'SETTLED' : 'RECONCILIATION_REQUIRED')
+              : 'NOT_SETTLED',
+          })),
           timeRecords: [],
           timeRecordsStatus: 'unavailable',
         });
@@ -100,7 +127,12 @@ export default async function handler(req, res) {
     for (const event of eventResult.data || []) eventsByRun.get(event.shift_run_id)?.push(event);
     const shiftsById = new Map((shiftResult.data || []).map((shift) => [shift.id, shift]));
     return res.status(200).json({
-      invoices: result.data || [],
+      invoices: (result.data || []).map((invoice) => ({
+        ...invoice,
+        canonical_payment_status: invoice.status === 'paid'
+          ? (invoice.settlement_evidence_status === 'provider_confirmed' ? 'SETTLED' : 'RECONCILIATION_REQUIRED')
+          : 'NOT_SETTLED',
+      })),
       timeRecords: runs.map((run) => summarizeTime(run, eventsByRun.get(run.id) || [], shiftsById.get(run.shift_id))),
       timeRecordsStatus: 'available',
     });

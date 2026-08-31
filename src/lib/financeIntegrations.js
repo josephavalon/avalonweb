@@ -56,14 +56,14 @@ export const GUSTO_PAYROLL_PLACEHOLDER = {
 
 export const QUICKBOOKS_ACCOUNTING_PLACEHOLDER = {
   service: 'QuickBooks Accounting',
-  badgeStatus: 'Placeholder',
-  mode: 'Books Pending',
+  badgeStatus: 'Removed',
+  mode: 'Not supported',
   envKeys: QUICKBOOKS_ENV_KEYS,
-  description: 'Accounting destination for invoices, deposits, payouts, reimbursements, and reconciliation summaries.',
+  description: 'Legacy compatibility label only. QuickBooks is not part of the Avalon PayOps or Avalon nurse-pay subledger architecture.',
   capabilities: [
-    'Mirror paid deposits and invoices after admin review',
-    'Receive Mercury/Gusto summary lines without PHI',
-    'Support bookkeeping reconciliation without exposing clinical notes',
+    'No live adapter',
+    'No automatic export',
+    'No accounting-system-of-record claim',
   ],
 };
 
@@ -97,14 +97,13 @@ export const FINANCE_HANDOFF_CONTRACT = [
   'Client payment: Stripe or Acuity',
   'Banking: Mercury',
   'Payroll: Gusto',
-  'Books: QuickBooks',
+  'Nurse-pay subledger: Avalon Ledger (limited scope, not complete company books)',
   'Avalon stores only operational proof, never clinical notes in finance exports',
 ];
 
 export const PLACEHOLDER_INTEGRATIONS = [
   MERCURY_BANKING_PLACEHOLDER,
   GUSTO_PAYROLL_PLACEHOLDER,
-  QUICKBOOKS_ACCOUNTING_PLACEHOLDER,
   QUALIPHY_GFE_PLACEHOLDER,
   NURSEYS_CREDENTIAL_PLACEHOLDER,
 ];
@@ -124,10 +123,8 @@ export function isGustoConfigured(env = import.meta.env) {
 }
 
 export function isQuickBooksConfigured(env = import.meta.env) {
-  return Boolean(
-    env?.[QUICKBOOKS_ENV_KEYS.clientId] &&
-    env?.[QUICKBOOKS_ENV_KEYS.realmId]
-  );
+  void env;
+  return false;
 }
 
 export function isQualiphyConfigured(env = import.meta.env) {
@@ -147,7 +144,6 @@ export function isNurseysConfigured(env = import.meta.env) {
 export function integrationConfigured(service, env = import.meta.env) {
   if (service === MERCURY_BANKING_PLACEHOLDER.service) return isMercuryConfigured(env);
   if (service === GUSTO_PAYROLL_PLACEHOLDER.service) return isGustoConfigured(env);
-  if (service === QUICKBOOKS_ACCOUNTING_PLACEHOLDER.service) return isQuickBooksConfigured(env);
   if (service === QUALIPHY_GFE_PLACEHOLDER.service) return isQualiphyConfigured(env);
   if (service === NURSEYS_CREDENTIAL_PLACEHOLDER.service) return isNurseysConfigured(env);
   return false;

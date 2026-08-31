@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
   Clock3,
-  FileText,
   HandCoins,
   Loader2,
   MapPin,
   RefreshCw,
-  Settings,
   ShieldCheck,
   SlidersHorizontal,
-  Stethoscope,
   XCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -22,6 +18,7 @@ import MobileNavBar from '@/components/navigation/MobileNavBar';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
+import { nursePortalNav } from '@/lib/nursePortalNav';
 import { useSeo } from '@/lib/seo';
 
 const FILTERS = [
@@ -78,15 +75,6 @@ const hasOfferTerms = (shift) => Boolean(
   && shift.offer_terms.claim_eligible === true
   && ['proposed', 'accepted'].includes(text(shift.offer_terms.status).toLowerCase()),
 );
-
-function nurseNav(activeShiftId = '') {
-  return [
-    { label: 'Work', to: '/provider/shifts', icon: BriefcaseBusiness, exact: true },
-    ...(activeShiftId ? [{ label: 'Shift', to: `/provider/shifts/${encodeURIComponent(activeShiftId)}`, icon: Stethoscope, primary: true }] : []),
-    { label: 'Time & Pay', to: '/provider/invoices', icon: FileText },
-    { label: 'Me', to: '/provider/settings', icon: Settings },
-  ];
-}
 
 function filterShift(shift, filter) {
   const today = dayKey(new Date());
@@ -343,7 +331,7 @@ export default function NurseSchedule() {
   const rows = useMemo(() => state.shifts.filter((shift) => filterShift(shift, filter)), [filter, state.shifts]);
   const counts = useMemo(() => Object.fromEntries(FILTERS.map(([key]) => [key, state.shifts.filter((shift) => filterShift(shift, key)).length])), [state.shifts]);
   const activeShift = useMemo(() => state.shifts.find((shift) => isActiveRun(shift)) || null, [state.shifts]);
-  const navItems = nurseNav(activeShift?.id || '');
+  const navItems = nursePortalNav(activeShift?.id || '');
 
   const act = async (shift, action, extra = {}) => {
     setBusy(shift.id);
@@ -369,7 +357,7 @@ export default function NurseSchedule() {
             description="Your offers, readiness, and accepted work could not be verified. No work records are shown, and all work actions remain disabled until the persisted source reconnects."
           />
         </section>
-        <MobileNavBar items={nurseNav()} columns={3} maxWidth="shift" mobileOnly={false} ariaLabel="Nurse work" />
+        <MobileNavBar items={nursePortalNav()} columns={4} maxWidth="shift" mobileOnly={false} ariaLabel="Nurse work" />
       </main>
     );
   }

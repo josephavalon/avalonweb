@@ -56,7 +56,7 @@ export const RECONCILIATION_CASE_DEFAULTS = {
   refund_accounting_mismatch: {
     severity: 'action',
     owner_role: 'finance',
-    required_action: 'Reconcile Stripe refund against QuickBooks and Mercury finance records.',
+    required_action: 'Reconcile the Stripe refund against Mercury evidence and the controlled Avalon ledger record.',
   },
   appointment_drift: {
     severity: 'action',
@@ -71,7 +71,7 @@ export const RECONCILIATION_CASE_DEFAULTS = {
   finance_sync_failed: {
     severity: 'action',
     owner_role: 'finance',
-    required_action: 'Hold finance close until Mercury, QuickBooks, and Avalon ledgers agree.',
+    required_action: 'Hold finance close until Mercury evidence and the controlled Avalon ledger agree.',
   },
   crm_sync_failed: {
     severity: 'action',

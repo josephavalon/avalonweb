@@ -1,13 +1,14 @@
 import { requireAdmin } from '../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { receiptsWithSignedUrls } from '../_lib/nurse-invoice-store.js';
+import { assertFinanceSafe, PayOpsError } from '../_lib/payops-core.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 
 const TRANSITIONS = Object.freeze({
   quarantined: ['submitted', 'rejected'],
   submitted: ['approved', 'correction_required', 'rejected'],
   correction_required: ['approved', 'rejected'],
-  approved: ['paid', 'correction_required'],
+  approved: ['correction_required'],
   paid: [],
   rejected: [],
 });
@@ -38,12 +39,19 @@ async function hydrateInvoices(db, tenantId, invoices) {
   for (const event of eventResult.data || []) {
     eventsByInvoice.set(event.invoice_id, [...(eventsByInvoice.get(event.invoice_id) || []), event]);
   }
-  return Promise.all(invoices.map(async (invoice) => ({
-    ...invoice,
-    lines: linesByInvoice.get(invoice.id) || [],
-    receipts: await receiptsWithSignedUrls(db, receiptsByInvoice.get(invoice.id) || []),
-    statusEvents: eventsByInvoice.get(invoice.id) || [],
-  })));
+  return Promise.all(invoices.map(async (invoice) => {
+    const legacyPaidClaim = invoice.status === 'paid' && invoice.settlement_evidence_status !== 'provider_confirmed';
+    return {
+      ...invoice,
+      canonical_payment_status: invoice.status === 'paid'
+        ? (legacyPaidClaim ? 'RECONCILIATION_REQUIRED' : 'SETTLED')
+        : 'NOT_SETTLED',
+      legacy_paid_claim: legacyPaidClaim,
+      lines: linesByInvoice.get(invoice.id) || [],
+      receipts: await receiptsWithSignedUrls(db, receiptsByInvoice.get(invoice.id) || []),
+      statusEvents: eventsByInvoice.get(invoice.id) || [],
+    };
+  }));
 }
 
 export default async function handler(req, res) {
@@ -101,6 +109,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invoice id and expected version are required.', code: 'invoice_version_required' });
     }
 
+    if (nextStatus === 'paid') {
+      return res.status(409).json({
+        error: 'Invoices can only become settled from provider evidence and reconciliation.',
+        code: 'provider_settlement_required',
+      });
+    }
+
     const currentResult = await authed.db.from('nurse_invoices').select('*')
       .eq('tenant_id', authed.tenantId).eq('id', invoiceId).maybeSingle();
     if (currentResult.error) throw currentResult.error;
@@ -116,7 +131,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (['approved', 'paid'].includes(nextStatus)) {
+    if (nextStatus === 'approved') {
       const expectedReceiptCount = Math.max(0, Math.floor(Number(current.payload?.receiptCount) || 0));
       if (expectedReceiptCount > 0) {
         if (current.receipt_storage_status !== 'complete') {
@@ -149,10 +164,7 @@ export default async function handler(req, res) {
         code: 'review_note_required',
       });
     }
-    const paymentReference = String(body.paymentReference || '').trim().slice(0, 160);
-    if (nextStatus === 'paid' && !paymentReference) {
-      return res.status(400).json({ error: 'A payment reference is required before marking an invoice paid.', code: 'payment_reference_required' });
-    }
+    assertFinanceSafe({ reviewNote: note });
 
     const now = new Date().toISOString();
     const patch = {
@@ -166,7 +178,6 @@ export default async function handler(req, res) {
         identity_verified_by: authed.user.id,
         identity_verified_at: now,
       } : {}),
-      ...(nextStatus === 'paid' ? { paid_at: now, payment_reference: paymentReference } : {}),
     };
     const updateResult = await authed.db.from('nurse_invoices').update(patch)
       .eq('tenant_id', authed.tenantId)
@@ -197,6 +208,9 @@ export default async function handler(req, res) {
     const hydrated = await hydrateInvoices(authed.db, authed.tenantId, [updateResult.data]);
     return res.status(200).json({ ok: true, invoice: hydrated[0] });
   } catch (error) {
+    if (error instanceof PayOpsError) {
+      return res.status(error.status).json({ error: error.message, code: error.code });
+    }
     console.warn('[admin/nurse-invoices] failed', safeLogContext(error, 'nurse_invoices_failed'));
     return res.status(500).json({
       error: 'Could not process nurse invoices.',

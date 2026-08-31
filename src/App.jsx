@@ -19,6 +19,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
+import { PAYOPS_FINANCE_CORE_ENABLED } from '@/lib/payOpsFinanceCore';
 import { isPublicChromeRoute } from '@/lib/publicChrome';
 import MfaGate from '@/components/auth/MfaGate';
 import IdleWarning from '@/components/auth/IdleWarning';
@@ -135,6 +136,7 @@ const NurseSchedule = lazyRoute(() => import('./pages/provider/NurseSchedule'));
 const NurseInvoices = lazyRoute(() => import('./pages/provider/NurseInvoices'));
 const NurseGuidedShift = lazyRoute(() => import('../app-modules/pages/provider/NurseGuidedShift'));
 const NurseWorkSettings = lazyRoute(() => import('../app-modules/pages/provider/NurseWorkSettings'));
+const NurseKit = lazyRoute(() => import('./pages/provider/NurseKit'));
 const OrganizerEventHub = lazyRoute(() => import('./pages/organizer/EventHub'));
 const EventPage = lazyRoute(() => import('./pages/EventPage'));
 const EventPresale = lazyRoute(() => import('./pages/EventPresale'));
@@ -206,6 +208,11 @@ const AdminInbox = lazyRoute(() => import('./pages/admin/Inbox'));
 const AdminTeamInbox = lazyRoute(() => import('./pages/admin/TeamInbox'));
 const AdminGfeSettings = lazyRoute(() => import('./pages/admin/GfeSettings'));
 const AdminFinanceControl = lazyRoute(() => import('./pages/admin/FinanceControl'));
+const AdminPayables = lazyRoute(() => import('./pages/admin/Payables'));
+const AdminPayroll = lazyRoute(() => import('./pages/admin/Payroll'));
+const AdminVendorPayments = lazyRoute(() => import('./pages/admin/VendorPayments'));
+const AdminInventoryCosts = lazyRoute(() => import('./pages/admin/InventoryCosts'));
+const AdminSharedInventory = lazyRoute(() => import('./pages/admin/SharedInventory'));
 const AdminNurseInvoices = lazyRoute(() => import('./pages/admin/NurseInvoices'));
 const AdminSchedulingControl = lazyRoute(() => import('./pages/admin/SchedulingControl'));
 const AdminCredentialControl = lazyRoute(() => import('./pages/admin/CredentialControl'));
@@ -531,7 +538,10 @@ function AppRoutes() {
             <Route path="/provider/credentials" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/settings" replace /></RequireAuth>} />
             <Route path="/provider/dispatch" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/field" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
-            <Route path="/provider/kits" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
+            <Route path="/provider/kit" element={PAYOPS_FINANCE_CORE_ENABLED ? <RequireAuth allowedRoles={['nurse', 'rn', 'np']}><NurseKit /></RequireAuth> : <NotFound />} />
+            <Route path="/provider/kits" element={PAYOPS_FINANCE_CORE_ENABLED
+              ? <RequireAuth allowedRoles={['nurse', 'rn', 'np']}><Navigate to="/provider/kit" replace /></RequireAuth>
+              : <RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/training" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/shift" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/role-os" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
@@ -548,16 +558,24 @@ function AppRoutes() {
             <Route path="/admin/crm" element={<Navigate to="/admin/hubspot" replace />} />
             <Route path="/admin/hubspot" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminHubspotControl /></RequireAuth>} />
             <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
+            <Route path="/admin/payables" element={PAYOPS_FINANCE_CORE_ENABLED ? <RequireAuth allowedRoles={['admin']}><AdminPayables /></RequireAuth> : <NotFound />} />
+            <Route path="/admin/payroll" element={PAYOPS_FINANCE_CORE_ENABLED ? <RequireAuth allowedRoles={['admin']}><AdminPayroll /></RequireAuth> : <NotFound />} />
+            <Route path="/admin/vendor-payments" element={PAYOPS_FINANCE_CORE_ENABLED ? <RequireAuth allowedRoles={['admin']}><AdminVendorPayments /></RequireAuth> : <NotFound />} />
+            <Route path="/admin/inventory-costs" element={PAYOPS_FINANCE_CORE_ENABLED ? <RequireAuth allowedRoles={['admin']}><AdminInventoryCosts /></RequireAuth> : <NotFound />} />
             <Route path="/admin/nurse-invoices" element={<RequireAuth allowedRoles={['admin']}><AdminNurseInvoices /></RequireAuth>} />
             <Route path="/admin/scheduling" element={<RequireAuth allowedRoles={['admin']}><AdminSchedulingControl /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
             <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />
-            <Route path="/admin/kits" element={<RequireAuth allowedRoles={['admin']}><AdminKitControl /></RequireAuth>} />
+            <Route path="/admin/kits" element={PAYOPS_FINANCE_CORE_ENABLED
+              ? <RequireAuth allowedRoles={['admin']}><Navigate to="/admin/inventory?view=kits" replace /></RequireAuth>
+              : <RequireAuth allowedRoles={['admin']}><AdminKitControl /></RequireAuth>} />
             <Route path="/admin/training" element={<RequireAuth allowedRoles={['admin']}><AdminTrainingControl /></RequireAuth>} />
             <Route path="/admin/communications" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin/messages" replace /></RequireAuth>} />
             <Route path="/admin/role-os" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
-            <Route path="/admin/inventory" element={<RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
+            <Route path="/admin/inventory" element={PAYOPS_FINANCE_CORE_ENABLED
+              ? <RequireAuth allowedRoles={['admin']}><AdminSharedInventory /></RequireAuth>
+              : <RequireAuth allowedRoles={['admin']}><Navigate to="/admin" replace /></RequireAuth>} />
             <Route path="/admin/bookings" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminBookings /></RequireAuth>} />
             <Route path="/admin/team" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminTeamSettings /></RequireAuth>} />
             <Route path="/admin/email-templates" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminEmailTemplates /></RequireAuth>} />

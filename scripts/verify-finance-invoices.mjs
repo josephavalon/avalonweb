@@ -89,7 +89,9 @@ assert.match(adminApi, /\.range\(offset, offset \+ limit - 1\)/, 'the durable qu
 assert.match(adminApi, /count: 'exact'/, 'queue paging must report an exact matching total');
 assert.match(adminClient, /Load older invoices/, 'admin Finance must expose older invoice pages');
 assert.match(adminApi, /quarantined: \['submitted', 'rejected'\]/, 'quarantine must resolve only to submitted or rejected');
-assert.match(adminApi, /payment_reference_required/, 'paid transition must require payment evidence');
+assert.doesNotMatch(adminApi, /payment_reference_required/, 'typed references are not provider settlement evidence');
+assert.match(adminApi, /provider_settlement_required/, 'invoice review must reject direct paid transitions');
+assert.doesNotMatch(adminClient, />Mark paid</, 'the review UI must not expose a direct paid action');
 assert.match(adminApi, /\.eq\('version', expectedVersion\)/, 'status transitions must be optimistic');
 assert.doesNotMatch(adminApi, /postBalancedLedger/, 'review API must not perform non-atomic ledger side effects');
 

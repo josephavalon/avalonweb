@@ -3,23 +3,19 @@ import {
   AlertOctagon,
   AlertTriangle,
   ArrowLeft,
-  BriefcaseBusiness,
   CheckCircle2,
   Clock3,
   CloudOff,
   CloudUpload,
   Coffee,
   ExternalLink,
-  FileText,
   Flag,
   Loader2,
   MapPin,
   Navigation,
   Play,
   RefreshCw,
-  Settings,
   ShieldCheck,
-  Stethoscope,
   TimerReset,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
@@ -27,6 +23,7 @@ import MobileNavBar from '@/components/navigation/MobileNavBar';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { assertApiResponse } from '@/lib/apiResponse';
+import { nursePortalNav } from '@/lib/nursePortalNav';
 import {
   applyNurseOutboxOverlay,
   cacheNurseShiftPayload,
@@ -109,15 +106,6 @@ function assertGuidedShiftPayload(value, shiftId, message) {
 function toIsoTimestamp(value) {
   const timestamp = Date.parse(value);
   return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
-}
-
-function nurseNav(shiftId) {
-  return [
-    { label: 'Work', to: '/provider/shifts', icon: BriefcaseBusiness },
-    { label: 'Shift', to: `/provider/shifts/${encodeURIComponent(shiftId)}`, icon: Stethoscope, primary: true, exact: true },
-    { label: 'Time & Pay', to: '/provider/invoices', icon: FileText },
-    { label: 'Me', to: '/provider/settings', icon: Settings },
-  ];
 }
 
 function lastTimeEvent(events, wanted) {
@@ -609,7 +597,7 @@ export default function NurseGuidedShift() {
         <section className="mx-auto max-w-3xl">
           <p className="flex items-center gap-2 rounded-3xl border border-foreground/10 bg-foreground/[0.025] p-6 text-sm"><Loader2 className="h-4 w-4 animate-spin" />Loading persisted guided shift</p>
         </section>
-        <MobileNavBar items={nurseNav(shiftId)} columns={4} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
+        <MobileNavBar items={nursePortalNav(shiftId)} columns={nursePortalNav(shiftId).length} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
       </main>
     );
   }
@@ -624,7 +612,7 @@ export default function NurseGuidedShift() {
             description="The authenticated server source could not be reached and no matching sanitized device cache was available. No care step is inferred, and all shift actions remain disabled."
           />
         </section>
-        <MobileNavBar items={nurseNav(shiftId)} columns={4} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
+        <MobileNavBar items={nursePortalNav(shiftId)} columns={nursePortalNav(shiftId).length} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
       </main>
     );
   }
@@ -726,7 +714,7 @@ export default function NurseGuidedShift() {
           ) : null}
         </div>
       </section>
-      <MobileNavBar items={nurseNav(shiftId)} columns={4} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
+      <MobileNavBar items={nursePortalNav(shiftId)} columns={nursePortalNav(shiftId).length} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
     </main>
   );
 }

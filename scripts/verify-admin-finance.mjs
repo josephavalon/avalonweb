@@ -85,17 +85,20 @@ assert.match(endpoint, /rpc\('nurse_invoice_metrics'/);
 assert.match(endpoint, /receiptsWithSignedUrls/);
 assert.match(endpoint, /expectedVersion/);
 assert.match(endpoint, /invoice_version_conflict/);
-assert.match(endpoint, /payment_reference_required/);
+assert.doesNotMatch(endpoint, /payment_reference_required/, 'invoice review must not accept typed payment proof');
+assert.match(endpoint, /provider_settlement_required/, 'settlement must require provider and reconciliation evidence');
 assert.match(endpoint, /writeAuditEvent[\s\S]*admin_nurse_invoices_read/);
 assert.match(endpoint, /action: `nurse_invoice_\$\{nextStatus\}`/);
 
 assert.match(page, /\/api\/admin\/nurse-invoices/);
 assert.match(page, /Nurse invoice source unavailable/);
 assert.match(page, /No zeroed or sample finance metrics are shown/);
-assert.match(page, /disabled=\{busy !== '' \|\| !receiptEvidenceReady\}/, 'receipt-bearing approval and payment must fail closed');
-for (const action of ['Verify identity', 'Approve', 'Request correction', 'Reject', 'Mark paid']) {
+assert.match(page, /disabled=\{busy !== '' \|\| !receiptEvidenceReady\}/, 'receipt-bearing approval must fail closed');
+for (const action of ['Verify identity', 'Approve', 'Request correction', 'Reject']) {
   assert.ok(page.includes(action), `missing Finance review action: ${action}`);
 }
+assert.doesNotMatch(page, />Mark paid</, 'one operator must not mark an invoice paid from review');
+assert.match(page, /cannot be marked paid here/, 'the review surface must explain the controlled settlement path');
 assert.match(page, /Private receipt evidence · quarantined until an approved scanner clears it/);
 assert.match(page, /No Nurse Portal invoices have been stored yet/);
 assert.match(routes, /path="\/admin\/nurse-invoices"/);
