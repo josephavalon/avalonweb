@@ -149,11 +149,16 @@ for (const route of ['invoice', 'nurse-login']) {
   assert(publicSpaRewrite?.source.includes(route), `Route missing from Vercel rewrite: /${route}`);
   assert(previewServerSource.includes(route), `Route missing from preview server: /${route}`);
 }
-// The front-door menu's Login must point at the nurse door, not the OS login —
-// /login is wrapped in FrontDoorRedirect and would bounce to /start on the apex.
+// The public menu opens the unified login on its staff view so the Nurse and
+// Admin tabs are visible immediately. The invoice-only nurse gate is legacy and
+// must not become the main sign-in door again.
 assert(
-  /FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/nurse-login' \}/.test(cornerMenuSource),
-  'Front-door menu Login must link to /nurse-login',
+  /FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/login\?role=nurse' \}/.test(cornerMenuSource),
+  'Front-door menu Login must open the unified staff login',
+);
+assert(
+  !/FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/nurse-login' \}/.test(cornerMenuSource),
+  'Front-door menu must not reopen the invoice-only nurse gate',
 );
 assert(viteConfigSource.includes("'/api/invoice/unlock'"), 'Invoice unlock API missing from vite dev API_ROUTES');
 assert(viteConfigSource.includes("'/api/invoice/submit'"), 'Invoice submit API missing from vite dev API_ROUTES');

@@ -284,9 +284,9 @@ const AnalyticsRouteTracker = () => {
 // is set pre-paint by public/theme-bootstrap.js (same predicate) so the first
 // render never flashes dark; this only handles route changes after mount.
 // The dedicated Avalon OS beta uses the cream editorial theme everywhere.
-// Production portals and auth retain their current dark appearance, except
-// Admin, which has its own cream product surface and glass material system.
-const PORTAL_PREFIX = /^\/(provider|admin|members|account|organizer|kiosk|login|signup|forgot|forgot-password)(\/|$)/;
+// Production portals retain their current dark appearance, except Admin and
+// the unified login, which use the cream product surface.
+const PORTAL_PREFIX = /^\/(provider|admin|members|account|organizer|kiosk|signup|forgot|forgot-password)(\/|$)/;
 const ADMIN_PREFIX = /^\/admin(\/|$)/;
 
 const ConsumerThemeSync = () => {
@@ -476,12 +476,10 @@ function AppRoutes() {
             <Route path="/booking/confirmation" element={<CareAcuityForward><FrontDoorRedirect><BookingConfirmation /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/checkout" element={<CareAcuityForward><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareAcuityForward>} />
             <Route path="/checkout/success" element={<CareAcuityForward><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareAcuityForward>} />
-            {/* Login is Avalon OS, which lives on beta only — on the front-door
-                host the sign-in door must not exist. Gating this route does NOT
-                close the aliases that point at it: each of those is gated at its
-                own route, because a redirect INTO this one would chain two
-                <Navigate replace> calls and strand the visitor on a blank page. */}
-            <Route path="/login" element={<FrontDoorRedirect><Login /></FrontDoorRedirect>} />
+            {/* One shared sign-in surface for members, nurses, admins, and event
+                organizers. It is intentionally available on the main URL; the
+                clinical and account routes behind it keep their own guards. */}
+            <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
             <Route path="/order" element={<FrontDoorRedirect><ManageOrder /></FrontDoorRedirect>} />

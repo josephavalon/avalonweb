@@ -83,7 +83,7 @@ function ErrorBanner({ message }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.18, ease: EASE }}
-          className="flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-500/[0.08] px-4 py-3 text-red-200"
+          className="flex items-start gap-3 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-red-700"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
           <p className="font-body text-sm font-medium leading-relaxed">{message}</p>
@@ -893,12 +893,18 @@ export default function Login({ defaultAudience = 'patient' }) {
   );
 
   return (
-    <div className="relative min-h-screen min-h-dvh bg-[#f6f2eb] px-4 pb-10 pt-24 text-[#2b211b] md:px-6 md:pb-14 md:pt-28">
+    <div
+      className="relative min-h-screen min-h-dvh bg-[#f6f2eb] px-4 pb-10 pt-24 text-[#2b211b] md:px-6 md:pb-14 md:pt-28"
+      style={{ backgroundColor: '#f6f2eb' }}
+    >
       <main className="relative mx-auto grid min-h-[calc(100dvh-8.5rem)] w-full max-w-5xl place-items-center">
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6">
+        <section
+          className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6"
+          style={{ '--background': '40 33% 98%', '--foreground': '24 23% 14%' }}
+        >
           <PortalChooser value={activePortalChoice} onChange={switchPortal} />
           {isStaff ? <StaffPortalChooser value={staffMode} onChange={switchStaffPortal} /> : null}
 
