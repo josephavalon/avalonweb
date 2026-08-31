@@ -32,6 +32,7 @@
  * content to inject), and the rate limits below cap the Quo spend. The worst
  * case is a stranger making three phones buzz with a message that says nothing.
  */
+import crypto from 'crypto';
 import { adminAlertPhones, isSmsConfigured, sendSms } from '../_lib/send-sms.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeLogContext } from '../_lib/safe-error.js';
@@ -54,6 +55,25 @@ const ALERT_BODIES = Object.freeze({
   start: 'Avalon Vitality: a new request just came in on the site. Open the secure system to review and follow up. Details are not sent by text.',
   vitalice: 'Avalon Vitality: a new Vital Ice request just came in on the site. Open the secure system to review and follow up. Details are not sent by text.',
 });
+
+// Every alert ends with a short random reference, e.g. "Ref 7QTX".
+//
+// This is not decoration. The bodies above are constants, so two alerts were
+// byte-identical, and carriers silently drop repeated identical SMS to the same
+// number — observed 2026-08-31: the first alert arrived, the next two were
+// accepted by Quo (2xx, skipped: 0) and never reached the handset. A varying
+// tail makes each message unique.
+//
+// It is random and derived from NOTHING about the request — not the time, not
+// the source, not the submitter. It carries no information at all, which is
+// what keeps it outside PHI while still defeating dedupe. It also gives ops a
+// token to quote when matching a text to a Quo dashboard entry.
+const REF_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
+function alertRef() {
+  return Array.from(crypto.randomBytes(4))
+    .map((byte) => REF_ALPHABET[byte % REF_ALPHABET.length])
+    .join('');
+}
 
 const SOURCES = new Set(Object.keys(ALERT_BODIES));
 const DEFAULT_SOURCE = 'start';
@@ -83,10 +103,10 @@ const ALLOWED_LINK_HOSTS = new Set([
 // script. NOTE: without KV_REST_API_URL/_TOKEN, rate-limit.js falls back to a
 // per-instance Map — "global" is then per-Vercel-instance. Provision KV.
 const LIMITS = [
-  { key: (ip) => `intake-alert:ip:${ip}`, windowMs: 60 * 1000, max: 3 },
-  { key: (ip) => `intake-alert:ipd:${ip}`, windowMs: 24 * 60 * 60 * 1000, max: 20 },
-  { key: () => 'intake-alert:global:m', windowMs: 60 * 1000, max: 10 },
-  { key: () => 'intake-alert:global:h', windowMs: 60 * 60 * 1000, max: 60 },
+  { name: 'ip-minute', key: (ip) => `intake-alert:ip:${ip}`, windowMs: 60 * 1000, max: 3 },
+  { name: 'ip-day', key: (ip) => `intake-alert:ipd:${ip}`, windowMs: 24 * 60 * 60 * 1000, max: 20 },
+  { name: 'global-minute', key: () => 'intake-alert:global:m', windowMs: 60 * 1000, max: 10 },
+  { name: 'global-hour', key: () => 'intake-alert:global:h', windowMs: 60 * 60 * 1000, max: 60 },
 ];
 
 const NONCE_RE = /^[a-f0-9-]{8,64}$/i;
@@ -154,7 +174,10 @@ export default async function handler(req, res) {
       windowMs: NONCE_TTL_MS,
       max: 1,
     });
-    if (!fresh.ok) return res.status(200).json({ ok: true, deduped: true, sent: 0 });
+    if (!fresh.ok) {
+      console.log('[intake-alert] outcome', { source, result: 'deduped', sent: 0 });
+      return res.status(200).json({ ok: true, deduped: true, sent: 0 });
+    }
   }
 
   const ip = clientIp(req);
@@ -162,20 +185,26 @@ export default async function handler(req, res) {
     const result = await checkRateLimit({ key: limit.key(ip), windowMs: limit.windowMs, max: limit.max });
     if (!result.ok) {
       res.setHeader('Retry-After', Math.max(1, Math.ceil((result.reset - Date.now()) / 1000)));
+      console.log('[intake-alert] outcome', { source, result: 'rate_limited', bucket: limit.name, sent: 0 });
       return res.status(429).json({ ok: false, code: 'rate_limited' });
     }
   }
 
   if (!isSmsConfigured()) {
+    console.log('[intake-alert] outcome', { source, result: 'sms_not_configured', sent: 0 });
     return res.status(200).json({ ok: true, sent: 0, code: 'sms_not_configured' });
   }
 
   const phones = adminAlertPhones();
   if (!phones.length) {
+    console.log('[intake-alert] outcome', { source, result: 'no_admin_phones', sent: 0 });
     return res.status(200).json({ ok: true, sent: 0, code: 'no_admin_phones' });
   }
+  // Count only — the numbers themselves never reach a log line.
+  console.log('[intake-alert] dispatching', { source, recipients: phones.length });
 
-  const body = ALERT_BODIES[source] + alertLink();
+  const ref = alertRef();
+  const body = `${ALERT_BODIES[source]} Ref ${ref}.${alertLink()}`;
 
   try {
     // sendSms never throws and never rejects; allSettled is belt-and-braces so
@@ -183,6 +212,10 @@ export default async function handler(req, res) {
     const results = await Promise.allSettled(phones.map((to) => sendSms({ to, body })));
     const sent = results.filter((r) => r.status === 'fulfilled' && r.value?.ok).length;
     const skipped = phones.length - sent;
+    const providerIds = results
+      .map((r) => (r.status === 'fulfilled' ? r.value?.providerId : null))
+      .filter(Boolean);
+    console.log('[intake-alert] outcome', { source, ref, result: 'dispatched', sent, skipped, providerIds });
     if (skipped > 0) {
       // Codes only — never a number, never the nonce.
       const codes = results.map((r) => (r.status === 'fulfilled' ? r.value?.code || 'ok' : 'rejected'));

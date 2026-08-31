@@ -109,7 +109,17 @@ export async function sendSms({ to, body }, opts = {}) {
       console.warn('[send-sms] provider send failed', { status: resp.status, detail: String(detail).slice(0, 400) });
       return { ok: false, code: 'provider_send_failed', status: 502, providerStatus: resp.status };
     }
-    return { ok: true, normalizedTo: recipient };
+    // Surface the provider's message id. Without it a "sent" result is
+    // unfalsifiable: Quo can accept a message the carrier later drops, and
+    // there is no way to find that message in Quo's dashboard after the fact.
+    let providerId = null;
+    try {
+      const payload = await resp.json();
+      providerId = payload?.data?.id || payload?.id || null;
+    } catch {
+      /* a 2xx with no JSON body is still a successful send */
+    }
+    return { ok: true, normalizedTo: recipient, providerId };
   } catch (err) {
     console.warn('[send-sms] provider request error', safeLogContext(err, 'send_sms_provider_request_failed'));
     return { ok: false, code: 'provider_request_failed', status: 502 };

@@ -512,6 +512,7 @@ const PHI_FREE_HANDLER_RULES = [
     required: [
       [/bodyParser:\s*false/, 'must disable bodyParser so a payload is never parsed'],
       [/content-length/i, 'must refuse a request that declares a body'],
+      [/crypto\.randomBytes/, 'the alert ref must come from crypto.randomBytes — it exists to defeat carrier duplicate-filtering and must encode nothing about the request'],
     ],
   },
   {
