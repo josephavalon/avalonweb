@@ -85,6 +85,12 @@ begin
   if to_regprocedure('public.bd_merge_records(uuid,text,uuid,uuid,integer,integer,uuid)') is not null then
     raise exception using errcode = 'P0001', message = 'bd_preflight_merge_function_exists';
   end if;
+  if to_regprocedure('public.bd_people_require_active_company()') is not null then
+    raise exception using errcode = 'P0001', message = 'bd_preflight_person_company_function_exists';
+  end if;
+  if to_regprocedure('public.bd_companies_guard_archive_people()') is not null then
+    raise exception using errcode = 'P0001', message = 'bd_preflight_company_archive_function_exists';
+  end if;
 end $$;
 
 create table public.bd_companies (
@@ -645,6 +651,94 @@ create index bd_agent_mutations_record_idx
 create unique index bd_agent_mutations_request_unique_idx
   on public.bd_agent_mutations (tenant_id, request_id);
 
+-- Keep active people linked only to an active company in the same tenant. The
+-- row share lock serializes this check with a concurrent company archive.
+create function public.bd_people_require_active_company()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, pg_temp
+as $function$
+begin
+  if new.company_id is null then
+    return new;
+  end if;
+
+  perform 1
+  from public.bd_companies company_record
+  where company_record.tenant_id = new.tenant_id
+    and company_record.id = new.company_id
+    and company_record.deleted_at is null
+  for share;
+
+  if not found then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_person_company_inactive';
+  end if;
+
+  return new;
+end;
+$function$;
+
+-- A company update takes its row lock before this check. Combined with the
+-- person trigger's FOR SHARE lock, no active person link can race an archive.
+create function public.bd_companies_guard_archive_people()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, pg_temp
+as $function$
+begin
+  if old.deleted_at is null
+     and new.deleted_at is not null
+     and exists (
+       select 1
+       from public.bd_people person_record
+       where person_record.tenant_id = old.tenant_id
+         and person_record.company_id = old.id
+         and person_record.deleted_at is null
+     ) then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_company_archive_active_people';
+  end if;
+
+  return new;
+end;
+$function$;
+
+revoke all on function public.bd_people_require_active_company()
+  from public, anon, authenticated, service_role;
+revoke all on function public.bd_companies_guard_archive_people()
+  from public, anon, authenticated, service_role;
+
+-- Fresh standalone tables are empty, but keep the invariant explicit and
+-- fail closed if a future edit introduces a row before trigger installation.
+do $$
+begin
+  if exists (
+    select 1
+    from public.bd_people person_record
+    left join public.bd_companies company_record
+      on company_record.tenant_id = person_record.tenant_id
+     and company_record.id = person_record.company_id
+    where person_record.deleted_at is null
+      and person_record.company_id is not null
+      and (company_record.id is null or company_record.deleted_at is not null)
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_active_person_company_violation';
+  end if;
+end $$;
+
+create trigger trg_bd_people_active_company
+before insert or update of company_id, tenant_id on public.bd_people
+for each row execute function public.bd_people_require_active_company();
+
+create trigger trg_bd_companies_archive_people
+before update of deleted_at on public.bd_companies
+for each row execute function public.bd_companies_guard_archive_people();
+
 -- Transactional, human-admin-only merge for the two duplicate-prone identity
 -- objects in V1. The target record is preserved; the source is soft-deleted
 -- only after every relationship is repointed. Potential uniqueness collisions
@@ -1012,8 +1106,11 @@ end $$;
 -- cannot be physically deleted by the API service role.
 grant select, insert, update on public.bd_companies, public.bd_people, public.bd_opportunities,
   public.bd_tasks, public.bd_notes, public.bd_files, public.bd_lists,
-  public.bd_activities, public.bd_call_ingestions, public.bd_agent_identities,
+  public.bd_call_ingestions, public.bd_agent_identities,
   public.bd_agent_permissions to service_role;
+
+-- Timeline evidence is append-only for ordinary API callers.
+grant select, insert on public.bd_activities to service_role;
 
 -- Relationship junctions are explicitly replaceable by service workflows.
 grant select, insert, update, delete on public.bd_opportunity_people,
@@ -1031,6 +1128,179 @@ begin
   ] loop
     execute format('create trigger %I before update on public.%I for each row execute function public.touch_updated_at()', 'trg_' || tbl || '_updated_at', tbl);
   end loop;
+end $$;
+
+-- Postflight the exact race guards and their non-callable trigger functions.
+do $$
+declare
+  expected_function record;
+  function_oid oid;
+  expected_owner oid;
+  checked_role text;
+  people_oid oid := 'public.bd_people'::regclass;
+  companies_oid oid := 'public.bd_companies'::regclass;
+begin
+  for expected_function in
+    select *
+    from (values
+      (
+        'public.bd_people_require_active_company()',
+        'bd_people_require_active_company',
+        'bd_people',
+        $expected$begin
+  if new.company_id is null then
+    return new;
+  end if;
+
+  perform 1
+  from public.bd_companies company_record
+  where company_record.tenant_id = new.tenant_id
+    and company_record.id = new.company_id
+    and company_record.deleted_at is null
+  for share;
+
+  if not found then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_person_company_inactive';
+  end if;
+
+  return new;
+end;$expected$
+      ),
+      (
+        'public.bd_companies_guard_archive_people()',
+        'bd_companies_guard_archive_people',
+        'bd_companies',
+        $expected$begin
+  if old.deleted_at is null
+     and new.deleted_at is not null
+     and exists (
+       select 1
+       from public.bd_people person_record
+       where person_record.tenant_id = old.tenant_id
+         and person_record.company_id = old.id
+         and person_record.deleted_at is null
+     ) then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_company_archive_active_people';
+  end if;
+
+  return new;
+end;$expected$
+      )
+    ) as expected(identity, function_name, owner_table, function_source)
+  loop
+    function_oid := to_regprocedure(expected_function.identity);
+    select table_definition.relowner into expected_owner
+    from pg_class table_definition
+    join pg_namespace table_namespace on table_namespace.oid = table_definition.relnamespace
+    where table_namespace.nspname = 'public'
+      and table_definition.relname = expected_function.owner_table;
+
+    if function_oid is null or not exists (
+      select 1
+      from pg_proc function_definition
+      join pg_namespace function_namespace on function_namespace.oid = function_definition.pronamespace
+      join pg_language function_language on function_language.oid = function_definition.prolang
+      where function_definition.oid = function_oid
+        and function_namespace.nspname = 'public'
+        and function_definition.proname = expected_function.function_name
+        and function_definition.proowner = expected_owner
+        and function_definition.prorettype = 'trigger'::regtype
+        and function_definition.pronargs = 0
+        and function_definition.prokind = 'f'
+        and function_language.lanname = 'plpgsql'
+        and function_definition.prosecdef
+        and function_definition.provolatile = 'v'
+        and function_definition.proparallel = 'u'
+        and not function_definition.proleakproof
+        and function_definition.proconfig = array['search_path=pg_catalog, pg_temp']::text[]
+        and regexp_replace(
+          btrim(function_definition.prosrc, E' \t\n\r'),
+          '[[:space:]]+', ' ', 'g'
+        ) = regexp_replace(
+          btrim(expected_function.function_source, E' \t\n\r'),
+          '[[:space:]]+', ' ', 'g'
+        )
+        and not exists (
+          select 1
+          from aclexplode(coalesce(
+            function_definition.proacl,
+            acldefault('f', function_definition.proowner)
+          )) expanded_acl
+          where expanded_acl.grantee <> function_definition.proowner
+        )
+    ) then
+      raise exception using
+        errcode = 'P0001',
+        message = 'bd_company_race_function_postflight_mismatch',
+        detail = expected_function.identity;
+    end if;
+
+    foreach checked_role in array array['anon', 'authenticated', 'service_role'] loop
+      if has_function_privilege(checked_role, function_oid, 'EXECUTE') then
+        raise exception using
+          errcode = 'P0001',
+          message = 'bd_company_race_function_execute_forbidden',
+          detail = expected_function.identity || ':' || checked_role;
+      end if;
+    end loop;
+  end loop;
+
+  function_oid := to_regprocedure('public.bd_people_require_active_company()');
+  if not exists (
+    select 1
+    from pg_trigger trigger_definition
+    where trigger_definition.tgrelid = people_oid
+      and trigger_definition.tgname = 'trg_bd_people_active_company'
+      and not trigger_definition.tgisinternal
+      and trigger_definition.tgenabled = 'O'
+      and trigger_definition.tgfoid = function_oid
+      and trigger_definition.tgtype = 23
+      and trigger_definition.tgqual is null
+      and trigger_definition.tgnargs = 0
+      and octet_length(trigger_definition.tgargs) = 0
+      and trigger_definition.tgconstraint = 0
+      and trigger_definition.tgconstrrelid = 0
+      and not trigger_definition.tgdeferrable
+      and not trigger_definition.tginitdeferred
+      and cardinality(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[]) = 2
+      and (select attribute.attnum from pg_attribute attribute
+           where attribute.attrelid = people_oid and attribute.attname = 'company_id')
+          = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
+      and (select attribute.attnum from pg_attribute attribute
+           where attribute.attrelid = people_oid and attribute.attname = 'tenant_id')
+          = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_people_company_trigger_postflight_mismatch';
+  end if;
+
+  function_oid := to_regprocedure('public.bd_companies_guard_archive_people()');
+  if not exists (
+    select 1
+    from pg_trigger trigger_definition
+    where trigger_definition.tgrelid = companies_oid
+      and trigger_definition.tgname = 'trg_bd_companies_archive_people'
+      and not trigger_definition.tgisinternal
+      and trigger_definition.tgenabled = 'O'
+      and trigger_definition.tgfoid = function_oid
+      and trigger_definition.tgtype = 19
+      and trigger_definition.tgqual is null
+      and trigger_definition.tgnargs = 0
+      and octet_length(trigger_definition.tgargs) = 0
+      and trigger_definition.tgconstraint = 0
+      and trigger_definition.tgconstrrelid = 0
+      and not trigger_definition.tgdeferrable
+      and not trigger_definition.tginitdeferred
+      and cardinality(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[]) = 1
+      and (select attribute.attnum from pg_attribute attribute
+           where attribute.attrelid = companies_oid and attribute.attname = 'deleted_at')
+          = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_company_archive_trigger_postflight_mismatch';
+  end if;
 end $$;
 
 comment on table public.bd_companies is 'Avalon BD company records. normalized_domain is the strongest active-company duplicate key.';

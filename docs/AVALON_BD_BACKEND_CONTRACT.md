@@ -8,7 +8,8 @@ from every outreach, research, webhook, calendar, and autonomous-agent path.
 `/api/admin/bd` is disabled unless the server-only environment variable
 `AVALON_BD_CRM_ENABLED` is exactly `true`. The default is `false`; there is no
 browser flag. Enable it only after applying `064_avalon_bd_standalone.sql` and
-verifying its empty-data and access-control postflight.
+`065_avalon_bd_activity_acl_reconciliation.sql`, then verifying the empty-data
+and access-control postflight.
 
 `AVALON_BD_DATA_REVIEWED` is a separate safety gate for the later outreach
 system and remains `false` for this release. Enabling Avalon BD does not enable
@@ -67,11 +68,17 @@ foundation, required functions, database roles, and absence of prior BD tables
 before the first schema write. The entire migration is one transaction and
 seeds no rows.
 
+Installations where migration 064 was already applied must also apply
+`065_avalon_bd_activity_acl_reconciliation.sql`. Migration 065 atomically
+removes service-role UPDATE access from `bd_activities` and fails closed unless
+the direct and effective final privileges match the reviewed ACL.
+
 All 15 tables have RLS enabled. PUBLIC, anonymous, and authenticated roles receive
 no direct table privileges. Profile attribution uses same-tenant composite
 foreign keys. The service role receives only the operations required
 by the server API: soft-deleted business tables cannot be physically deleted,
-relationship junctions can be replaced, and `bd_agent_mutations` is append-only.
+relationship junctions can be replaced, and both `bd_activities` evidence and
+`bd_agent_mutations` are append-only.
 The merge function is executable only by the service role and independently
 verifies an active same-tenant admin before it writes.
 

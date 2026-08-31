@@ -12,7 +12,7 @@ import {
   normalizePersonInput,
   requireBdUuid,
 } from '../api/_lib/bd-crm-core.js';
-import { pacificDayWindow } from '../api/admin/bd.js';
+import { pacificDayWindow, preparePersonUpdatePatch, updateCoreRecord } from '../api/admin/bd.js';
 import './verify-bd-release.mjs';
 
 assert.equal(normalizeBdDomain('https://WWW.Example.AI/team'), 'example.ai');
@@ -42,6 +42,94 @@ assert.deepEqual(normalizePersonInput({
   email: 'founder@example.ai', normalized_email: 'founder@example.ai', title: 'CEO', source: 'manual',
 });
 
+function companyLookup(result) {
+  const calls = [];
+  const query = {
+    select(columns) { calls.push(['select', columns]); return this; },
+    eq(column, value) { calls.push(['eq', column, value]); return this; },
+    is(column, value) { calls.push(['is', column, value]); return this; },
+    maybeSingle() { calls.push(['maybeSingle']); return Promise.resolve(result); },
+  };
+  return {
+    calls,
+    db: {
+      from(table) { calls.push(['from', table]); return query; },
+    },
+  };
+}
+
+const personTenantId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const activeCompanyId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const personRecordId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const actorProfileId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+
+const omittedCompany = companyLookup({ data: null, error: null });
+assert.deepEqual(
+  await preparePersonUpdatePatch(omittedCompany.db, personTenantId, { title: 'Founder' }),
+  { title: 'Founder' },
+);
+assert.deepEqual(omittedCompany.calls, [], 'an update that omits companyId must not look up or change the link');
+
+const explicitUnlink = companyLookup({ data: null, error: null });
+const explicitUnlinkPatch = await preparePersonUpdatePatch(explicitUnlink.db, personTenantId, { companyId: null });
+assert.deepEqual(explicitUnlinkPatch, { company_id: null });
+assert.deepEqual(explicitUnlink.calls, [], 'an explicit null companyId must be accepted as an unlink without a lookup');
+
+const activeCompany = companyLookup({ data: { id: activeCompanyId }, error: null });
+assert.deepEqual(
+  await preparePersonUpdatePatch(activeCompany.db, personTenantId, { companyId: activeCompanyId }),
+  { company_id: activeCompanyId },
+);
+assert.deepEqual(activeCompany.calls, [
+  ['from', 'bd_companies'],
+  ['select', 'id'],
+  ['eq', 'tenant_id', personTenantId],
+  ['eq', 'id', activeCompanyId],
+  ['is', 'deleted_at', null],
+  ['maybeSingle'],
+], 'a person company change must resolve an active company in the caller tenant');
+
+const inactiveCompany = companyLookup({ data: null, error: null });
+await assert.rejects(
+  () => preparePersonUpdatePatch(inactiveCompany.db, personTenantId, { companyId: activeCompanyId }),
+  (error) => error instanceof BdInputError
+    && error.code === 'person_company_invalid'
+    && error.status === 409
+    && error.message === 'Selected company is not an active Avalon BD company.',
+  'missing, cross-tenant, and soft-deleted company ids must all fail closed',
+);
+
+const inactiveCompanyThroughUpdate = companyLookup({ data: null, error: null });
+await assert.rejects(
+  () => updateCoreRecord(
+    inactiveCompanyThroughUpdate.db,
+    personTenantId,
+    actorProfileId,
+    'update_person',
+    { id: personRecordId, expectedVersion: 1, patch: { companyId: activeCompanyId } },
+  ),
+  (error) => error instanceof BdInputError
+    && error.code === 'person_company_invalid'
+    && error.status === 409,
+  'the actual update_person execution path must reject an inactive company before updating a person',
+);
+assert.deepEqual(inactiveCompanyThroughUpdate.calls, [
+  ['from', 'bd_companies'],
+  ['select', 'id'],
+  ['eq', 'tenant_id', personTenantId],
+  ['eq', 'id', activeCompanyId],
+  ['is', 'deleted_at', null],
+  ['maybeSingle'],
+], 'updateCoreRecord must validate the company before reading or mutating the person row');
+
+const lookupError = new Error('company_lookup_failed');
+const failedCompanyLookup = companyLookup({ data: null, error: lookupError });
+await assert.rejects(
+  () => preparePersonUpdatePatch(failedCompanyLookup.db, personTenantId, { companyId: activeCompanyId }),
+  (error) => error === lookupError,
+  'company lookup failures must propagate instead of allowing the change',
+);
+
 const opportunity = normalizeOpportunityInput({
   name: 'Example AI — Employee Wellness',
   companyId: '11111111-1111-4111-8111-111111111111',
@@ -70,8 +158,12 @@ assert.deepEqual(pacificDayWindow(new Date('2026-11-01T12:00:00.000Z')), {
 });
 
 const migration = readFileSync(new URL('../supabase/migrations/064_avalon_bd_standalone.sql', import.meta.url), 'utf8');
+const activityAclReconciliation = readFileSync(
+  new URL('../supabase/migrations/065_avalon_bd_activity_acl_reconciliation.sql', import.meta.url),
+  'utf8',
+);
 
-function assertSqlStructure(sql) {
+function assertSqlStructure(sql, expectedTableCount) {
   const open = [];
   let state = 'normal';
   let dollarTag = '';
@@ -116,10 +208,15 @@ function assertSqlStructure(sql) {
   }
   assert.equal(state, 'normal', `unterminated SQL ${state}`);
   assert.equal(open.length, 0, 'migration has unclosed parentheses');
-  assert.equal((sql.match(/create table public\.bd_/g) || []).length, 15, 'expected all 15 Avalon BD tables');
+  assert.equal(
+    (sql.match(/create table public\.bd_/g) || []).length,
+    expectedTableCount,
+    `expected ${expectedTableCount} Avalon BD table definitions`,
+  );
 }
 
-assertSqlStructure(migration);
+assertSqlStructure(migration, 15);
+assertSqlStructure(activityAclReconciliation, 0);
 for (const table of [
   'companies', 'people', 'opportunities', 'opportunity_people', 'activities',
   'activity_people', 'tasks', 'notes', 'files', 'lists', 'list_items',

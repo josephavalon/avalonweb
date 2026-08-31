@@ -470,6 +470,26 @@ async function validateOwnerProfile(db, tenantId, actorProfileId, ownerProfileId
   return result.data.id;
 }
 
+async function assertPersonCompanyChangeValid(db, tenantId, fields) {
+  if (!Object.hasOwn(fields, 'company_id') || fields.company_id === null) return;
+  const companyResult = await db.from('bd_companies').select('id')
+    .eq('tenant_id', tenantId).eq('id', fields.company_id).is('deleted_at', null).maybeSingle();
+  if (companyResult.error) throw companyResult.error;
+  if (!companyResult.data) {
+    throw new BdInputError(
+      'Selected company is not an active Avalon BD company.',
+      'person_company_invalid',
+      409,
+    );
+  }
+}
+
+export async function preparePersonUpdatePatch(db, tenantId, input) {
+  const patch = normalizePersonInput(input || {}, { partial: true });
+  await assertPersonCompanyChangeValid(db, tenantId, patch);
+  return patch;
+}
+
 async function createCompany(db, tenantId, actorProfileId, input) {
   const row = normalizeCompanyInput(input);
   let duplicateQuery = db.from('bd_companies').select('id, name, normalized_domain')
@@ -495,18 +515,7 @@ async function createCompany(db, tenantId, actorProfileId, input) {
 
 async function createPerson(db, tenantId, actorProfileId, input) {
   const row = normalizePersonInput(input);
-  if (row.company_id) {
-    const companyResult = await db.from('bd_companies').select('id')
-      .eq('tenant_id', tenantId).eq('id', row.company_id).is('deleted_at', null).maybeSingle();
-    if (companyResult.error) throw companyResult.error;
-    if (!companyResult.data) {
-      throw new BdInputError(
-        'Selected company is not an active Avalon BD company.',
-        'person_company_invalid',
-        409,
-      );
-    }
-  }
+  await assertPersonCompanyChangeValid(db, tenantId, row);
   row.source = 'manual';
   row.owner_profile_id = await validateOwnerProfile(db, tenantId, actorProfileId, row.owner_profile_id || actorProfileId);
   return insertRecord(db, tenantId, actorProfileId, 'bd_people', 'person', row, 'create_person');
@@ -847,7 +856,7 @@ async function updateVersioned(db, tenantId, actorProfileId, table, objectType, 
   return result.data;
 }
 
-async function updateCoreRecord(db, tenantId, actorProfileId, action, body) {
+export async function updateCoreRecord(db, tenantId, actorProfileId, action, body) {
   const config = {
     update_company: { table: 'bd_companies', objectType: 'company', normalize: normalizeCompanyInput },
     update_person: { table: 'bd_people', objectType: 'person', normalize: normalizePersonInput },
@@ -855,7 +864,9 @@ async function updateCoreRecord(db, tenantId, actorProfileId, action, body) {
   }[action];
   const id = requireBdUuid(body.id, 'id');
   const expectedVersion = bdInteger(body.expectedVersion, { field: 'Expected version', min: 1, optional: false });
-  const patch = config.normalize(body.patch || {}, { partial: true });
+  const patch = config.objectType === 'person'
+    ? await preparePersonUpdatePatch(db, tenantId, body.patch)
+    : config.normalize(body.patch || {}, { partial: true });
   delete patch.source;
   if (config.objectType === 'opportunity' && (Object.hasOwn(body.patch || {}, 'pipelineStage') || Object.hasOwn(body.patch || {}, 'lostReason'))) {
     throw new BdInputError('Use change_pipeline_stage for stage and lost-reason updates.', 'pipeline_action_required');
@@ -1090,6 +1101,14 @@ export default async function handler(req, res) {
         bd_merge_list_collision: 'Merge blocked: both records already belong to the same list.',
       };
       return res.status(status).json({ error: messages[code] || 'Records cannot be merged safely.', code });
+    }
+    if (String(error?.code || '').toUpperCase() === 'P0001') {
+      const code = String(error?.message || '');
+      const messages = {
+        bd_person_company_inactive: 'Selected company is not an active Avalon BD company.',
+        bd_company_archive_active_people: 'Archive blocked because active people still reference this company. Unlink or archive those people first.',
+      };
+      if (messages[code]) return res.status(409).json({ error: messages[code], code });
     }
     if (error?.code === '23505') return res.status(409).json({ error: 'A matching active record already exists.', code: 'duplicate_record' });
     if (error?.code === '23503') return res.status(409).json({ error: 'A linked Avalon BD record was not found.', code: 'relationship_invalid' });
