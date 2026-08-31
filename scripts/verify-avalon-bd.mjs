@@ -12,7 +12,12 @@ import {
   normalizePersonInput,
   requireBdUuid,
 } from '../api/_lib/bd-crm-core.js';
-import { pacificDayWindow, preparePersonUpdatePatch, updateCoreRecord } from '../api/admin/bd.js';
+import {
+  pacificDayWindow,
+  preparePersonUpdatePatch,
+  priorityDashboardSnapshot,
+  updateCoreRecord,
+} from '../api/admin/bd.js';
 import './verify-bd-release.mjs';
 
 assert.equal(normalizeBdDomain('https://WWW.Example.AI/team'), 'example.ai');
@@ -156,6 +161,25 @@ assert.deepEqual(pacificDayWindow(new Date('2026-11-01T12:00:00.000Z')), {
   start: '2026-11-01T07:00:00.000Z',
   end: '2026-11-02T08:00:00.000Z',
 });
+
+const priorityDashboard = priorityDashboardSnapshot([
+  ...Array.from({ length: 645 }, (_, index) => ({
+    id: `priority-${index}`,
+    priority: index % 2 ? 'high' : 'urgent',
+    fit_score: index,
+  })),
+  ...Array.from({ length: 12 }, (_, index) => ({
+    id: `normal-${index}`,
+    priority: 'normal',
+    fit_score: 1000,
+  })),
+]);
+assert.equal(priorityDashboard.count, 645,
+  'dashboard summary must count every open high/urgent opportunity, not only the displayed rows');
+assert.equal(priorityDashboard.rows.length, 25,
+  'dashboard priority detail list must remain capped at 25 rows');
+assert.equal(priorityDashboard.rows[0].id, 'priority-644',
+  'dashboard priority detail rows must remain ranked by fit score');
 
 const migration = readFileSync(new URL('../supabase/migrations/064_avalon_bd_standalone.sql', import.meta.url), 'utf8');
 const activityAclReconciliation = readFileSync(

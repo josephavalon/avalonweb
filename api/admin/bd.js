@@ -167,6 +167,13 @@ export function pacificDayWindow(now = new Date()) {
   };
 }
 
+export function priorityDashboardSnapshot(opportunities = []) {
+  const ranked = opportunities
+    .filter((item) => ['high', 'urgent'].includes(item.priority))
+    .sort((a, b) => Number(b.fit_score || 0) - Number(a.fit_score || 0));
+  return { count: ranked.length, rows: ranked.slice(0, 25) };
+}
+
 async function combineRowQueries(queries, { limit = 200, sortField = 'created_at', ascending = false } = {}) {
   if (!queries.length) return [];
   const results = await Promise.all(queries);
@@ -251,21 +258,20 @@ async function dashboard(db, tenantId) {
     person_id: meeting.primary_person_id || null,
   }));
   const openPipelineCents = opportunities.reduce((sum, item) => sum + Number(item.expected_value_cents || 0), 0);
-  const priority = opportunities.filter((item) => ['high', 'urgent'].includes(item.priority))
-    .sort((a, b) => Number(b.fit_score || 0) - Number(a.fit_score || 0)).slice(0, 25);
+  const priority = priorityDashboardSnapshot(opportunities);
   const ownerNames = await ownerNameMap(db, tenantId, [
-    ...priority, ...(dueTasks.data || []), ...(overdueTasks.data || []), ...(recentChanges.data || []),
+    ...priority.rows, ...(dueTasks.data || []), ...(overdueTasks.data || []), ...(recentChanges.data || []),
   ]);
   return {
     summary: {
       openPipelineCents,
       openOpportunities: opportunities.length,
-      priorityOpportunities: priority.length,
+      priorityOpportunities: priority.count,
       callsThisWeek: upcomingCalls.length,
       actionsDueToday: (dueTasks.data || []).length,
       overdueActions: (overdueTasks.data || []).length,
     },
-    priorityOpportunities: priority.map((row) => withOwnerName(row, ownerNames)),
+    priorityOpportunities: priority.rows.map((row) => withOwnerName(row, ownerNames)),
     repliesRequiringAction: [],
     followUpsDue: (dueTasks.data || []).map((row) => withOwnerName(row, ownerNames)),
     overdueTasks: (overdueTasks.data || []).map((row) => withOwnerName(row, ownerNames)),
