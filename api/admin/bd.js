@@ -23,6 +23,10 @@ const ACTIVITY_TYPES = new Set([
   'proposal', 'follow_up', 'status_change', 'file', 'internal_comment', 'task',
 ]);
 const PRIORITIES = new Set(['low', 'normal', 'high', 'urgent']);
+const OPPORTUNITY_PERSON_ROLES = new Set([
+  'primary_contact', 'decision_maker', 'champion', 'influencer', 'stakeholder', 'blocker',
+]);
+const OWNER_ROLES = ['admin', 'staff'];
 const REOPEN_PROBABILITY = Object.freeze({
   new: 10, researching: 15, approved: 20, contacted: 30,
   engaged: 40, discovery: 50, proposal: 65, negotiation: 80,
@@ -35,6 +39,7 @@ const POST_ACTIONS = new Set([
 const PATCH_ACTIONS = new Set([
   'update_company', 'update_person', 'update_opportunity', 'change_pipeline_stage',
   'update_task', 'complete_task', 'soft_delete',
+  'set_opportunity_contact', 'remove_opportunity_contact',
 ]);
 
 function missingMigration(error) {
@@ -93,7 +98,7 @@ async function selectAll(db, table, columns, tenantId, configure = (query) => qu
   const rows = [];
   for (let start = 0; ; start += pageSize) {
     let query = db.from(table).select(columns).eq('tenant_id', tenantId).range(start, start + pageSize - 1);
-    query = configure(query);
+    query = configure(query).order('id', { ascending: true });
     const { data, error } = await query;
     if (error) throw error;
     rows.push(...(data || []));
@@ -209,6 +214,7 @@ async function listView(db, tenantId, view, queryParams) {
   let query = db.from(config.table).select('*', { count: 'exact' })
     .eq('tenant_id', tenantId).is('deleted_at', null)
     .order(config.order, { ascending: view === 'tasks', nullsFirst: false })
+    .order('id', { ascending: true })
     .range(offset, offset + limit - 1);
   if (view === 'pipeline' && queryParams.stage) {
     if (!BD_PIPELINE_STAGES.includes(String(queryParams.stage))) throw new BdInputError('Pipeline stage is not supported.', 'pipeline_stage_invalid');
@@ -224,6 +230,24 @@ async function listView(db, tenantId, view, queryParams) {
   const rows = result.data || [];
   const names = await ownerNameMap(db, tenantId, rows);
   return { [config.name]: rows.map((row) => withOwnerName(row, names)), ...pageResult(rows, result.count, limit, offset) };
+}
+
+async function listOwners(db, tenantId) {
+  const result = await db.from('profiles').select('id, full_name, role')
+    .eq('tenant_id', tenantId).eq('status', 'active').in('role', OWNER_ROLES)
+    .order('full_name', { ascending: true }).order('id', { ascending: true });
+  if (result.error) throw result.error;
+  return {
+    owners: (result.data || []).map((row) => ({
+      id: row.id,
+      name: row.full_name || labelCaseOwnerRole(row.role),
+      role: row.role,
+    })),
+  };
+}
+
+function labelCaseOwnerRole(role) {
+  return String(role || 'operator').replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 async function dashboard(db, tenantId) {
@@ -262,6 +286,7 @@ async function dashboard(db, tenantId) {
   const ownerNames = await ownerNameMap(db, tenantId, [
     ...priority.rows, ...(dueTasks.data || []), ...(overdueTasks.data || []), ...(recentChanges.data || []),
   ]);
+  const ownerDirectory = await listOwners(db, tenantId);
   return {
     summary: {
       openPipelineCents,
@@ -278,6 +303,7 @@ async function dashboard(db, tenantId) {
     upcomingCalls,
     newDiscoveries: [],
     recentlyChangedOpportunities: (recentChanges.data || []).map((row) => withOwnerName(row, ownerNames)),
+    owners: ownerDirectory.owners,
     runtime: {
       callTranscriptExtraction: 'not_connected',
       fileStorage: 'not_connected',
@@ -476,6 +502,19 @@ async function validateOwnerProfile(db, tenantId, actorProfileId, ownerProfileId
   return result.data.id;
 }
 
+async function assertActiveCompany(db, tenantId, companyId) {
+  const companyResult = await db.from('bd_companies').select('id')
+    .eq('tenant_id', tenantId).eq('id', companyId).is('deleted_at', null).maybeSingle();
+  if (companyResult.error) throw companyResult.error;
+  if (!companyResult.data) {
+    throw new BdInputError(
+      'Selected company is not an active Avalon BD company.',
+      'company_invalid',
+      409,
+    );
+  }
+}
+
 async function assertPersonCompanyChangeValid(db, tenantId, fields) {
   if (!Object.hasOwn(fields, 'company_id') || fields.company_id === null) return;
   const companyResult = await db.from('bd_companies').select('id')
@@ -529,12 +568,22 @@ async function createPerson(db, tenantId, actorProfileId, input) {
 
 async function createOpportunity(db, tenantId, actorProfileId, input) {
   const row = normalizeOpportunityInput(input);
+  await assertActiveCompany(db, tenantId, row.company_id);
   row.source = 'manual';
   row.owner_profile_id = await validateOwnerProfile(db, tenantId, actorProfileId, row.owner_profile_id || actorProfileId);
   if (row.pipeline_stage === 'won') row.probability = 100;
   if (row.pipeline_stage === 'lost') row.probability = 0;
   const contactIds = Array.isArray(input.contactIds) ? [...new Set(input.contactIds.map((id) => requireBdUuid(id, 'contactId')))] : [];
   if (contactIds.length > 25) throw new BdInputError('An opportunity can start with at most 25 contacts.', 'contacts_too_many');
+  if (contactIds.length) {
+    const contacts = await db.from('bd_people').select('id').eq('tenant_id', tenantId)
+      .in('id', contactIds).is('deleted_at', null);
+    if (contacts.error) throw contacts.error;
+    const activeIds = new Set((contacts.data || []).map((person) => person.id));
+    if (contactIds.some((id) => !activeIds.has(id))) {
+      throw new BdInputError('Every selected contact must be an active Avalon BD person.', 'contact_invalid', 409);
+    }
+  }
   const opportunity = await insertRecord(db, tenantId, actorProfileId, 'bd_opportunities', 'opportunity', row, 'create_opportunity');
   if (contactIds.length) {
     const links = contactIds.map((personId, index) => ({
@@ -547,13 +596,156 @@ async function createOpportunity(db, tenantId, actorProfileId, input) {
   return opportunity;
 }
 
-async function createActivity(db, tenantId, actorProfileId, input) {
+async function activeOpportunityAndPerson(db, tenantId, opportunityId, personId) {
+  const [opportunity, person] = await Promise.all([
+    db.from('bd_opportunities').select('id, company_id').eq('tenant_id', tenantId)
+      .eq('id', opportunityId).is('deleted_at', null).maybeSingle(),
+    db.from('bd_people').select('id, company_id, full_name').eq('tenant_id', tenantId)
+      .eq('id', personId).is('deleted_at', null).maybeSingle(),
+  ]);
+  if (opportunity.error) throw opportunity.error;
+  if (person.error) throw person.error;
+  if (!opportunity.data) throw new BdInputError('Opportunity was not found.', 'record_not_found', 404);
+  if (!person.data) throw new BdInputError('Contact was not found.', 'record_not_found', 404);
+  return { opportunity: opportunity.data, person: person.data };
+}
+
+async function setOpportunityContact(db, tenantId, actorProfileId, input = {}) {
+  const opportunityId = requireBdUuid(input.opportunityId, 'opportunityId');
+  const personId = requireBdUuid(input.personId, 'personId');
+  const relationshipRole = String(input.relationshipRole || 'stakeholder').trim();
+  if (!OPPORTUNITY_PERSON_ROLES.has(relationshipRole)) {
+    throw new BdInputError('Relationship role is not supported.', 'relationship_role_invalid');
+  }
+  const { person } = await activeOpportunityAndPerson(db, tenantId, opportunityId, personId);
+  if (relationshipRole === 'primary_contact') {
+    const primary = await db.from('bd_opportunity_people').select('person_id')
+      .eq('tenant_id', tenantId).eq('opportunity_id', opportunityId)
+      .eq('relationship_role', 'primary_contact').neq('person_id', personId).limit(1);
+    if (primary.error) throw primary.error;
+    if ((primary.data || []).length) {
+      throw new BdInputError(
+        'This opportunity already has a primary contact. Change that relationship first.',
+        'primary_contact_exists',
+        409,
+      );
+    }
+  }
+  const previous = await db.from('bd_opportunity_people').select('*')
+    .eq('tenant_id', tenantId).eq('opportunity_id', opportunityId).eq('person_id', personId).maybeSingle();
+  if (previous.error) throw previous.error;
+  const expectedRole = input.expectedRole == null ? null : String(input.expectedRole).trim();
+  if (!previous.data && expectedRole) {
+    throw new BdInputError('That relationship changed while you were editing it. Refresh and try again.', 'relationship_conflict', 409);
+  }
+  if (previous.data && (!expectedRole || expectedRole !== previous.data.relationship_role)) {
+    throw new BdInputError('That relationship changed while you were editing it. Refresh and try again.', 'relationship_conflict', 409);
+  }
+  const result = previous.data
+    ? await db.from('bd_opportunity_people').update({ relationship_role: relationshipRole })
+      .eq('tenant_id', tenantId).eq('opportunity_id', opportunityId).eq('person_id', personId)
+      .eq('relationship_role', expectedRole).select('*').maybeSingle()
+    : await db.from('bd_opportunity_people').insert({
+      tenant_id: tenantId,
+      opportunity_id: opportunityId,
+      person_id: personId,
+      relationship_role: relationshipRole,
+      created_by: actorProfileId,
+    }).select('*').single();
+  if (result.error?.code === '23505' && relationshipRole === 'primary_contact') {
+    throw new BdInputError(
+      'This opportunity already has a primary contact. Change that relationship first.',
+      'primary_contact_exists',
+      409,
+    );
+  }
+  if (result.error?.code === '23505') {
+    throw new BdInputError(
+      'That relationship changed while you were editing it. Refresh and try again.',
+      'relationship_conflict',
+      409,
+    );
+  }
+  if (result.error) throw result.error;
+  if (!result.data) throw new BdInputError('That relationship changed while you were editing it. Refresh and try again.', 'relationship_conflict', 409);
+  await recordBdMutation(db, {
+    tenantId, actorProfileId, action: previous.data ? 'update_opportunity_contact' : 'add_opportunity_contact',
+    objectType: 'opportunity', objectId: opportunityId, source: 'admin_api',
+    approvalStatus: 'human_approved', previousValue: previous.data,
+    resultingValue: result.data,
+  });
+  return { ...result.data, person };
+}
+
+async function removeOpportunityContact(db, tenantId, actorProfileId, input = {}) {
+  const opportunityId = requireBdUuid(input.opportunityId, 'opportunityId');
+  const personId = requireBdUuid(input.personId, 'personId');
+  const expectedRole = String(input.expectedRole || '').trim();
+  if (!OPPORTUNITY_PERSON_ROLES.has(expectedRole)) {
+    throw new BdInputError('Refresh the relationship before removing it.', 'relationship_conflict', 409);
+  }
+  await activeOpportunityAndPerson(db, tenantId, opportunityId, personId);
+  const result = await db.from('bd_opportunity_people').delete().eq('tenant_id', tenantId)
+    .eq('opportunity_id', opportunityId).eq('person_id', personId)
+    .eq('relationship_role', expectedRole).select('*').maybeSingle();
+  if (result.error) throw result.error;
+  if (!result.data) throw new BdInputError('That relationship changed while you were editing it. Refresh and try again.', 'relationship_conflict', 409);
+  await recordBdMutation(db, {
+    tenantId, actorProfileId, action: 'remove_opportunity_contact', objectType: 'opportunity',
+    objectId: opportunityId, source: 'admin_api', approvalStatus: 'human_approved',
+    previousValue: result.data, resultingValue: null,
+  });
+  return result.data;
+}
+
+async function assertActiveActivityRelations(db, tenantId, relations) {
+  const checks = [];
+  if (relations.company_id) {
+    checks.push(db.from('bd_companies').select('id').eq('tenant_id', tenantId)
+      .eq('id', relations.company_id).is('deleted_at', null).maybeSingle());
+  }
+  if (relations.person_id) {
+    checks.push(db.from('bd_people').select('id').eq('tenant_id', tenantId)
+      .eq('id', relations.person_id).is('deleted_at', null).maybeSingle());
+  }
+  if (relations.opportunity_id) {
+    checks.push(db.from('bd_opportunities').select('id, company_id').eq('tenant_id', tenantId)
+      .eq('id', relations.opportunity_id).is('deleted_at', null).maybeSingle());
+  }
+  const results = await Promise.all(checks);
+  for (const result of results) {
+    if (result.error) throw result.error;
+    if (!result.data) throw new BdInputError('A linked Avalon BD record is not active.', 'relationship_invalid', 409);
+  }
+  if (relations.company_id && relations.opportunity_id) {
+    const opportunity = results[results.length - 1]?.data;
+    if (opportunity?.company_id !== relations.company_id) {
+      throw new BdInputError('The activity company must match the opportunity company.', 'activity_company_mismatch', 409);
+    }
+  }
+}
+
+async function createActivity(db, tenantId, actorProfileId, input = {}, { trustedSource = false } = {}) {
   const relations = relationIds(input);
+  await assertActiveActivityRelations(db, tenantId, relations);
   const activityType = String(input.activityType || '').trim();
   if (!ACTIVITY_TYPES.has(activityType)) throw new BdInputError('Activity type is not supported.', 'activity_type_invalid');
   const content = cleanBdText(input.content, { field: 'Activity content', max: 20000, required: true });
   const occurredAt = bdIsoDate(input.occurredAt || new Date().toISOString(), { field: 'Activity timestamp' });
-  const source = cleanBdText(input.source, { field: 'Source', max: 120 }) || 'manual';
+  const source = trustedSource
+    ? cleanBdText(input.source, { field: 'Source', max: 120 }) || 'manual'
+    : 'manual';
+  const personIds = Array.isArray(input.personIds) ? [...new Set(input.personIds.map((id) => requireBdUuid(id, 'personId')))] : [];
+  if (personIds.length > 50) throw new BdInputError('An activity can reference at most 50 people.', 'activity_people_too_many');
+  if (personIds.length) {
+    const contacts = await db.from('bd_people').select('id').eq('tenant_id', tenantId)
+      .in('id', personIds).is('deleted_at', null);
+    if (contacts.error) throw contacts.error;
+    const activeIds = new Set((contacts.data || []).map((person) => person.id));
+    if (personIds.some((id) => !activeIds.has(id))) {
+      throw new BdInputError('Every activity contact must be an active Avalon BD person.', 'activity_contact_invalid', 409);
+    }
+  }
   const result = await db.from('bd_activities').insert({
     tenant_id: tenantId, occurred_at: occurredAt, activity_type: activityType,
     company_id: relations.company_id, primary_person_id: relations.person_id,
@@ -562,8 +754,6 @@ async function createActivity(db, tenantId, actorProfileId, input) {
     approval_status: 'human_approved',
   }).select('*').single();
   if (result.error) throw result.error;
-  const personIds = Array.isArray(input.personIds) ? [...new Set(input.personIds.map((id) => requireBdUuid(id, 'personId')))] : [];
-  if (personIds.length > 50) throw new BdInputError('An activity can reference at most 50 people.', 'activity_people_too_many');
   if (personIds.length) {
     const linkResult = await db.from('bd_activity_people').insert(personIds.map((personId) => ({
       tenant_id: tenantId, activity_id: result.data.id, person_id: personId,
@@ -828,7 +1018,7 @@ async function recordCall(db, tenantId, actorProfileId, input) {
     occurredAt: row.occurred_at,
     content: summary || 'Call notes recorded in Avalon BD.',
     source: 'manual_call_ingestion',
-  });
+  }, { trustedSource: true });
   await recordBdMutation(db, {
     tenantId, actorProfileId, action: 'record_call', objectType: 'call_ingestion', objectId: result.data.id,
     source: 'admin_api', approvalStatus: 'human_approved', resultingValue: result.data,
@@ -859,7 +1049,8 @@ async function updateVersioned(db, tenantId, actorProfileId, table, objectType, 
     source: 'admin_api', approvalStatus: 'human_approved',
     previousValue: currentResult.data, resultingValue: result.data,
   });
-  return result.data;
+  const ownerNames = await ownerNameMap(db, tenantId, [result.data]);
+  return withOwnerName(result.data, ownerNames);
 }
 
 export async function updateCoreRecord(db, tenantId, actorProfileId, action, body) {
@@ -876,6 +1067,9 @@ export async function updateCoreRecord(db, tenantId, actorProfileId, action, bod
   delete patch.source;
   if (config.objectType === 'opportunity' && (Object.hasOwn(body.patch || {}, 'pipelineStage') || Object.hasOwn(body.patch || {}, 'lostReason'))) {
     throw new BdInputError('Use change_pipeline_stage for stage and lost-reason updates.', 'pipeline_action_required');
+  }
+  if (config.objectType === 'opportunity' && Object.hasOwn(patch, 'company_id')) {
+    await assertActiveCompany(db, tenantId, patch.company_id);
   }
   if (Object.hasOwn(patch, 'owner_profile_id') && patch.owner_profile_id) {
     patch.owner_profile_id = await validateOwnerProfile(db, tenantId, actorProfileId, patch.owner_profile_id);
@@ -906,7 +1100,7 @@ async function changeStage(db, tenantId, actorProfileId, body) {
   const activity = await createActivity(db, tenantId, actorProfileId, {
     activityType: 'status_change', companyId: opportunity.company_id, opportunityId: opportunity.id,
     content: `Pipeline stage changed to ${stage}.`, source: 'admin_pipeline',
-  });
+  }, { trustedSource: true });
   return { opportunity, activity };
 }
 
@@ -1038,6 +1232,12 @@ async function handlePatch(db, tenantId, actorProfileId, body) {
   const action = String(body.action || '').trim();
   if (!PATCH_ACTIONS.has(action)) throw new BdInputError('Unknown Avalon BD update.', 'action_invalid');
   if (['update_company', 'update_person', 'update_opportunity'].includes(action)) return { record: await updateCoreRecord(db, tenantId, actorProfileId, action, body) };
+  if (action === 'set_opportunity_contact') return {
+    relationship: await setOpportunityContact(db, tenantId, actorProfileId, body.relationship || body.record),
+  };
+  if (action === 'remove_opportunity_contact') return {
+    relationship: await removeOpportunityContact(db, tenantId, actorProfileId, body.relationship || body.record),
+  };
   if (action === 'change_pipeline_stage') return changeStage(db, tenantId, actorProfileId, body);
   if (action === 'complete_task') return { record: await updateTask(db, tenantId, actorProfileId, body, true) };
   if (action === 'update_task') return { record: await updateTask(db, tenantId, actorProfileId, body, false) };
@@ -1057,6 +1257,7 @@ export default async function handler(req, res) {
       const view = String(req.query?.view || 'dashboard').trim();
       let result;
       if (view === 'dashboard') result = await dashboard(db, tenantId);
+      else if (view === 'owners') result = await listOwners(db, tenantId);
       else if (view === 'search') result = await globalSearch(db, tenantId, req.query?.q);
       else if (view === 'record') result = await getRecordContext(db, tenantId, String(req.query?.recordType || ''), req.query?.id);
       else if (LIST_VIEWS.has(view)) result = await listView(db, tenantId, view, req.query || {});
@@ -1079,7 +1280,10 @@ export default async function handler(req, res) {
     await writeAuditEvent(db, {
       tenantId, actorProfileId: user.id, action: `admin_bd_${String(body.action || 'mutation')}`,
       entityType: 'avalon_bd', phiTouched: false,
-      payload: { action: body.action, recordId: result.record?.id || result.opportunity?.id || null },
+      payload: {
+        action: body.action,
+        recordId: result.record?.id || result.opportunity?.id || result.relationship?.opportunity_id || null,
+      },
     });
     return res.status(req.method === 'POST' ? 201 : 200).json({ ok: true, ...result });
   } catch (error) {

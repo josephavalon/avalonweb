@@ -20,6 +20,7 @@ that system, its API, its crons, its webhook, or live sending.
 `GET /api/admin/bd`
 
 - `?view=dashboard`
+- `?view=owners`
 - `?view=companies|people|pipeline|tasks|lists&limit=50&offset=0`
 - `?view=search&q=...`
 - `?view=record&recordType=company|person|opportunity&id=<uuid>`
@@ -52,7 +53,21 @@ queried. Empty CRM tables produce real zero totals and empty lists.
 - `change_pipeline_stage { opportunityId, expectedVersion, stage }`
 - `update_task { taskId, expectedVersion, patch }`
 - `complete_task { taskId, expectedVersion }`
+- `set_opportunity_contact { relationship: { opportunityId, personId, relationshipRole, expectedRole? } }`
+- `remove_opportunity_contact { relationship: { opportunityId, personId, expectedRole } }`
 - `soft_delete { recordType, id, expectedVersion }`
+
+The owner directory returns only active admin and staff profiles in the current
+tenant. Opportunity-contact relationships support `primary_contact`,
+`decision_maker`, `champion`, `influencer`, `stakeholder`, and `blocker`.
+Creating a relationship omits `expectedRole`; editing or unlinking includes the
+last observed role. A stale role returns `409 relationship_conflict`, and only
+one primary contact is accepted per opportunity.
+
+Manual email, call, meeting, and direct-message entries use `create_activity`.
+The API validates every linked active record before the append-only activity is
+inserted, forces generic UI attribution to `manual`, and requires a supplied
+company to match the linked opportunity.
 
 There is no prospect-reconciliation or outbound mutation action on this
 endpoint. The API requires a Supabase admin session and AAL2 when operator MFA
