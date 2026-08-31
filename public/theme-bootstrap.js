@@ -11,7 +11,7 @@
     var isIosBrowser = /iP(?:hone|ad|od)/.test(navigatorRef.userAgent || '')
       || (navigatorRef.platform === 'MacIntel' && navigatorRef.maxTouchPoints > 1);
     var isPortal = /^\/(provider|admin|members|account)(\/|$)/.test(path)
-      || /^\/(login|signup|forgot|forgot-password)(\/|$)/.test(path);
+      || /^\/(signup|forgot|forgot-password)(\/|$)/.test(path);
     var isAdmin = /^\/admin(\/|$)/.test(path);
     var isPrivateChrome = /^\/(account|admin|invoice|kiosk|login|members|nurse-login|organizer|provider|signup|forgot)(\/|$)/.test(path)
       || /\/kiosk\//.test(path);

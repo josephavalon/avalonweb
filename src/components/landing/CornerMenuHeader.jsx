@@ -5,17 +5,14 @@ import AvalonMark from '@/components/AvalonMark';
 import { AnimatePresence, motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { DURATIONS, EASE } from '@/lib/motion';
 import { isFrontDoorHost } from '@/lib/frontDoor';
-import { clearInvoiceSession, isInvoiceSignedIn } from '@/lib/invoiceSession';
 
 // This header is global — it renders on the front door AND on beta, so the two
 // surfaces get two item lists rather than one edited list. Beta carries the full
 // Avalon OS, so its Login goes to /login.
 //
-// The front door still has no *client* sign-in (see src/lib/frontDoor.js, and
-// /login is wrapped in FrontDoorRedirect so it bounces to /start there). Its
-// Login is the nurse door instead: /nurse-login → /invoice, the contractor pay
-// form. Different destination, same label, and it sits last on purpose — it is
-// staff-facing, not part of the customer path above it.
+// Both surfaces use the unified login. On the public front door it opens on the
+// staff view so Nurse and Admin are immediately visible; members and event
+// organizers can still switch portals from the same page.
 const OS_ITEMS = [
   { label: 'Start', to: '/start' },
   { label: 'Help', to: '/nurse-delivery?path=guided' },
@@ -29,7 +26,7 @@ const FRONT_DOOR_ITEMS = [
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
-  { label: 'Login', to: '/nurse-login' },
+  { label: 'Login', to: '/login?role=nurse' },
 ];
 
 const PHONE_URL = 'tel:+14159807708';
@@ -37,10 +34,6 @@ const TEXT_URL = 'sms:+14159807708';
 
 export default function CornerMenuHeader() {
   const [open, setOpen] = useState(false);
-  // A nurse who is signed in should be offered the way out, not the way in.
-  // Read on open and on navigation rather than subscribed to: sessionStorage
-  // fires no event for same-tab writes, and those are the only writes there are.
-  const [signedIn, setSignedIn] = useState(() => isInvoiceSignedIn());
   // Host read taken once via the useState initializer, same technique as
   // FrontDoorRedirect, so the first render already shows the right menu.
   const [items] = useState(() => (isFrontDoorHost() ? FRONT_DOOR_ITEMS : OS_ITEMS));
@@ -83,7 +76,6 @@ export default function CornerMenuHeader() {
 
   useEffect(() => {
     setOpen(false);
-    setSignedIn(isInvoiceSignedIn());
   }, [pathname]);
 
   useEffect(() => {
@@ -134,10 +126,7 @@ export default function CornerMenuHeader() {
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls={menuId}
-            onClick={() => {
-              setSignedIn(isInvoiceSignedIn());
-              setOpen((current) => !current);
-            }}
+            onClick={() => setOpen((current) => !current)}
           >
             <span className="nd-corner-menu__glyph" aria-hidden="true">
               <AnimatePresence initial={false} mode="wait">
@@ -168,25 +157,13 @@ export default function CornerMenuHeader() {
                 exit="exit"
                 variants={panelMotion}
               >
-                {items.map((item) => {
-                  const signOut = item.to === '/nurse-login' && signedIn;
-                  return (
-                    <motion.div key={item.label} {...itemMotion}>
-                      <Link
-                        to={item.to}
-                        onClick={() => {
-                          if (signOut) {
-                            clearInvoiceSession();
-                            setSignedIn(false);
-                          }
-                          setOpen(false);
-                        }}
-                      >
-                        {signOut ? 'Log out' : item.label}
-                      </Link>
-                    </motion.div>
-                  );
-                })}
+                {items.map((item) => (
+                  <motion.div key={item.label} {...itemMotion}>
+                    <Link to={item.to} onClick={() => setOpen(false)}>
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                ))}
               </motion.nav>
             )}
           </AnimatePresence>

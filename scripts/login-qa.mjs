@@ -229,7 +229,7 @@ async function waitForPageCondition(cdp, expression, label, timeout = 8_000) {
   throw new Error(`Timed out waiting for ${label}. Debug: ${JSON.stringify(debug)}`);
 }
 
-async function openLogin(cdp) {
+async function openLogin(cdp, route = '/login') {
   cdp.consoleIssues = [];
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORT);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
@@ -238,7 +238,7 @@ async function openLogin(cdp) {
     returnByValue: true,
   });
   await cdp.send('Runtime.evaluate', {
-    expression: `location.href = ${JSON.stringify(`${BASE_URL}/login`)}; true;`,
+    expression: `location.href = ${JSON.stringify(`${BASE_URL}${route}`)}; true;`,
     returnByValue: true,
   });
   await waitForReady(cdp);
@@ -328,7 +328,7 @@ const SET_INPUT_VALUE_SOURCE = `((selector, value) => {
 })`;
 
 async function runManualLogin(cdp, testCase) {
-  await openLogin(cdp);
+  await openLogin(cdp, testCase.expectedRole === 'nurse' ? '/login?role=nurse' : '/login');
   const ok = await evalOnPage(cdp, `(() => {
     const setValue = ${SET_INPUT_VALUE_SOURCE};
     const ready = setValue('#login-identifier', ${JSON.stringify(testCase.username)})
