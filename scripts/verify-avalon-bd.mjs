@@ -269,7 +269,7 @@ assert.match(core, /export async function recordBdMutation/);
 
 const endpoint = readFileSync(new URL('../api/admin/bd.js', import.meta.url), 'utf8');
 assert.match(endpoint, /requireAdmin\(req, res\)/);
-for (const view of ['dashboard', 'companies', 'people', 'pipeline', 'tasks', 'lists', 'search', 'record']) {
+for (const view of ['dashboard', 'companies', 'people', 'pipeline', 'tasks', 'lists', 'owners', 'search', 'record']) {
   assert.ok(endpoint.includes(`'${view}'`) || endpoint.includes(`=== '${view}'`), `missing ${view} view`);
 }
 for (const action of [
@@ -278,7 +278,17 @@ for (const action of [
   'add_list_item', 'record_call', 'update_company', 'update_person',
   'update_opportunity', 'change_pipeline_stage', 'update_task',
   'complete_task', 'soft_delete', 'merge_records',
+  'set_opportunity_contact', 'remove_opportunity_contact',
 ]) assert.ok(endpoint.includes(`'${action}'`), `missing ${action} action`);
+for (const role of ['primary_contact', 'decision_maker', 'champion', 'influencer', 'stakeholder', 'blocker']) {
+  assert.ok(endpoint.includes(`'${role}'`), `missing opportunity-contact role: ${role}`);
+}
+assert.match(endpoint, /relationship_conflict/);
+assert.match(endpoint, /primary_contact_exists/);
+assert.match(endpoint, /const source = trustedSource[\s\S]*?: 'manual'/,
+  'generic activity entry must remain manually attributed');
+assert.match(endpoint, /const ownerNames = await ownerNameMap\(db, tenantId, \[result\.data\]\);[\s\S]*return withOwnerName\(result\.data, ownerNames\);/,
+  'versioned updates must return the selected owner name to the interface');
 assert.match(endpoint, /expectedVersion/);
 assert.match(endpoint, /version_conflict/);
 assert.match(endpoint, /body\.stage \|\| body\.patch\?\.stage/);
@@ -316,5 +326,23 @@ for (const retiredFixture of [
   assert.ok(!adminUi.includes(retiredFixture), `retired fixture must not ship: ${retiredFixture}`);
 }
 assert.match(adminUi, /No sample data has been substituted/, 'the unavailable state must be explicit and truthful');
+for (const interfaceContract of [
+  'Add relationship', 'Choose contact', 'Relationship strength', 'Save activity',
+  "action: 'set_opportunity_contact'", "action: 'remove_opportunity_contact'",
+  "action: 'create_activity'", 'OwnerPicker',
+]) assert.ok(adminUi.includes(interfaceContract), `missing relationship interface contract: ${interfaceContract}`);
+for (const roleLabel of ['Primary contact', 'Decision-maker', 'Champion', 'Influencer', 'Stakeholder', 'Blocker']) {
+  assert.ok(adminUi.includes(roleLabel), `missing relationship role control: ${roleLabel}`);
+}
+assert.match(adminUi, /expectedValue: record\.expectedValueCentsValue == null \? ''/,
+  'editing another opportunity field must preserve an unknown expected value');
+assert.match(adminUi, /form\.expectedValue === ''[\s\S]*record\.expectedValueCentsValue == null \? \{\} : \{ expectedValueCents: null \}/,
+  'an untouched unknown opportunity value must be omitted while an intentionally cleared value becomes null');
+assert.match(adminUi, /selection\.type === 'company'\) return !item\.companyId/,
+  'company relationship creation must not silently move an already-linked contact');
+assert.match(adminUi, /type === 'Opportunity' \? \{ primaryContactId: '' \} : \{\}/,
+  'changing an opportunity company must clear any hidden primary-contact selection');
+assert.match(adminUi, /primaryContact: primary\?\.name \|\| 'Unassigned'/,
+  'a company with no linked contacts must not retain a stale primary-contact label');
 
 console.log('Avalon BD CRM behavior verification passed.');

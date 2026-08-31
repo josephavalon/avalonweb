@@ -16,13 +16,16 @@ import {
   FileText,
   GripVertical,
   LayoutDashboard,
+  Link2,
   List,
   ListTodo,
   MessageSquare,
+  Pencil,
   Plus,
   Search,
   Sparkles,
   Target,
+  Trash2,
   UserRound,
   X,
 } from 'lucide-react';
@@ -42,6 +45,40 @@ const PIPELINE_STAGES = [
   'Negotiation',
   'Won',
   'Lost',
+];
+
+const RELATIONSHIP_ROLES = [
+  ['primary_contact', 'Primary contact'],
+  ['decision_maker', 'Decision-maker'],
+  ['champion', 'Champion'],
+  ['influencer', 'Influencer'],
+  ['stakeholder', 'Stakeholder'],
+  ['blocker', 'Blocker'],
+];
+
+const RELATIONSHIP_STRENGTHS = [
+  ['unknown', 'Unknown'], ['cold', 'Cold'], ['warm', 'Warm'], ['strong', 'Strong'],
+];
+
+const COMPANY_RELATIONSHIP_STATUSES = [
+  ['unknown', 'Unknown'], ['cold', 'Cold'], ['warm', 'Warm'], ['active', 'Active'],
+  ['partner', 'Partner'], ['dormant', 'Dormant'], ['do_not_contact', 'Do not contact'],
+];
+
+const DECISION_STATUSES = [
+  ['unknown', 'Unknown'], ['influencer', 'Influencer'], ['decision_maker', 'Decision-maker'],
+  ['champion', 'Champion'], ['blocker', 'Blocker'],
+];
+
+const COMPANY_TYPES = [
+  'Venue', 'Festival', 'Hotel', 'Record Label', 'Corporate', 'Fitness', 'Wellness',
+  'Hospitality', 'Sports', 'Brand', 'Agency', 'Healthcare', 'Other',
+];
+
+const OPPORTUNITY_TYPES = [
+  'Event Wellness', 'Artist Wellness', 'Employee Wellness', 'Corporate Wellness',
+  'Venue Partnership', 'Hospitality Partnership', 'Retainer', 'Activation',
+  'Strategic Partnership', 'Other',
 ];
 
 const BD_NAV = [
@@ -105,14 +142,18 @@ function normalizeCompanyRecord(item = {}) {
     id: item.id,
     name: item.name || 'Unnamed company',
     type: item.type || item.companyType || item.company_type || 'Other',
+    website: item.website || item.websiteUrl || item.website_url || '',
     location: item.location || '',
+    ownerProfileId: item.ownerProfileId || item.owner_profile_id || '',
     owner: item.owner || item.ownerName || item.owner_name || item.owner_profile?.full_name || 'Unassigned',
+    relationshipStatus: item.relationshipStatus || item.relationship_status || 'unknown',
     stage: labelCase(item.stage || item.pipelineStage || item.pipeline_stage, 'New'),
     openValue: Number(item.openValue ?? item.open_value ?? ((item.openValueCents ?? item.open_value_cents ?? item.estimated_opportunity_value_cents ?? 0) / 100)) || 0,
     fitScore: Number(item.fitScore ?? item.fit_score) || 0,
     lastTouch: item.lastTouch || item.last_touch || dateLabel(item.last_touch_at, 'Not contacted'),
     nextAction: item.nextAction || item.next_action || 'Qualify relationship',
     nextActionDate: item.nextActionDate || dateLabel(item.next_action_date, 'Unscheduled'),
+    nextActionDateValue: item.next_action_date || item.nextActionDateValue || '',
     primaryContact: item.primaryContact || item.primary_contact || item.primary_contact_name || 'Unassigned',
     description: item.description || '',
     source: item.source || 'manual',
@@ -129,19 +170,31 @@ function normalizePersonRecord(item = {}) {
     companyId: item.companyId || item.company_id || item.company?.id || '',
     company: item.companyName || item.company_name || item.company?.name || 'Unlinked',
     title: item.title || '',
+    relationshipStrength: item.relationshipStrength || item.relationship_strength || 'unknown',
     relationship: labelCase(item.relationship || item.relationshipStrength || item.relationship_strength, 'Unknown'),
+    decisionMakerStatus: decisionStatus || 'unknown',
     decisionMaker: item.decisionMaker ?? item.decision_maker ?? ['decision_maker', 'champion'].includes(decisionStatus),
+    ownerProfileId: item.ownerProfileId || item.owner_profile_id || '',
     owner: item.owner || item.ownerName || item.owner_name || item.owner_profile?.full_name || 'Unassigned',
     lastContact: item.lastContact || item.last_contact || dateLabel(item.last_contact_at, 'Not contacted'),
     nextAction: item.nextAction || item.next_action || 'Qualify contact',
+    nextActionDateValue: item.next_action_date || item.nextActionDateValue || '',
     email: item.email || '',
     phone: item.phone || '',
     location: item.location || '',
+    linkedinUrl: item.linkedinUrl || item.linkedin_url || '',
     notes: item.notes || item.notes_summary || '',
   };
 }
 
 function normalizeOpportunityRecord(item = {}) {
+  const expectedValueCentsValue = Object.hasOwn(item, 'expectedValueCentsValue')
+    ? item.expectedValueCentsValue
+    : item.expectedValueCents ?? item.expected_value_cents
+      ?? (item.value != null ? Math.round(Number(item.value) * 100) : null);
+  const fitScoreValue = Object.hasOwn(item, 'fitScoreValue')
+    ? item.fitScoreValue
+    : item.fitScore ?? item.fit_score ?? null;
   return {
     ...item,
     id: item.id,
@@ -149,15 +202,19 @@ function normalizeOpportunityRecord(item = {}) {
     companyId: item.companyId || item.company_id || item.company?.id || '',
     company: item.companyName || item.company_name || item.company?.name || 'Unlinked',
     contacts: item.contacts || [],
+    ownerProfileId: item.ownerProfileId || item.owner_profile_id || '',
     owner: item.owner || item.ownerName || item.owner_name || item.owner_profile?.full_name || 'Unassigned',
     type: item.type || item.opportunityType || item.opportunity_type || 'Other',
     stage: labelCase(item.stage || item.pipelineStage || item.pipeline_stage, 'New'),
-    value: Number(item.value ?? item.expectedValue ?? ((item.expectedValueCents ?? item.expected_value_cents ?? 0) / 100)) || 0,
+    expectedValueCentsValue: expectedValueCentsValue == null ? null : Number(expectedValueCentsValue),
+    value: expectedValueCentsValue == null ? 0 : Number(expectedValueCentsValue) / 100,
     probability: Number(item.probability) || 0,
-    fitScore: Number(item.fitScore ?? item.fit_score) || 0,
+    fitScoreValue: fitScoreValue == null ? null : Number(fitScoreValue),
+    fitScore: fitScoreValue == null ? 0 : Number(fitScoreValue),
     priority: labelCase(item.priority, 'Normal'),
     nextAction: item.nextAction || item.next_action || 'Qualify opportunity',
     nextActionDate: item.nextActionDate || dateLabel(item.next_action_date, 'Unscheduled'),
+    nextActionDateValue: item.next_action_date || item.nextActionDateValue || '',
     source: item.source || 'manual',
   };
 }
@@ -218,7 +275,7 @@ function hydrateWorkspace(companyRows, peopleRows, opportunityRows, taskRows) {
       ...company,
       stage: ranked[0]?.stage || (companyOpportunities.length ? companyOpportunities[0].stage : 'No opportunity'),
       openValue: openOpportunities.reduce((sum, item) => sum + item.value, 0),
-      primaryContact: primary?.name || company.primaryContact,
+      primaryContact: primary?.name || 'Unassigned',
     };
   });
   return { companies, people: normalizedPeople, opportunities: normalizedOpportunities, tasks: normalizedTasks };
@@ -235,7 +292,7 @@ function deriveCompanyRollups(companies, people, opportunities) {
       ...company,
       stage: ranked[0]?.stage || (related.length ? related[0].stage : 'No opportunity'),
       openValue: open.reduce((sum, item) => sum + item.value, 0),
-      primaryContact: primary?.name || company.primaryContact,
+      primaryContact: primary?.name || 'Unassigned',
     };
   });
 }
@@ -861,7 +918,279 @@ function CallIntelligenceForm({ company, opportunity, onSaved }) {
   );
 }
 
-function RecordPanel({ selection, companies, people, opportunities, activities, sourceStatus, onOpportunityUpdated, onClose }) {
+const compactInputClass = 'h-9 w-full rounded-lg border border-stone-200 bg-white px-2.5 text-[11px] text-stone-900 outline-none focus:border-stone-500';
+const compactAreaClass = 'min-h-20 w-full resize-y rounded-lg border border-stone-200 bg-white px-2.5 py-2 text-[11px] leading-4 text-stone-900 outline-none focus:border-stone-500';
+
+function OwnerPicker({ value, owners, onChange, emptyLabel = 'Unassigned' }) {
+  return (
+    <select value={value || ''} onChange={(event) => onChange(event.target.value)} className={compactInputClass}>
+      <option value="">{emptyLabel}</option>
+      {owners.map((owner) => <option key={owner.id} value={owner.id}>{owner.name} · {labelCase(owner.role)}</option>)}
+    </select>
+  );
+}
+
+function coreEditForm(recordType, record) {
+  if (recordType === 'company') return {
+    name: record.name || '', companyType: record.type || 'Other', website: record.website || '',
+    location: record.location || '', relationshipStatus: record.relationshipStatus || 'unknown',
+    ownerProfileId: record.ownerProfileId || '', nextAction: record.nextAction === 'Qualify relationship' ? '' : record.nextAction || '',
+    nextActionDate: record.nextActionDateValue || '',
+  };
+  if (recordType === 'person') return {
+    fullName: record.name || '', email: record.email || '', phone: record.phone || '', title: record.title || '',
+    linkedinUrl: record.linkedinUrl || '', companyId: record.companyId || '',
+    relationshipStrength: record.relationshipStrength || 'unknown', decisionMakerStatus: record.decisionMakerStatus || 'unknown',
+    ownerProfileId: record.ownerProfileId || '', nextAction: record.nextAction === 'Qualify contact' ? '' : record.nextAction || '',
+    nextActionDate: record.nextActionDateValue || '',
+  };
+  return {
+    name: record.name || '', opportunityType: record.type || 'Other', priority: String(record.priority || 'Normal').toLowerCase(),
+    expectedValue: record.expectedValueCentsValue == null ? '' : record.expectedValueCentsValue / 100,
+    probability: record.probability || 0,
+    fitScore: record.fitScoreValue == null ? '' : record.fitScoreValue,
+    ownerProfileId: record.ownerProfileId || '', nextAction: record.nextAction === 'Qualify opportunity' ? '' : record.nextAction || '',
+    nextActionDate: record.nextActionDateValue || '',
+  };
+}
+
+function CoreRecordEditor({ recordType, record, companies, owners, onSaved }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(() => coreEditForm(recordType, record));
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => { setForm(coreEditForm(recordType, record)); setOpen(false); setNotice(''); setError(''); }, [record.id, record.version, recordType]);
+  const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const submit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    setNotice('');
+    const patch = recordType === 'company'
+      ? {
+          name: form.name, companyType: form.companyType, website: form.website || null,
+          location: form.location || null, relationshipStatus: form.relationshipStatus,
+          ownerProfileId: form.ownerProfileId || null, nextAction: form.nextAction || null,
+          nextActionDate: form.nextActionDate || null,
+        }
+      : recordType === 'person'
+        ? {
+            fullName: form.fullName, email: form.email || null, phone: form.phone || null, title: form.title || null,
+            linkedinUrl: form.linkedinUrl || null, companyId: form.companyId || null,
+            relationshipStrength: form.relationshipStrength, decisionMakerStatus: form.decisionMakerStatus,
+            ownerProfileId: form.ownerProfileId || null, nextAction: form.nextAction || null,
+            nextActionDate: form.nextActionDate || null,
+          }
+        : {
+            name: form.name, opportunityType: form.opportunityType, priority: form.priority,
+            ...(form.expectedValue === ''
+              ? (record.expectedValueCentsValue == null ? {} : { expectedValueCents: null })
+              : { expectedValueCents: Math.round(Number(form.expectedValue) * 100) }),
+            probability: Math.max(0, Math.min(100, Math.round(Number(form.probability) || 0))),
+            ...(form.fitScore === ''
+              ? (record.fitScoreValue == null ? {} : { fitScore: null })
+              : { fitScore: Math.max(0, Math.min(100, Math.round(Number(form.fitScore)))) }),
+            ownerProfileId: form.ownerProfileId || null, nextAction: form.nextAction || null,
+            nextActionDate: form.nextActionDate || null,
+          };
+    try {
+      const response = await apiPatch('/api/admin/bd', {
+        action: `update_${recordType}`,
+        id: record.id,
+        expectedVersion: record.version,
+        patch,
+      });
+      if (!response?.record) throw new Error('record_update_missing');
+      onSaved(response.record);
+      setNotice('Saved.');
+      setOpen(false);
+    } catch (requestError) {
+      setError(requestError?.message || 'This record could not be saved. Refresh and try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const label = (title, child) => <label><span className="mb-1 block text-[9px] font-medium text-stone-500">{title}</span>{child}</label>;
+  return (
+    <div>
+      <button type="button" onClick={() => setOpen((value) => !value)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 text-[10px] font-semibold text-stone-700 hover:border-stone-400">
+        <Pencil className="h-3 w-3" /> {open ? 'Cancel edit' : 'Edit'}
+      </button>
+      {open ? (
+        <form onSubmit={submit} className="mt-3 rounded-xl border border-stone-200 bg-stone-50/70 p-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {recordType === 'company' ? <>
+              {label('Company name', <input required value={form.name} onChange={(event) => setField('name', event.target.value)} className={compactInputClass} />)}
+              {label('Type', <select value={form.companyType} onChange={(event) => setField('companyType', event.target.value)} className={compactInputClass}>{COMPANY_TYPES.map((value) => <option key={value}>{value}</option>)}</select>)}
+              {label('Website', <input value={form.website} onChange={(event) => setField('website', event.target.value)} placeholder="https://" className={compactInputClass} />)}
+              {label('Location', <input value={form.location} onChange={(event) => setField('location', event.target.value)} className={compactInputClass} />)}
+              {label('Relationship', <select value={form.relationshipStatus} onChange={(event) => setField('relationshipStatus', event.target.value)} className={compactInputClass}>{COMPANY_RELATIONSHIP_STATUSES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select>)}
+            </> : null}
+            {recordType === 'person' ? <>
+              {label('Full name', <input required value={form.fullName} onChange={(event) => setField('fullName', event.target.value)} className={compactInputClass} />)}
+              {label('Title', <input value={form.title} onChange={(event) => setField('title', event.target.value)} className={compactInputClass} />)}
+              {label('Email', <input type="email" value={form.email} onChange={(event) => setField('email', event.target.value)} className={compactInputClass} />)}
+              {label('Phone', <input value={form.phone} onChange={(event) => setField('phone', event.target.value)} className={compactInputClass} />)}
+              {label('LinkedIn', <input value={form.linkedinUrl} onChange={(event) => setField('linkedinUrl', event.target.value)} placeholder="https://linkedin.com/in/…" className={compactInputClass} />)}
+              {label('Company', <select value={form.companyId} onChange={(event) => setField('companyId', event.target.value)} className={compactInputClass}><option value="">Unlinked</option>{companies.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>)}
+              {label('Relationship strength', <select value={form.relationshipStrength} onChange={(event) => setField('relationshipStrength', event.target.value)} className={compactInputClass}>{RELATIONSHIP_STRENGTHS.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select>)}
+              {label('Role', <select value={form.decisionMakerStatus} onChange={(event) => setField('decisionMakerStatus', event.target.value)} className={compactInputClass}>{DECISION_STATUSES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select>)}
+            </> : null}
+            {recordType === 'opportunity' ? <>
+              {label('Opportunity name', <input required value={form.name} onChange={(event) => setField('name', event.target.value)} className={compactInputClass} />)}
+              {label('Type', <select value={form.opportunityType} onChange={(event) => setField('opportunityType', event.target.value)} className={compactInputClass}>{OPPORTUNITY_TYPES.map((value) => <option key={value}>{value}</option>)}</select>)}
+              {label('Priority', <select value={form.priority} onChange={(event) => setField('priority', event.target.value)} className={compactInputClass}>{['low', 'normal', 'high', 'urgent'].map((value) => <option key={value} value={value}>{labelCase(value)}</option>)}</select>)}
+              {label('Expected value', <input type="number" min="0" step="1" value={form.expectedValue} onChange={(event) => setField('expectedValue', event.target.value)} className={compactInputClass} />)}
+              {label('Probability', <input type="number" min="0" max="100" value={form.probability} onChange={(event) => setField('probability', event.target.value)} className={compactInputClass} />)}
+              {label('Fit score', <input type="number" min="0" max="100" value={form.fitScore} onChange={(event) => setField('fitScore', event.target.value)} className={compactInputClass} />)}
+            </> : null}
+            {label('Owner', <OwnerPicker value={form.ownerProfileId} owners={owners} onChange={(value) => setField('ownerProfileId', value)} />)}
+            {label('Next action date', <input type="date" value={form.nextActionDate} onChange={(event) => setField('nextActionDate', event.target.value)} className={compactInputClass} />)}
+            <label className="sm:col-span-2"><span className="mb-1 block text-[9px] font-medium text-stone-500">Next action</span><textarea value={form.nextAction} onChange={(event) => setField('nextAction', event.target.value)} className={compactAreaClass} /></label>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3"><span className="text-[9px] text-stone-400">Human-approved CRM change.</span><button disabled={saving} type="submit" className="h-8 rounded-lg bg-stone-950 px-3 text-[10px] font-semibold text-white disabled:opacity-50">{saving ? 'Saving…' : 'Save changes'}</button></div>
+          {notice ? <p role="status" className="mt-2 text-[10px] font-medium text-emerald-700">{notice}</p> : null}
+          {error ? <p role="alert" className="mt-2 text-[10px] font-medium text-red-700">{error}</p> : null}
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
+function ActivityEntryForm({ selection, company, onSaved }) {
+  const [activityType, setActivityType] = useState('email');
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!content.trim()) return;
+    setSaving(true);
+    setError('');
+    const relation = selection.type === 'company'
+      ? { companyId: selection.id }
+      : selection.type === 'person'
+        ? { personId: selection.id, ...(company?.id ? { companyId: company.id } : {}) }
+        : { opportunityId: selection.id, ...(company?.id ? { companyId: company.id } : {}) };
+    try {
+      const response = await apiPost('/api/admin/bd', {
+        action: 'create_activity',
+        activity: { activityType, content: content.trim(), ...relation },
+      });
+      if (!response?.record) throw new Error('activity_missing');
+      onSaved(response.record);
+      setContent('');
+    } catch (requestError) {
+      setError(requestError?.message || 'The activity could not be saved.');
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <form onSubmit={submit} className="rounded-xl border border-stone-200 bg-stone-50/70 p-3">
+      <div className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5 text-stone-500" /><h4 className="text-[11px] font-semibold text-stone-900">Log communication</h4></div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-[150px_1fr]">
+        <label><span className="mb-1 block text-[9px] font-medium text-stone-500">Activity type</span><select value={activityType} onChange={(event) => setActivityType(event.target.value)} className={compactInputClass}>
+          <option value="email">Email</option><option value="call">Call</option><option value="meeting">Meeting</option><option value="dm">Direct message</option>
+        </select></label>
+        <label><span className="mb-1 block text-[9px] font-medium text-stone-500">Activity details</span><textarea required value={content} onChange={(event) => setContent(event.target.value)} placeholder="What happened, who responded, and what comes next?" className={compactAreaClass} /></label>
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-3"><span className="text-[9px] text-stone-400">Saved to the relationship timeline.</span><button type="submit" disabled={saving || !content.trim()} className="h-8 rounded-lg bg-stone-950 px-3 text-[10px] font-semibold text-white disabled:opacity-40">{saving ? 'Saving…' : 'Save activity'}</button></div>
+      {error ? <p role="alert" className="mt-2 text-[10px] font-medium text-red-700">{error}</p> : null}
+    </form>
+  );
+}
+
+function RelationshipManager({ selection, record, company, linkedPeople, linkedOpportunities, allPeople, companies, onRefresh, onRecordUpdated }) {
+  const [adding, setAdding] = useState(false);
+  const [personId, setPersonId] = useState('');
+  const [companyId, setCompanyId] = useState(company?.id || '');
+  const [role, setRole] = useState('stakeholder');
+  const [strength, setStrength] = useState('unknown');
+  const [decisionStatus, setDecisionStatus] = useState('unknown');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  useEffect(() => { setAdding(false); setPersonId(''); setCompanyId(company?.id || ''); setError(''); setNotice(''); }, [selection.type, selection.id, company?.id]);
+  const run = async (action) => {
+    setSaving(true); setError(''); setNotice('');
+    try {
+      await action();
+      await onRefresh();
+      setNotice('Relationships updated.');
+      setAdding(false);
+      setPersonId('');
+    } catch (requestError) {
+      setError(requestError?.message || 'The relationship could not be changed. Refresh and try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const setOpportunityRole = (opportunityId, selectedPersonId, nextRole, expectedRole) => run(async () => {
+    await apiPatch('/api/admin/bd', {
+      action: 'set_opportunity_contact',
+      relationship: { opportunityId, personId: selectedPersonId, relationshipRole: nextRole, ...(expectedRole ? { expectedRole } : {}) },
+    });
+  });
+  const unlinkOpportunity = (opportunityId, selectedPersonId, expectedRole) => run(async () => {
+    await apiPatch('/api/admin/bd', {
+      action: 'remove_opportunity_contact',
+      relationship: { opportunityId, personId: selectedPersonId, expectedRole },
+    });
+  });
+  const updatePerson = (personRecord, patch) => run(async () => {
+    const currentPayload = await apiGet(`/api/admin/bd?view=record&recordType=person&id=${encodeURIComponent(personRecord.id)}`);
+    const currentPerson = currentPayload?.record;
+    if (!currentPerson?.id || !currentPerson?.version) throw new Error('The current contact could not be loaded.');
+    const response = await apiPatch('/api/admin/bd', {
+      action: 'update_person', id: currentPerson.id, expectedVersion: currentPerson.version, patch,
+    });
+    if (response?.record) onRecordUpdated('person', response.record);
+  });
+  const addRelationship = (event) => {
+    event.preventDefault();
+    if (selection.type === 'opportunity' && personId) return setOpportunityRole(selection.id, personId, role);
+    if (selection.type === 'company' && personId) {
+      const selected = allPeople.find((item) => item.id === personId);
+      if (selected) return updatePerson(selected, { companyId: selection.id, relationshipStrength: strength, decisionMakerStatus: decisionStatus });
+    }
+    if (selection.type === 'person' && companyId) return updatePerson(record, { companyId, relationshipStrength: strength, decisionMakerStatus: decisionStatus });
+    return undefined;
+  };
+  const availablePeople = allPeople.filter((item) => {
+    if (selection.type === 'opportunity') return !linkedPeople.some((linked) => linked.id === item.id);
+    if (selection.type === 'company') return !item.companyId;
+    return true;
+  });
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-3"><SectionHeader title="Relationships" /><button type="button" onClick={() => setAdding((value) => !value)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 text-[10px] font-semibold text-stone-700 hover:border-stone-400"><Link2 className="h-3 w-3" /> {adding ? 'Cancel' : 'Add relationship'}</button></div>
+      {adding ? (
+        <form onSubmit={addRelationship} className="mt-3 rounded-xl border border-stone-200 bg-stone-50/70 p-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {selection.type === 'person' ? <label className="sm:col-span-2"><span className="mb-1 block text-[9px] font-medium text-stone-500">Company</span><select required value={companyId} onChange={(event) => setCompanyId(event.target.value)} className={compactInputClass}><option value="">Choose company</option>{companies.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{company?.id ? <span className="mt-1 block text-[9px] text-stone-400">Choosing another company moves this contact from {company.name}.</span> : null}</label> : <label className="sm:col-span-2"><span className="mb-1 block text-[9px] font-medium text-stone-500">Contact</span><select required value={personId} onChange={(event) => setPersonId(event.target.value)} className={compactInputClass}><option value="">Choose contact</option>{availablePeople.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.company}</option>)}</select>{selection.type === 'company' ? <span className="mt-1 block text-[9px] text-stone-400">Only unlinked contacts are shown. Move an existing contact from that person’s record.</span> : null}</label>}
+            {selection.type === 'opportunity' ? <label><span className="mb-1 block text-[9px] font-medium text-stone-500">Role</span><select value={role} onChange={(event) => setRole(event.target.value)} className={compactInputClass}>{RELATIONSHIP_ROLES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select></label> : null}
+            {selection.type !== 'opportunity' ? <><label><span className="mb-1 block text-[9px] font-medium text-stone-500">Strength</span><select value={strength} onChange={(event) => setStrength(event.target.value)} className={compactInputClass}>{RELATIONSHIP_STRENGTHS.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select></label><label><span className="mb-1 block text-[9px] font-medium text-stone-500">Role</span><select value={decisionStatus} onChange={(event) => setDecisionStatus(event.target.value)} className={compactInputClass}>{DECISION_STATUSES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select></label></> : null}
+          </div>
+          <div className="mt-3 flex justify-end"><button type="submit" disabled={saving} className="h-8 rounded-lg bg-stone-950 px-3 text-[10px] font-semibold text-white disabled:opacity-40">{saving ? 'Saving…' : 'Add relationship'}</button></div>
+        </form>
+      ) : null}
+      <div className="mt-3 space-y-2">
+        {selection.type === 'opportunity' ? linkedPeople.map((item) => <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-stone-200 p-3 sm:flex-row sm:items-center"><div className="flex min-w-0 flex-1 items-center gap-2"><Avatar name={item.name} /><span className="min-w-0"><span className="block truncate text-[11px] font-medium text-stone-900">{item.name}</span><span className="block truncate text-[9px] text-stone-400">{item.title || item.company}</span></span></div><select aria-label={`Opportunity role for ${item.name}`} value={item.relationshipRole || 'stakeholder'} onChange={(event) => setOpportunityRole(selection.id, item.id, event.target.value, item.relationshipRole || 'stakeholder')} disabled={saving} className="h-8 rounded-lg border border-stone-200 bg-white px-2 text-[10px]">{RELATIONSHIP_ROLES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select><button aria-label={`Unlink ${item.name} from this opportunity`} type="button" onClick={() => unlinkOpportunity(selection.id, item.id, item.relationshipRole || 'stakeholder')} disabled={saving} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-200 px-2 text-[9px] font-medium text-red-700"><Trash2 className="h-3 w-3" /> Unlink</button></div>) : null}
+        {selection.type === 'person' ? linkedOpportunities.map((item) => <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-stone-200 p-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><span className="block truncate text-[11px] font-medium text-stone-900">{item.name}</span><span className="block text-[9px] text-stone-400">{item.company} · {item.stage}</span></div><select aria-label={`Relationship role on ${item.name}`} value={item.relationshipRole || 'stakeholder'} onChange={(event) => setOpportunityRole(item.id, selection.id, event.target.value, item.relationshipRole || 'stakeholder')} disabled={saving} className="h-8 rounded-lg border border-stone-200 bg-white px-2 text-[10px]">{RELATIONSHIP_ROLES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select><button aria-label={`Unlink this contact from ${item.name}`} type="button" onClick={() => unlinkOpportunity(item.id, selection.id, item.relationshipRole || 'stakeholder')} disabled={saving} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-200 px-2 text-[9px] font-medium text-red-700"><Trash2 className="h-3 w-3" /> Unlink</button></div>) : null}
+        {selection.type === 'company' ? linkedPeople.map((item) => <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-stone-200 p-3 sm:flex-row sm:items-center"><div className="flex min-w-0 flex-1 items-center gap-2"><Avatar name={item.name} /><span className="min-w-0"><span className="block truncate text-[11px] font-medium text-stone-900">{item.name}</span><span className="block truncate text-[9px] text-stone-400">{item.title || 'Contact'} · {item.relationship}</span></span></div><select aria-label={`Relationship strength for ${item.name}`} value={item.relationshipStrength || 'unknown'} onChange={(event) => updatePerson(item, { relationshipStrength: event.target.value })} disabled={saving} className="h-8 rounded-lg border border-stone-200 bg-white px-2 text-[10px]">{RELATIONSHIP_STRENGTHS.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select><select aria-label={`Relationship role for ${item.name}`} value={item.decisionMakerStatus || 'unknown'} onChange={(event) => updatePerson(item, { decisionMakerStatus: event.target.value })} disabled={saving} className="h-8 rounded-lg border border-stone-200 bg-white px-2 text-[10px]">{DECISION_STATUSES.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select><button aria-label={`Unlink ${item.name} from this company`} type="button" onClick={() => updatePerson(item, { companyId: null })} disabled={saving} className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-200 px-2 text-[9px] font-medium text-red-700"><Trash2 className="h-3 w-3" /> Unlink</button></div>) : null}
+        {selection.type === 'opportunity' && linkedPeople.length === 0 ? <EmptyRows>No contacts are linked to this opportunity.</EmptyRows> : null}
+        {selection.type === 'person' && linkedOpportunities.length === 0 ? <EmptyRows>No opportunities are linked to this contact.</EmptyRows> : null}
+        {selection.type === 'company' && linkedPeople.length === 0 ? <EmptyRows>No contacts are linked to this company.</EmptyRows> : null}
+      </div>
+      {notice ? <p role="status" className="mt-2 text-[10px] font-medium text-emerald-700">{notice}</p> : null}
+      {error ? <p role="alert" className="mt-2 text-[10px] font-medium text-red-700">{error}</p> : null}
+    </section>
+  );
+}
+
+function RecordPanel({ selection, companies, people, opportunities, owners, activities, sourceStatus, onRecordUpdated, onOpportunityUpdated, onClose }) {
   const preview = sourceStatus === 'preview';
   const fallbackPerson = selection?.type === 'person' ? people.find((item) => item.id === selection.id) : null;
   const fallbackOpportunity = selection?.type === 'opportunity' ? opportunities.find((item) => item.id === selection.id) : null;
@@ -903,6 +1232,19 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [selection, sourceStatus]);
+
+  const refreshContext = async () => {
+    const payload = await apiGet(`/api/admin/bd?view=record&recordType=${encodeURIComponent(selection.type)}&id=${encodeURIComponent(selection.id)}`);
+    assertApiResponse(payload, {
+      objects: ['record', 'relationships', 'runtime'],
+      arrays: [
+        'relationships.companies', 'relationships.people', 'relationships.opportunities',
+        'timeline', 'tasks', 'notes', 'files', 'callIntelligence', 'mutationHistory',
+      ],
+    }, 'Avalon BD returned an invalid record response.');
+    setContext(payload);
+    return payload;
+  };
 
   if (sourceStatus !== 'live' || !selection || (preview && !fallbackRecord)) return null;
 
@@ -995,6 +1337,20 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
     if (response?.opportunity) onOpportunityUpdated?.(response.opportunity);
   };
 
+  const applyRecordSaved = (recordType, row) => {
+    setContext((current) => selection.type === recordType ? ({ ...current, record: row }) : current);
+    onRecordUpdated?.(recordType, row);
+  };
+
+  const handleRecordSaved = (recordType, row) => {
+    applyRecordSaved(recordType, row);
+    refreshContext().catch(() => setLoadError('The saved record could not be refreshed.'));
+  };
+
+  const handleActivitySaved = (activity) => {
+    setContext((current) => ({ ...current, timeline: [activity, ...(current?.timeline || [])] }));
+  };
+
   return (
     <div className="avalon-bd-workspace fixed inset-0 z-[80] flex justify-end" role="dialog" aria-modal="true" aria-label={`${title} record`}>
       <button type="button" className="absolute inset-0 bg-stone-950/20 backdrop-blur-[1px]" onClick={onClose} aria-label="Close record" />
@@ -1016,17 +1372,18 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
           {!loading && !loadError && tab === 'overview' ? (
             <div className="space-y-7">
               <section>
-                <SectionHeader title="Core fields" />
+                <div className="flex items-center justify-between gap-3"><SectionHeader title="Core fields" /><CoreRecordEditor recordType={selection.type} record={record} companies={companies} owners={owners} onSaved={(row) => handleRecordSaved(selection.type, row)} /></div>
                 {person ? <><FieldRow label="Email">{person.email ? <a href={`mailto:${person.email}`} className="text-stone-800 hover:underline">{person.email}</a> : '—'}</FieldRow><FieldRow label="Phone" value={person.phone} /><FieldRow label="Relationship" value={person.relationship} /><FieldRow label="Decision maker" value={person.decisionMaker ? 'Yes' : 'No'} /><FieldRow label="Owner" value={person.owner} /><FieldRow label="Next action" value={person.nextAction} /></> : opportunity ? <><FieldRow label="Company" value={opportunity.company} /><FieldRow label="Type" value={opportunity.type} /><FieldRow label="Stage" value={opportunity.stage} /><FieldRow label="Expected value" value={money(opportunity.value)} /><FieldRow label="Probability" value={`${opportunity.probability}%`} /><FieldRow label="Weighted value" value={money(opportunity.value * opportunity.probability / 100)} /><FieldRow label="Owner" value={opportunity.owner} /><FieldRow label="Next action" value={`${opportunity.nextAction} · ${opportunity.nextActionDate}`} /></> : company ? <><FieldRow label="Type" value={company.type} /><FieldRow label="Location" value={company.location} /><FieldRow label="Primary contact" value={company.primaryContact} /><FieldRow label="Owner" value={company.owner} /><FieldRow label="Source" value={company.source} /><FieldRow label="Open value" value={money(company.openValue)} /><FieldRow label="Next action" value={`${company.nextAction} · ${company.nextActionDate}`} /></> : null}
               </section>
+              <RelationshipManager selection={selection} record={record} company={company} linkedPeople={linkedPeople} linkedOpportunities={linkedOpportunities} allPeople={people} companies={companies} onRefresh={refreshContext} onRecordUpdated={applyRecordSaved} />
               <section>
-                <SectionHeader title="Relationships" />
-                <div className="grid gap-3 pt-3 sm:grid-cols-3">
-                  <div className="rounded-xl border border-stone-200 p-3"><p className="text-[10px] font-medium uppercase tracking-[0.08em] text-stone-400">People</p>{linkedPeople.length ? linkedPeople.map((item) => <div key={item.id} className="mt-3 flex items-center gap-2"><Avatar name={item.name} /><span className="min-w-0"><span className="block truncate text-[11px] font-medium text-stone-800">{item.name}</span><span className="block truncate text-[9px] text-stone-400">{item.title || item.relationshipRole}</span></span></div>) : <p className="mt-3 text-[10px] text-stone-400">No linked people</p>}</div>
-                  <div className="rounded-xl border border-stone-200 p-3"><p className="text-[10px] font-medium uppercase tracking-[0.08em] text-stone-400">Opportunities</p>{linkedOpportunities.length ? linkedOpportunities.map((item) => <div key={item.id} className="mt-3"><span className="block text-[11px] font-medium text-stone-800">{item.name}</span><span className="mt-0.5 block text-[9px] text-stone-400">{item.stage} · {money(item.value)}</span></div>) : <p className="mt-3 text-[10px] text-stone-400">No linked opportunities</p>}</div>
-                  <div className="rounded-xl border border-stone-200 p-3"><p className="text-[10px] font-medium uppercase tracking-[0.08em] text-stone-400">Tasks</p>{linkedTasks.length ? linkedTasks.filter((item) => item.status !== 'cancelled').slice(0, 5).map((item) => <div key={item.id} className="mt-3"><span className="block text-[11px] font-medium text-stone-800">{item.title}</span><span className="mt-0.5 block text-[9px] text-stone-400">{item.status === 'completed' ? 'Completed' : item.status === 'in_progress' ? `In progress · ${item.due}` : item.due}</span></div>) : <p className="mt-3 text-[10px] text-stone-400">No linked tasks</p>}</div>
+                <SectionHeader title="Related work" />
+                <div className="grid gap-3 pt-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-stone-200 p-3"><p className="text-[10px] font-medium uppercase tracking-[0.08em] text-stone-400">Opportunities</p>{linkedOpportunities.length ? linkedOpportunities.slice(0, 6).map((item) => <div key={item.id} className="mt-3"><span className="block text-[11px] font-medium text-stone-800">{item.name}</span><span className="mt-0.5 block text-[9px] text-stone-400">{item.stage} · {money(item.value)}</span></div>) : <p className="mt-3 text-[10px] text-stone-400">No linked opportunities</p>}</div>
+                  <div className="rounded-xl border border-stone-200 p-3"><p className="text-[10px] font-medium uppercase tracking-[0.08em] text-stone-400">Tasks</p>{linkedTasks.length ? linkedTasks.filter((item) => item.status !== 'cancelled').slice(0, 6).map((item) => <div key={item.id} className="mt-3"><span className="block text-[11px] font-medium text-stone-800">{item.title}</span><span className="mt-0.5 block text-[9px] text-stone-400">{item.status === 'completed' ? 'Completed' : item.status === 'in_progress' ? `In progress · ${item.due}` : item.due}</span></div>) : <p className="mt-3 text-[10px] text-stone-400">No linked tasks</p>}</div>
                 </div>
               </section>
+              <ActivityEntryForm selection={selection} company={company} onSaved={handleActivitySaved} />
               {opportunity ? (
                 <section>
                   <SectionHeader title="Call intelligence" meta={preview ? 'Preview unavailable' : `${calls.length} recorded`} />
@@ -1062,28 +1419,37 @@ function RecordPanel({ selection, companies, people, opportunities, activities, 
 const CREATE_FIELDS = {
   Company: [
     { key: 'name', label: 'Company name', placeholder: 'Company name', required: true },
-    { key: 'type', label: 'Company type', placeholder: 'Corporate, Venue, Hotel…' },
+    { key: 'type', label: 'Company type', options: COMPANY_TYPES },
     { key: 'website', label: 'Website', placeholder: 'https://' },
+    { key: 'ownerProfileId', label: 'Owner', ownerSelector: true },
   ],
   Person: [
     { key: 'name', label: 'Full name', placeholder: 'First and last name', required: true },
     { key: 'email', label: 'Email', placeholder: 'name@company.com', type: 'email' },
+    { key: 'phone', label: 'Phone', placeholder: '+1 415…' },
     { key: 'companyId', label: 'Company', companySelector: true },
     { key: 'title', label: 'Title', placeholder: 'Role or title' },
+    { key: 'relationshipStrength', label: 'Relationship strength', options: RELATIONSHIP_STRENGTHS },
+    { key: 'decisionMakerStatus', label: 'Role', options: DECISION_STATUSES },
+    { key: 'ownerProfileId', label: 'Owner', ownerSelector: true },
   ],
   Opportunity: [
     { key: 'name', label: 'Opportunity name', placeholder: 'What could Avalon win?', required: true },
-    { key: 'company', label: 'Existing company name', placeholder: 'Enter the exact company name', required: true },
+    { key: 'companyId', label: 'Company', companySelector: true, required: true },
+    { key: 'primaryContactId', label: 'Primary contact', personSelector: true },
+    { key: 'opportunityType', label: 'Opportunity type', options: OPPORTUNITY_TYPES },
     { key: 'value', label: 'Expected value', placeholder: '$0' },
+    { key: 'ownerProfileId', label: 'Owner', ownerSelector: true },
   ],
   Task: [
     { key: 'name', label: 'Task', placeholder: 'What needs to happen?', required: true },
-    { key: 'company', label: 'Existing company name', placeholder: 'Enter the exact company name', required: true },
+    { key: 'companyId', label: 'Company', companySelector: true, required: true },
     { key: 'due', label: 'Due date and time · optional', placeholder: '', type: 'datetime-local' },
+    { key: 'ownerProfileId', label: 'Owner', ownerSelector: true },
   ],
   Note: [
     { key: 'name', label: 'Note', placeholder: 'Capture relationship context', required: true, multiline: true },
-    { key: 'company', label: 'Existing company name', placeholder: 'Enter the exact company name', required: true },
+    { key: 'companyId', label: 'Company', companySelector: true, required: true },
   ],
 };
 
@@ -1107,7 +1473,7 @@ function personCompanyOptions(companies = []) {
   }).sort((left, right) => left.label.localeCompare(right.label));
 }
 
-function CreatePanel({ initialType = 'Company', companies = [], onClose, onCreate, sourceStatus }) {
+function CreatePanel({ initialType = 'Company', companies = [], people = [], owners = [], onClose, onCreate, sourceStatus }) {
   const [type, setType] = useState(initialType);
   const [form, setForm] = useState({});
   const [notice, setNotice] = useState('');
@@ -1140,11 +1506,27 @@ function CreatePanel({ initialType = 'Company', companies = [], onClose, onCreat
               {field.companySelector ? (
                 <select
                   value={form.companyId || ''}
-                  onChange={(event) => setForm((current) => ({ ...current, companyId: event.target.value }))}
+                  onChange={(event) => setForm((current) => ({
+                    ...current,
+                    companyId: event.target.value,
+                    ...(type === 'Opportunity' ? { primaryContactId: '' } : {}),
+                  }))}
+                  required={field.required}
                   className="h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-[12px] text-stone-900 outline-none focus:border-stone-500"
                 >
                   <option value="">Unlinked</option>
                   {companyOptions.map((company) => <option key={company.id} value={company.id}>{company.label}</option>)}
+                </select>
+              ) : field.personSelector ? (
+                <select value={form.primaryContactId || ''} onChange={(event) => setForm((current) => ({ ...current, primaryContactId: event.target.value }))} className="h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-[12px] text-stone-900 outline-none focus:border-stone-500">
+                  <option value="">No primary contact yet</option>
+                  {people.filter((person) => !form.companyId || person.companyId === form.companyId).map((person) => <option key={person.id} value={person.id}>{person.name} · {person.title || person.company}</option>)}
+                </select>
+              ) : field.ownerSelector ? (
+                <OwnerPicker value={form.ownerProfileId || ''} owners={owners} emptyLabel="Me by default" onChange={(value) => setForm((current) => ({ ...current, ownerProfileId: value }))} />
+              ) : field.options ? (
+                <select value={form[field.key] || (Array.isArray(field.options[0]) ? field.options[0][0] : field.options[0])} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} className="h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-[12px] text-stone-900 outline-none focus:border-stone-500">
+                  {field.options.map((option) => Array.isArray(option) ? <option key={option[0]} value={option[0]}>{option[1]}</option> : <option key={option} value={option}>{option}</option>)}
                 </select>
               ) : field.multiline ? (
                 <textarea value={form[field.key] || ''} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} required={field.required} className="min-h-28 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-[12px] text-stone-900 outline-none placeholder:text-stone-300 focus:border-stone-500" />
@@ -1314,6 +1696,7 @@ export default function AvalonBD() {
   const [people, setPeople] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [owners, setOwners] = useState([]);
   const [activities, setActivities] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [selection, setSelection] = useState(null);
@@ -1334,6 +1717,7 @@ export default function AvalonBD() {
       setPeople([]);
       setOpportunities([]);
       setTasks([]);
+      setOwners([]);
       setActivities([]);
       setDashboard(null);
       setSourceStatus('error');
@@ -1350,13 +1734,14 @@ export default function AvalonBD() {
           objects: ['summary', 'runtime'],
           arrays: [
             'priorityOpportunities', 'repliesRequiringAction', 'overdueTasks', 'followUpsDue',
-            'upcomingCalls', 'newDiscoveries', 'recentlyChangedOpportunities',
+            'upcomingCalls', 'newDiscoveries', 'recentlyChangedOpportunities', 'owners',
           ],
           numbers: [
             'summary.openPipelineCents', 'summary.openOpportunities', 'summary.priorityOpportunities',
             'summary.callsThisWeek', 'summary.actionsDueToday', 'summary.overdueActions',
           ],
         }, 'Avalon BD returned an invalid dashboard response.');
+        if (!hasObjectRows(dashboardPayload.owners)) throw invalidApiResponse('Avalon BD returned invalid owners.');
         const valid = Array.isArray(companyRows)
           && Array.isArray(peopleRows)
           && Array.isArray(opportunityRows)
@@ -1375,6 +1760,7 @@ export default function AvalonBD() {
         setPeople(workspace.people);
         setOpportunities(workspace.opportunities);
         setTasks(workspace.tasks);
+        setOwners(dashboardPayload.owners);
         setDashboard(hydrateDashboard(dashboardPayload, workspace));
         setActivities([]);
         setSourceStatus('live');
@@ -1458,23 +1844,21 @@ export default function AvalonBD() {
 
   const createRecord = async (type, form) => {
     if (sourceStatus === 'live') {
-      const selectedCompanyId = type === 'Person' ? String(form.companyId || '').trim() : '';
-      const linkedCompany = type === 'Person'
-        ? companies.find((item) => item.id === selectedCompanyId)
-        : companies.find((item) => item.name.toLowerCase() === String(form.company || '').trim().toLowerCase());
+      const selectedCompanyId = String(form.companyId || '').trim();
+      const linkedCompany = companies.find((item) => item.id === selectedCompanyId);
       if (selectedCompanyId && !linkedCompany) return false;
       const numericValue = Number(String(form.value || '').replace(/[^0-9.]/g, '')) || 0;
       const dueDate = form.due ? new Date(form.due) : null;
       if (dueDate && Number.isNaN(dueDate.getTime())) return false;
       let request;
       if (type === 'Company') {
-        const supportedTypes = ['Venue', 'Festival', 'Hotel', 'Record Label', 'Corporate', 'Fitness', 'Wellness', 'Hospitality', 'Sports', 'Brand', 'Agency', 'Healthcare', 'Other'];
         request = {
           action: 'create_company',
           company: {
             name: form.name.trim(),
-            companyType: supportedTypes.includes(form.type) ? form.type : 'Other',
+            companyType: COMPANY_TYPES.includes(form.type) ? form.type : 'Other',
             website: form.website || null,
+            ownerProfileId: form.ownerProfileId || null,
             source: 'manual',
           },
         };
@@ -1484,8 +1868,12 @@ export default function AvalonBD() {
           person: {
             fullName: form.name.trim(),
             email: form.email || null,
+            phone: form.phone || null,
             companyId: selectedCompanyId || null,
             title: form.title || null,
+            relationshipStrength: form.relationshipStrength || 'unknown',
+            decisionMakerStatus: form.decisionMakerStatus || 'unknown',
+            ownerProfileId: form.ownerProfileId || null,
             source: 'manual',
           },
         };
@@ -1495,10 +1883,12 @@ export default function AvalonBD() {
           opportunity: {
             name: form.name.trim(),
             companyId: linkedCompany.id,
-            opportunityType: 'Other',
+            opportunityType: OPPORTUNITY_TYPES.includes(form.opportunityType) ? form.opportunityType : 'Other',
             pipelineStage: 'new',
             expectedValueCents: Math.round(numericValue * 100),
             probability: 10,
+            ownerProfileId: form.ownerProfileId || null,
+            contactIds: form.primaryContactId ? [form.primaryContactId] : [],
             source: 'manual',
           },
         };
@@ -1509,6 +1899,7 @@ export default function AvalonBD() {
             title: form.name.trim(),
             companyId: linkedCompany.id,
             dueAt: dueDate?.toISOString(),
+            ownerProfileId: form.ownerProfileId || null,
             source: 'manual',
           },
         };
@@ -1571,11 +1962,36 @@ export default function AvalonBD() {
     const returned = {
       ...normalized,
       company: current.company,
-      owner: normalized.owner === 'Unassigned' ? current.owner : normalized.owner,
     };
     const nextOpportunities = opportunities.map((item) => item.id === returned.id ? returned : item);
     setOpportunities(nextOpportunities);
     setCompanies((items) => deriveCompanyRollups(items, people, nextOpportunities));
+  };
+
+  const applyReturnedRecord = (recordType, row) => {
+    if (!row?.id) return;
+    if (recordType === 'opportunity') {
+      applyReturnedOpportunity(row);
+      return;
+    }
+    if (recordType === 'company') {
+      setCompanies((items) => items.map((item) => item.id === row.id
+        ? {
+            ...normalizeCompanyRecord(row),
+            stage: item.stage,
+            openValue: item.openValue,
+            primaryContact: item.primaryContact,
+          }
+        : item));
+      return;
+    }
+    if (recordType === 'person') {
+      const normalized = normalizePersonRecord(row);
+      const companyName = companies.find((item) => item.id === normalized.companyId)?.name || 'Unlinked';
+      const nextPeople = people.map((item) => item.id === row.id ? { ...normalized, company: companyName } : item);
+      setPeople(nextPeople);
+      setCompanies((items) => deriveCompanyRollups(items, nextPeople, opportunities));
+    }
   };
 
   if (sourceStatus !== 'live') {
@@ -1635,8 +2051,8 @@ export default function AvalonBD() {
         </div>
       </div>
 
-      {selection ? <RecordPanel selection={selection} companies={companies} people={people} opportunities={opportunities} activities={activities} sourceStatus={sourceStatus} onOpportunityUpdated={applyReturnedOpportunity} onClose={closeRecord} /> : null}
-      {createOpen ? <CreatePanel initialType={createType} companies={companies} sourceStatus={sourceStatus} onCreate={createRecord} onClose={() => setCreateOpen(false)} /> : null}
+      {selection ? <RecordPanel selection={selection} companies={companies} people={people} opportunities={opportunities} owners={owners} activities={activities} sourceStatus={sourceStatus} onRecordUpdated={applyReturnedRecord} onOpportunityUpdated={applyReturnedOpportunity} onClose={closeRecord} /> : null}
+      {createOpen ? <CreatePanel initialType={createType} companies={companies} people={people} owners={owners} sourceStatus={sourceStatus} onCreate={createRecord} onClose={() => setCreateOpen(false)} /> : null}
       {searchOpen ? <SearchPalette companies={companies} people={people} opportunities={opportunities} sourceStatus={sourceStatus} onClose={() => setSearchOpen(false)} onOpen={setSelection} /> : null}
     </AdminShell>
   );

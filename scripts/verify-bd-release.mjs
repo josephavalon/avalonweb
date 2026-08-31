@@ -457,6 +457,11 @@ assert.match(endpoint, /if \(messages\[code\]\) return res\.status\(409\)/,
 assert.match(endpoint, /\.rpc\('bd_merge_records'/);
 assert.match(endpoint, /bd_merge_person_company_mismatch: 'Both people must be linked to the same company before they can be merged\.'/);
 assert.match(endpoint, /database migration 064 is required/);
+assert.match(endpoint, /view === 'owners'/);
+assert.match(endpoint, /action === 'set_opportunity_contact'/);
+assert.match(endpoint, /action === 'remove_opportunity_contact'/);
+assert.match(endpoint, /expectedRole/);
+assert.match(endpoint, /primary_contact_exists/);
 
 assert.match(env, /^AVALON_BD_CRM_ENABLED=false$/m);
 assert.match(env, /^AVALON_BD_DATA_REVIEWED=false$/m);
@@ -490,6 +495,13 @@ assert.match(ui, /selectedCompanyId[\s\S]*companies\.find\(\(item\) => item\.id 
   'person creation must reject a selected id that is not in the live company collection');
 assert.match(ui, /companyId: selectedCompanyId \|\| null/);
 assert.match(ui, /setPeople\(nextPeople\)/);
+assert.match(ui, /Add relationship/);
+assert.match(ui, /Choose contact/);
+assert.match(ui, /action: 'set_opportunity_contact'/);
+assert.match(ui, /action: 'remove_opportunity_contact'/);
+assert.match(ui, /action: 'create_activity'/);
+assert.match(ui, /Save activity/);
+assert.match(ui, /OwnerPicker/);
 assert.match(ui, /No meetings are scheduled in the next 7 days\./);
 for (const emptyState of [
   'No opportunities are recorded yet.',
@@ -509,7 +521,7 @@ assert.ok(hydrateWorkspaceSource.startsWith('function hydrateWorkspace('),
   'the reviewed workspace hydrator must remain present');
 assert.equal(
   createHash('sha256').update(hydrateWorkspaceSource).digest('hex'),
-  'cbbc91ce9bd2b9ca9dba7b6052b32f3b2b02b4dfab4828bcacf7f658df8afe7f',
+  '040986dc2c316c4d6e24ff564461d98841320cf70ba6a4e2c9098d8f4ca1f6eb',
   'workspace hydration must preserve the exact reviewed no-filter task path',
 );
 assert.match(ui, /const normalizedTasks = taskRows\.map\([\s\S]*return \{ companies, people: normalizedPeople, opportunities: normalizedOpportunities, tasks: normalizedTasks \};/,
@@ -537,5 +549,8 @@ assert.match(contract, /business row may already be committed/i);
 assert.match(contract, /Agent BD must not receive autonomous CRM[\s\S]*transactional RPC[\s\S]*exact-payload[\s\S]*authorization/i);
 assert.match(contract, /immutable mutation entry in one transaction/i,
   'merge must remain the explicit atomic exception');
+assert.match(contract, /set_opportunity_contact[\s\S]*expectedRole/);
+assert.match(contract, /remove_opportunity_contact[\s\S]*expectedRole/);
+assert.match(contract, /owner directory/i);
 
 console.log('Avalon BD standalone release verification passed.');
