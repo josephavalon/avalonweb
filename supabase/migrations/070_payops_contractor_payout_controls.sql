@@ -37,7 +37,7 @@ immutable
 strict
 set search_path = public, pg_temp
 as $$
-  select encode(digest(jsonb_build_object(
+  select encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'payable_id', p_payable_id,
     'payable_version', p_payable_version,
@@ -71,7 +71,7 @@ immutable
 strict
 set search_path = public, pg_temp
 as $$
-  select encode(digest(p_safe_payload::text, 'sha256'), 'hex')
+  select encode(extensions.digest(p_safe_payload::text, 'sha256'), 'hex')
 $$;
 
 revoke all on function app_private.finance_command_checksum(jsonb)
@@ -257,7 +257,7 @@ begin
                and send_approval.actor_profile_id = new.created_by
                and send_approval.payout_item_version = item.version - 1
            )
-           and encode(digest(jsonb_build_object(
+           and encode(extensions.digest(jsonb_build_object(
              'payee_profile_id', payee.id,
              'payee_profile_version', payee.version,
              'mercury_recipient_id', payee.mercury_recipient_id,
@@ -431,7 +431,7 @@ begin
   if v_payable.net_cents <= 0 then
     raise exception using errcode = 'P0001', message = 'payout_amount_invalid';
   end if;
-  v_destination_hash := encode(digest(jsonb_build_object(
+  v_destination_hash := encode(extensions.digest(jsonb_build_object(
     'payee_profile_id', v_payee.id, 'payee_profile_version', v_payee.version,
     'mercury_recipient_id', v_payee.mercury_recipient_id,
     'destination_masked_label', v_payee.destination_masked_label,
@@ -606,7 +606,7 @@ begin
         and (newer.effective_through is null or newer.effective_through >= current_date)
     )
   for update;
-  v_destination_hash := encode(digest(jsonb_build_object(
+  v_destination_hash := encode(extensions.digest(jsonb_build_object(
     'payee_profile_id', v_payee.id, 'payee_profile_version', v_payee.version,
     'mercury_recipient_id', v_payee.mercury_recipient_id,
     'destination_masked_label', v_payee.destination_masked_label,
@@ -661,7 +661,7 @@ begin
     raise exception using errcode = 'P0001', message = 'payout_approval_snapshot_changed';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'payout_item_id', p_payout_item_id,
     'expected_version', p_expected_version,
@@ -840,7 +840,7 @@ begin
         and (newer.effective_through is null or newer.effective_through >= current_date)
     )
   for update;
-  v_destination_hash := encode(digest(jsonb_build_object(
+  v_destination_hash := encode(extensions.digest(jsonb_build_object(
     'payee_profile_id', v_payee.id, 'payee_profile_version', v_payee.version,
     'mercury_recipient_id', v_payee.mercury_recipient_id,
     'destination_masked_label', v_payee.destination_masked_label,
@@ -933,7 +933,7 @@ begin
     'send_mode', v_batch.send_mode
   );
   v_command_checksum := app_private.finance_command_checksum(v_safe_payload);
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'payout_item_id', p_payout_item_id,
     'expected_version', p_expected_version,

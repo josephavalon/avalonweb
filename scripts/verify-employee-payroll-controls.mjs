@@ -83,6 +83,11 @@ includesAll(migration, [
 ], 'payroll identity and concurrency controls');
 assert.match(migration, /add constraint payroll_runs_paid_evidence_check check \([\s\S]*?\) not valid;/i, 'legacy PAID rows must not abort the control migration');
 assert.match(migration, /add constraint payroll_runs_cancel_control_check check \([\s\S]*?\) not valid;/i, 'legacy CANCELLED rows must not abort the control migration');
+assert.match(migration, /payroll_runs_paid_evidence_check[\s\S]*paid_provider_payload_checksum is not null[\s\S]*paid_provider_payload_checksum ~/i, 'PAID evidence checksum must fail closed on SQL NULL');
+assert.match(migration, /payroll_runs_hold_control_check[\s\S]*hold_code is not null[\s\S]*hold_code ~/i, 'HELD reason code must fail closed on SQL NULL');
+assert.match(migration, /payroll_runs_cancel_control_check[\s\S]*cancel_reason_code is not null[\s\S]*cancel_reason_code ~/i, 'CANCELLED reason code must fail closed on SQL NULL');
+assert.match(migration, /payroll_profiles_readiness_evidence_check[\s\S]*readiness_evidence_ref is not null[\s\S]*readiness_evidence_checksum is not null/i, 'payroll readiness evidence pairs must fail closed on SQL NULL');
+assert.match(migration, /payroll_events_control_request_check[\s\S]*idempotency_key is not null[\s\S]*request_hash is not null/i, 'payroll control request pairs must fail closed on SQL NULL');
 assert.doesNotMatch(migration, /grant\s+(?:insert|update|delete|all)\s+on\s+public\.(?:payroll_|finance_integration_|bank_statement_items|reconciliation_matches)[^;]*service_role/i, '074 must not restore direct service-role finance DML');
 
 const rpcs = [

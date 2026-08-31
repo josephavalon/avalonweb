@@ -14,8 +14,15 @@ for (const migration of [
   '073_vendor_accounts_payable.sql',
   '074_employee_management_payroll_controls.sql',
   '075_contractor_payout_settlement_reconciliation.sql',
+  '076_payops_finance_activation_hardening.sql',
 ]) {
   assert.ok(existsSync(new URL(`supabase/migrations/${migration}`, root)), `${migration} is required`);
+  const migrationSource = read(`supabase/migrations/${migration}`);
+  assert.doesNotMatch(
+    migrationSource,
+    /(^|[^.A-Za-z0-9_])digest\(/m,
+    `${migration} must schema-qualify pgcrypto digest calls as extensions.digest`,
+  );
 }
 
 const routes = read('src/App.jsx');
@@ -28,6 +35,7 @@ const payroll = read('app-modules/pages/admin/Payroll.jsx');
 const vendorMigration = read('supabase/migrations/073_vendor_accounts_payable.sql');
 const payrollMigration = read('supabase/migrations/074_employee_management_payroll_controls.sql');
 const settlementMigration = read('supabase/migrations/075_contractor_payout_settlement_reconciliation.sql');
+const activationMigration = read('supabase/migrations/076_payops_finance_activation_hardening.sql');
 const settlementApi = read('api/admin/payouts/[id]/settle.js');
 const env = read('.env.example');
 
@@ -46,7 +54,7 @@ for (const [path, component] of [
 }
 
 assert.match(env, /VITE_PAYOPS_FINANCE_CORE_ENABLED=false/, 'finance UI must default off for code-first deployment');
-assert.match(env, /migrations 067-075/, 'activation instructions must name the complete migration range');
+assert.match(env, /migrations 067-076/, 'activation instructions must name the complete migration range');
 assert.match(access, /PAYOPS_FINANCE_CORE_ENABLED \? \[[\s\S]*'\/admin\/payables'[\s\S]*'\/admin\/payroll'[\s\S]*'\/admin\/vendor-payments'[\s\S]*'\/admin\/inventory-costs'/, 'all outgoing payment routes must remain inside the fail-closed allow-list branch');
 assert.match(navigation, /W-2 Payroll'[\s\S]*PAYOPS_FINANCE_CORE_ENABLED \? '\/admin\/payroll'/, 'payroll navigation must use the live controlled route only when enabled');
 assert.match(navigation, /Vendor Bills'[\s\S]*PAYOPS_FINANCE_CORE_ENABLED \? '\/admin\/vendor-payments'/, 'vendor navigation must use the live controlled route only when enabled');
@@ -63,6 +71,10 @@ assert.match(contractor, /Reconcile existing settlement evidence/, 'nurse paymen
 assert.match(vendor, /Vendor Payments/, 'vendor and supply payment workflow must be visible');
 assert.match(payroll, /Employee & Management Payroll/, 'employee and management payroll workflow must be visible');
 assert.match(settlementMigration, /reconcile_contractor_payout_settlement/, 'nurse payouts need a final settlement RPC');
+assert.match(activationMigration, /validate constraint payroll_runs_paid_evidence_check/i, 'activation must validate canonical PAID evidence');
+assert.match(activationMigration, /validate constraint payroll_runs_cancel_control_check/i, 'activation must validate cancellation controls');
+assert.match(activationMigration, /paid_provider_payload_checksum is null/i, 'activation must reject a NULL PAID checksum');
+assert.match(activationMigration, /cancel_reason_code is null/i, 'activation must reject a NULL cancellation reason');
 assert.match(settlementApi, /accountant_controller[\s\S]*requireAal2: true/, 'nurse settlement must require an AAL2 accountant/controller');
 assert.doesNotMatch(settlementApi, /status\s*:\s*['"]SETTLED['"]|fetch\(|axios|mercury\.com/i, 'nurse settlement API must not write paid or call Mercury');
 for (const [name, migration] of [['vendor', vendorMigration], ['payroll', payrollMigration], ['nurse', settlementMigration]]) {

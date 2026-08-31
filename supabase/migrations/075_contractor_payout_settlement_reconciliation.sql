@@ -25,7 +25,7 @@ begin
        where attrelid = 'public.bank_statement_items'::regclass
          and attname = 'normalized_direction' and not attisdropped
      )
-     or to_regprocedure('digest(text,text)') is null then
+     or to_regprocedure('extensions.digest(text,text)') is null then
     raise exception using errcode = 'P0001', message = 'contractor_settlement_prerequisites_missing';
   end if;
 end $$;
@@ -424,7 +424,7 @@ begin
     raise exception using errcode = '22023', message = 'contractor_settlement_request_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'payout_item_id', p_payout_item_id,
     'expected_version', p_expected_version,
@@ -581,7 +581,7 @@ begin
     raise exception using errcode = 'P0001', message = 'bank_statement_capacity_exhausted';
   end if;
 
-  v_evidence_checksum := encode(digest(jsonb_build_object(
+  v_evidence_checksum := encode(extensions.digest(jsonb_build_object(
     'payout_item_id', v_item.id,
     'payable_id', v_payable.id,
     'command_id', v_command.id,

@@ -9,7 +9,7 @@ begin
      or to_regclass('public.earning_dispute_events') is null
      or to_regclass('public.ledger_journals') is null
      or to_regclass('public.ledger_journal_events') is null
-     or to_regprocedure('digest(text,text)') is null then
+     or to_regprocedure('extensions.digest(text,text)') is null then
     raise exception using errcode = 'P0001', message = 'payops_migrations_067_068_required';
   end if;
 end $$;
@@ -175,7 +175,7 @@ begin
   ) values (
     p_tenant_id, p_actor_profile_id, 'finance_role_assigned',
     'finance_role_assignments', v_assignment.id, false,
-    encode(digest(jsonb_build_object(
+    encode(extensions.digest(jsonb_build_object(
       'profile_id', p_target_profile_id, 'finance_role', p_finance_role,
       'effective_at', p_effective_at, 'expires_at', p_expires_at,
       'assignment_key', p_assignment_key
@@ -223,7 +223,7 @@ begin
   ) then
     raise exception using errcode = '42501', message = 'finance_role_admin_required';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'assignment_id', p_assignment_id,
     'expected_version', p_expected_version, 'actor_profile_id', p_actor_profile_id,
     'reason_code', p_reason_code
@@ -313,7 +313,7 @@ begin
   ) then
     raise exception using errcode = '42501', message = 'nurse_pay_access_required';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'worker_profile_id', p_worker_profile_id,
     'earning_event_id', p_earning_event_id,
     'expected_earning_version', p_expected_earning_version,
@@ -620,7 +620,7 @@ begin
     raise exception using errcode = '22023', message = 'ledger_journal_request_invalid';
   end if;
   v_period_key := to_char(p_posting_date, 'YYYY-MM');
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'actor_profile_id', p_actor_profile_id,
     'legal_entity_id', p_legal_entity_id, 'chart_version_id', p_chart_version_id,
     'source_type', p_source_type, 'source_id', p_source_id,
@@ -777,7 +777,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'ledger_post_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'journal_id', p_journal_id,
     'expected_version', p_expected_version, 'actor_profile_id', p_actor_profile_id,
     'reason_code', p_reason_code
@@ -883,8 +883,8 @@ begin
     set status = 'REVERSED', reversed_by_journal_id = v_journal.id, version = version + 1
     where tenant_id = p_tenant_id and id = v_original.id and status = 'POSTED'
     returning * into v_original;
-    v_original_event_key := encode(digest((p_idempotency_key || ':original')::text, 'sha256'), 'hex');
-    v_original_request_hash := encode(digest(jsonb_build_object(
+    v_original_event_key := encode(extensions.digest((p_idempotency_key || ':original')::text, 'sha256'), 'hex');
+    v_original_request_hash := encode(extensions.digest(jsonb_build_object(
       'original_journal_id', v_original.id, 'reversal_journal_id', v_journal.id,
       'actor_profile_id', p_actor_profile_id
     )::text, 'sha256'), 'hex');
@@ -947,7 +947,7 @@ begin
     raise exception using errcode = '22023', message = 'ledger_reversal_request_invalid';
   end if;
   v_period_key := to_char(p_posting_date, 'YYYY-MM');
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'original_journal_id', p_original_journal_id,
     'posting_date', p_posting_date, 'actor_profile_id', p_actor_profile_id,
     'reason_code', p_reason_code
@@ -990,7 +990,7 @@ begin
   ) values (
     p_tenant_id, v_original.legal_entity_id, v_original.chart_version_id,
     'LEDGER_REVERSAL', v_original.id, v_original.version,
-    encode(digest((v_original.source_hash || ':' || p_reason_code)::text, 'sha256'), 'hex'),
+    encode(extensions.digest((v_original.source_hash || ':' || p_reason_code)::text, 'sha256'), 'hex'),
     p_idempotency_key, v_request_hash, p_posting_date, v_period_key,
     v_original.currency, 'DRAFT', v_original.total_credit_cents,
     v_original.total_debit_cents, p_actor_profile_id, v_original.id
