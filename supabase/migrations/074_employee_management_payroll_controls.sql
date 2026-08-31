@@ -26,7 +26,7 @@ begin
      or to_regprocedure('app_private.assert_payops_actor_role(uuid,uuid,text[])') is null
      or to_regprocedure('app_private.lock_payops_idempotency(uuid,text,text)') is null
      or to_regprocedure('app_private.lock_payops_aggregate(uuid,text,uuid)') is null
-     or to_regprocedure('digest(text,text)') is null then
+     or to_regprocedure('extensions.digest(text,text)') is null then
     raise exception using errcode = 'P0001', message = 'payroll_control_prerequisites_missing';
   end if;
 end $$;
@@ -89,7 +89,9 @@ begin
   if not exists (select 1 from pg_constraint where conrelid = 'public.payroll_profiles'::regclass and conname = 'payroll_profiles_readiness_evidence_check') then
     alter table public.payroll_profiles add constraint payroll_profiles_readiness_evidence_check check (
       (readiness_evidence_ref is null and readiness_evidence_checksum is null)
-      or (readiness_evidence_ref ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{2,199}$'
+      or (readiness_evidence_ref is not null
+        and readiness_evidence_checksum is not null
+        and readiness_evidence_ref ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{2,199}$'
         and readiness_evidence_checksum ~ '^[0-9a-f]{64}$')
     );
   end if;
@@ -143,6 +145,7 @@ begin
         last_reconciliation_event_id is not null
         and last_bank_statement_item_id is not null
         and last_reconciliation_match_id is not null
+        and paid_provider_payload_checksum is not null
         and paid_provider_payload_checksum ~ '^[0-9a-f]{64}$'
         and paid_controller_profile_id is not null
         and paid_evidence_recorded_at is not null
@@ -165,19 +168,23 @@ begin
   if not exists (select 1 from pg_constraint where conrelid = 'public.payroll_events'::regclass and conname = 'payroll_events_control_request_check') then
     alter table public.payroll_events add constraint payroll_events_control_request_check check (
       (idempotency_key is null and request_hash is null)
-      or (idempotency_key ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$'
+      or (idempotency_key is not null
+        and request_hash is not null
+        and idempotency_key ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$'
         and request_hash ~ '^[0-9a-f]{64}$')
     );
   end if;
   if not exists (select 1 from pg_constraint where conrelid = 'public.payroll_runs'::regclass and conname = 'payroll_runs_hold_control_check') then
     alter table public.payroll_runs add constraint payroll_runs_hold_control_check check (
-      (status = 'HELD' and hold_code ~ '^[A-Z0-9_]{3,100}$' and hold_owner_profile_id is not null)
+      (status = 'HELD' and hold_code is not null
+        and hold_code ~ '^[A-Z0-9_]{3,100}$' and hold_owner_profile_id is not null)
       or status <> 'HELD'
     );
   end if;
   if not exists (select 1 from pg_constraint where conrelid = 'public.payroll_runs'::regclass and conname = 'payroll_runs_cancel_control_check') then
     alter table public.payroll_runs add constraint payroll_runs_cancel_control_check check (
       (status = 'CANCELLED' and cancelled_by is not null and cancelled_at is not null
+        and cancel_reason_code is not null
         and cancel_reason_code ~ '^[A-Z0-9_]{3,100}$')
       or status <> 'CANCELLED'
     ) not valid;
@@ -233,7 +240,7 @@ language sql
 immutable
 strict
 set search_path = public, pg_temp
-as $$ select encode(digest(p_payload::text, 'sha256'), 'hex') $$;
+as $$ select encode(extensions.digest(p_payload::text, 'sha256'), 'hex') $$;
 
 revoke all on function app_private.payroll_control_hash(jsonb)
   from public, anon, authenticated, service_role;

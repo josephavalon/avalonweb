@@ -13,7 +13,7 @@ begin
      or to_regclass('public.provider_profiles') is null
      or to_regclass('public.audit_events') is null
      or to_regprocedure('app_private.prevent_os_append_only_mutation()') is null
-     or to_regprocedure('digest(text,text)') is null then
+     or to_regprocedure('extensions.digest(text,text)') is null then
     raise exception using errcode = 'P0001', message = 'avalon_os_inventory_migration_required';
   end if;
 end $$;
@@ -240,7 +240,7 @@ select
   'Unassigned inventory',
   null,
   'inventory:legacy-unassigned:v1',
-  encode(digest(jsonb_build_object(
+  encode(extensions.digest(jsonb_build_object(
     'tenant_id', actor.tenant_id,
     'location_type', 'warehouse',
     'location_code', 'LEGACY_UNASSIGNED',
@@ -269,7 +269,7 @@ begin
         or location.nurse_profile_id is not null
         or location.status <> 'active'
         or location.request_idempotency_key <> 'inventory:legacy-unassigned:v1'
-        or location.request_hash <> encode(digest(jsonb_build_object(
+        or location.request_hash <> encode(extensions.digest(jsonb_build_object(
           'tenant_id', movement.tenant_id,
           'location_type', 'warehouse',
           'location_code', 'LEGACY_UNASSIGNED',
@@ -480,7 +480,7 @@ begin
       raise exception using errcode = 'P0001', message = 'inventory_location_required';
     end if;
 
-    v_compat_hash := encode(digest(jsonb_build_object(
+    v_compat_hash := encode(extensions.digest(jsonb_build_object(
       'tenant_id', new.tenant_id,
       'location_type', 'warehouse',
       'location_code', 'LEGACY_UNASSIGNED',
@@ -976,7 +976,7 @@ begin
     raise exception using errcode = 'P0001', message = 'inventory_par_context_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'location_id', p_location_id,
@@ -1111,7 +1111,7 @@ begin
      or (p_location_type = 'nurse_kit') <> (p_nurse_profile_id is not null) then
     raise exception using errcode = '22023', message = 'inventory_location_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'location_type', p_location_type,
@@ -1337,7 +1337,7 @@ begin
   end if;
   v_quantity_delta := case when v_is_gain then p_quantity else -p_quantity end;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'location_id', p_location_id,
@@ -1578,7 +1578,7 @@ begin
     raise exception using errcode = '22023', message = 'inventory_transfer_request_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'from_location_id', p_from_location_id,
@@ -1794,7 +1794,7 @@ begin
     raise exception using errcode = '42501', message = 'nurse_kit_access_required';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'nurse_profile_id', p_nurse_profile_id,
     'location_id', p_location_id,
@@ -1956,7 +1956,7 @@ begin
   ) then
     raise exception using errcode = '42501', message = 'nurse_kit_access_required';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'nurse_profile_id', p_nurse_profile_id,
     'location_id', p_location_id, 'reason_code', p_reason_code, 'lines', p_lines
   )::text, 'sha256'), 'hex');
@@ -2132,7 +2132,7 @@ begin
     raise exception using errcode = '22023', message = 'inventory_restock_fulfillment_context_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'request_id', p_request_id,
@@ -2352,7 +2352,7 @@ begin
     raise exception using errcode = '22023', message = 'inventory_restock_fulfill_request_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'request_id', p_request_id,
@@ -2361,7 +2361,7 @@ begin
     'lot_id', p_lot_id,
     'fulfillment_reference', v_fulfillment_reference
   )::text, 'sha256'), 'hex');
-  v_child_key_hash := encode(digest(p_idempotency_key, 'sha256'), 'hex');
+  v_child_key_hash := encode(extensions.digest(p_idempotency_key, 'sha256'), 'hex');
   v_transfer_key := 'restock:fulfill:transfer:' || v_child_key_hash;
   v_transition_key := 'restock:fulfill:transition:' || v_child_key_hash;
 
@@ -2516,7 +2516,7 @@ begin
   select coalesce(array_agg(trim(tag.value) order by tag.ordinality), array[]::text[])
   into v_tags
   from unnest(coalesce(p_tags, array[]::text[])) with ordinality as tag(value, ordinality);
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'name', v_name,
@@ -2620,7 +2620,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'inventory_vendor_create_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'name', v_name,
@@ -2713,7 +2713,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'inventory_variant_create_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'item_id', p_item_id,
@@ -2816,7 +2816,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'inventory_lot_create_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'item_id', p_item_id,
@@ -2935,7 +2935,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'inventory_purchase_order_create_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'vendor_id', p_vendor_id,
@@ -3046,7 +3046,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'inventory_purchase_order_line_create_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'purchase_order_id', p_purchase_order_id,
@@ -3205,7 +3205,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'inventory_purchase_order_receive_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'purchase_order_id', p_purchase_order_id,

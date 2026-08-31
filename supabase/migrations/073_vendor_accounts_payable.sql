@@ -24,7 +24,7 @@ begin
      or to_regprocedure('app_private.lock_payops_idempotency(uuid,text,text)') is null
      or to_regprocedure('app_private.lock_payops_aggregate(uuid,text,uuid)') is null
      or to_regprocedure('app_private.finance_command_checksum(jsonb)') is null
-     or to_regprocedure('digest(text,text)') is null then
+     or to_regprocedure('extensions.digest(text,text)') is null then
     raise exception using errcode = 'P0001', message = 'vendor_ap_prerequisite_migrations_missing';
   end if;
 end $$;
@@ -584,7 +584,7 @@ immutable
 security definer
 set search_path = public, pg_temp
 as $$
-  select encode(digest(jsonb_build_object(
+  select encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'vendor_payment_id', p_vendor_payment_id,
     'vendor_bill_id', p_vendor_bill_id,
@@ -653,12 +653,12 @@ begin
   ) then
     raise exception using errcode = 'P0001', message = 'vendor_or_legal_entity_invalid';
   end if;
-  v_destination_hash := encode(digest(jsonb_build_object(
+  v_destination_hash := encode(extensions.digest(jsonb_build_object(
     'destination_provider', p_destination_provider,
     'provider_recipient_id', nullif(trim(p_provider_recipient_id), ''),
     'destination_masked_label', trim(p_destination_masked_label)
   )::text, 'sha256'), 'hex');
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'actor_profile_id', p_actor_profile_id,
     'inventory_vendor_id', p_inventory_vendor_id, 'legal_entity_id', p_legal_entity_id,
     'legal_name', trim(p_legal_name), 'tax_classification', p_tax_classification,
@@ -753,7 +753,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'vendor_finance_profile_review_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'profile_id', p_vendor_finance_profile_id,
     'expected_version', p_expected_version, 'actor_profile_id', p_actor_profile_id,
     'tax_reporting_status', p_tax_reporting_status, 'w9_status', p_w9_status,
@@ -880,7 +880,7 @@ begin
   ) then
     raise exception using errcode = 'P0001', message = 'vendor_bill_purchase_order_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'actor_profile_id', p_actor_profile_id,
     'profile_id', p_vendor_finance_profile_id, 'purchase_order_id', p_purchase_order_id,
     'bill_number', p_bill_number, 'invoice_date', p_invoice_date, 'due_date', p_due_date,
@@ -989,14 +989,14 @@ begin
      or (p_line_type <> 'INVENTORY' and p_purchase_order_line_id is not null) then
     raise exception using errcode = '22023', message = 'vendor_bill_line_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'bill_id', p_vendor_bill_id,
     'expected_bill_version', p_expected_bill_version, 'actor_profile_id', p_actor_profile_id,
     'purchase_order_line_id', p_purchase_order_line_id, 'inventory_item_id', p_inventory_item_id,
     'line_type', p_line_type, 'line_code', p_line_code, 'quantity', p_quantity,
     'unit_amount_cents', p_unit_amount_cents, 'amount_cents', p_amount_cents
   )::text, 'sha256'), 'hex');
-  v_source_hash := encode(digest((v_request_hash || ':vendor_bill_line')::text, 'sha256'), 'hex');
+  v_source_hash := encode(extensions.digest((v_request_hash || ':vendor_bill_line')::text, 'sha256'), 'hex');
   perform app_private.lock_payops_idempotency(p_tenant_id, 'vendor_bill_line_add', p_idempotency_key);
   select * into v_line from public.vendor_bill_lines line
   where line.tenant_id = p_tenant_id and line.request_idempotency_key = p_idempotency_key;
@@ -1099,7 +1099,7 @@ begin
        and coalesce(p_safe_exception_code, '') !~ '^[A-Z0-9_]{3,100}$') then
     raise exception using errcode = '22023', message = 'vendor_bill_match_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'bill_id', p_vendor_bill_id,
     'expected_bill_version', p_expected_bill_version, 'actor_profile_id', p_actor_profile_id,
     'match_type', p_match_type, 'policy_tolerance_cents', v_policy_tolerance_cents,
@@ -1268,7 +1268,7 @@ begin
       'inventory_lines', 0
     );
   end if;
-  v_evidence_checksum := encode(digest(jsonb_build_object(
+  v_evidence_checksum := encode(extensions.digest(jsonb_build_object(
     'bill_id', v_bill.id, 'bill_version', v_bill.version,
     'match_type', p_match_type, 'match_status', v_match_status,
     'snapshot', v_snapshot, 'request_hash', v_request_hash
@@ -1411,7 +1411,7 @@ begin
     v_profile.destination_snapshot_hash, v_profile.destination_masked_label,
     p_funding_account_ref, trim(p_funding_account_masked_label)
   );
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'vendor_bill_id', v_bill.id,
     'expected_bill_version', p_expected_bill_version, 'actor_profile_id', p_actor_profile_id,
     'funding_account_ref', p_funding_account_ref,
@@ -1506,7 +1506,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'vendor_payment_checker_approval_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'vendor_bill_id', p_vendor_bill_id,
     'vendor_payment_id', p_vendor_payment_id,
     'expected_payment_version', p_expected_payment_version,
@@ -1705,7 +1705,7 @@ begin
     'send_mode', 'approval_queue'
   );
   v_command_checksum := app_private.finance_command_checksum(v_safe_payload);
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'vendor_bill_id', p_vendor_bill_id,
     'vendor_payment_id', p_vendor_payment_id,
     'expected_payment_version', p_expected_payment_version,
@@ -1800,7 +1800,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'vendor_bill_hold_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'bill_id', p_vendor_bill_id,
     'expected_bill_version', p_expected_bill_version, 'actor_profile_id', p_actor_profile_id,
     'hold', p_hold, 'reason_code', p_reason_code
@@ -1939,7 +1939,7 @@ begin
      or coalesce(p_idempotency_key, '') !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,199}$' then
     raise exception using errcode = '22023', message = 'vendor_bill_cancel_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'bill_id', p_vendor_bill_id,
     'expected_bill_version', p_expected_bill_version,
     'actor_profile_id', p_actor_profile_id, 'reason_code', p_reason_code
@@ -2062,7 +2062,7 @@ begin
      or (p_evidence_source = 'CONTROLLED_MANUAL' and p_finance_integration_event_id is not null) then
     raise exception using errcode = '22023', message = 'vendor_payment_settlement_request_invalid';
   end if;
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id, 'vendor_bill_id', p_vendor_bill_id,
     'vendor_payment_id', p_vendor_payment_id,
     'expected_payment_version', p_expected_payment_version,
@@ -2159,7 +2159,7 @@ begin
   if not found then
     raise exception using errcode = 'P0001', message = 'vendor_payment_bank_evidence_mismatch';
   end if;
-  v_evidence_checksum := encode(digest(jsonb_build_object(
+  v_evidence_checksum := encode(extensions.digest(jsonb_build_object(
     'vendor_payment_id', v_payment.id,
     'vendor_bill_id', v_payment.vendor_bill_id,
     'evidence_source', p_evidence_source,

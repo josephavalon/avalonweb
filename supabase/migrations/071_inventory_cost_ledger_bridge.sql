@@ -16,7 +16,7 @@ begin
      or to_regclass('public.os_purchase_orders') is null
      or to_regclass('public.ledger_journals') is null
      or to_regclass('public.audit_events') is null
-     or to_regprocedure('digest(text,text)') is null
+     or to_regprocedure('extensions.digest(text,text)') is null
      or to_regprocedure('public.prepare_ledger_journal(uuid,uuid,uuid,uuid,text,uuid,integer,text,date,text,jsonb,text)') is null
      or to_regprocedure('app_private.assert_payops_actor_role(uuid,uuid,text[])') is null then
     raise exception using errcode = 'P0001', message = 'inventory_and_payops_migrations_required';
@@ -200,7 +200,7 @@ begin
     raise exception using errcode = '22023', message = 'inventory_cost_request_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'actor_profile_id', p_actor_profile_id,
     'stock_transaction_id', p_stock_transaction_id,
@@ -398,7 +398,7 @@ begin
     end if;
   end if;
 
-  v_source_hash := encode(digest(jsonb_build_object(
+  v_source_hash := encode(extensions.digest(jsonb_build_object(
     'stock_transaction_id', v_transaction.id,
     'inventory_item_id', v_transaction.item_id,
     'inventory_variant_id', v_effective_variant_id,

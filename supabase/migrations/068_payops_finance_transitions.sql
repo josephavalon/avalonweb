@@ -9,7 +9,7 @@ begin
      or to_regclass('public.engagement_decisions') is null
      or to_regclass('public.finance_role_assignments') is null
      or to_regclass('public.audit_events') is null
-     or to_regprocedure('digest(text,text)') is null then
+     or to_regprocedure('extensions.digest(text,text)') is null then
     raise exception using errcode = 'P0001', message = 'migration_067_required';
   end if;
 end $$;
@@ -143,7 +143,7 @@ begin
     raise exception using errcode = '22023', message = 'payable_request_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'invoice_id', p_invoice_id,
     'invoice_version', p_expected_invoice_version,
@@ -268,7 +268,7 @@ begin
     v_hold_owner := coalesce(v_hold_owner, p_actor_profile_id);
   end if;
 
-  v_calculation_hash := encode(digest(jsonb_build_object(
+  v_calculation_hash := encode(extensions.digest(jsonb_build_object(
     'invoice_id', v_invoice.id,
     'invoice_version', v_invoice.version,
     'request_hash', v_invoice.request_hash,
@@ -317,7 +317,7 @@ begin
     ) values (
       p_tenant_id, v_payable.id, 'compensation', v_invoice.wages_cents,
       v_invoice.currency,
-      encode(digest((v_calculation_hash || ':compensation')::text, 'sha256'), 'hex')
+      encode(extensions.digest((v_calculation_hash || ':compensation')::text, 'sha256'), 'hex')
     );
   end if;
   if v_invoice.reimbursements_cents > 0 then
@@ -326,7 +326,7 @@ begin
     ) values (
       p_tenant_id, v_payable.id, 'reimbursement', v_invoice.reimbursements_cents,
       v_invoice.currency,
-      encode(digest((v_calculation_hash || ':reimbursement')::text, 'sha256'), 'hex')
+      encode(extensions.digest((v_calculation_hash || ':reimbursement')::text, 'sha256'), 'hex')
     );
   end if;
 
@@ -342,7 +342,7 @@ begin
   ) values (
     p_tenant_id, p_actor_profile_id, 'contractor_payable_created', 'payables', v_payable.id,
     false,
-    encode(digest(jsonb_build_object(
+    encode(extensions.digest(jsonb_build_object(
       'invoice_id', v_invoice.id,
       'invoice_version', v_invoice.version,
       'calculation_hash', v_calculation_hash,
@@ -407,7 +407,7 @@ begin
     raise exception using errcode = '22023', message = 'payable_approval_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'payable_id', p_payable_id,
     'expected_version', p_expected_version,
@@ -545,7 +545,7 @@ begin
   ) values (
     p_tenant_id, p_actor_profile_id, 'contractor_payable_approved', 'payables', p_payable_id,
     false,
-    encode(digest(jsonb_build_object(
+    encode(extensions.digest(jsonb_build_object(
       'payable_version', v_payable.version,
       'calculation_hash', v_payable.calculation_hash,
       'reason_code', p_reason_code
@@ -596,7 +596,7 @@ begin
     raise exception using errcode = '22023', message = 'payable_hold_invalid';
   end if;
 
-  v_request_hash := encode(digest(jsonb_build_object(
+  v_request_hash := encode(extensions.digest(jsonb_build_object(
     'tenant_id', p_tenant_id,
     'payable_id', p_payable_id,
     'expected_version', p_expected_version,

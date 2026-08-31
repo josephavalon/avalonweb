@@ -188,7 +188,7 @@ includesAll(settle, [
   "allocated.match_status = 'APPROVED'", 'for update',
   "'command_request_checksum', v_command.request_checksum", "'bank_payload_checksum', v_bank.payload_checksum",
   "'bank_provider_account_id', v_bank.provider_account_id", "'bank_normalized_direction', v_bank.normalized_direction",
-  "v_integration_event.payload_checksum", 'v_evidence_checksum := encode(digest',
+  "v_integration_event.payload_checksum", 'v_evidence_checksum := encode(extensions.digest',
   'insert into public.reconciliation_matches', "'APPROVED'", "'vendor_ap_v1_exact'",
   'insert into public.vendor_payment_evidence', "set status = 'SETTLED'",
 ], 'controlled settlement and reconciliation');
