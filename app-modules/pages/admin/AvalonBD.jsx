@@ -674,7 +674,8 @@ function TasksView({ tasks, onToggle }) {
       <section>
         <SectionHeader title="Open tasks" meta={`${open.length} remaining`} />
         <div>{open.map(render)}</div>
-        {open.length === 0 && done.length === 0 ? <EmptyRows>No tasks are recorded yet. Use New to create the first task.</EmptyRows> : null}
+        {tasks.length === 0 ? <EmptyRows>No tasks are recorded yet. Use New to create the first task.</EmptyRows> : null}
+        {tasks.length > 0 && open.length === 0 && done.length === 0 ? <EmptyRows>No active tasks. Cancelled tasks are hidden from the action queue.</EmptyRows> : null}
         {done.length ? <><div className="mt-7"><SectionHeader title="Completed" meta={`${done.length}`} /></div><div>{done.map(render)}</div></> : null}
       </section>
       <aside className="border-l border-stone-200 pl-0 xl:pl-6">

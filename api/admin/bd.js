@@ -1107,6 +1107,7 @@ export default async function handler(req, res) {
       const messages = {
         bd_person_company_inactive: 'Selected company is not an active Avalon BD company.',
         bd_company_archive_active_people: 'Archive blocked because active people still reference this company. Unlink or archive those people first.',
+        bd_company_race_read_committed_required: 'This protected company update requires the standard database isolation mode. Retry the request.',
       };
       if (messages[code]) return res.status(409).json({ error: messages[code], code });
     }

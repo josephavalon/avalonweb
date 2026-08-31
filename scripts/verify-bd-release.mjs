@@ -51,7 +51,24 @@ function loopTables(marker) {
 
 const beginAt = migration.indexOf('\nbegin;');
 const firstWriteAt = migration.indexOf('create table public.bd_companies');
+const migrationFinalPostflightAt = migration.lastIndexOf('\ndo $$\n');
+const migrationFinalPostflight = migration.slice(migrationFinalPostflightAt + 1);
+assert.equal((migration.match(/\bbegin\s*;/gi) || []).length, 1,
+  'migration 064 must contain exactly one transaction BEGIN');
+assert.equal((migration.match(/\bcommit\s*;/gi) || []).length, 1,
+  'migration 064 must contain exactly one transaction COMMIT');
 assert.ok(beginAt >= 0 && beginAt < firstWriteAt, 'migration must begin one transaction before schema writes');
+assert.equal((migration.match(/set transaction isolation level read committed;/gi) || []).length, 1,
+  'migration 064 must pin exactly one READ COMMITTED transaction');
+assert.match(migration, /\nbegin;\nset transaction isolation level read committed;\n/,
+  'migration 064 must pin READ COMMITTED immediately after BEGIN');
+assert.ok(migrationFinalPostflightAt >= 0,
+  'migration 064 must retain its final catalog postflight');
+assert.equal(
+  createHash('sha256').update(migrationFinalPostflight).digest('hex'),
+  'c3f0face999ff0b41261d91aa3105e3a92e5122106523b8250f8f379fbc204bc',
+  'migration 064 final postflight, reviewed comments, and COMMIT must remain an exact mutation-free release seal',
+);
 assert.match(migration.trim(), /commit;$/);
 assert.match(migration, /to_regclass\('public\.tenants'\)/);
 assert.match(migration, /to_regclass\('public\.profiles'\)/);
@@ -132,8 +149,19 @@ assert.match(migration, /revoke all on public\.%I from public, anon, authenticat
 assert.deepEqual(loopTables('alter table public.%I enable row level security'), expectedTables,
   'RLS and full privilege revocation must cover exactly all 15 BD tables');
 const normalizeSql = (statement) => statement.replace(/\s+/g, ' ').trim().toLowerCase();
-assert.doesNotMatch(migration, /execute\s+format\(\s*'grant\b/i,
+assert.doesNotMatch(migration, /\bexecute\s+(?:format\s*\(\s*)?['$][^;]*\bgrant\b/i,
   'dynamic GRANT statements are not permitted in the standalone migration');
+const migrationDynamicLines = migration.split('\n')
+  .map((line) => normalizeSql(line))
+  .filter((line) => /^execute\s+/.test(line))
+  .sort();
+assert.deepEqual(migrationDynamicLines, [
+  "execute format('alter table public.%i enable row level security', tbl);",
+  "execute format('create trigger %i before update on public.%i for each row execute function public.touch_updated_at()', 'trg_' || tbl || '_updated_at', tbl);",
+  "execute format('revoke all on public.%i from public, anon, authenticated, service_role', tbl);",
+].sort(), 'migration 064 dynamic SQL must be limited to reviewed RLS, revoke, and updated-at statements');
+assert.equal((migration.match(/\bexecute\b/gi) || []).length, 8,
+  'migration 064 cannot hide an additional dynamic EXECUTE statement');
 const topLevelGrants = [...migration.matchAll(/(?:^|\n)\s*grant\s+[\s\S]*?;/gi)]
   .map((match) => normalizeSql(match[0]));
 const expectedTopLevelGrants = [
@@ -172,15 +200,36 @@ assert.doesNotMatch(migration, /grant\s+[^;]*(update|delete)[^;]*public\.bd_agen
 const reconciliationBeginAt = activityAclReconciliation.indexOf('\nbegin;');
 const reconciliationRevokeAt = activityAclReconciliation.indexOf('revoke update on table public.bd_activities from service_role;');
 const reconciliationPostflightAt = activityAclReconciliation.indexOf('-- Verify the exact table and column privilege boundary');
+const reconciliationPostflight = activityAclReconciliation.slice(reconciliationPostflightAt);
 assert.equal((activityAclReconciliation.match(/\bbegin\s*;/gi) || []).length, 1,
   'migration 065 must contain exactly one transaction BEGIN');
 assert.equal((activityAclReconciliation.match(/\bcommit\s*;/gi) || []).length, 1,
   'migration 065 must contain exactly one transaction COMMIT');
 assert.ok(reconciliationBeginAt >= 0 && reconciliationBeginAt < reconciliationRevokeAt,
   'migration 065 must begin one transaction before its ACL mutation');
+assert.equal((activityAclReconciliation.match(/set transaction isolation level read committed;/gi) || []).length, 1,
+  'migration 065 must pin exactly one READ COMMITTED transaction');
+assert.match(activityAclReconciliation, /\nbegin;\nset transaction isolation level read committed;\n/,
+  'migration 065 must pin READ COMMITTED immediately after BEGIN');
 assert.ok(reconciliationPostflightAt > reconciliationRevokeAt,
   'migration 065 must verify the reconciled table and column ACL after the revoke');
+assert.equal(
+  createHash('sha256').update(reconciliationPostflight).digest('hex'),
+  '21dc8b490e7a998967c5e44a9c5d851ce4722e296cf3630c065f22d553d019eb',
+  'migration 065 final postflight and COMMIT must remain an exact mutation-free release seal',
+);
 assert.match(activityAclReconciliation.trim(), /commit;$/);
+assert.equal((reconciliationPostflight.match(/(?:^|\n)do \$\$/g) || []).length, 1,
+  'migration 065 must have exactly one final postflight block');
+assert.equal((reconciliationPostflight.match(/(?:^|\n)end \$\$;/g) || []).length, 1,
+  'migration 065 final postflight must close exactly once');
+const reconciliationPostflightEndAt = reconciliationPostflight.lastIndexOf('\nend $$;');
+assert.ok(reconciliationPostflightEndAt >= 0, 'migration 065 final postflight must close before commit');
+assert.equal(
+  reconciliationPostflight.slice(reconciliationPostflightEndAt).trim(),
+  'end $$;\n\ncommit;',
+  'migration 065 must commit immediately after the final postflight with no executable statement in between',
+);
 const reconciliationRevokes = [...activityAclReconciliation.matchAll(/(?:^|\n)\s*revoke\s+[\s\S]*?;/gi)]
   .map((match) => normalizeSql(match[0]))
   .sort();
@@ -191,18 +240,20 @@ assert.deepEqual(reconciliationRevokes, [
 ].sort(), 'migration 065 must contain only the reviewed revokes');
 assert.doesNotMatch(
   activityAclReconciliation,
-  /\bgrant\s+(?:all|select|insert|update|delete|truncate|references|trigger|execute|usage)\b/i,
-  'migration 065 must never broaden privileges, including through same-line or dynamic SQL',
+  /\bgrant\b/i,
+  'migration 065 must never contain a privilege or role-membership GRANT',
 );
 assert.doesNotMatch(activityAclReconciliation, /execute\s+format\s*\(/i,
   'migration 065 must not hide ACL mutations in formatted SQL');
 const reconciliationExecuteStatements = [...activityAclReconciliation.matchAll(/(?:^|;)\s*execute\s+/gim)];
 assert.equal(reconciliationExecuteStatements.length, 4,
   'migration 065 dynamic SQL must be limited to two reviewed functions and two reviewed triggers');
+assert.equal((activityAclReconciliation.match(/\bexecute\b/gi) || []).length, 8,
+  'migration 065 cannot hide an additional dynamic EXECUTE statement');
 for (const expectedDynamicDdl of [
   /execute\s+\$ddl\$\s*create function public\.bd_people_require_active_company\(\)/i,
   /execute\s+\$ddl\$\s*create function public\.bd_companies_guard_archive_people\(\)/i,
-  /execute\s+'create trigger trg_bd_people_active_company before insert or update of company_id, tenant_id on public\.bd_people for each row execute function public\.bd_people_require_active_company\(\)'/i,
+  /execute\s+'create trigger trg_bd_people_active_company before insert or update of company_id, tenant_id, deleted_at on public\.bd_people for each row execute function public\.bd_people_require_active_company\(\)'/i,
   /execute\s+'create trigger trg_bd_companies_archive_people before update of deleted_at on public\.bd_companies for each row execute function public\.bd_companies_guard_archive_people\(\)'/i,
 ]) {
   assert.equal((activityAclReconciliation.match(expectedDynamicDdl) || []).length, 1,
@@ -210,8 +261,14 @@ for (const expectedDynamicDdl of [
 }
 assert.doesNotMatch(activityAclReconciliation, /table_definition\.relkind in \(/,
   'migration 065 cannot accept partitioned tables');
-assert.ok((activityAclReconciliation.match(/table_definition\.relkind = 'r'/g) || []).length >= 4,
+assert.ok((activityAclReconciliation.match(/table_definition\.relkind = 'r'/g) || []).length >= 6,
   'migration 065 must require ordinary heap tables in preflight and postflight');
+assert.ok((activityAclReconciliation.match(/table_definition\.relpersistence = 'p'/g) || []).length >= 6,
+  'migration 065 must require permanent heap tables in preflight and postflight');
+assert.ok((activityAclReconciliation.match(/not table_definition\.relispartition/g) || []).length >= 6,
+  'migration 065 must reject leaf partitions in preflight and postflight');
+assert.ok((activityAclReconciliation.match(/from pg_inherits table_lineage/g) || []).length >= 6,
+  'migration 065 must reject both inheritance parents and children');
 const activitiesCatalogLookups = [...activityAclReconciliation.matchAll(
   /select\s+table_definition\.oid[\s\S]*?into\s+activities_oid[\s\S]*?;/gi,
 )];
@@ -221,6 +278,23 @@ for (const lookup of activitiesCatalogLookups) {
   assert.match(lookup[0], /table_namespace\.nspname = 'public'/);
   assert.match(lookup[0], /table_definition\.relname = 'bd_activities'/);
   assert.match(lookup[0], /table_definition\.relkind = 'r'/);
+  assert.match(lookup[0], /table_definition\.relpersistence = 'p'/);
+  assert.match(lookup[0], /not table_definition\.relispartition/);
+  assert.match(lookup[0], /table_lineage\.inhrelid = table_definition\.oid[\s\S]*table_lineage\.inhparent = table_definition\.oid/);
+}
+for (const tableName of ['bd_people', 'bd_companies']) {
+  const lookups = [...activityAclReconciliation.matchAll(new RegExp(
+    `select\\s+table_definition\\.oid[\\s\\S]*?into\\s+${tableName === 'bd_people' ? 'people' : 'companies'}_oid[\\s\\S]*?;`,
+    'gi',
+  ))];
+  assert.equal(lookups.length, 2, `migration 065 must resolve public.${tableName} before and after reconciliation`);
+  for (const lookup of lookups) {
+    assert.match(lookup[0], new RegExp(`table_definition\\.relname = '${tableName}'`));
+    assert.match(lookup[0], /table_definition\.relkind = 'r'/);
+    assert.match(lookup[0], /table_definition\.relpersistence = 'p'/);
+    assert.match(lookup[0], /not table_definition\.relispartition/);
+    assert.match(lookup[0], /table_lineage\.inhrelid = table_definition\.oid[\s\S]*table_lineage\.inhparent = table_definition\.oid/);
+  }
 }
 for (const role of ['anon', 'authenticated', 'service_role']) {
   assert.ok(activityAclReconciliation.includes(`to_regrole('${role}')`),
@@ -249,8 +323,8 @@ function triggerFunctionBody(sql, functionName) {
   return canonicalBody(match[1]);
 }
 const raceFunctions = [
-  ['bd_people_require_active_company', 'd1aced673b084dbeed85e8df798047a0'],
-  ['bd_companies_guard_archive_people', 'fc8d17b3b6ae68d9ba9fdfc3e15a2567'],
+  ['bd_people_require_active_company', '50c5a24940b092a1134945935a4f75e8'],
+  ['bd_companies_guard_archive_people', 'ea209b74da6a02a8657b2f51b6c922ac'],
 ];
 for (const [functionName, expectedHash] of raceFunctions) {
   const freshBody = triggerFunctionBody(migration, functionName);
@@ -267,18 +341,55 @@ for (const [functionName, expectedHash] of raceFunctions) {
   assert.match(migration, revoke);
   assert.match(activityAclReconciliation, revoke);
 }
+assert.equal((activityAclReconciliation.match(/\)\)\s*=\s*expected_function\.source_md5/g) || []).length, 2,
+  'migration 065 must enforce the reviewed function-source hash before and after reconciliation');
+const expectedTouchHashFinalPredicate = normalizeSql(`
+  and md5(regexp_replace(
+    btrim(function_definition.prosrc, E' \\t\\n\\r'),
+    '[[:space:]]+', ' ', 'g'
+  )) = '0146fd32790ffdead7f8c61f46267c34'
+) then
+`);
+for (const sql of [migration, activityAclReconciliation]) {
+  assert.equal(normalizeSql(sql).split(expectedTouchHashFinalPredicate).length - 1, 2,
+    'touch_updated_at must finish both catalog predicates with the exact reviewed equality hash check');
+}
+assert.match(triggerFunctionBody(migration, 'bd_people_require_active_company'), /new\.deleted_at is not null[\s\S]*new\.company_id is null[\s\S]*return new/i);
 assert.match(triggerFunctionBody(migration, 'bd_people_require_active_company'), /tenant_id = new\.tenant_id[\s\S]*id = new\.company_id[\s\S]*deleted_at is null[\s\S]*for share[\s\S]*bd_person_company_inactive/i);
 assert.match(triggerFunctionBody(migration, 'bd_companies_guard_archive_people'), /old\.deleted_at is null[\s\S]*new\.deleted_at is not null[\s\S]*person_record\.tenant_id = old\.tenant_id[\s\S]*person_record\.company_id = old\.id[\s\S]*person_record\.deleted_at is null[\s\S]*bd_company_archive_active_people/i);
+for (const functionName of raceFunctions.map(([name]) => name)) {
+  for (const sql of [migration, activityAclReconciliation]) {
+    const body = triggerFunctionBody(sql, functionName);
+    assert.match(body, /current_setting\('transaction_isolation'\) <> 'read committed'/,
+      `${functionName} must fail closed outside READ COMMITTED`);
+    assert.match(body, /bd_company_race_read_committed_required/,
+      `${functionName} must expose the reviewed isolation failure code`);
+  }
+}
 for (const sql of [migration, activityAclReconciliation]) {
-  assert.match(sql, /before insert or update of company_id, tenant_id on public\.bd_people[\s\S]*execute function public\.bd_people_require_active_company\(\)/i);
+  assert.match(sql, /before insert or update of company_id, tenant_id, deleted_at on public\.bd_people[\s\S]*execute function public\.bd_people_require_active_company\(\)/i);
   assert.match(sql, /before update of deleted_at on public\.bd_companies[\s\S]*execute function public\.bd_companies_guard_archive_people\(\)/i);
-  assert.match(sql, /trigger_definition\.tgtype = 23[\s\S]*cardinality\(string_to_array\(btrim\(trigger_definition\.tgattr::text\), ' '\)::smallint\[\]\) = 2[\s\S]*attribute\.attname = 'company_id'[\s\S]*attribute\.attname = 'tenant_id'/);
+  assert.match(sql, /trigger_definition\.tgfoid = function_oid[\s\S]*trigger_definition\.tgtype = 23[\s\S]*cardinality\(string_to_array\(btrim\(trigger_definition\.tgattr::text\), ' '\)::smallint\[\]\) = 3[\s\S]*attribute\.attname = 'company_id'[\s\S]*attribute\.attname = 'tenant_id'[\s\S]*attribute\.attname = 'deleted_at'/);
   assert.match(sql, /trigger_definition\.tgtype = 19[\s\S]*cardinality\(string_to_array\(btrim\(trigger_definition\.tgattr::text\), ' '\)::smallint\[\]\) = 1[\s\S]*attribute\.attname = 'deleted_at'/);
   assert.match(sql, /function_definition\.prosecdef[\s\S]*function_definition\.proconfig = array\['search_path=pg_catalog, pg_temp'\]::text\[\][\s\S]*function_definition\.prosrc/);
   assert.match(sql, /aclexplode\(coalesce\([\s\S]*function_definition\.proacl[\s\S]*expanded_acl\.grantee <> function_definition\.proowner/);
   assert.match(sql, /has_function_privilege\(checked_role, function_oid, 'EXECUTE'\)/);
   assert.match(sql, /person_record\.deleted_at is null[\s\S]*company_record\.deleted_at is not null[\s\S]*bd_active_person_company_violation/);
+  assert.match(sql, /to_regprocedure\('public\.touch_updated_at\(\)'\)[\s\S]*trg_bd_people_updated_at[\s\S]*trg_bd_companies_updated_at/);
+  assert.equal((sql.match(/0146fd32790ffdead7f8c61f46267c34/g) || []).length, 2,
+    'the live touch_updated_at body hash must be pinned before and after the BD schema mutation');
+  assert.match(sql, /function_definition\.proname = 'touch_updated_at'[\s\S]*function_definition\.prorettype = 'trigger'::regtype[\s\S]*function_definition\.pronargs = 0[\s\S]*function_definition\.prokind = 'f'[\s\S]*function_language\.lanname = 'plpgsql'/);
+  assert.match(sql, /not function_definition\.prosecdef[\s\S]*function_definition\.provolatile = 'v'[\s\S]*function_definition\.proparallel = 'u'[\s\S]*not function_definition\.proleakproof[\s\S]*function_definition\.proconfig is null[\s\S]*function_definition\.proacl is null[\s\S]*0146fd32790ffdead7f8c61f46267c34/);
+  assert.match(sql, /\(trigger_definition\.tgtype & 2\) = 2[\s\S]*trg_bd_people_active_company[\s\S]*trg_bd_people_updated_at[\s\S]*trg_bd_companies_archive_people[\s\S]*trg_bd_companies_updated_at[\s\S]*bd_company_race_unreviewed_before_trigger/);
 }
+assert.match(migration, /function_definition\.proowner = to_regrole\(current_user\)/,
+  'fresh migration preflight must require the timestamp trigger to be owned by the migration role');
+assert.match(migration, /function_definition\.proowner = \(select relowner from pg_class where oid = people_oid\)[\s\S]*function_definition\.proowner = \(select relowner from pg_class where oid = companies_oid\)/,
+  'fresh migration postflight must bind the timestamp trigger owner to both guarded tables');
+assert.ok((activityAclReconciliation.match(/function_definition\.proowner = people_owner/g) || []).length >= 2,
+  'reconciliation must bind the timestamp trigger owner to the people table before and after mutation');
+assert.ok((activityAclReconciliation.match(/function_definition\.proowner = companies_owner/g) || []).length >= 2,
+  'reconciliation must bind the timestamp trigger owner to the companies table before and after mutation');
 for (const functionName of raceFunctions.map(([name]) => name)) {
   assert.match(activityAclReconciliation, new RegExp(`if to_regprocedure\\('public\\.${functionName}\\(\\)'\\) is null then[\\s\\S]*create function public\\.${functionName}`),
     `migration 065 must install ${functionName} only when absent`);
@@ -340,6 +451,7 @@ assert.match(updateCoreSource, /config\.objectType === 'person'[\s\S]*await prep
   'updateCoreRecord must execute the tested person-update preparation path');
 assert.match(endpoint, /person_company_invalid/);
 assert.match(endpoint, /bd_company_archive_active_people: 'Archive blocked because active people still reference this company\. Unlink or archive those people first\.'/);
+assert.match(endpoint, /bd_company_race_read_committed_required: 'This protected company update requires the standard database isolation mode\. Retry the request\.'/);
 assert.match(endpoint, /if \(messages\[code\]\) return res\.status\(409\)/,
   'database race guards must map to an operator-actionable 409 response');
 assert.match(endpoint, /\.rpc\('bd_merge_records'/);
@@ -385,6 +497,31 @@ for (const emptyState of [
   'No people match this view.',
   'No tasks are recorded yet.',
 ]) assert.ok(ui.includes(emptyState), `missing truthful empty state: ${emptyState}`);
+assert.match(ui, /tasks\.length === 0 \? <EmptyRows>No tasks are recorded yet\./,
+  'the first-task empty state must be based on all persisted tasks, including cancelled records');
+assert.match(ui, /tasks\.length > 0 && open\.length === 0 && done\.length === 0 \? <EmptyRows>No active tasks\. Cancelled tasks are hidden/,
+  'cancelled-only queues must not claim that no task records exist');
+const hydrateWorkspaceSource = ui.slice(
+  ui.indexOf('function hydrateWorkspace('),
+  ui.indexOf('function deriveCompanyRollups('),
+);
+assert.ok(hydrateWorkspaceSource.startsWith('function hydrateWorkspace('),
+  'the reviewed workspace hydrator must remain present');
+assert.equal(
+  createHash('sha256').update(hydrateWorkspaceSource).digest('hex'),
+  'cbbc91ce9bd2b9ca9dba7b6052b32f3b2b02b4dfab4828bcacf7f658df8afe7f',
+  'workspace hydration must preserve the exact reviewed no-filter task path',
+);
+assert.match(ui, /const normalizedTasks = taskRows\.map\([\s\S]*return \{ companies, people: normalizedPeople, opportunities: normalizedOpportunities, tasks: normalizedTasks \};/,
+  'workspace hydration must preserve every persisted task, including cancelled records');
+assert.match(ui, /fetchBdCollection\('tasks', 'tasks'\),[\s\S]*\.then\(\(\[dashboardPayload, companyRows, peopleRows, opportunityRows, taskRows\]\) =>/,
+  'the raw persisted task collection must remain bound to taskRows');
+assert.match(ui, /const workspace = hydrateWorkspace\(\s*companyRows,\s*peopleRows,\s*opportunityRows,\s*taskRows,\s*\);/,
+  'workspace hydration must receive the unfiltered persisted task collection');
+assert.match(ui, /setTasks\(workspace\.tasks\)/,
+  'the live workspace must retain the complete hydrated task collection');
+assert.match(ui, /view === 'tasks' \? <TasksView tasks=\{tasks\} onToggle=\{toggleTask\} \/> : null/,
+  'TasksView must receive the complete persisted task collection without call-site filtering');
 for (const surface of [app, shell, access]) {
   assert.doesNotMatch(surface, /admin\/robbot3k|AdminRobBot3K|Rob Bot/);
 }

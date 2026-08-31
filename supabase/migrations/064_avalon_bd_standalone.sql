@@ -7,6 +7,7 @@
 -- mutation. Every accepted mutation must be recorded in bd_agent_mutations.
 
 begin;
+set transaction isolation level read committed;
 
 -- Fail before the first schema write if the production foundation differs
 -- from the contract this isolated release was reviewed against.
@@ -21,8 +22,31 @@ begin
   if to_regclass('public.profiles') is null then
     raise exception using errcode = 'P0001', message = 'bd_preflight_profiles_missing';
   end if;
-  if to_regprocedure('public.touch_updated_at()') is null then
-    raise exception using errcode = 'P0001', message = 'bd_preflight_touch_updated_at_missing';
+  if to_regprocedure('public.touch_updated_at()') is null or not exists (
+    select 1
+    from pg_proc function_definition
+    join pg_namespace function_namespace on function_namespace.oid = function_definition.pronamespace
+    join pg_language function_language on function_language.oid = function_definition.prolang
+    where function_definition.oid = to_regprocedure('public.touch_updated_at()')
+      and function_namespace.nspname = 'public'
+      and function_definition.proname = 'touch_updated_at'
+      and function_definition.proowner = to_regrole(current_user)
+      and function_definition.prorettype = 'trigger'::regtype
+      and function_definition.pronargs = 0
+      and function_definition.prokind = 'f'
+      and function_language.lanname = 'plpgsql'
+      and not function_definition.prosecdef
+      and function_definition.provolatile = 'v'
+      and function_definition.proparallel = 'u'
+      and not function_definition.proleakproof
+      and function_definition.proconfig is null
+      and function_definition.proacl is null
+      and md5(regexp_replace(
+        btrim(function_definition.prosrc, E' \t\n\r'),
+        '[[:space:]]+', ' ', 'g'
+      )) = '0146fd32790ffdead7f8c61f46267c34'
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_preflight_touch_updated_at_mismatch';
   end if;
   if to_regprocedure('gen_random_uuid()') is null then
     raise exception using errcode = 'P0001', message = 'bd_preflight_gen_random_uuid_missing';
@@ -660,7 +684,13 @@ security definer
 set search_path = pg_catalog, pg_temp
 as $function$
 begin
-  if new.company_id is null then
+  if current_setting('transaction_isolation') <> 'read committed' then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_company_race_read_committed_required';
+  end if;
+
+  if new.deleted_at is not null or new.company_id is null then
     return new;
   end if;
 
@@ -690,6 +720,12 @@ security definer
 set search_path = pg_catalog, pg_temp
 as $function$
 begin
+  if current_setting('transaction_isolation') <> 'read committed' then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_company_race_read_committed_required';
+  end if;
+
   if old.deleted_at is null
      and new.deleted_at is not null
      and exists (
@@ -732,7 +768,7 @@ begin
 end $$;
 
 create trigger trg_bd_people_active_company
-before insert or update of company_id, tenant_id on public.bd_people
+before insert or update of company_id, tenant_id, deleted_at on public.bd_people
 for each row execute function public.bd_people_require_active_company();
 
 create trigger trg_bd_companies_archive_people
@@ -1148,7 +1184,13 @@ begin
         'bd_people_require_active_company',
         'bd_people',
         $expected$begin
-  if new.company_id is null then
+  if current_setting('transaction_isolation') <> 'read committed' then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_company_race_read_committed_required';
+  end if;
+
+  if new.deleted_at is not null or new.company_id is null then
     return new;
   end if;
 
@@ -1173,6 +1215,12 @@ end;$expected$
         'bd_companies_guard_archive_people',
         'bd_companies',
         $expected$begin
+  if current_setting('transaction_isolation') <> 'read committed' then
+    raise exception using
+      errcode = 'P0001',
+      message = 'bd_company_race_read_committed_required';
+  end if;
+
   if old.deleted_at is null
      and new.deleted_at is not null
      and exists (
@@ -1266,12 +1314,15 @@ end;$expected$
       and trigger_definition.tgconstrrelid = 0
       and not trigger_definition.tgdeferrable
       and not trigger_definition.tginitdeferred
-      and cardinality(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[]) = 2
+      and cardinality(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[]) = 3
       and (select attribute.attnum from pg_attribute attribute
            where attribute.attrelid = people_oid and attribute.attname = 'company_id')
           = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
       and (select attribute.attnum from pg_attribute attribute
            where attribute.attrelid = people_oid and attribute.attname = 'tenant_id')
+          = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
+      and (select attribute.attnum from pg_attribute attribute
+           where attribute.attrelid = people_oid and attribute.attname = 'deleted_at')
           = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
   ) then
     raise exception using errcode = 'P0001', message = 'bd_people_company_trigger_postflight_mismatch';
@@ -1300,6 +1351,92 @@ end;$expected$
           = any(string_to_array(btrim(trigger_definition.tgattr::text), ' ')::smallint[])
   ) then
     raise exception using errcode = 'P0001', message = 'bd_company_archive_trigger_postflight_mismatch';
+  end if;
+
+  function_oid := to_regprocedure('public.touch_updated_at()');
+  if function_oid is null or not exists (
+    select 1
+    from pg_proc function_definition
+    join pg_namespace function_namespace on function_namespace.oid = function_definition.pronamespace
+    join pg_language function_language on function_language.oid = function_definition.prolang
+    where function_definition.oid = function_oid
+      and function_namespace.nspname = 'public'
+      and function_definition.proname = 'touch_updated_at'
+      and function_definition.proowner = (select relowner from pg_class where oid = people_oid)
+      and function_definition.proowner = (select relowner from pg_class where oid = companies_oid)
+      and function_definition.prorettype = 'trigger'::regtype
+      and function_definition.pronargs = 0
+      and function_definition.prokind = 'f'
+      and function_language.lanname = 'plpgsql'
+      and not function_definition.prosecdef
+      and function_definition.provolatile = 'v'
+      and function_definition.proparallel = 'u'
+      and not function_definition.proleakproof
+      and function_definition.proconfig is null
+      and function_definition.proacl is null
+      and md5(regexp_replace(
+        btrim(function_definition.prosrc, E' \t\n\r'),
+        '[[:space:]]+', ' ', 'g'
+      )) = '0146fd32790ffdead7f8c61f46267c34'
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_company_race_touch_updated_at_function_mismatch';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_trigger trigger_definition
+    where trigger_definition.tgrelid = people_oid
+      and trigger_definition.tgname = 'trg_bd_people_updated_at'
+      and not trigger_definition.tgisinternal
+      and trigger_definition.tgenabled = 'O'
+      and trigger_definition.tgfoid = function_oid
+      and trigger_definition.tgtype = 19
+      and trigger_definition.tgqual is null
+      and trigger_definition.tgnargs = 0
+      and octet_length(trigger_definition.tgargs) = 0
+      and trigger_definition.tgconstraint = 0
+      and trigger_definition.tgconstrrelid = 0
+      and not trigger_definition.tgdeferrable
+      and not trigger_definition.tginitdeferred
+      and btrim(trigger_definition.tgattr::text) = ''
+  ) or not exists (
+    select 1
+    from pg_trigger trigger_definition
+    where trigger_definition.tgrelid = companies_oid
+      and trigger_definition.tgname = 'trg_bd_companies_updated_at'
+      and not trigger_definition.tgisinternal
+      and trigger_definition.tgenabled = 'O'
+      and trigger_definition.tgfoid = function_oid
+      and trigger_definition.tgtype = 19
+      and trigger_definition.tgqual is null
+      and trigger_definition.tgnargs = 0
+      and octet_length(trigger_definition.tgargs) = 0
+      and trigger_definition.tgconstraint = 0
+      and trigger_definition.tgconstrrelid = 0
+      and not trigger_definition.tgdeferrable
+      and not trigger_definition.tginitdeferred
+      and btrim(trigger_definition.tgattr::text) = ''
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_company_race_updated_at_trigger_mismatch';
+  end if;
+
+  if exists (
+    select 1
+    from pg_trigger trigger_definition
+    where trigger_definition.tgrelid in (people_oid, companies_oid)
+      and not trigger_definition.tgisinternal
+      and (trigger_definition.tgtype & 2) = 2
+      and not (
+        (trigger_definition.tgrelid = people_oid and trigger_definition.tgname in (
+          'trg_bd_people_active_company', 'trg_bd_people_updated_at'
+        ))
+        or
+        (trigger_definition.tgrelid = companies_oid and trigger_definition.tgname in (
+          'trg_bd_companies_archive_people', 'trg_bd_companies_updated_at'
+        ))
+      )
+  ) then
+    raise exception using errcode = 'P0001', message = 'bd_company_race_unreviewed_before_trigger';
   end if;
 end $$;
 

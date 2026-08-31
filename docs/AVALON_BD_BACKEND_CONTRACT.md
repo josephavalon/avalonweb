@@ -71,7 +71,20 @@ seeds no rows.
 Installations where migration 064 was already applied must also apply
 `065_avalon_bd_activity_acl_reconciliation.sql`. Migration 065 atomically
 removes service-role UPDATE access from `bd_activities` and fails closed unless
-the direct and effective final privileges match the reviewed ACL.
+the direct and effective final privileges match the reviewed ACL. It also
+installs database guards that prevent an active or reactivated person from
+linking to an archived company and prevent a company archive while active
+people still reference it. The reconciliation accepts only permanent,
+standalone heap tables and rejects unreviewed `BEFORE` triggers on the guarded
+company/person tables.
+Because the shared `touch_updated_at()` trigger runs on both guarded tables, its
+live owner, language, security attributes, ACL state, and exact timestamp-only
+body are pinned before and after either migration. Any drift aborts the
+transaction rather than allowing that later trigger to rewrite a protected
+company link or deletion state.
+Both migrations pin `READ COMMITTED`, and the protected company/person trigger
+functions fail closed if a caller attempts those writes under another
+transaction isolation mode.
 
 All 15 tables have RLS enabled. PUBLIC, anonymous, and authenticated roles receive
 no direct table privileges. Profile attribution uses same-tenant composite
