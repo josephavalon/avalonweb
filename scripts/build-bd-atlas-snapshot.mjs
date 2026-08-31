@@ -689,7 +689,7 @@ begin
     where imported.tenant_id = tenant and imported.source = 'regional_opportunity_atlas' and imported.source_snapshot = date '2026-08-29'
       and (imported.expected_value_cents is not null or imported.handoff_status <> 'not_ready'
         or not imported.tags @> array['review-required', 'outreach-blocked']::text[]
-        or imported.created_by <> actor or imported.updated_by <> actor
+        or imported.created_by is distinct from actor or imported.updated_by is distinct from actor
         or imported.created_by_agent_id is not null or imported.updated_by_agent_id is not null
         or (imported.priority, imported.fit_score) not in (('low', 50), ('normal', 70), ('high', 90)))
   ) then
@@ -733,7 +733,7 @@ begin
        or imported.tags is distinct from staged.tags
        or imported.website_url is not null or imported.normalized_domain is not null
        or imported.deleted_at is not null or imported.deleted_by is not null
-       or imported.created_by <> actor or imported.updated_by <> actor
+       or imported.created_by is distinct from actor or imported.updated_by is distinct from actor
        or imported.created_by_agent_id is not null or imported.updated_by_agent_id is not null
        or not imported.tags @> array['review-required', 'outreach-blocked']::text[]
   ) then
