@@ -597,7 +597,7 @@ export default function NurseGuidedShift() {
         <section className="mx-auto max-w-3xl">
           <p className="flex items-center gap-2 rounded-3xl border border-foreground/10 bg-foreground/[0.025] p-6 text-sm"><Loader2 className="h-4 w-4 animate-spin" />Loading persisted guided shift</p>
         </section>
-        <MobileNavBar items={nursePortalNav(shiftId)} columns={5} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
+        <MobileNavBar items={nursePortalNav(shiftId)} columns={nursePortalNav(shiftId).length} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
       </main>
     );
   }
@@ -612,7 +612,7 @@ export default function NurseGuidedShift() {
             description="The authenticated server source could not be reached and no matching sanitized device cache was available. No care step is inferred, and all shift actions remain disabled."
           />
         </section>
-        <MobileNavBar items={nursePortalNav(shiftId)} columns={5} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
+        <MobileNavBar items={nursePortalNav(shiftId)} columns={nursePortalNav(shiftId).length} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
       </main>
     );
   }
@@ -714,7 +714,7 @@ export default function NurseGuidedShift() {
           ) : null}
         </div>
       </section>
-      <MobileNavBar items={nursePortalNav(shiftId)} columns={5} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
+      <MobileNavBar items={nursePortalNav(shiftId)} columns={nursePortalNav(shiftId).length} maxWidth="shift" mobileOnly={false} ariaLabel="Guided nurse shift" />
     </main>
   );
 }

@@ -31,6 +31,7 @@ import {
 import { useAuthStore } from '@/lib/useAuthStore';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
 import { apiGet } from '@/lib/apiClient';
+import { PAYOPS_FINANCE_CORE_ENABLED } from '@/lib/payOpsFinanceCore';
 import { osCapabilityPath } from '@/data/osCapabilities';
 
 // Acuity owns scheduling + nurse dispatch; everything else lives in the console.
@@ -98,9 +99,9 @@ const NAV_LIVE = [
       },
       {
         label: 'Nurse PayOps', children: [
-          { label: '1099 Payables', to: '/admin/payables' },
+          ...(PAYOPS_FINANCE_CORE_ENABLED ? [{ label: '1099 Payables', to: '/admin/payables' }] : []),
           { label: 'Nurse invoice review', to: '/admin/nurse-invoices' },
-          { label: 'W-2 Payroll', to: soon('W-2 Payroll') },
+          { label: 'W-2 Payroll', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/payroll' : soon('W-2 Payroll') },
           { label: 'Avalon nurse-pay subledger', to: soon('Avalon nurse-pay subledger') },
         ],
       },
@@ -123,13 +124,13 @@ const NAV_LIVE = [
       {
         label: 'Expenses & Payroll', children: [
           { label: 'Operating Expenses', to: soon('Operating Expenses') },
-          { label: 'Vendor Bills', to: soon('Vendor Bills') },
+          { label: 'Vendor Bills', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/vendor-payments' : soon('Vendor Bills') },
           { label: 'Employee Reimbursements', to: soon('Employee Reimbursements') },
           { label: 'Mileage', to: soon('Mileage') },
           { label: 'Corporate Cards', to: soon('Corporate Cards') },
-          { label: 'Employees', to: soon('Employees') },
+          { label: 'Employees', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/payroll' : soon('Employees') },
           { label: 'Contractors', to: soon('Contractors') },
-          { label: 'Payroll Runs', to: soon('Payroll Runs') },
+          { label: 'Payroll Runs', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/payroll' : soon('Payroll Runs') },
           { label: 'Benefits', to: soon('Benefits') },
           { label: 'Payroll Taxes', to: soon('Payroll Taxes') },
           { label: 'Tax Documents', to: soon('Tax Documents') },
@@ -138,14 +139,14 @@ const NAV_LIVE = [
       },
       {
         label: 'Inventory Finance', children: [
-          { label: 'Inventory Value', to: '/admin/inventory-costs' },
-          { label: 'COGS', to: '/admin/inventory-costs' },
-          { label: 'Purchase Orders', to: '/admin/inventory' },
-          { label: 'Vendor Spend', to: soon('Vendor Spend') },
+          { label: 'Inventory Value', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory-costs' : soon('Inventory Value') },
+          { label: 'COGS', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory-costs' : soon('COGS') },
+          { label: 'Purchase Orders', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory' : soon('Purchase Orders') },
+          { label: 'Vendor Spend', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/vendor-payments' : soon('Vendor Spend') },
           { label: 'Inventory Turnover', to: soon('Inventory Turnover') },
-          { label: 'Expired Inventory', to: '/admin/inventory-costs' },
-          { label: 'Shrinkage', to: '/admin/inventory-costs' },
-          { label: 'Cost Analysis', to: '/admin/inventory-costs' },
+          { label: 'Expired Inventory', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory-costs' : soon('Expired Inventory') },
+          { label: 'Shrinkage', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory-costs' : soon('Shrinkage') },
+          { label: 'Cost Analysis', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory-costs' : soon('Cost Analysis') },
         ],
       },
       {
@@ -217,7 +218,7 @@ const NAV_LIVE = [
               { label: 'Training', to: soon('Training') },
             ],
           },
-          { label: 'Clinical Inventory', to: '/admin/inventory' },
+          { label: 'Clinical Inventory', to: PAYOPS_FINANCE_CORE_ENABLED ? '/admin/inventory' : soon('Clinical Inventory') },
         ],
       },
       { label: 'GFE', to: '/admin/gfe' },

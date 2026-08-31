@@ -5,6 +5,8 @@
 // filter, and the access tests. Keep this in sync with the route table in
 // App.jsx and the NAV array in AdminShell.jsx.
 
+import { PAYOPS_FINANCE_CORE_ENABLED } from './payOpsFinanceCore.js';
+
 // Sections the `staff` tier may open when the route is otherwise visible.
 // Preview-only routes are still hidden unless VITE_ADMIN_PREVIEW=1.
 export const STAFF_ROUTES = Object.freeze([
@@ -38,9 +40,13 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/messages',
   '/admin/bookings',
   '/admin/finance',
-  '/admin/payables', // contractor PayOps queue (admin shell + finance role enforced server-side)
-  '/admin/inventory-costs', // supplies and inventory cost evidence (admin + finance role server-side)
-  '/admin/inventory', // shared typed stock and nurse-kit custody (admin-only)
+  ...(PAYOPS_FINANCE_CORE_ENABLED ? [
+    '/admin/payables', // contractor PayOps queue (admin shell + finance role enforced server-side)
+    '/admin/payroll', // employee and management payroll controls (finance role enforced server-side)
+    '/admin/vendor-payments', // vendor and supply AP controls (finance role enforced server-side)
+    '/admin/inventory-costs', // supplies and inventory cost evidence (admin + finance role server-side)
+    '/admin/inventory', // shared typed stock and nurse-kit custody (admin-only)
+  ] : []),
   '/admin/scheduling', // admin-only credential-gated workforce scheduling
   '/admin/nurse-invoices', // contractor pay review (admin-only)
   '/admin/team',

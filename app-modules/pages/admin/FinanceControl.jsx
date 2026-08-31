@@ -16,6 +16,8 @@ import {
 import AdminShell from '@/components/admin/AdminShell';
 import OperationalSourceUnavailable from '@/components/ops/OperationalSourceUnavailable';
 import { apiGet } from '@/lib/apiClient';
+import { PAYOPS_FINANCE_CORE_ENABLED } from '@/lib/payOpsFinanceCore';
+import { useAuthStore } from '@/lib/useAuthStore';
 
 const CARD = 'hsl(var(--foreground) / 0.045)';
 const CARD_STRONG = 'hsl(var(--foreground) / 0.075)';
@@ -71,7 +73,16 @@ function DomainUnavailable({ title, status, body }) {
   );
 }
 
+const PAYMENT_LANES = Object.freeze([
+  { label: 'Nurses', detail: '1099 payable review, approval, and payout evidence', to: '/admin/payables', icon: BriefcaseBusiness },
+  { label: 'Supplies', detail: 'Purchase-order bills, receipts, inventory cost, and settlement', to: '/admin/vendor-payments', icon: PackageSearch },
+  { label: 'Vendors', detail: 'Vendor readiness, bills, approvals, payment, and reconciliation', to: '/admin/vendor-payments', icon: Landmark },
+  { label: 'Employees & management', detail: 'W-2 payroll readiness, runs, approval, and provider evidence', to: '/admin/payroll', icon: Users },
+]);
+
 export default function FinanceControl() {
+  const { user } = useAuthStore();
+  const canManageFinance = user?.role === 'admin';
   const [state, setState] = useState({ loading: true, error: '', summary: null });
   const load = useCallback(async () => {
     setState((current) => ({ ...current, loading: true, error: '' }));
@@ -119,10 +130,30 @@ export default function FinanceControl() {
     >
       <div className="space-y-8">
         <header className="max-w-3xl">
-          <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/45">Three finance domains · one controlled view</p>
+          <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/45">Four outgoing payment lanes · one controlled view</p>
           <h1 className="mt-2 font-heading text-5xl uppercase leading-none">Finance control</h1>
-          <p className="mt-3 text-sm leading-relaxed text-foreground/55">Client revenue stays in Stripe. Nurse earnings and payment controls stay in PayOps. Supplies and kit costs come only from the typed inventory ledger. No domain is used as proof for another.</p>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/55">Nurse, supply, vendor, and employee or management payments each keep their own evidence and approval chain. Client revenue stays in Stripe, and inventory costs come only from the typed inventory ledger. No domain is used as proof for another.</p>
         </header>
+
+        {PAYOPS_FINANCE_CORE_ENABLED && canManageFinance ? (
+          <section aria-labelledby="payment-lanes-title" className="space-y-3">
+            <div className="border-b border-foreground/10 pb-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/40">Payment operations</p>
+              <h2 id="payment-lanes-title" className="mt-1 text-2xl font-semibold">Choose who or what Avalon is paying</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {PAYMENT_LANES.map(({ label, detail, to, icon: Icon }) => (
+                <Link key={label} to={to} className="group rounded-2xl p-4 transition hover:-translate-y-0.5 hover:bg-foreground/[0.07]" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-sm font-semibold">{label}</h3>
+                    <Icon className="h-4 w-4 text-foreground/35 transition group-hover:text-foreground/65" strokeWidth={1.8} />
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-foreground/50">{detail}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-foreground/10 pb-3">
@@ -182,10 +213,13 @@ export default function FinanceControl() {
               </p>
             </>
           )}
-          <div className="flex flex-wrap gap-2">
-            <Link to="/admin/inventory-costs" className="rounded-full bg-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-background">Inventory costs</Link>
-            <Link to="/admin/inventory" className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em]">Manage stock &amp; kits</Link>
-          </div>
+          {PAYOPS_FINANCE_CORE_ENABLED && canManageFinance ? (
+            <div className="flex flex-wrap gap-2">
+              <Link to="/admin/inventory-costs" className="rounded-full bg-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-background">Inventory costs</Link>
+              <Link to="/admin/vendor-payments" className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em]">Supply &amp; vendor payments</Link>
+              <Link to="/admin/inventory" className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em]">Manage stock &amp; kits</Link>
+            </div>
+          ) : null}
         </section>
 
         <section className="space-y-4">
@@ -208,10 +242,13 @@ export default function FinanceControl() {
               <Metric label="Avalon nurse-pay subledger" value={payOps.ledger?.postedCount || 0} detail={`${payOps.ledger?.draftCount || 0} draft journals · not complete company books`} icon={ShieldCheck} />
             </div>
           )}
-          <div className="flex flex-wrap gap-2">
-            <Link to="/admin/payables" className="rounded-full bg-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-background">1099 Payables</Link>
-            <Link to="/admin/nurse-invoices" className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em]">Nurse invoice review</Link>
-          </div>
+          {canManageFinance ? (
+            <div className="flex flex-wrap gap-2">
+              {PAYOPS_FINANCE_CORE_ENABLED ? <Link to="/admin/payables" className="rounded-full bg-foreground px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-background">1099 Payables</Link> : null}
+              {PAYOPS_FINANCE_CORE_ENABLED ? <Link to="/admin/payroll" className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em]">Employee &amp; management payroll</Link> : null}
+              <Link to="/admin/nurse-invoices" className="rounded-full border border-foreground/10 bg-foreground/[0.045] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em]">Nurse invoice review</Link>
+            </div>
+          ) : null}
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {adapters.map(([key, adapter]) => (

@@ -14,6 +14,8 @@ const sharedPage = read('src/components/inventory/SharedInventoryWorkspace.jsx')
 const routes = read('src/App.jsx');
 const access = read('src/lib/adminAccess.js');
 const nav = read('src/lib/nursePortalNav.js');
+const adminNav = read('src/components/admin/AdminShell.jsx');
+const featureGate = read('src/lib/payOpsFinanceCore.js');
 const finance = read('app-modules/pages/admin/FinanceControl.jsx');
 const env = read('.env.example');
 const legacyApi = read('api/os/v1/inventory.js');
@@ -104,12 +106,20 @@ assert.match(nursePage, /Confirm item used/, 'destructive nurse count changes ne
 assert.match(nursePage, /structured restock request/i, 'nurse restock must be structured');
 assert.doesNotMatch(nursePage, /unitCostCents|purchaseOrders|vendorId|inventoryValueCents/, 'nurse UI must not retain cost or global procurement fields');
 
-assert.match(routes, /path="\/provider\/kit"/, 'My Kit route must be live');
-assert.match(routes, /path="\/provider\/kits"[\s\S]*Navigate to="\/provider\/kit"/, 'legacy provider kit links must reconcile');
-assert.match(routes, /path="\/admin\/inventory"[\s\S]*AdminSharedInventory/, 'admin inventory route must be live');
-assert.match(routes, /path="\/admin\/kits"[\s\S]*Navigate to="\/admin\/inventory\?view=kits"/, 'legacy admin kit links must reconcile');
-assert.match(access, /'\/admin\/inventory'/, 'admin route gate must know inventory');
-assert.match(nav, /label: 'Kit'[\s\S]*to: '\/provider\/kit'/, 'nurse navigation must include My Kit');
+assert.match(featureGate, /VITE_PAYOPS_FINANCE_CORE_ENABLED/, 'shared browser visibility must use one explicit feature flag');
+assert.match(featureGate, /=== 'true'/, 'shared browser visibility must fail closed unless explicitly true');
+assert.match(env, /VITE_PAYOPS_FINANCE_CORE_ENABLED=false/, 'PayOps finance routes must default off for code-first deployment');
+assert.match(routes, /path="\/provider\/kit" element=\{PAYOPS_FINANCE_CORE_ENABLED \?/, 'My Kit route must be feature-gated');
+assert.match(routes, /path="\/provider\/kits"[\s\S]*PAYOPS_FINANCE_CORE_ENABLED[\s\S]*Navigate to="\/provider\/kit"[\s\S]*Navigate to="\/provider\/shifts"/, 'legacy provider kit links must return to shifts while the gate is off');
+assert.match(routes, /path="\/admin\/payables" element=\{PAYOPS_FINANCE_CORE_ENABLED \?/, 'Payables route must be feature-gated');
+assert.match(routes, /path="\/admin\/inventory-costs" element=\{PAYOPS_FINANCE_CORE_ENABLED \?/, 'Inventory Costs route must be feature-gated');
+assert.match(routes, /path="\/admin\/inventory"[\s\S]*PAYOPS_FINANCE_CORE_ENABLED[\s\S]*AdminSharedInventory[\s\S]*Navigate to="\/admin"/, 'admin inventory must return to its old dashboard redirect while the gate is off');
+assert.match(routes, /path="\/admin\/kits"[\s\S]*PAYOPS_FINANCE_CORE_ENABLED[\s\S]*Navigate to="\/admin\/inventory\?view=kits"[\s\S]*AdminKitControl/, 'legacy Admin Kits must retain AdminKitControl while the gate is off');
+assert.match(access, /PAYOPS_FINANCE_CORE_ENABLED \? \[[\s\S]*'\/admin\/inventory'/, 'admin allow-list must expose inventory only when the browser gate is on');
+assert.match(nav, /PAYOPS_FINANCE_CORE_ENABLED \? \[\{ label: 'Kit', to: '\/provider\/kit'/, 'nurse navigation must gate My Kit');
+assert.match(adminNav, /PAYOPS_FINANCE_CORE_ENABLED \? \[\{ label: '1099 Payables', to: '\/admin\/payables'/, 'admin navigation must gate Payables');
+assert.match(finance, /PAYOPS_FINANCE_CORE_ENABLED \? [\s\S]*to="\/admin\/payables"/, 'Finance Payables CTA must be feature-gated');
+assert.match(finance, /PAYOPS_FINANCE_CORE_ENABLED && canManageFinance \? \([\s\S]*to="\/admin\/inventory-costs"[\s\S]*to="\/admin\/inventory"/, 'Finance inventory CTAs must be feature-gated and admin-only');
 assert.match(finance, /Supplies &amp; inventory/, 'Finance must surface supply and inventory cost');
 assert.match(env, /AVALON_INVENTORY_COSTS_ENABLED=false/, 'inventory cost preparation must default off');
 assert.match(legacyApi, /requireAdmin\(req, res\)/, 'legacy inventory reads must no longer be staff-wide');

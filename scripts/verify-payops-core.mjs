@@ -10,6 +10,7 @@ const flags = read('api/_lib/payops-core.js');
 const summary = read('api/admin/finance/summary.js');
 const financePage = read('app-modules/pages/admin/FinanceControl.jsx');
 const invoiceApi = read('api/admin/nurse-invoices.js');
+const nurseInvoiceApi = read('api/me/nurse-invoices.js');
 const invoicePage = read('app-modules/pages/admin/NurseInvoices.jsx');
 const payablesApi = read('api/admin/payables.js');
 const env = read('.env.example');
@@ -123,8 +124,8 @@ assertContainsAll(serverOnlyTables, [
 ], 'server-only finance table list');
 assert.match(
   core,
-  /alter table public\.%I enable row level security[\s\S]*?revoke all on public\.%I from public, anon, authenticated/,
-  'finance tables must enable RLS and deny direct browser access',
+  /alter table public\.%I enable row level security[\s\S]*?revoke all on public\.%I from public, anon, authenticated, service_role/,
+  'finance tables must enable RLS and deny direct writes before service-role SELECT is granted',
 );
 
 const appendOnlyTables = loopArray(core, 'immutable_table');
@@ -447,10 +448,12 @@ assert.match(env, /CONTRACTOR_TAX_MODE=manual/);
 assert.match(env, /EMPLOYEE_PAYROLL_PROVIDER=gusto_embedded/);
 
 assert.match(summary, /clientRevenue[\s\S]*nursePayOps[\s\S]*inventoryCosts/, 'Finance must keep three independent domains');
-assert.match(financePage, /Three finance domains/, 'Finance UI must label the separated domains');
+assert.match(financePage, /Four outgoing payment lanes/, 'Finance UI must label the separated payment lanes');
 assert.match(invoiceApi, /provider_settlement_required/, 'invoice review must reject direct settlement');
 assert.doesNotMatch(invoiceApi, /payment_reference_required/, 'typed references must not prove payment');
 assert.doesNotMatch(invoicePage, />Mark paid</, 'one operator must not mark an invoice paid');
+assert.match(nurseInvoiceApi, /payOpsInvoiceColumnsUnavailable/, 'the existing nurse Time & Pay route must tolerate a code-first deploy');
+assert.match(nurseInvoiceApi, /return query\(BASE_INVOICE_COLUMNS\)/, 'the nurse invoice reader must retry without migration-067 columns');
 assert.match(payablesApi, /requireFinanceActor/, 'payable amounts require Finance authorization');
 
 console.log('PayOps core QA passed: canonical schema, server-only RPCs, serialized roles and idempotency, locked ledger posting, three-party payout authorization, exact command binding, late-hold cancellation, fail-closed flags, and no direct paid transition.');

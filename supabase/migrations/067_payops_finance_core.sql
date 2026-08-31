@@ -1220,7 +1220,7 @@ begin
     'payroll_events', 'payroll_liabilities', 'tax_reporting_events', 'finance_exports'
   ] loop
     execute format('alter table public.%I enable row level security', finance_table);
-    execute format('revoke all on public.%I from public, anon, authenticated', finance_table);
+    execute format('revoke all on public.%I from public, anon, authenticated, service_role', finance_table);
   end loop;
 end $$;
 
