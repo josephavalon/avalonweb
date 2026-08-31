@@ -66,7 +66,6 @@ const NAV_LIVE = [
   {
     label: 'BD', icon: Bot, children: [
       { label: 'Avalon BD', to: '/admin/bd' },
-      { label: 'Rob Bot', to: '/admin/robbot3k' },
     ],
   },
   {

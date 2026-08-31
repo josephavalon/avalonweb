@@ -104,6 +104,12 @@ check('dispatch and preview surfaces are redirect-only when preview is off', () 
     assert.equal(canAccessAdminRoute(role, '/admin/client-heat-map'), false);
   }
 });
+check('Agent BD stays hidden until its separate release', () => {
+  for (const role of ['admin', 'staff']) {
+    assert.equal(canAccessAdminRoute(role, '/admin/robbot3k'), false);
+    assert.equal(canAccessAdminRoute(role, '/admin/robbot3k/prospect/example'), false);
+  }
+});
 check('staff can open the live staff surface, including read-only Team', () => {
   for (const p of STAFF_ROUTES.filter((route) => route !== '/admin/os' && LIVE_ADMIN_ROUTES.includes(route))) {
     assert.equal(canAccessAdminRoute('staff', p), true);

@@ -62,6 +62,7 @@
     "verify:nurse-guided-shift-acl": "node scripts/verify-nurse-guided-shift-acl.mjs",
     "verify:nurse-release": "npm run verify:nurse-operational-bootstrap && npm run verify:nurse-route-reconciliation && npm run verify:nurse-guided-shift && npm run verify:nurse-guided-shift-acl && npm run verify:no-live-operational-fixtures && npm run verify:operational-scheduling && npm run verify:operational-platform-migrations",
     "verify:avalon-bd": "node scripts/verify-avalon-bd.mjs",
+    "verify:bd-release": "node scripts/verify-bd-release.mjs",
     "verify:bd-data-review-gate": "node scripts/verify-bd-data-review-gate.mjs",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:hosted-admin-endpoints": "node scripts/verify-hosted-admin-endpoints.mjs",

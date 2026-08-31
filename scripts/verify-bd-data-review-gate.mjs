@@ -27,7 +27,6 @@ assert.equal(requireBdDataReview({ status() { throw new Error('ready gate must n
 }), true);
 
 const protectedRoutes = [
-  '../api/admin/bd.js',
   '../api/admin/robbot3k.js',
   '../api/cron/robbot3k-refresh.js',
   '../api/cron/robbot3k-outreach.js',
@@ -42,7 +41,6 @@ for (const route of protectedRoutes) {
 }
 
 const routeOrderChecks = [
-  ['../api/admin/bd.js', "const { db, tenantId, user } = authed"],
   ['../api/admin/robbot3k.js', "const { db, tenantId, user } = authed"],
   ['../api/cron/robbot3k-refresh.js', 'const db = await getServiceClient()'],
   ['../api/cron/robbot3k-outreach.js', 'const db = await getServiceClient()'],
@@ -55,15 +53,19 @@ for (const [route, firstSensitiveOperation] of routeOrderChecks) {
     `${route} must gate before its first BD data operation`);
 }
 
-const adminBd = readFileSync(new URL('../api/admin/bd.js', import.meta.url), 'utf8');
 const adminRobBot = readFileSync(new URL('../api/admin/robbot3k.js', import.meta.url), 'utf8');
-for (const source of [adminBd, adminRobBot]) {
-  assert.ok(source.indexOf('requireAdmin(req, res)') < source.indexOf('requireBdDataReview(res)'),
-    'admin routes must authenticate before revealing readiness state');
-}
+assert.ok(adminRobBot.indexOf('requireAdmin(req, res)') < adminRobBot.indexOf('requireBdDataReview(res)'),
+  'outreach admin route must authenticate before revealing readiness state');
+
+const adminBd = readFileSync(new URL('../api/admin/bd.js', import.meta.url), 'utf8');
+assert.match(adminBd, /requireBdCrmEnabled\(res\)/,
+  'standalone CRM must use its independent server gate');
+assert.doesNotMatch(adminBd, /requireBdDataReview|AVALON_BD_DATA_REVIEWED/,
+  'standalone CRM enablement must not open or depend on the outreach gate');
 
 const envExample = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
 assert.match(envExample, /^AVALON_BD_DATA_REVIEWED=false$/m);
+assert.match(envExample, /^AVALON_BD_CRM_ENABLED=false$/m);
 assert.doesNotMatch(envExample, /^VITE_AVALON_BD_DATA_REVIEWED=/m, 'the gate must remain server-only');
 
-console.log('PASS: Avalon BD and RobBot remain server-side fail-closed until production data review is explicitly complete.');
+console.log('PASS: outreach remains data-review gated while standalone Avalon BD uses its own fail-closed gate.');

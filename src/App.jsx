@@ -225,7 +225,6 @@ const AdminDeletionRequests = lazyRoute(() => import('./pages/admin/DeletionRequ
 const AdminExpiringCredits = lazyRoute(() => import('./pages/admin/ExpiringCredits'));
 const AdminReviews = lazyRoute(() => import('./pages/admin/Reviews'));
 const AdminAvalonBD = lazyRoute(() => import('./pages/admin/AvalonBD'));
-const AdminRobBot3K = lazyRoute(() => import('./pages/admin/RobBot3K'));
 const AdminSupportTickets = lazyRoute(() => import('./pages/admin/SupportTickets'));
 const AdminReconciliation = lazyRoute(() => import('./pages/admin/Reconciliation'));
 const Review = lazyRoute(() => import('./pages/Review'));
@@ -571,7 +570,6 @@ function AppRoutes() {
             <Route path="/admin/expiring-credits" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminExpiringCredits /></RequireAuth>} />
             <Route path="/admin/reviews" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReviews /></RequireAuth>} />
             <Route path="/admin/bd/*" element={<RequireAuth allowedRoles={['admin']}><AdminAvalonBD /></RequireAuth>} />
-            <Route path="/admin/robbot3k" element={<RequireAuth allowedRoles={['admin']}><AdminRobBot3K /></RequireAuth>} />
             <Route path="/admin/support-tickets" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSupportTickets /></RequireAuth>} />
             <Route path="/admin/reconciliation" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminReconciliation /></RequireAuth>} />
             <Route path="/admin/os/:capability" element={AVALON_OS_BETA_ENABLED ? <RequireAuth allowedRoles={['admin', 'staff']}><AdminOsCapability /></RequireAuth> : <NotFound />} />
