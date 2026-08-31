@@ -88,6 +88,8 @@ assert.match(sql, /'human', context\.actor_profile_id, null, null/);
 assert.match(sql, /'human_approved'/);
 assert.match(sql, /on conflict \(tenant_id, request_id\) do nothing/);
 assert.match(sql, /on conflict \(id\) do nothing/g);
+assert.equal((sql.match(/imported\.created_by is distinct from actor or imported\.updated_by is distinct from actor/g) || []).length, 2);
+assert.doesNotMatch(sql, /imported\.(?:created_by|updated_by) <> actor/);
 assert.doesNotMatch(sql, /insert into public\.bd_(?:agent_identities|agent_permissions|activities|tasks|people)/i);
 
 console.log(`verified BD Atlas import: ${EXPECTED.companies} companies, ${EXPECTED.opportunities} opportunities, ${EXPECTED.mutations} human mutation records`);
