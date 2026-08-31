@@ -60,6 +60,22 @@ export function toE164(phone) {
 // of failing the whole send.
 export const MAX_ADMIN_ALERT_PHONES = 5;
 
+// Email counterpart to the phone list. Email is the reliable half of the alert:
+// SMS to US mobiles is subject to carrier A2P filtering that can silently drop
+// a message the provider reports as "sent" (observed 2026-08-31), whereas mail
+// either lands or bounces visibly. Both channels fire, neither depends on the
+// other, and a failure in one never suppresses the other.
+export function adminAlertEmails(env = process.env) {
+  const seen = new Set();
+  for (const raw of String(env.ADMIN_ALERT_EMAILS || '').split(',')) {
+    const candidate = String(raw || '').trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(candidate)) continue;
+    seen.add(candidate);
+    if (seen.size >= MAX_ADMIN_ALERT_PHONES) break;
+  }
+  return [...seen];
+}
+
 export function adminAlertPhones(env = process.env) {
   const seen = new Set();
   for (const raw of String(env.ADMIN_ALERT_PHONES || '').split(',')) {

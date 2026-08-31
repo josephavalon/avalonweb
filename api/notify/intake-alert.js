@@ -33,7 +33,8 @@
  * case is a stranger making three phones buzz with a message that says nothing.
  */
 import crypto from 'crypto';
-import { adminAlertPhones, isSmsConfigured, sendSms } from '../_lib/send-sms.js';
+import { adminAlertEmails, adminAlertPhones, isSmsConfigured, sendSms } from '../_lib/send-sms.js';
+import { isEmailConfigured, sendEmail } from '../_lib/send-email.js';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 import { safeLogContext } from '../_lib/safe-error.js';
 
@@ -203,26 +204,36 @@ export default async function handler(req, res) {
     return res.status(429).json({ ok: false, code: 'rate_limited' });
   }
 
-  if (!isSmsConfigured()) {
-    console.log('[intake-alert] outcome', { source, result: 'sms_not_configured', sent: 0 });
-    return res.status(200).json({ ok: true, sent: 0, code: 'sms_not_configured' });
-  }
+  const phones = isSmsConfigured() ? adminAlertPhones() : [];
+  const emails = isEmailConfigured() ? adminAlertEmails() : [];
 
-  const phones = adminAlertPhones();
-  if (!phones.length) {
-    console.log('[intake-alert] outcome', { source, result: 'no_admin_phones', sent: 0 });
-    return res.status(200).json({ ok: true, sent: 0, code: 'no_admin_phones' });
+  if (!phones.length && !emails.length) {
+    console.log('[intake-alert] outcome', { source, result: 'no_recipients', sent: 0 });
+    return res.status(200).json({ ok: true, sent: 0, code: 'no_recipients' });
   }
-  // Count only — the numbers themselves never reach a log line.
-  console.log('[intake-alert] dispatching', { source, recipients: phones.length });
+  // Counts only — addresses and numbers never reach a log line.
+  console.log('[intake-alert] dispatching', { source, phones: phones.length, emails: emails.length });
 
   const ref = alertRef();
   const body = `${ALERT_BODIES[source]} Ref ${ref}.${alertLink()}`;
+  const subject = `New ${source === 'vitalice' ? 'Vital Ice ' : ''}request — Ref ${ref}`;
 
   try {
-    // sendSms never throws and never rejects; allSettled is belt-and-braces so
-    // one bad number cannot suppress the other admins' texts.
-    const results = await Promise.allSettled(phones.map((to) => sendSms({ to, body })));
+    // Both channels go out together. Email is not a fallback that waits for SMS
+    // to fail — SMS can report success and still never arrive, so waiting on it
+    // would mean waiting forever for a signal that never comes.
+    const [results, emailResults] = await Promise.all([
+      Promise.allSettled(phones.map((to) => sendSms({ to, body }))),
+      Promise.allSettled(emails.map((to) => sendEmail({
+        to,
+        subject,
+        text: `${body}\n\nThis notice contains no client details by design. Open the secure system to see the request.`,
+        html: `<p style="font:16px/1.5 -apple-system,Segoe UI,sans-serif">${body}</p>`
+          + '<p style="font:13px/1.5 -apple-system,Segoe UI,sans-serif;color:#666">'
+          + 'This notice contains no client details by design. Open the secure system to see the request.</p>',
+      }))),
+    ]);
+    const emailsSent = emailResults.filter((r) => r.status === 'fulfilled' && r.value?.ok).length;
     const sent = results.filter((r) => r.status === 'fulfilled' && r.value?.ok).length;
     const skipped = phones.length - sent;
     // Per-message provider detail. No phone numbers — only ids, statuses, and
@@ -230,13 +241,16 @@ export default async function handler(req, res) {
     const dispatches = results.map((r) => (r.status === 'fulfilled'
       ? { id: r.value?.providerId, status: r.value?.providerStatus, meta: r.value?.providerMeta, code: r.value?.code }
       : { rejected: true }));
-    console.log('[intake-alert] outcome', JSON.stringify({ source, ref, result: 'dispatched', sent, skipped, dispatches }));
+    const emailCodes = emailResults.map((r) => (r.status === 'fulfilled' ? (r.value?.code || 'ok') : 'rejected'));
+    console.log('[intake-alert] outcome', JSON.stringify({
+      source, ref, result: 'dispatched', sent, skipped, emailsSent, emailCodes, dispatches,
+    }));
     if (skipped > 0) {
       // Codes only — never a number, never the nonce.
       const codes = results.map((r) => (r.status === 'fulfilled' ? r.value?.code || 'ok' : 'rejected'));
       console.warn('[intake-alert] some alerts did not send', { sent, skipped, codes });
     }
-    return res.status(200).json({ ok: true, sent, skipped });
+    return res.status(200).json({ ok: true, ref, sent, skipped, emailsSent });
   } catch (err) {
     console.warn('[intake-alert] send failed', safeLogContext(err, 'intake_alert_send_failed'));
     return res.status(200).json({ ok: true, sent: 0, code: 'send_failed' });
