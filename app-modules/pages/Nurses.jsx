@@ -38,7 +38,7 @@ export default function Nurses() {
           </p>
 
           <Link
-            to="/login"
+            to="/nurse-login"
             className="mt-8 inline-flex min-h-[44px] items-center justify-center gap-2 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />

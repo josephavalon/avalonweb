@@ -10,9 +10,10 @@ import { isFrontDoorHost } from '@/lib/frontDoor';
 // surfaces get two item lists rather than one edited list. Beta carries the full
 // Avalon OS, so its Login goes to /login.
 //
-// Both surfaces use the unified login. On the public front door it opens on the
-// staff view so Nurse and Admin are immediately visible; members and event
-// organizers can still switch portals from the same page.
+// The public front door deliberately uses the shared contractor invoice gate.
+// That short-lived session can submit /invoice and cannot authenticate any
+// /provider or /admin route. Full Nurse access remains available only through
+// an individually provisioned account or a canonical Admin account.
 const OS_ITEMS = [
   { label: 'Start', to: '/start' },
   { label: 'Help', to: '/nurse-delivery?path=guided' },
@@ -26,7 +27,7 @@ const FRONT_DOOR_ITEMS = [
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
-  { label: 'Login', to: '/login?role=nurse' },
+  { label: 'Login', to: '/nurse-login' },
 ];
 
 const PHONE_URL = 'tel:+14159807708';

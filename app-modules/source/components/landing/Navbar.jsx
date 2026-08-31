@@ -11,6 +11,7 @@ import { useAuthStore } from '@/lib/useAuthStore';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
+import { isFrontDoorHost } from '@/lib/frontDoor';
 
 const MAIN_LINKS_FULL = [
   { to: '/protocols', label: 'Menu' },
@@ -457,6 +458,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
     .some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
   // (navVisible is computed below from scroll direction on mobile.)
   const care = isCareHost();
+  const signedOutLoginPath = isFrontDoorHost() ? '/nurse-login' : '/login';
   const isHomeRoute = location.pathname === '/';
   const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
   const bookHref = care ? ACUITY_URL : BOOK_URL;
@@ -468,7 +470,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const mobileLinks = [
     { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
     ...mainLinks,
-    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: '/login', label: 'Login' }]),
+    ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: signedOutLoginPath, label: 'Login' }]),
   ];
 
   // Sign-in / sign-up screens (customer + admin) intentionally DO show the
@@ -633,7 +635,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
           {!compact && !focusMode && !care && user && <Link to={dashboardPathFor(user)} className={linkClass}>Dashboard</Link>}
           {/* Audit finding K6/D7: hide Login on /login (redundant with the
               sign-in card); hide on /signup (users already in a signup flow). */}
-          {!compact && !focusMode && !care && !user && !loginRoute && <Link to="/login" className={linkClass}>Login</Link>}
+          {!compact && !focusMode && !care && !user && !loginRoute && <Link to={signedOutLoginPath} className={linkClass}>Login</Link>}
         </div>
       </div>
 

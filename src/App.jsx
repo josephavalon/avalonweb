@@ -466,7 +466,7 @@ function AppRoutes() {
             {/* Deep-link recovery — audit findings N2-N5. Nurse SMS invites,
                 marketing-cadence /iv-therapy links, muscle-memory /dashboard
                 and /kiosk should route somewhere useful, not 404. */}
-            <Route path="/nurse" element={<FrontDoorRedirect><Navigate to="/login?role=nurse" replace /></FrontDoorRedirect>} />
+            <Route path="/nurse" element={<Navigate to="/nurse-login" replace />} />
             <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
             <Route path="/dashboard" element={<FrontDoorRedirect><Navigate to="/members/dashboard" replace /></FrontDoorRedirect>} />
             <Route path="/kiosk" element={<FrontDoorRedirect><Navigate to="/login?next=/kiosk" replace /></FrontDoorRedirect>} />

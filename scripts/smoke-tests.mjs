@@ -149,16 +149,16 @@ for (const route of ['invoice', 'nurse-login']) {
   assert(publicSpaRewrite?.source.includes(route), `Route missing from Vercel rewrite: /${route}`);
   assert(previewServerSource.includes(route), `Route missing from preview server: /${route}`);
 }
-// The public menu opens the unified login on its staff view so the Nurse and
-// Admin tabs are visible immediately. The invoice-only nurse gate is legacy and
-// must not become the main sign-in door again.
+// The public menu opens the shared contractor invoice gate. That credential is
+// intentionally narrower than an Avalon OS identity; Admin remains available
+// from the gate, while full Nurse access requires a provisioned OS account.
 assert(
-  /FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/login\?role=nurse' \}/.test(cornerMenuSource),
-  'Front-door menu Login must open the unified staff login',
+  /FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/nurse-login' \}/.test(cornerMenuSource),
+  'Front-door menu Login must open the invoice-only nurse gate',
 );
 assert(
-  !/FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/nurse-login' \}/.test(cornerMenuSource),
-  'Front-door menu must not reopen the invoice-only nurse gate',
+  !/FRONT_DOOR_ITEMS[\s\S]*?\{ label: 'Login', to: '\/login\?role=nurse' \}/.test(cornerMenuSource),
+  'Front-door menu must not expose the full Nurse Portal login',
 );
 assert(viteConfigSource.includes("'/api/invoice/unlock'"), 'Invoice unlock API missing from vite dev API_ROUTES');
 assert(viteConfigSource.includes("'/api/invoice/submit'"), 'Invoice submit API missing from vite dev API_ROUTES');
