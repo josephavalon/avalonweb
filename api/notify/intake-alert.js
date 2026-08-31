@@ -225,10 +225,12 @@ export default async function handler(req, res) {
     const results = await Promise.allSettled(phones.map((to) => sendSms({ to, body })));
     const sent = results.filter((r) => r.status === 'fulfilled' && r.value?.ok).length;
     const skipped = phones.length - sent;
-    const providerIds = results
-      .map((r) => (r.status === 'fulfilled' ? r.value?.providerId : null))
-      .filter(Boolean);
-    console.log('[intake-alert] outcome', { source, ref, result: 'dispatched', sent, skipped, providerIds });
+    // Per-message provider detail. No phone numbers — only ids, statuses, and
+    // the field names the provider returned.
+    const dispatches = results.map((r) => (r.status === 'fulfilled'
+      ? { id: r.value?.providerId, status: r.value?.providerStatus, meta: r.value?.providerMeta, code: r.value?.code }
+      : { rejected: true }));
+    console.log('[intake-alert] outcome', JSON.stringify({ source, ref, result: 'dispatched', sent, skipped, dispatches }));
     if (skipped > 0) {
       // Codes only — never a number, never the nonce.
       const codes = results.map((r) => (r.status === 'fulfilled' ? r.value?.code || 'ok' : 'rejected'));

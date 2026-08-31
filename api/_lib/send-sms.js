@@ -109,17 +109,33 @@ export async function sendSms({ to, body }, opts = {}) {
       console.warn('[send-sms] provider send failed', { status: resp.status, detail: String(detail).slice(0, 400) });
       return { ok: false, code: 'provider_send_failed', status: 502, providerStatus: resp.status };
     }
-    // Surface the provider's message id. Without it a "sent" result is
-    // unfalsifiable: Quo can accept a message the carrier later drops, and
-    // there is no way to find that message in Quo's dashboard after the fact.
+    // Surface what the provider actually said. Without this a "sent" result is
+    // unfalsifiable: Quo can accept a message the carrier later drops, and a
+    // 2xx alone cannot be told apart from a delivered text.
+    //
+    // Read the STATUS as well as the id. A provider that answers 2xx with
+    // status 'queued' has taken responsibility for the message; one that
+    // answers 2xx with an error or a rejected status has not, and those two
+    // look identical if you only check resp.ok.
     let providerId = null;
+    let providerStatus = null;
+    let providerMeta = null;
     try {
       const payload = await resp.json();
-      providerId = payload?.data?.id || payload?.id || null;
+      const data = payload?.data ?? payload;
+      providerId = data?.id ?? null;
+      providerStatus = data?.status ?? null;
+      // Field names only, never values — the response echoes the recipient
+      // number and must not be logged verbatim.
+      providerMeta = {
+        keys: data && typeof data === 'object' ? Object.keys(data).slice(0, 20) : null,
+        direction: data?.direction ?? null,
+        error: data?.error ?? data?.errorCode ?? data?.errorMessage ?? null,
+      };
     } catch {
       /* a 2xx with no JSON body is still a successful send */
     }
-    return { ok: true, normalizedTo: recipient, providerId };
+    return { ok: true, normalizedTo: recipient, providerId, providerStatus, providerMeta };
   } catch (err) {
     console.warn('[send-sms] provider request error', safeLogContext(err, 'send_sms_provider_request_failed'));
     return { ok: false, code: 'provider_request_failed', status: 502 };
