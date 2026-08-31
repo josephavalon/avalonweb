@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -9,6 +9,7 @@ import {
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
+import CognitoSubmitPing from '@/components/forms/CognitoSubmitPing';
 import GuidedCommerce from '@/components/guided/GuidedCommerce';
 import { IV_SESSIONS } from '@/config/verticals';
 import {
@@ -82,7 +83,7 @@ const FEATURES = [
 // 90-minute arrival window) — do not promise a number we don't publish.
 const NEXT_STEPS = [
   { n: '01', title: 'We call to confirm', hint: 'Same day • 8am–8pm' },
-  { n: '02', title: 'You get a deposit link', hint: 'Applies to your visit' },
+  { n: '02', title: 'You reserve with $50', hint: 'Applies to your visit' },
   { n: '03', title: 'A nurse arrives', hint: '90-minute arrival window' },
 ];
 
@@ -199,6 +200,56 @@ function RequestRail({ therapyName = '', duration = '' }) {
   );
 }
 
+// The deposit is the one action worth taking the moment a request is in, so it
+// gets a solid surface rather than a fourth underlined link in the paths row
+// below. Posts nothing: api/deposit/create-session.js refuses a body outright
+// and mints its own reference, so this button cannot leak what the visitor
+// typed even if someone later wires it to a form.
+function ReserveDepositButton() {
+  const [state, setState] = useState('idle');
+
+  async function openCheckout() {
+    if (state === 'pending') return;
+    setState('pending');
+    try {
+      const res = await fetch('/api/deposit/create-session', {
+        method: 'POST',
+        cache: 'no-store',
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.url) throw new Error(data?.code || 'deposit_unavailable');
+      // assign, not replace: Back from Stripe should return here, not to the
+      // empty form the visitor already submitted.
+      window.location.assign(data.url);
+    } catch {
+      setState('error');
+    }
+  }
+
+  return (
+    <div data-when="post-submit" data-testid="landing-deposit-cta" className="mt-2 grid gap-2">
+      <button
+        type="button"
+        onClick={openCheckout}
+        disabled={state === 'pending'}
+        className="inline-flex items-center justify-between gap-4 rounded-2xl bg-foreground px-5 py-4 font-body text-[1.0625rem] font-semibold text-background transition-opacity duration-base ease-editorial hover:opacity-90 disabled:opacity-60 md:px-8 md:py-5"
+      >
+        {state === 'pending' ? 'Opening secure checkout…' : 'Reserve your spot — $50'}
+        {state !== 'pending' && <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2} />}
+      </button>
+      {state === 'error' ? (
+        <p className="font-body text-[13px] font-medium leading-snug text-foreground/60">
+          Couldn&apos;t open checkout. Call (415) 980-7708 and we&apos;ll take it from there.
+        </p>
+      ) : (
+        <p className="font-body text-[13px] font-medium leading-snug text-foreground/55">
+          Applied to your visit. Refunded if ineligible. Or wait for our call — either works.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Landing({
   onHelpMeDecide,
   focused = false,
@@ -250,17 +301,20 @@ function Landing({
 
         <div className={`${focused ? 'mt-6 gap-3.5' : 'mt-10 gap-5'} grid`} data-testid="landing-form">
           <CognitoFormEmbed compact tight={focused} prefill={prefill} />
+          <CognitoSubmitPing source="start" />
           {/* data-when="pre-submit": both lines speak to a form that hasn't been sent
               yet ("we'll text you", "by submitting"), so they read as stale once
               Cognito swaps in its confirmation. Hidden by a :has() rule in
-              index.css keyed on Cognito's own .is-success class — CSS only, so
-              nothing here has to observe the form to know it was submitted. */}
+              index.css keyed on Cognito's own .is-success class, so the copy
+              swap itself needs no JS. CognitoSubmitPing above watches that same
+              class to fire the admin SMS alert — it reads class attributes only
+              and never touches a field value. */}
           <p
             data-when="pre-submit"
             className={`font-body font-medium text-foreground/65 ${focused ? 'text-sm leading-[1.55]' : 'text-base leading-relaxed'}`}
           >
-            We&apos;ll text a $50 deposit link after confirmation. Applied to your visit.
-            Refunded if ineligible.
+            A $50 deposit holds your spot — applied to your visit, refunded if
+            ineligible. You can pay it as soon as this is sent, or wait for our call.
           </p>
           <p
             data-when="pre-submit"
@@ -278,6 +332,8 @@ function Landing({
               form they compete with the one thing this screen exists to do;
               here the request is already in, so browsing is the natural next
               move. Revealed by the same .is-success rule as the copy above. */}
+          <ReserveDepositButton />
+
           <div
             data-when="post-submit"
             data-testid="landing-post-submit-paths"

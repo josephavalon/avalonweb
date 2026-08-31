@@ -16,7 +16,7 @@ function stop(message) {
 }
 
 if (!apply) {
-  console.log(`Dry run: would seed 5 review identities and ${OS_CAPABILITIES.length} synthetic capability records. Re-run with --apply after setting the beta-only environment.`);
+  console.log(`Dry run: would seed 5 review identities, ${OS_CAPABILITIES.length} synthetic capability records, and today's synthetic nurse route. Re-run with --apply after setting the beta-only environment.`);
   process.exit(0);
 }
 if (!url || !serviceKey || !expectedRef) stop('SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and AVALON_BETA_SUPABASE_PROJECT_REF are required.');
@@ -28,6 +28,34 @@ if (!/^(?:example\.test|[^@]+\.test)$/.test(emailDomain)) stop('review identity 
 const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 const tenantId = crypto.createHash('sha256').update(`avalon-os-beta:${expectedRef}`).digest('hex');
 const tenantUuid = `${tenantId.slice(0, 8)}-${tenantId.slice(8, 12)}-4${tenantId.slice(13, 16)}-a${tenantId.slice(17, 20)}-${tenantId.slice(20, 32)}`;
+const routeFixtureIds = {
+  provider: 'b0000000-0000-4000-a000-000000000001',
+  home: 'b0000000-0000-4000-a000-000000000010',
+  office: 'b0000000-0000-4000-a000-000000000011',
+  appointments: [
+    'b1000000-0000-4000-a000-000000000001',
+    'b1000000-0000-4000-a000-000000000002',
+    'b1000000-0000-4000-a000-000000000003',
+    'b1000000-0000-4000-a000-000000000004',
+  ],
+};
+
+function pacificDate(value = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(value).reduce((out, part) => ({ ...out, [part.type]: part.value }), {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function pacificIsoAt(date, hour, minute = 0) {
+  const noonUtc = new Date(`${date}T12:00:00Z`);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(noonUtc).reduce((out, part) => ({ ...out, [part.type]: part.value }), {});
+  const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
+  const offsetMs = represented - noonUtc.getTime();
+  return new Date(Date.parse(`${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00Z`) - offsetMs).toISOString();
+}
 
 const identities = [
   { key: 'admin', role: 'admin', name: 'Avery Admin' },
@@ -74,6 +102,57 @@ for (const identity of identities) {
   profiles[identity.key] = user.id;
 }
 
+await must(db.from('provider_profiles').upsert({
+  id: routeFixtureIds.provider,
+  tenant_id: tenantUuid,
+  profile_id: profiles.nurse,
+  provider_role: 'rn',
+  credential_status: 'clear',
+  nursys_status: 'clear',
+  scope_tags: ['mobile_iv', 'synthetic_beta'],
+  active: true,
+}, { onConflict: 'id' }), 'nurse provider profile');
+
+await must(db.from('provider_route_origins').upsert([
+  {
+    id: routeFixtureIds.home, tenant_id: tenantUuid, owner_profile_id: profiles.nurse, kind: 'home', label: 'Home',
+    address: 'Inner Sunset, San Francisco, CA', latitude: 37.7562, longitude: -122.4768, is_default: true,
+  },
+  {
+    id: routeFixtureIds.office, tenant_id: tenantUuid, owner_profile_id: null, kind: 'office', label: 'Avalon Office',
+    address: 'SoMa, San Francisco, CA', latitude: 37.7811, longitude: -122.4006, is_default: false,
+  },
+], { onConflict: 'id' }), 'nurse route origins');
+
+const routeDate = pacificDate();
+const routeFixtures = [
+  { name: 'Maya', service: 'Myers Cocktail', protocol: 'myers_cocktail', neighborhood: 'Pacific Heights', address: 'Pacific Heights, San Francisco, CA', hour: 9, minute: 0, duration: 60, latitude: 37.7925, longitude: -122.4382 },
+  { name: 'Alex', service: 'Hydration IV', protocol: 'hydration_iv', neighborhood: 'Oakland', address: 'Uptown Oakland, Oakland, CA', hour: 11, minute: 0, duration: 45, latitude: 37.8124, longitude: -122.2683 },
+  { name: 'Jordan', service: 'Performance Drip', protocol: 'performance_drip', neighborhood: 'San Mateo', address: 'Downtown San Mateo, San Mateo, CA', hour: 13, minute: 0, duration: 60, latitude: 37.563, longitude: -122.3255 },
+  { name: 'Taylor', service: 'NAD+ Infusion', protocol: 'nad_plus', neighborhood: 'Palo Alto', address: 'University Avenue, Palo Alto, CA', hour: 15, minute: 30, duration: 90, latitude: 37.4443, longitude: -122.1608 },
+];
+await must(db.from('appointments').upsert(routeFixtures.map((fixture, index) => ({
+  id: routeFixtureIds.appointments[index],
+  tenant_id: tenantUuid,
+  provider_profile_id: routeFixtureIds.provider,
+  status: 'confirmed',
+  starts_at: pacificIsoAt(routeDate, fixture.hour, fixture.minute),
+  protocol_key: fixture.protocol,
+  payment_status: 'paid',
+  gfe_status: 'accepted',
+  external_payload: {
+    primaryService: fixture.service,
+    contact: { firstName: fixture.name },
+    appointment: {
+      address: fixture.address,
+      neighborhood: fixture.neighborhood,
+      durationMinutes: fixture.duration,
+      coordinate: { latitude: fixture.latitude, longitude: fixture.longitude },
+    },
+    synthetic: true,
+  },
+})), { onConflict: 'id' }), 'nurse route appointments');
+
 await must(db.from('os_settings').upsert([
   { tenant_id: tenantUuid, namespace: 'organization', key: 'profile', value: { name: 'Avalon OS Synthetic Beta', synthetic_only: true }, created_by: profiles.admin },
   { tenant_id: tenantUuid, namespace: 'markets', key: 'san-francisco-beta', value: { timezone: 'America/Los_Angeles', status: 'active' }, created_by: profiles.admin },
@@ -111,4 +190,4 @@ await must(db.from('os_finance_ledger').upsert([
   { tenant_id: tenantUuid, entry_group_id: groupId, account_code: '3000', account_name: 'Beta Test Equity', account_type: 'equity', direction: 'credit', amount_cents: 250000, occurred_at: '2026-08-01T17:00:00.000Z', source_type: 'synthetic_seed', source_id: 'BETA-OPENING', memo: 'Synthetic test-mode opening balance', dimensions: { synthetic: true }, idempotency_key: 'synthetic-ledger-opening-v1:1', created_by: profiles.admin },
 ], { onConflict: 'tenant_id,idempotency_key,account_code,direction', ignoreDuplicates: true }), 'finance opening balance');
 
-console.log(`Seeded Avalon OS beta tenant ${tenantUuid}, ${identities.length} review identities, and ${records.length} synthetic capability records. No password or service credential was printed.`);
+console.log(`Seeded Avalon OS beta tenant ${tenantUuid}, ${identities.length} review identities, ${records.length} synthetic capability records, and ${routeFixtures.length} route appointments for ${routeDate}. No password or service credential was printed.`);

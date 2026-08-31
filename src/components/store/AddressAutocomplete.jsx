@@ -18,6 +18,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 //   className    string   — input class (pass the page's inputClass)
 //   minChars     number   — min chars before querying (default 3)
 //   debounceMs   number   — debounce delay (default 300)
+//   fallbackResults array  — local suggestions used when the API is unavailable
 //   ...rest      — any extra <input> props (placeholder, autoComplete, id, etc.)
 
 const DEFAULT_MIN_CHARS = 3;
@@ -30,6 +31,7 @@ export default function AddressAutocomplete({
   className,
   minChars = DEFAULT_MIN_CHARS,
   debounceMs = DEFAULT_DEBOUNCE,
+  fallbackResults = [],
   ...rest
 }) {
   const [results, setResults] = useState([]);
@@ -62,6 +64,18 @@ export default function AddressAutocomplete({
     let cancelled = false;
     setLoading(true);
     const timer = setTimeout(async () => {
+      const queryTokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+      const localMatches = fallbackResults
+        .filter((item) => {
+          const haystack = String(item.label || [item.street, item.city, item.state, item.zip].filter(Boolean).join(' ')).toLowerCase();
+          return queryTokens.every((token) => haystack.includes(token));
+        })
+        .slice(0, 5);
+      if (localMatches.length) {
+        setResults(localMatches);
+        setActiveIndex(-1);
+        setOpen(true);
+      }
       if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -72,21 +86,22 @@ export default function AddressAutocomplete({
         const data = await res.json().catch(() => null);
         if (cancelled) return;
         if (!res.ok || !data || !Array.isArray(data.results)) {
-          // Degrade silently to a plain text input.
+          // Local previews have no serverless API runtime. Keep the predictive
+          // experience useful with the supplied Bay Area index.
           setErrored(true);
-          setResults([]);
-          setOpen(false);
+          setResults(localMatches);
+          setOpen(localMatches.length > 0);
           return;
         }
         setErrored(false);
-        setResults(data.results);
+        setResults(data.results.length ? data.results : localMatches);
         setActiveIndex(-1);
-        setOpen(true);
+        setOpen(data.results.length > 0 || localMatches.length > 0);
       } catch (err) {
         if (cancelled || err?.name === 'AbortError') return;
         setErrored(true);
-        setResults([]);
-        setOpen(false);
+        setResults(localMatches);
+        setOpen(localMatches.length > 0);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -96,7 +111,7 @@ export default function AddressAutocomplete({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [value, minChars, debounceMs]);
+  }, [value, minChars, debounceMs, fallbackResults]);
 
   // Click-outside to close.
   useEffect(() => {

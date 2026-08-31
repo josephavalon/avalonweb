@@ -61,6 +61,11 @@ These block payment, scheduling, auth, or staff operations if missing.
 - `SEND_SMS_HOOK_SECRET` - Supabase send-SMS hook shared secret.
 - `SEND_SMS_ALLOWED_COUNTRY_PREFIXES` - optional SMS country allowlist.
 - `SEND_SMS_MAX_BODY_BYTES` - optional SMS hook request size limit.
+- `ADMIN_ALERT_PHONES` - comma-separated E.164 admins texted when a request lands on `/start`
+  or `/vitalice` (max 5). Unset means the alert answers `200 {sent:0, code:'no_admin_phones'}`
+  and no one is paged — the Cognito email still arrives, so this degrades rather than breaks.
+  Server-only; never prefix `VITE_`.
+- `ADMIN_ALERT_LINK` - optional https link appended to that alert; host-allowlisted in code.
 - `ACUITY_WEBHOOK_SECRET` - required only when enabling the P1 Acuity reverse webhook.
 - `ACUITY_WEBHOOK_FETCH_TIMEOUT_MS`
 - `ACUITY_WEBHOOK_MAX_BODY_BYTES`

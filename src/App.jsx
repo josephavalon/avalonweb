@@ -18,6 +18,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { servicePillars } from '@/data/seoArchitecture';
 import { captureAttribution, trackPageView } from '@/lib/analytics';
 import { canAccessAdminRoute } from '@/lib/adminAccess';
+import { isPublicChromeRoute } from '@/lib/publicChrome';
 import MfaGate from '@/components/auth/MfaGate';
 import IdleWarning from '@/components/auth/IdleWarning';
 import { requiresPrivilegedMfa } from '@/lib/portalAccess';
@@ -43,6 +44,11 @@ function RequireAuth({ children, allowedRoles }) {
   const { pathname } = useLocation();
   if (loading && authBackend === 'supabase') return <RouteFallback />;
   if (!user) {
+    // The loopback-only Vite demo is a clickable product preview, not a real
+    // clinical session. Let the nurse route open directly there so reviewers
+    // do not need placeholder credentials. Production builds continue through
+    // the authenticated provider gate below, including Supabase-backed deploys.
+    if (import.meta.env.DEV && pathname === '/provider/shift') return children;
     // The front door has no sign-in surface, so there is nowhere to send an
     // unauthenticated visitor except back to /start. This must be a DIRECT
     // bounce: routing them to /login instead would chain into the gate on that
@@ -64,7 +70,7 @@ function RequireAuth({ children, allowedRoles }) {
   const role = user.role ?? null;
   if (allowedRoles && !allowedRoles.includes(role)) {
     if (user.role === 'admin' || user.role === 'staff') return <Navigate to="/admin" replace />;
-    if (user.role === 'nurse') return <Navigate to="/provider/shift" replace />;
+    if (['nurse', 'rn', 'np'].includes(user.role)) return <Navigate to="/provider/shift" replace />;
     if (user.role === 'promoter') return <Navigate to="/organizer" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
     return <Navigate to="/login" replace />;
@@ -130,6 +136,8 @@ const ProviderServices = lazyRoute(() => import('./pages/provider/Services'));
 const ProviderStaff = lazyRoute(() => import('./pages/provider/Staff'));
 const ProviderCommunications = lazyRoute(() => import('./pages/provider/Communications'));
 const NurseShift = lazyRoute(() => import('./pages/provider/NurseShift'));
+const NurseSchedule = lazyRoute(() => import('./pages/provider/NurseSchedule'));
+const NurseInvoices = lazyRoute(() => import('./pages/provider/NurseInvoices'));
 const NurseDashboard = lazyRoute(() => import('./pages/provider/NurseDashboard'));
 const RoleOS = lazyRoute(() => import('./pages/provider/RoleOS'));
 const ProviderReports = lazyRoute(() => import('./pages/provider/Reports'));
@@ -178,6 +186,7 @@ const EventsPage = lazyRoute(() => import('./pages/Events'));
 const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
 const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
 const RequestReceived = lazyRoute(() => import('./pages/RequestReceived'));
+const StartDeposit = lazyRoute(() => import('./pages/StartDeposit'));
 const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
 const NurseInvoice = lazyRoute(() => import('./pages/NurseInvoice'));
 const NurseLogin = lazyRoute(() => import('./pages/NurseLogin'));
@@ -205,6 +214,10 @@ const AdminInbox = lazyRoute(() => import('./pages/admin/Inbox'));
 const AdminTeamInbox = lazyRoute(() => import('./pages/admin/TeamInbox'));
 const AdminGfeSettings = lazyRoute(() => import('./pages/admin/GfeSettings'));
 const AdminFinanceControl = lazyRoute(() => import('./pages/admin/FinanceControl'));
+const AdminSchedulingControl = lazyRoute(() => import('./pages/admin/SchedulingControl'));
+const AdminClientPayments = lazyRoute(() => import('./pages/admin/ClientPayments'));
+const AdminNurseInvoices = lazyRoute(() => import('./pages/admin/NurseInvoices'));
+const AdminOperationalAccounting = lazyRoute(() => import('./pages/admin/OperationalAccounting'));
 const AdminCredentialControl = lazyRoute(() => import('./pages/admin/CredentialControl'));
 const AdminDispatchControl = lazyRoute(() => import('./pages/admin/DispatchControl'));
 const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
@@ -290,6 +303,7 @@ const ConsumerThemeSync = () => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.classList.toggle('av-cream', AVALON_OS_BETA_ENABLED || !PORTAL_PREFIX.test(pathname));
+    document.documentElement.classList.toggle('av-browser-espresso', isPublicChromeRoute(pathname));
   }, [pathname]);
   return null;
 };
@@ -377,6 +391,11 @@ function AppRoutes() {
                 /nurse-delivery stays for existing links and the ?path=guided flow. */}
             <Route path="/start" element={<NurseDelivery entry="book" />} />
             <Route path="/start/received" element={<RequestReceived />} />
+            {/* Stripe's return URL for the reservation deposit. Deliberately NOT
+                wrapped in <FrontDoorRedirect>: it has to resolve on the apex,
+                where the deposit button actually runs. It reads only the query
+                string, so there is nothing here to gate. */}
+            <Route path="/start/deposit" element={<StartDeposit />} />
             <Route path="/nurse-delivery" element={<NurseDelivery />} />
             {/* Vital Ice × Avalon co-branded intake for Outside Lands weekend.
                 Separate Cognito form; same PHI posture as /start. */}
@@ -518,7 +537,9 @@ function AppRoutes() {
             <Route path="/provider/field" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/shift" replace /></RequireAuth>} />
             <Route path="/provider/kits" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/role-os?focus=inventory" replace /></RequireAuth>} />
             <Route path="/provider/training" element={<RequireAuth allowedRoles={['nurse', 'admin']}><Navigate to="/provider/role-os?focus=protocols" replace /></RequireAuth>} />
-            <Route path="/provider/shift" element={<RequireAuth allowedRoles={['nurse', 'admin']}><NurseShift /></RequireAuth>} />
+            <Route path="/provider/shift" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseShift /></RequireAuth>} />
+            <Route path="/provider/shifts" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseSchedule /></RequireAuth>} />
+            <Route path="/provider/invoices" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseInvoices /></RequireAuth>} />
             <Route path="/provider/role-os" element={<RequireAuth allowedRoles={['nurse', 'admin']}><RoleOS /></RequireAuth>} />
             <Route path="/provider/reports" element={<RequireAuth allowedRoles={['admin']}><ProviderReports /></RequireAuth>} />
             <Route path="/provider/settings" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderSettings /></RequireAuth>} />
@@ -534,6 +555,10 @@ function AppRoutes() {
             <Route path="/admin/crm" element={<Navigate to="/admin/hubspot" replace />} />
             <Route path="/admin/hubspot" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminHubspotControl /></RequireAuth>} />
             <Route path="/admin/finance" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminFinanceControl /></RequireAuth>} />
+            <Route path="/admin/scheduling" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminSchedulingControl /></RequireAuth>} />
+            <Route path="/admin/client-payments" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminClientPayments /></RequireAuth>} />
+            <Route path="/admin/nurse-invoices" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminNurseInvoices /></RequireAuth>} />
+            <Route path="/admin/accounting" element={<RequireAuth allowedRoles={['admin', 'staff']}><AdminOperationalAccounting /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
             <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />

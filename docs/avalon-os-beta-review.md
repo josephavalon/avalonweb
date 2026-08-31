@@ -1,14 +1,16 @@
 # Avalon OS protected beta review
 
-This build is exclusively for `beta.avalonvitality.co`. It must use a dedicated Vercel project, a dedicated staging Supabase project, Stripe test mode, isolated Acuity test resources, restricted outbound recipients, team-only deployment protection, and `noindex, nofollow, noarchive`.
+This build is exclusively for `beta.avalonvitality.co`. It must use a dedicated Vercel project, a dedicated staging Supabase project, sandbox payment providers, isolated Acuity test resources, restricted outbound recipients, authenticated application access, and `noindex, nofollow, noarchive`.
 
 ## Provisioning status
 
-The dedicated Vercel project `avalonweb-beta` (`prj_smizqQYWmruc0rbuWIulXxKUMQvD`) exists with Vite, `npm run build`, and `dist` configured. The protected Preview deployment is `dpl_Gc1DxpceQYFDduNZsdEtrjjjF7Dr`. Its immutable URL and branch alias both redirect unauthenticated visitors to Vercel team SSO and emit `X-Robots-Tag: noindex`. The public project alias was removed after verification.
+The dedicated Vercel project `avalonweb-beta` (`prj_smizqQYWmruc0rbuWIulXxKUMQvD`) is configured with Vite, `npm run build`, and `dist`. The active Preview deployment is `dpl_EdfaAjRhgtYwFokNbua3AamDk8p3`, and `beta.avalonvitality.co` points to that deployment. It emits `X-Robots-Tag: noindex, nofollow, noarchive`.
 
-Vercel Standard Protection does not protect production custom domains. `beta.avalonvitality.co` therefore remains untouched and must not be attached until equivalent access control is confirmed for that domain. No main or Snooches alias was changed.
+Vercel Standard Protection does not protect the custom domain. The beta domain therefore uses real Supabase email/password authentication instead of the old client-only review session. Unauthenticated operational API requests return `401`, and the live-API flags are enabled only in the beta project's Preview environment. No main or Snooches alias was changed.
 
-The dedicated free Supabase organization and staging project `avalon-os-beta` (`adnuvhjodolgpenfhvrh`, West US) are provisioned and healthy. No credential has been copied into the application, and no migration or seed has been run externally yet.
+The dedicated free Supabase organization and staging project `avalon-os-beta` (`adnuvhjodolgpenfhvrh`, West US) are healthy. Repository migrations `001` through `045` have been applied. Its URL, anon key, service-role key, project ref, and synthetic-review password exist only as Preview variables in `avalonweb-beta`.
+
+Five `example.test` review identities, 104 synthetic capability records, a balanced opening ledger, synthetic inventory, an open shift, a completed shift, a submitted nurse invoice, and a four-stop nurse route are seeded. The admin login, scheduling workspace, invoice queue, accounting ledger, client-payments workspace, and server-backed nurse route builder have been verified against this staging project.
 
 The seed command refuses to run unless the Supabase URL matches `AVALON_BETA_SUPABASE_PROJECT_REF`, the review email domain ends in `.test`, and an explicit `--apply` flag is present:
 
@@ -23,7 +25,8 @@ Required environment variables are `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, 
 | Priority | System | Beta-only values needed |
 | --- | --- | --- |
 | Required | Supabase | Project URL, anon key, service-role key, project ref, and a synthetic review-user password. |
-| Required for payments | Stripe test mode | Test secret key, test publishable key, and test webhook signing secret. |
+| Required for client payments | Square sandbox | Sandbox access token, application/location IDs, webhook signature key, and the exact beta webhook notification URL. |
+| Required for legacy checkout paths | Stripe test mode | Test secret key, test publishable key, and test webhook signing secret. |
 | Required for live scheduling | Acuity test resources | User ID, API key, dedicated beta calendar ID, and test appointment-type IDs. |
 | Required for outbound email | Resend | Restricted API key, verified beta sender, and recipient allowlist. |
 | Required for outbound SMS | Quo/OpenPhone | Sandbox/restricted API key, beta sender number, and recipient allowlist. |

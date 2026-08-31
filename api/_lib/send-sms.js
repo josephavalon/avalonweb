@@ -36,7 +36,7 @@ export function isSmsConfigured() {
 // E.164 number, but the admin Communications page accepts free-form input like
 // "(415) 555-0100" or "415-555-0100", so strip formatting and default a bare
 // 10-digit number to US/CA (+1).
-function toE164(phone) {
+export function toE164(phone) {
   const raw = String(phone || '').trim();
   if (!raw) return '';
   if (raw.startsWith('+')) {
@@ -48,6 +48,27 @@ function toE164(phone) {
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   return `+${digits}`;
+}
+
+// Internal alert fan-out list. ADMIN_ALERT_PHONES is a comma-separated E.164
+// list of the admins who should get a buzz when a new request lands on the
+// site. Deliberately NOT VITE_-prefixed: a VITE_ var is inlined into the public
+// bundle, which would publish the founders' mobile numbers.
+//
+// Capped at 5 so a fat-fingered env value cannot fan a paid SMS out to an
+// unbounded list, and validated strictly so one bad entry drops itself instead
+// of failing the whole send.
+export const MAX_ADMIN_ALERT_PHONES = 5;
+
+export function adminAlertPhones(env = process.env) {
+  const seen = new Set();
+  for (const raw of String(env.ADMIN_ALERT_PHONES || '').split(',')) {
+    const candidate = toE164(raw);
+    if (!/^\+[1-9]\d{6,14}$/.test(candidate)) continue; // strict E.164
+    seen.add(candidate);
+    if (seen.size >= MAX_ADMIN_ALERT_PHONES) break;
+  }
+  return [...seen];
 }
 
 /**

@@ -10,7 +10,11 @@
 import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 
-const INTERNAL_TO = 'littonjose@gmail.com';
+const RECIPIENTS = [
+  'aaron@avalonvitality.co',
+  'joseph@avalonvitality.co',
+  'support@avalonvitality.co',
+];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const clean = (v, max) => String(v ?? '').trim().slice(0, max);
@@ -68,7 +72,7 @@ export default async function handler(req, res) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'Avalon Events <support@avalonvitality.co>',
-        to: INTERNAL_TO,
+        to: RECIPIENTS,
         ...(inquiry.email ? { replyTo: inquiry.email } : {}),
         subject: `Event inquiry — ${inquiry.where} · ${inquiry.date}`,
         text: lines,

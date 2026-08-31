@@ -8,9 +8,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save, MessageSquare, BellRing } from 'lucide-react';
+import { RefreshCw, Calendar, Phone, Mail, CreditCard, Link2, Loader2, AlertCircle, CheckCircle2, MapPin, AlertTriangle, Sparkles, Trash2, Pencil, X, Save, MessageSquare, BellRing, Route, UserRoundCheck } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
-import { apiGet, apiPost } from '@/lib/apiClient';
+import { apiGet, apiPatch, apiPost } from '@/lib/apiClient';
 
 const BG = 'hsl(var(--background))';
 const TEXT = 'hsl(var(--foreground))';
@@ -169,7 +169,7 @@ function EditForm({ booking, busy, onSave, onCancel }) {
   );
 }
 
-function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBusy, consentBusy, editing, result, onCharge, onLink, onRetryAcuity, onDelete, onEdit, onSave, onCancelEdit, onSendReminder, onToggleConsent }) {
+function BookingRow({ booking, providers, selected, assigning, busy, retryBusy, deleteBusy, saveBusy, reminderBusy, consentBusy, editing, result, onSelect, onAssign, onCharge, onLink, onRetryAcuity, onDelete, onEdit, onSave, onCancelEdit, onSendReminder, onToggleConsent }) {
   const collectable = booking.balanceDue > 0 && booking.paymentStatus !== 'paid_in_full';
   const canPay = booking.hasStripeCustomer; // link + charge both need a Stripe customer
   const appointmentLabel = APPOINTMENT_LABEL[booking.appointmentType] || titleize(booking.appointmentType || 'One-time');
@@ -179,7 +179,9 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
   return (
     <div className="rounded-2xl px-4 py-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 gap-3">
+          <input type="checkbox" checked={selected} onChange={() => onSelect(booking.id)} className="mt-1 h-4 w-4 accent-current" aria-label={`Select ${booking.customerName} for bulk assignment`} />
+          <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="truncate font-heading text-xl uppercase leading-none">{booking.customerName}</h3>
             <StatusPill status={booking.paymentStatus} />
@@ -212,10 +214,25 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
             {booking.customerPhone ? <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" strokeWidth={1.7} />{booking.customerPhone}</span> : null}
             {booking.address ? <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" strokeWidth={1.7} />{booking.address}</span> : null}
           </div>
+          </div>
         </div>
         <div className="text-right">
           <p className="font-heading text-2xl uppercase leading-none">{collectable ? money(booking.balanceDue) : money(0)}</p>
           <p className="mt-1 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}>Balance Due</p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-3 rounded-xl border p-3 sm:grid-cols-[1fr_auto] sm:items-end" style={{ borderColor: BORDER, background: 'hsl(var(--background) / 0.46)' }}>
+        <label className="min-w-0">
+          <span className="flex items-center gap-1.5 font-body text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: DIM }}><UserRoundCheck className="h-3.5 w-3.5" />Assigned nurse</span>
+          <select value={booking.providerProfileId || ''} disabled={assigning} onChange={(event) => onAssign(booking, event.target.value || null)} className="mt-2 min-h-[42px] w-full rounded-xl px-3 font-body text-sm" style={FIELD_STYLE}>
+            <option value="">Unassigned</option>
+            {providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.name} · {String(provider.role).toUpperCase()}</option>)}
+          </select>
+        </label>
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <span className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full border px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.13em]" style={{ borderColor: BORDER, color: MUTED }}><Route className="h-3 w-3" />{titleize(booking.routeState || 'not built')}</span>
+          <span className="inline-flex min-h-[28px] items-center rounded-full border px-2.5 font-body text-[9px] font-bold uppercase tracking-[0.13em]" style={{ borderColor: BORDER, color: MUTED }}>{booking.providerProfileId ? booking.assignedNurse : 'Unassigned'}</span>
         </div>
       </div>
 
@@ -340,21 +357,45 @@ function BookingRow({ booking, busy, retryBusy, deleteBusy, saveBusy, reminderBu
 }
 
 export default function LiveAdminBookings() {
-  const [state, setState] = useState({ loading: true, error: '', bookings: [] });
+  const [state, setState] = useState({ loading: true, error: '', bookings: [], providers: [] });
   const [actions, setActions] = useState({}); // id -> { busy, message, tone, link }
   const [editingId, setEditingId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkProvider, setBulkProvider] = useState('');
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: '' }));
     try {
-      const data = await apiGet('/api/admin/bookings');
-      setState({ loading: false, error: '', bookings: Array.isArray(data?.bookings) ? data.bookings : [] });
+      const [data, roster] = await Promise.all([apiGet('/api/admin/bookings'), apiGet('/api/admin/bookings/assign')]);
+      setState({ loading: false, error: '', bookings: Array.isArray(data?.bookings) ? data.bookings : [], providers: Array.isArray(roster?.providers) ? roster.providers : [] });
     } catch (err) {
-      setState({ loading: false, error: 'Could not load bookings.', bookings: [] });
+      setState((current) => ({ ...current, loading: false, error: 'Could not load bookings.', bookings: [] }));
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const assignBookings = useCallback(async (items, providerProfileId) => {
+    const ids = items.map((item) => item.id);
+    ids.forEach((id) => setActions((current) => ({ ...current, [id]: { ...current[id], busyAssign: true } })));
+    const changes = items.map((booking) => ({ appointmentId: booking.id, providerProfileId: providerProfileId || null, expectedUpdatedAt: booking.updatedAt }));
+    try {
+      await apiPatch('/api/admin/bookings/assign', { changes });
+      setSelectedIds([]);
+      await load();
+    } catch (requestError) {
+      const locked = requestError?.body?.code === 'treatment_assignment_locked';
+      if (locked && items.length === 1) {
+        const reason = window.prompt('Treatment has started. Enter the required override reason:');
+        if (reason?.trim()) {
+          await apiPatch('/api/admin/bookings/assign', { ...changes[0], force: true, overrideReason: reason.trim() });
+          await load();
+          return;
+        }
+      }
+      ids.forEach((id) => setActions((current) => ({ ...current, [id]: { busyAssign: false, tone: 'error', message: requestError.message || 'Assignment failed.' } })));
+    }
+  }, [load]);
 
   const runAction = useCallback(async (booking, mode) => {
     setActions((m) => ({ ...m, [booking.id]: { busy: true } }));
@@ -460,7 +501,7 @@ export default function LiveAdminBookings() {
     }
   }, []);
 
-  const { loading, error, bookings } = state;
+  const { loading, error, bookings, providers } = state;
   const outstanding = bookings.filter((b) => b.balanceDue > 0 && b.paymentStatus !== 'paid_in_full');
 
   return (
@@ -485,6 +526,17 @@ export default function LiveAdminBookings() {
             </button>
           </div>
 
+          {selectedIds.length > 0 && (
+            <div className="mt-4 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center" style={{ background: TEXT, color: INVERT, borderColor: TEXT }}>
+              <strong className="font-body text-xs uppercase tracking-[0.16em]">{selectedIds.length} selected</strong>
+              <select value={bulkProvider} onChange={(event) => setBulkProvider(event.target.value)} className="min-h-[42px] flex-1 rounded-xl border border-white/20 bg-black px-3 font-body text-sm text-white">
+                <option value="">Unassign selected</option>
+                {providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.name} · {String(provider.role).toUpperCase()}</option>)}
+              </select>
+              <button type="button" onClick={() => assignBookings(bookings.filter((booking) => selectedIds.includes(booking.id)), bulkProvider)} className="min-h-[42px] rounded-full bg-white px-5 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-black">Apply assignment</button>
+            </div>
+          )}
+
           {error ? (
             <div className="mt-6 flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: CARD_STRONG, border: `1px solid ${BORDER}`, color: 'hsl(0 70% 62%)' }}>
               <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -502,6 +554,11 @@ export default function LiveAdminBookings() {
               <BookingRow
                 key={booking.id}
                 booking={booking}
+                providers={providers}
+                selected={selectedIds.includes(booking.id)}
+                assigning={!!actions[booking.id]?.busyAssign}
+                onSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
+                onAssign={(item, providerId) => assignBookings([item], providerId)}
                 busy={!!actions[booking.id]?.busy}
                 retryBusy={!!actions[booking.id]?.busyRetry}
                 result={actions[booking.id]}

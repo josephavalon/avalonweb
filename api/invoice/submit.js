@@ -33,6 +33,7 @@ import {
   MAX_SHIFT_ROWS,
 } from '../../src/data/nurseInvoiceRates.js';
 import { buildInvoiceDocumentHtml } from '../../src/data/invoiceDocument.js';
+import { getDefaultTenantId, getSupabaseServiceClient } from '../_supabase-server.js';
 
 const RECIPIENTS = [
   'aaron@avalonvitality.co',
@@ -216,13 +217,84 @@ export default async function handler(req, res) {
     const invoiceNumber = buildInvoiceNumber(nurse, periodEnd);
     const submittedAt = new Date().toISOString();
 
-    if (!process.env.RESEND_API_KEY) {
-      return res.status(503).json({
-        error: 'Invoice email is not configured yet.',
-        code: 'email_not_configured',
-      });
+    // Persistence is now part of submission, not an after-the-fact email
+    // scrape. The existing calculator remains authoritative; only its server
+    // result is stored. Shift associations are accepted only when they resolve
+    // to this tenant, so the shared invoice door cannot forge cross-tenant links.
+    const db = await getSupabaseServiceClient();
+    const tenantId = await getDefaultTenantId(db);
+    if (!db || !tenantId) {
+      return res.status(503).json({ error: 'Invoice storage is not configured yet.', code: 'invoice_storage_not_configured' });
+    }
+    const profileResult = await db.from('profiles').select('id').eq('tenant_id', tenantId)
+      .eq('email', nurseEmail).maybeSingle();
+    const requestedShiftIds = [...new Set(shifts.map((row) => row?.shiftId).filter(Boolean))];
+    let linkedShifts = [];
+    if (requestedShiftIds.length) {
+      const result = await db.from('operational_shifts')
+        .select('id, event_container_id, appointment_id').eq('tenant_id', tenantId).in('id', requestedShiftIds);
+      if (result.error) throw result.error;
+      linkedShifts = result.data || [];
+    }
+    const linkedShiftById = new Map(linkedShifts.map((row) => [row.id, row]));
+    const invoiceInsert = await db.from('nurse_invoices').insert({
+      tenant_id: tenantId,
+      invoice_number: invoiceNumber,
+      nurse_profile_id: profileResult.data?.id || null,
+      nurse_name: nurse.name,
+      nurse_email: nurseEmail,
+      status: 'submitted',
+      period_start: periodStart,
+      period_end: periodEnd,
+      wages_cents: computed.wagesCents,
+      reimbursements_cents: computed.reimbursementsCents,
+      total_cents: computed.grandTotalCents,
+      submitted_at: submittedAt,
+      delivery_status: 'pending',
+      payload: {
+        contract: 'avalon_nurse_invoice_v2',
+        knownContractor,
+        receiptCount: attachments.length,
+      },
+    }).select('id').single();
+    if (invoiceInsert.error) throw invoiceInsert.error;
+    const invoiceId = invoiceInsert.data.id;
+    const lineRows = [
+      ...computed.shiftLines.map((line, index) => {
+        const linked = linkedShiftById.get(shifts[index]?.shiftId) || null;
+        return {
+          tenant_id: tenantId, invoice_id: invoiceId, line_type: 'shift',
+          shift_id: linked?.id || null,
+          event_container_id: linked?.event_container_id || null,
+          appointment_id: linked?.appointment_id || null,
+          service_code: line.typeKey, service_date: line.date, hours: line.hours,
+          quantity: { ivCount: line.ivCount, shotCount: line.shotCount, gfeCount: line.gfeCount },
+          description: line.typeLabel, amount_cents: line.subtotalCents, sort_order: index,
+        };
+      }),
+      ...computed.expenseLines.map((line, index) => ({
+        tenant_id: tenantId, invoice_id: invoiceId, line_type: 'expense',
+        description: line.description, amount_cents: line.amountCents,
+        sort_order: computed.shiftLines.length + index,
+      })),
+    ];
+    const linesInsert = await db.from('nurse_invoice_lines').insert(lineRows);
+    if (linesInsert.error) {
+      await db.from('nurse_invoices').delete().eq('tenant_id', tenantId).eq('id', invoiceId);
+      throw linesInsert.error;
     }
 
+    if (!process.env.RESEND_API_KEY) {
+      await db.from('nurse_invoices').update({ delivery_status: 'failed' })
+        .eq('tenant_id', tenantId).eq('id', invoiceId);
+      return res.status(202).json({
+        ok: true, invoiceId, status: 'submitted', deliveryStatus: 'failed',
+        warning: 'The invoice was saved, but its email copy could not be sent. Operations can review it in Avalon OS.',
+        invoiceNumber, knownContractor, receiptCount: attachments.length, submittedAt,
+        computed, wagesCents: computed.wagesCents, reimbursementsCents: computed.reimbursementsCents,
+        grandTotalCents: computed.grandTotalCents,
+      });
+    }
     const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
       from: fromAddress(),
@@ -241,12 +313,25 @@ export default async function handler(req, res) {
     });
 
     if (result?.error) {
+      await db.from('nurse_invoices').update({ delivery_status: 'failed' })
+        .eq('tenant_id', tenantId).eq('id', invoiceId);
       console.warn('Invoice email failed', safeLogContext(result.error, 'invoice_email_failed'));
-      return res.status(502).json({ error: 'Submission is temporarily unavailable. Please try again.' });
+      return res.status(202).json({
+        ok: true, invoiceId, status: 'submitted', deliveryStatus: 'failed',
+        warning: 'The invoice was saved, but its email copy could not be sent. Operations can review it in Avalon OS.',
+        invoiceNumber, knownContractor, receiptCount: attachments.length, submittedAt,
+        computed, wagesCents: computed.wagesCents, reimbursementsCents: computed.reimbursementsCents,
+        grandTotalCents: computed.grandTotalCents,
+      });
     }
+
+    await db.from('nurse_invoices').update({ delivery_status: 'sent' })
+      .eq('tenant_id', tenantId).eq('id', invoiceId);
 
     return res.status(200).json({
       ok: true,
+      invoiceId,
+      status: 'submitted',
       invoiceNumber,
       knownContractor,
       receiptCount: attachments.length,

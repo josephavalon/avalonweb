@@ -10,7 +10,7 @@ import {
 
 assert.deepEqual(OS_ADAPTER_OPERATIONS, ['health', 'import', 'export', 'sync', 'retry', 'disconnect']);
 
-for (const provider of ['acuity', 'stripe', 'supabase', 'resend', 'quo', 'hubspot', 'mercury', 'quickbooks', 'gusto', 'nursys', 'qualiphy']) {
+for (const provider of ['acuity', 'stripe', 'square', 'supabase', 'resend', 'quo', 'hubspot', 'mercury', 'quickbooks', 'gusto', 'nursys', 'qualiphy']) {
   const adapter = getOsAdapter(provider);
   assert.equal(adapter.provider, provider);
   const health = adapterHealth(adapter);

@@ -78,6 +78,8 @@ const NAV_LIVE = [
       },
       {
         label: 'Revenue & Payments', children: [
+          { label: 'Client payments', to: '/admin/client-payments' },
+          { label: 'Nurse invoices', to: '/admin/nurse-invoices' },
           { label: 'Revenue Dashboard', to: soon('Revenue Dashboard') },
           { label: 'Sales', to: soon('Sales') },
           { label: 'Memberships', to: soon('Memberships') },
@@ -94,6 +96,7 @@ const NAV_LIVE = [
       },
       {
         label: 'Banking & Accounting', children: [
+          { label: 'Operational ledger', to: '/admin/accounting' },
           { label: 'Cash Flow', to: soon('Cash Flow') },
           { label: 'Bank Accounts', to: soon('Bank Accounts') },
           { label: 'Transfers', to: soon('Transfers') },
@@ -176,6 +179,7 @@ const NAV_LIVE = [
   },
   {
     label: 'Operations', icon: ShieldCheck, children: [
+      { label: 'Scheduling', to: '/admin/scheduling' },
       { label: 'Team', to: '/admin/team' },
       {
         label: 'Clinical', children: [

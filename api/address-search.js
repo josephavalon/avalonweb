@@ -84,12 +84,14 @@ export default async function handler(req, res) {
       const city = cityFromAddress(address);
       const stateCode = stateFromAddress(address);
       const zip = String(address.postcode || '').split(';')[0].trim().slice(0, 5);
+      const latitude = Number(item.lat);
+      const longitude = Number(item.lon);
       // Only surface results precise enough to use (need a street + city).
       if (!street || !city) continue;
       const label = [street, city, [stateCode, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
       if (seen.has(label)) continue;
       seen.add(label);
-      results.push({ street, city, state: stateCode, zip, label });
+      results.push({ street, city, state: stateCode, zip, label, latitude, longitude });
       if (results.length >= 5) break;
     }
 

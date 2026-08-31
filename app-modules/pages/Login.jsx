@@ -51,7 +51,7 @@ function AppleMark() {
 function Field({ id, name, label, type = 'text', value, onChange, placeholder, autoComplete, autoCapitalize = 'none', children }) {
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/58">
+      <label htmlFor={id} className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6258]">
         {label}
       </label>
       <div className="relative">
@@ -66,7 +66,7 @@ function Field({ id, name, label, type = 'text', value, onChange, placeholder, a
           autoCorrect="off"
           spellCheck={false}
           placeholder={placeholder}
-          className="min-h-[44px] w-full rounded-xl border border-foreground/14 bg-foreground/[0.045] px-4 py-2.5 font-body text-[15px] font-semibold text-foreground shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06)] outline-none backdrop-blur-xl transition-colors placeholder:text-foreground/25 focus:border-foreground/42 focus:bg-foreground/[0.07] md:min-h-[40px] md:py-2"
+          className="min-h-[44px] w-full rounded-xl border border-[#d8d0c5] bg-[#f7f2ea] px-4 py-2.5 font-body text-[15px] font-semibold text-[#2b211b] shadow-[inset_0_1px_0_rgba(43,33,27,0.05)] outline-none transition-colors placeholder:text-[#8d8176] focus:border-[#2b211b] focus:bg-white md:min-h-[40px] md:py-2"
         />
         {children}
       </div>
@@ -99,11 +99,11 @@ function SubmitButton({ loading, idle, busy }) {
       type="submit"
       disabled={loading}
       whileTap={{ scale: 0.985 }}
-      className="flex min-h-[46px] w-full items-center justify-between rounded-full bg-foreground px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-background transition-colors hover:bg-foreground/88 disabled:cursor-wait disabled:opacity-45 md:min-h-[42px]"
+      className="flex min-h-[46px] w-full items-center justify-between rounded-full bg-[#2b211b] px-5 font-body text-xs font-bold uppercase tracking-[0.2em] text-[#fffdf8] transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-45 md:min-h-[42px]"
     >
       <span>{loading ? busy : idle}</span>
       {loading ? (
-        <span className="h-5 w-5 rounded-full border-2 border-background/25 border-t-background animate-spin" />
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/25 border-t-white" />
       ) : (
         <ArrowRight className="h-5 w-5" strokeWidth={2} />
       )}
@@ -285,7 +285,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   // 'methods' is the passwordless launchpad; 'email'/'phone' are the expanded forms.
   const [view, setView] = useState('methods');
   const localOrganizerDemo = requestedOrganizer && !supabaseMode && demoAuthAvailable;
-  const [identifier, setIdentifier] = useState(reviewAuthAvailable ? reviewUsername : localOrganizerDemo ? 'ORGANIZER001' : ''); // demo client ID / admin operator ID
+  const [identifier, setIdentifier] = useState(reviewAuthAvailable ? reviewUsername : localOrganizerDemo ? 'ORGANIZER001' : demoAuthAvailable && requestedNurse ? 'NURSE001' : ''); // demo client ID / staff ID
   const [email, setEmail] = useState('');           // supabase magic-link address
   const [password, setPassword] = useState(reviewAuthAvailable ? reviewPassword : localOrganizerDemo ? (import.meta.env.VITE_AVALON_DEMO_PASSWORD || '') : '');
   const [showPassword, setShowPassword] = useState(false);
@@ -459,7 +459,7 @@ export default function Login({ defaultAudience = 'patient' }) {
     setIdentifier(submittedIdentifier);
     setPassword(submittedPassword);
     if (!submittedIdentifier) {
-      setFieldError(isAdmin ? 'Enter your operator ID and passcode.' : isOrganizer ? 'Enter your organizer ID or email.' : 'Enter your client ID or email.');
+      setFieldError(isAdmin ? 'Enter your operator ID and passcode.' : isOrganizer ? 'Enter your organizer ID or email.' : isNurse ? 'Enter your nurse ID or email.' : 'Enter your client ID or email.');
       return;
     }
     if (!submittedPassword) {
@@ -724,7 +724,7 @@ export default function Login({ defaultAudience = 'patient' }) {
           type="button"
           onClick={() => setShowPassword((value) => !value)}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
-          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-foreground/45 transition-colors hover:bg-foreground/[0.07] hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:text-foreground"
+          className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-[#6e6258] transition-colors hover:bg-black/[0.06] hover:text-[#2b211b] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2b211b]"
         >
           {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.7} /> : <Eye className="h-5 w-5" strokeWidth={1.7} />}
         </button>
@@ -898,7 +898,10 @@ export default function Login({ defaultAudience = 'patient' }) {
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
-        <section className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6">
+        <section
+          className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6"
+          style={{ '--foreground': '24 23% 14%', '--background': '40 33% 98%' }}
+        >
           <PortalChooser value={activePortalChoice} onChange={switchPortal} />
           {isStaff ? <StaffPortalChooser value={staffMode} onChange={switchStaffPortal} /> : null}
 
@@ -916,7 +919,7 @@ export default function Login({ defaultAudience = 'patient' }) {
               className="flex-1"
             >
               <div className="mb-3">
-                <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[2.2rem]">
+                <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-tight text-[#2b211b] md:text-[2.2rem]">
                   {heading[0]} {heading[1]}
                 </h1>
                 {isOrganizer ? (

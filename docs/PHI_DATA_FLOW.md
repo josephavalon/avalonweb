@@ -66,3 +66,30 @@ Appointment Summary Access requires either a signed summary token from `APPOINTM
 | Regression guard | 9 assertions, wired to both `npm run test:front-door` and `npm run test:launch-blockers` | `scripts/front-door-qa.mjs` |
 
 Architecture record and rationale: `docs/COGNITO_FRONT_DOOR.md`.
+
+### Endpoints deliberately exempt from `blockFrontDoorPhiRoute()`
+
+The apex and `www` are front-door hosts, so that guard answers `409` there. Any
+feature that must actually work on the apex therefore cannot call it, and cannot
+be listed in `PHI_WRITING_HANDLERS`. That exemption is only defensible when the
+handler is *structurally* incapable of receiving patient data, and each one is
+paid for with a dedicated CI assertion.
+
+| Endpoint | Why it is exempt | Guard |
+|---|---|---|
+| `api/invoice/submit.js` | Nurse pay data, not patient data. Free text is PHI-screened on input. | `checkInvoicePageIsPhiFree()` |
+| `api/notify/intake-alert.js` | Empty POST. `bodyParser` off, a declared body is refused unread, the parsed-body property is never referenced. Sends one frozen constant with no name, service, time, or identifier. | `checkStartPingAndDepositArePhiFree()` |
+| `api/deposit/create-session.js` | Empty POST, same body refusal. Sends Stripe no `customer_email`, no name, no phone, no address, no cart; metadata is restricted to `safeStripeMetadata()`'s frozen allowlist; writes nothing to Supabase, Acuity, or HubSpot. | `checkStartPingAndDepositArePhiFree()` |
+
+The reviewer's objection to the deposit is that Stripe collects an email on its
+hosted page and that email belongs to a healthcare provider's customer. The
+answer is that we never **correlate** it: Avalon never learns the address, the
+`AV-XXXX-XXXX` reference is random and derived from nothing about the person,
+and no record anywhere links a Stripe session to a Cognito entry. The join
+happens in a human's head in the Stripe dashboard, not in a data flow we built.
+
+The SMS alert additionally relies on the body being a constant: Quo signs a BAA
+but **SMS is not covered by it** (`api/_lib/send-sms.js`). Adding a first name,
+a city, or a service to that message would break HIPAA posture, not merely a
+lint rule. `checkStartPingAndDepositArePhiFree()` runs the real
+`bodyContainsPhi()` over the real constants for exactly this reason.

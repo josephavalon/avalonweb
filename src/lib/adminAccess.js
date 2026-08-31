@@ -16,6 +16,10 @@ export const STAFF_ROUTES = Object.freeze([
   '/admin/crm', // preview-only patients/customer surface
   '/admin/bookings', // billing — ready to collect
   '/admin/finance', // billing — payments
+  '/admin/scheduling', // operational workforce schedule
+  '/admin/client-payments', // Square payment reconciliation
+  '/admin/nurse-invoices', // contractor invoice approvals
+  '/admin/accounting', // integrated Square/invoice double-entry ledger
   '/admin/inventory',
   '/admin/team',
   '/admin/email-templates', // editable customer email templates
@@ -40,6 +44,10 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
   '/admin/messages',
   '/admin/bookings',
   '/admin/finance',
+  '/admin/scheduling',
+  '/admin/client-payments',
+  '/admin/nurse-invoices',
+  '/admin/accounting',
   '/admin/inventory',
   '/admin/team',
   '/admin/gfe', // GFE policy toggles (admin-only)

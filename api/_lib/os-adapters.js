@@ -1,6 +1,7 @@
 const PROVIDERS = Object.freeze({
   acuity: { label: 'Acuity', mode: 'sandbox', required: ['ACUITY_USER_ID', 'ACUITY_API_KEY'] },
   stripe: { label: 'Stripe', mode: 'sandbox', required: ['STRIPE_SECRET_KEY'] },
+  square: { label: 'Square', mode: 'sandbox', required: ['SQUARE_WEBHOOK_SIGNATURE_KEY', 'SQUARE_WEBHOOK_NOTIFICATION_URL'] },
   supabase: { label: 'Supabase', mode: 'sandbox', required: ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] },
   resend: { label: 'Resend', mode: 'sandbox', required: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'] },
   quo: { label: 'Quo', mode: 'sandbox', required: ['QUO_API_KEY', 'QUO_FROM_NUMBER'] },

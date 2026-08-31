@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import PageShell from '@/components/admin/PageShell';
+import RouteAssignmentPanel from '@/components/admin/RouteAssignmentPanel';
 import { APPOINTMENTS, CLIENTS, SERVICES, STAFF } from '@/fixtures/adminMockData';
 import { NURSES, REQUESTS } from '@/fixtures/commandMockData';
 import {
@@ -398,6 +399,7 @@ export default function DispatchControl() {
         )}
       >
         <div className="space-y-5">
+          <RouteAssignmentPanel />
           {note && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}

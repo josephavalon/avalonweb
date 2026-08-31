@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
+import CognitoSubmitPing from '@/components/forms/CognitoSubmitPing';
 import { useSeo } from '@/lib/seo';
 
 // Vital Ice × Avalon — Outside Lands weekend front door.
@@ -223,6 +224,7 @@ export default function Vitalice() {
 
               <div className="mt-8 grid gap-4" data-testid="vitalice-form">
                 <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} />
+                <CognitoSubmitPing source="vitalice" />
 
                 <p
                   data-when="pre-submit"

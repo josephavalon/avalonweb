@@ -99,6 +99,7 @@ function rowId() {
 
 const emptyShift = () => ({
   id: rowId(),
+  shiftId: null,
   date: '',
   typeKey: 'mobile',
   hours: '',
@@ -216,6 +217,7 @@ function reducer(state, action) {
 function toComputeInput(state) {
   return {
     shifts: state.shifts.map((row) => ({
+      shiftId: row.shiftId || null,
       date: row.date,
       typeKey: row.typeKey,
       hours: Number(row.hours),
@@ -814,7 +816,7 @@ export default function NurseInvoice() {
             <div className={CARD_CLASS}>
               <CheckCircle2 className="h-10 w-10 text-emerald-600" strokeWidth={1.75} />
               <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[3rem] leading-[0.9]">
-                Invoice sent
+                {state.result?.deliveryStatus === 'failed' ? 'Invoice saved' : 'Invoice sent'}
               </h2>
               <p className="mt-4 av-mono text-[13px] text-foreground/60">
                 {state.result?.invoiceNumber}
@@ -823,8 +825,9 @@ export default function NurseInvoice() {
                 {formatCents(state.result?.grandTotalCents || 0)}
               </p>
               <p className="mt-4 font-body text-[14px] leading-[1.55] text-foreground/70">
-                A copy went to you, Aaron, Corey, Joseph and support. You'll be paid through Gusto
-                once it's approved.
+                {state.result?.deliveryStatus === 'failed'
+                  ? state.result.warning
+                  : "A copy went to you, Aaron, Corey, Joseph and support. You'll be paid through Gusto once it's approved."}
               </p>
 
               <p className="mt-7 font-body text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">

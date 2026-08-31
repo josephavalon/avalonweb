@@ -21,6 +21,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+// The real guard, not a copy: the whole point of the ALERT_BODIES check is that
+// it exercises the same block-list sendSms() will apply at runtime.
+import { bodyContainsPhi } from '../api/_lib/phi-guard.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -480,6 +483,143 @@ async function checkInvoicePageIsPhiFree(failures) {
   }
 }
 
+
+// ── The front-door exemption for the alert ping and the deposit ─────────────
+//
+// api/notify/intake-alert.js and api/deposit/create-session.js both run on the
+// apex, so neither can call blockFrontDoorPhiRoute() — that guard 409s exactly
+// the hosts they serve. Being absent from PHI_WRITING_HANDLERS is therefore
+// load-bearing, and it is only defensible while these files remain incapable of
+// receiving patient data. That is what this check enforces, and it is the price
+// of the exemption (api/invoice/* pays the same price above).
+//
+// Comments are stripped before scanning: the header of each handler DISCUSSES
+// the tokens it must not use ("no customer_email, no Supabase"), and a naive
+// substring match would either fail on the prose or force the docs to be vague.
+function stripComments(source) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+const PHI_FREE_HANDLER_RULES = [
+  {
+    rel: 'api/notify/intake-alert.js',
+    why: 'the admin SMS alert',
+    forbidden: [
+      [/\breq\.body\b/, 'reads a request body — the alert must be structurally incapable of receiving the intake'],
+    ],
+    required: [
+      [/bodyParser:\s*false/, 'must disable bodyParser so a payload is never parsed'],
+      [/content-length/i, 'must refuse a request that declares a body'],
+    ],
+  },
+  {
+    rel: 'api/deposit/create-session.js',
+    why: 'the $50 reservation deposit',
+    forbidden: [
+      [/\breq\.body\b/, 'reads a request body — the deposit must never accept patient detail'],
+      [/customer_email/, 'sends customer_email to Stripe — identity must come from Stripe\'s own page, and it re-enables Link'],
+      [/setup_future_usage/, 'vaults a card we cannot attribute to an owner; not authorized by the on-page copy'],
+      [/supabase/i, 'writes to Supabase — that drags Supabase back into BAA scope from the front door'],
+      [/acuity/i, 'talks to Acuity — scheduling is not part of the front-door deposit'],
+      [/hubspot/i, 'talks to HubSpot — the deposit must not create a CRM record'],
+    ],
+    required: [
+      [/bodyParser:\s*false/, 'must disable bodyParser so a payload is never parsed'],
+      [/content-length/i, 'must refuse a request that declares a body'],
+      [/payment_method_types:\s*\['card'\]/, "must pin payment_method_types: ['card'] or Stripe Link's OTP prompt returns"],
+      [/safeStripeMetadata\(/, 'must route metadata through safeStripeMetadata()'],
+    ],
+  },
+];
+
+// The observer sits in a subtree that now holds live form fields (seamless.js,
+// 2026-07-31). attributeFilter is what makes it structurally unable to see a
+// value; the rest are the reads that would defeat that.
+const SUBMIT_PING_FORBIDDEN = [
+  [/\.value\b/, 'reads .value'],
+  [/textContent/, 'reads textContent'],
+  [/innerText/, 'reads innerText'],
+  [/FormData/, 'constructs FormData'],
+  [/querySelector(All)?\(\s*['"`][^'"`]*input/i, 'queries for an input element'],
+];
+
+async function checkStartPingAndDepositArePhiFree(failures) {
+  for (const rule of PHI_FREE_HANDLER_RULES) {
+    let source = '';
+    try {
+      source = await fs.readFile(path.join(ROOT, rule.rel), 'utf8');
+    } catch {
+      failures.push(`${rule.rel}: missing — ${rule.why} has no handler`);
+      continue;
+    }
+    const code = stripComments(source);
+    for (const [pattern, reason] of rule.forbidden) {
+      if (pattern.test(code)) failures.push(`${rule.rel}: ${reason}`);
+    }
+    for (const [pattern, reason] of rule.required) {
+      if (!pattern.test(code)) failures.push(`${rule.rel}: ${reason}`);
+    }
+  }
+
+  // The silent-failure trap. bodyContainsPhi() blocks the bare words "nurse"
+  // and "appointment", and sendSms() answers { ok: false } rather than throwing,
+  // so an alert body that trips it sends NOTHING with no error anywhere a human
+  // would see. Run the real guard over the real constants.
+  const alertRel = 'api/notify/intake-alert.js';
+  try {
+    const source = await fs.readFile(path.join(ROOT, alertRel), 'utf8');
+    const block = source.match(/const ALERT_BODIES = Object\.freeze\(\{([\s\S]*?)\}\);/);
+    if (!block) {
+      failures.push(`${alertRel}: ALERT_BODIES must stay a module-level Object.freeze({...}) so CI can verify every message`);
+    } else {
+      if (block[1].includes('${')) {
+        failures.push(`${alertRel}: an ALERT_BODIES entry interpolates a value — alert bodies must be constants, never built from a request`);
+      }
+      const bodies = [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+      if (!bodies.length) failures.push(`${alertRel}: no alert bodies found to verify`);
+      for (const body of bodies) {
+        if (bodyContainsPhi(body)) {
+          failures.push(
+            `${alertRel}: alert body "${body.slice(0, 48)}…" trips bodyContainsPhi() — `
+            + 'sendSms() would refuse it and NO texts would go out, silently. Reword it.',
+          );
+        }
+      }
+    }
+  } catch {
+    /* the missing-file case is already reported above */
+  }
+
+  const pingRel = 'src/components/forms/CognitoSubmitPing.jsx';
+  try {
+    const source = await fs.readFile(path.join(ROOT, pingRel), 'utf8');
+    const code = stripComments(source);
+    if (!/attributeFilter:\s*\['class'\]/.test(code)) {
+      failures.push(`${pingRel}: must observe with attributeFilter: ['class'] — that is what makes it unable to be handed a field value`);
+    }
+    for (const [pattern, reason] of SUBMIT_PING_FORBIDDEN) {
+      if (pattern.test(code)) {
+        failures.push(`${pingRel}: ${reason} — the submit observer must learn only THAT a form succeeded, never what was in it`);
+      }
+    }
+  } catch {
+    failures.push(`${pingRel}: missing — /start would submit with no admin alert`);
+  }
+
+  // Stripe's return URL is a full page load, so a missing rewrite 404s the
+  // customer AFTER they have been charged.
+  try {
+    const vercelJson = await fs.readFile(path.join(ROOT, 'vercel.json'), 'utf8');
+    if (!vercelJson.includes('start/.*')) {
+      failures.push('vercel.json: SPA rewrite must include start/.* or /start/deposit and /start/received 404 on a hard load');
+    }
+  } catch {
+    failures.push('vercel.json: unreadable');
+  }
+}
+
 export async function runFrontDoorChecks() {
   const failures = [];
   await checkInvoicePageIsPhiFree(failures);
@@ -492,6 +632,7 @@ export async function runFrontDoorChecks() {
   await checkAnalyticsEventTaxonomy(failures);
   await checkLandingHasNoIdentityCapture(failures);
   await checkServerGateCoverage(failures);
+  await checkStartPingAndDepositArePhiFree(failures);
   return failures;
 }
 

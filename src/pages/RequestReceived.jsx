@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
+import { pingIntakeAlert } from '@/lib/intakeAlert';
 import { readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
 import { useSeo } from '@/lib/seo';
 
@@ -16,6 +17,11 @@ export default function RequestReceived() {
   });
 
   useEffect(() => {
+    // Belt to CognitoSubmitPing's braces: if Cognito redirects here instead of
+    // swapping in place, this is the only signal that a request landed. Both
+    // share one sessionStorage key, so the admins still get exactly one text.
+    pingIntakeAlert('start');
+
     const storedFlow = readGuidedFlow();
     const flow = Number.isFinite(storedFlow?.selectedAt) ? storedFlow : null;
     if (flow?.submittedAt) return;

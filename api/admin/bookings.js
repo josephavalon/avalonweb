@@ -27,7 +27,7 @@ function smsConsentGranted(payload) {
   return truthy(payload?.contact?.smsReminderConsent) || truthy(payload?.smsReminderConsent);
 }
 
-function shapeBooking(row) {
+function shapeBooking(row, providerNames = new Map(), routeStates = new Map()) {
   const payload = row.external_payload || {};
   const appointment = payload.appointment || {};
   const contact = payload.contact || {};
@@ -37,6 +37,7 @@ function shapeBooking(row) {
   const name = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
   return {
     id: row.id,
+    updatedAt: row.updated_at,
     status: row.status,
     startsAt: row.starts_at,
     service: payload.primaryService || row.protocol_key || 'Avalon Visit',
@@ -69,6 +70,10 @@ function shapeBooking(row) {
     hasStripeCustomer: !!row.stripe_customer_id,
     smsConsent: smsConsentGranted(payload),
     createdAt: row.created_at,
+    providerProfileId: row.provider_profile_id || null,
+    assignedNurse: row.provider_profile_id ? (providerNames.get(row.provider_profile_id) || 'Assigned provider') : '',
+    assignmentState: row.provider_profile_id ? 'assigned' : 'unassigned',
+    routeState: routeStates.get(row.id) || 'not_built',
   };
 }
 
@@ -85,7 +90,7 @@ export default async function handler(req, res) {
   const scope = req.query?.scope === 'upcoming' ? 'upcoming' : 'all';
 
   let query = db.from('appointments')
-    .select('id, tenant_id, status, starts_at, protocol_key, payment_status, reconciliation_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
+    .select('id, tenant_id, status, starts_at, updated_at, provider_profile_id, protocol_key, payment_status, reconciliation_status, visit_subtotal_cents, deposit_amount_cents, balance_due_cents, deposit_paid_at, balance_paid_at, acuity_appointment_id, stripe_customer_id, stripe_payment_method_id, external_payload, created_at')
     .neq('status', 'archived')
     .order('starts_at', { ascending: scope === 'upcoming', nullsFirst: false })
     .limit(limit);
@@ -106,6 +111,22 @@ export default async function handler(req, res) {
       code: safeErrorCode(error, 'admin_bookings_query_failed'),
     });
   }
+  const providerIds = [...new Set((data || []).map((row) => row.provider_profile_id).filter(Boolean))];
+  const providerNames = new Map();
+  if (providerIds.length) {
+    const { data: providers } = await db.from('provider_profiles')
+      .select('id, profiles:profile_id(full_name), people:person_id(display_name)').in('id', providerIds);
+    (providers || []).forEach((provider) => providerNames.set(provider.id, provider.profiles?.full_name || provider.people?.display_name || 'Assigned provider'));
+  }
+  const routeStates = new Map();
+  try {
+    const appointmentIds = (data || []).map((row) => row.id);
+    if (appointmentIds.length) {
+      const { data: routeStops } = await db.from('provider_route_day_stops')
+        .select('appointment_id, selected, provider_route_days!inner(status)').in('appointment_id', appointmentIds);
+      (routeStops || []).forEach((stop) => routeStates.set(stop.appointment_id, stop.selected ? (stop.provider_route_days?.status === 'active' ? 'active_route' : 'included') : 'omitted'));
+    }
+  } catch { /* route tables may not be migrated yet; assignment still works */ }
   await writeAuditEvent(db, {
     tenantId: authed.tenantId || data?.find((row) => row?.tenant_id)?.tenant_id || null,
     actorProfileId: authed.user?.id || null,
@@ -119,5 +140,5 @@ export default async function handler(req, res) {
       resultCount: (data || []).length,
     },
   });
-  return res.status(200).json({ bookings: (data || []).map(shapeBooking) });
+  return res.status(200).json({ bookings: (data || []).map((row) => shapeBooking(row, providerNames, routeStates)) });
 }

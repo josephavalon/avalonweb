@@ -177,6 +177,42 @@ export const FALLBACK_EVENTS = [
       { id: 'ao-compression', name: 'Compression therapy', description: '20-minute NormaTec session, added to your IV visit.', priceCents: 4500 },
     ],
   },
+  {
+    slug: 'dantes-inferno-halloween',
+    name: "Dante's Inferno Halloween",
+    venue: 'San Francisco Bay Area',
+    startsAt: '2026-10-31T19:00:00-07:00',
+    endsAt: '2026-11-01T01:00:00-07:00',
+    status: 'presale',
+    hostName: "Dante's Inferno",
+    cohosts: ['Avalon Vitality'],
+    descriptionBlocks: {
+      vibe: 'Halloween night, with recovery built in.',
+      description:
+        "Avalon brings a nurse-led recovery lounge to Dante's Inferno on Halloween night. Hydration and recovery services on-site, administered by registered nurses.",
+      goodToKnow: [
+        'Venue and service menu announced closer to the date',
+        'Guests must be 21+ with a valid photo ID',
+        '90-second pre-visit health check required for any clinical service',
+      ],
+    },
+    tiers: [],
+  },
+  {
+    slug: 'voyage-to-paradiso',
+    name: "Voyage to Paradiso: Dante's Inferno",
+    venue: 'San Francisco Bay Area',
+    startsAt: '2026-07-04T19:00:00-07:00',
+    endsAt: '2026-07-05T01:00:00-07:00',
+    status: 'closed',
+    hostName: "Dante's Inferno",
+    cohosts: ['Avalon Vitality'],
+    descriptionBlocks: {
+      description:
+        "Avalon ran a nurse-led recovery lounge at Voyage to Paradiso on the Fourth of July — hydration and recovery services on-site, administered by registered nurses.",
+    },
+    tiers: [],
+  },
 ];
 
 export function fallbackList() {
