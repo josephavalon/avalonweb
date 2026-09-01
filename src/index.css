@@ -8736,7 +8736,20 @@ body:has(.nd-home) .avalon-static-backdrop {
     min-height: 0 !important;
     flex: 1 1 auto;
     flex-direction: column;
-    padding: calc(3.6rem + 0.35rem) 1.25rem max(0.35rem, env(safe-area-inset-bottom));
+    /* Reserve the cookie banner's height at the bottom.
+       This column is a locked 100dvh box, so a fixed banner sitting on top of
+       it does not push anything — it just covers it. Measured on the live site
+       in both Chrome and WebKit: the banner is 176px tall and the Cognito
+       submit button lands at 566-610 on an iPhone SE and 710-762 on an
+       iPhone 13/14, so START was physically underneath the banner for every
+       first-time visitor on the two most common iPhones. They fill the form
+       and cannot tap the button.
+       CookieConsent.jsx already publishes --av-cookie-banner-height on :root
+       and body:has(.nd-home) .nd-hero__split already subtracts it; this is the
+       same reservation for the intake column. Collapses to 0px once consent is
+       given and the property is removed. */
+    padding: calc(3.6rem + 0.35rem) 1.25rem
+      calc(max(0.35rem, env(safe-area-inset-bottom)) + var(--av-cookie-banner-height, 0px));
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
