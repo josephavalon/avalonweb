@@ -24,6 +24,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // The real guard, not a copy: the whole point of the ALERT_BODIES check is that
 // it exercises the same block-list sendSms() will apply at runtime.
 import { bodyContainsPhi } from '../api/_lib/phi-guard.js';
+// Same reasoning: exercise the real gate, not a regex over its source. The
+// source-text checks below can only prove the host LISTS look right; this one
+// proves the DECISION is right, which is the thing that was actually wrong.
+import { isFrontDoorHost } from '../api/_lib/pre-api-guard.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -201,6 +205,74 @@ async function checkSeamlessEmbed(failures) {
 
 // 2. Every brochure host must appear in BOTH host lists, and the two lists must
 //    match exactly. Drift means half the gate is open.
+// 2a. The gate must DENY BY DEFAULT.
+//
+// Regression tripwire for the 2026-09-01 finding: isFrontDoorHost() used to ask
+// "is this host on the front-door list?", so every host that was not on it —
+// every *.vercel.app preview URL of this project, publicly reachable, with live
+// Stripe/Acuity/Resend/Quo keys in Preview env — ran the PHI funnel ungated.
+// A source-text check over the host lists could not see that, because both
+// lists were correct; the DECISION built on them was not.
+//
+// Cases are exhaustive on purpose: an unknown host, an empty host, and a
+// preview URL must all be gated, and the known OS hosts must all stay open, or
+// the fix has been half-reverted.
+const GATE_EXPECTATIONS = [
+  // [host, mustBeGated]
+  ['www.avalonvitality.co', true],
+  ['avalonvitality.co', true],
+  ['snooches.avalonvitality.co', true],
+  ['avalonweb-probe-abc123-joseph-8775s-projects.vercel.app', true],
+  ['some-host-nobody-added-yet.avalonvitality.co', true],
+  ['', true],
+  ['beta.avalonvitality.co', false],
+  ['care.avalonvitality.co', false],
+  ['localhost', false],
+  ['127.0.0.1', false],
+];
+
+async function checkGateDeniesByDefault(failures) {
+  for (const [host, mustBeGated] of GATE_EXPECTATIONS) {
+    const gated = isFrontDoorHost({ headers: { host } });
+    if (gated !== mustBeGated) {
+      failures.push(
+        `isFrontDoorHost({ host: "${host}" }) returned ${gated}, expected ${mustBeGated}`
+        + (mustBeGated
+          ? ' — that host would serve the PHI funnel ungated'
+          : ' — that host runs the OS and has just been locked out'),
+      );
+    }
+  }
+
+  // The escape hatch must be additive-only and must never be able to open a
+  // real front-door host.
+  const previous = process.env.AVALON_OS_EXTRA_HOSTS;
+  try {
+    process.env.AVALON_OS_EXTRA_HOSTS = 'www.avalonvitality.co, some-preview.vercel.app';
+    if (!isFrontDoorHost({ headers: { host: 'www.avalonvitality.co' } })) {
+      failures.push('AVALON_OS_EXTRA_HOSTS opened www.avalonvitality.co — the front-door list must win over the escape hatch');
+    }
+    if (isFrontDoorHost({ headers: { host: 'some-preview.vercel.app' } })) {
+      failures.push('AVALON_OS_EXTRA_HOSTS did not open the host it names — the QA escape hatch is broken');
+    }
+    // ...and it must be inert in Production entirely, so that leaving it set
+    // in the Vercel dashboard cannot re-open the funnel on the apex.
+    const previousEnv = process.env.VERCEL_ENV;
+    try {
+      process.env.VERCEL_ENV = 'production';
+      if (!isFrontDoorHost({ headers: { host: 'some-preview.vercel.app' } })) {
+        failures.push('AVALON_OS_EXTRA_HOSTS was honoured with VERCEL_ENV=production — the QA escape hatch must be inert in prod');
+      }
+    } finally {
+      if (previousEnv === undefined) delete process.env.VERCEL_ENV;
+      else process.env.VERCEL_ENV = previousEnv;
+    }
+  } finally {
+    if (previous === undefined) delete process.env.AVALON_OS_EXTRA_HOSTS;
+    else process.env.AVALON_OS_EXTRA_HOSTS = previous;
+  }
+}
+
 async function checkHostListScope(failures) {
   const lists = [
     { rel: 'src/lib/frontDoor.js', name: 'FRONT_DOOR_HOSTS' },
@@ -534,6 +606,23 @@ const PHI_FREE_HANDLER_RULES = [
       [/content-length/i, 'must refuse a request that declares a body'],
       [/payment_method_types:\s*\['card'\]/, "must pin payment_method_types: ['card'] or Stripe Link's OTP prompt returns"],
       [/safeStripeMetadata\(/, 'must route metadata through safeStripeMetadata()'],
+      [/\{CHECKOUT_SESSION_ID\}/, 'must let Stripe stamp the session id into success_url, or /start/deposit cannot verify the payment and goes back to trusting the query string'],
+    ],
+  },
+  {
+    rel: 'api/deposit/verify.js',
+    why: 'the deposit receipt check',
+    forbidden: [
+      [/\breq\.body\b/, 'reads a request body — verification takes a session id and nothing else'],
+      [/customer_details/, 'reads customer_details — Stripe collects an email on its own page and we must never correlate it to an intake'],
+      [/customer_email/, 'reads customer_email — same reason'],
+      [/supabase/i, 'writes to Supabase — that drags Supabase back into BAA scope from the front door'],
+      [/acuity/i, 'talks to Acuity'],
+      [/hubspot/i, 'talks to HubSpot'],
+    ],
+    required: [
+      [/bodyParser:\s*false/, 'must disable bodyParser so a payload is never parsed'],
+      [/metadata\?\.kind !== DEPOSIT_KIND/, 'must confirm the session is a start_deposit — without it ANY Avalon checkout session id would render the deposit receipt'],
     ],
   },
 ];
@@ -583,6 +672,16 @@ async function checkStartPingAndDepositArePhiFree(failures) {
       }
       const bodies = [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
       if (!bodies.length) failures.push(`${alertRel}: no alert bodies found to verify`);
+      // {time} is the one substitution the alert is allowed to make, and it is
+      // filled from the clock. Any OTHER placeholder would be a channel for
+      // request data to reach an un-BAA'd SMS provider.
+      for (const body of bodies) {
+        for (const ph of body.match(/\{[a-z_]+\}/gi) || []) {
+          if (ph !== '{time}') {
+            failures.push(`${alertRel}: alert body contains placeholder ${ph} — only {time} may be substituted, and only from the clock`);
+          }
+        }
+      }
       for (const body of bodies) {
         if (bodyContainsPhi(body)) {
           failures.push(
@@ -629,6 +728,7 @@ export async function runFrontDoorChecks() {
   await checkInvoicePageIsPhiFree(failures);
   await checkSeamlessEmbed(failures);
   await checkHostListScope(failures);
+  await checkGateDeniesByDefault(failures);
   await checkDeletedRoutes(failures);
   await checkRouteGates(failures);
   await checkCspSplit(failures);
