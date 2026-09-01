@@ -10157,6 +10157,16 @@ body:has(.nd-hero) {
 }
 
 .nd-safari-tint-bar a {
+  /* "Start your visit" is a CTA repeated on every page, and with no padding its
+     hit box was only as tall as the text: 101x10 on a phone, 114x11 on desktop.
+     WCAG 2.5.8 puts the floor at 24px, and a 10px target on a touch screen is
+     a miss waiting to happen on the one link that starts the funnel.
+     Stretching it to the bar's own height costs no layout — the bar is already
+     32-34px and the flex row centres it — so the target triples without the
+     header growing by a pixel. */
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
   border-bottom: 1px solid currentColor;
   color: inherit;
   text-decoration: none;
