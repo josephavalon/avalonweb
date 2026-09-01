@@ -24,6 +24,7 @@ const STRIPE_FILES = [
   'api/charge-balance.js',
   'api/integrations/stripe/webhook.js',
   'api/_lib/balance-core.js',
+  'api/deposit/create-session.js',
 ];
 
 // Stripe SDK write methods. We only audit calls that send data outbound to

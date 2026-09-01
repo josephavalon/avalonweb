@@ -8813,7 +8813,7 @@ body:has(.nd-home) .avalon-static-backdrop {
     font-size: 0.7rem !important;
   }
 
-  body:has(.nd-flow--focused-booking):has(.av-cookie-control) .nd-flow--focused-booking [data-testid='landing-form'] > p {
+  .nd-flow--focused-booking [data-testid='landing-form'] > p {
     margin: 0;
   }
 
@@ -13893,5 +13893,401 @@ html.av-browser-espresso #root {
     margin-bottom: 0.65rem;
     font-size: 0.62rem;
     text-align: center;
+  }
+}
+/* Focused Book on TALL DESKTOP windows — the screenshot's broad, editorial
+   rhythm, used only where the whole request genuinely fits at that scale.
+   The floor was 821px and that was measured wrong: at this scale the page
+   needs ~1067px, so every laptop window between 821 and 1079 rendered the
+   expanded type and pushed the START button below the fold (167px of overflow
+   at 1440x900, 217px at 1440x850 — the primary CTA was unreachable without
+   scrolling on the most common screen sizes we have). Raised to 1080px, which
+   is the first height the expanded rhythm actually fits in. */
+@media (min-width: 1024px) and (min-height: 1080px) {
+  .nd-flow--focused-booking .nd-focused-booking__form-column {
+    position: relative;
+    top: -0.625rem;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 {
+    position: relative;
+    top: 0.875rem;
+    font-size: 7.5rem !important;
+    line-height: 0.78 !important;
+  }
+
+  .nd-flow--focused-booking .cognito input.el-input__inner {
+    padding-top: 0.9rem !important;
+    padding-bottom: 0.9rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field,
+  .nd-flow--focused-booking .cognito .cog-col {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field:has(input[type='email']) {
+    margin-bottom: -0.5625rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-checkable {
+    line-height: 1.35 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-button {
+    min-height: 3.5rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-page__navigation {
+    margin-top: -0.8125rem !important;
+  }
+}
+/* Focused Book on NORMAL-TO-SHORT desktop windows — fit the whole intake in one
+   viewport. This is the common case, not the exception: it now covers every
+   window shorter than 1080px, which is most laptops.
+   The 100dvh lock further up is `@media (max-width: 760px)`, i.e. mobile only,
+   so desktop was never height-constrained and on a laptop-height window the
+   START button fell below the fold. A patient should never have to scroll to
+   finish the primary CTA.
+   Compress rather than lock: a genuinely tiny window still scrolls instead of
+   clipping content. */
+@media (min-width: 1024px) and (max-height: 1079px) {
+  /* Full header clearance. This was 5.9rem (94.4px) against a 118px fixed
+     header — the 32px announcement bar plus the 86px corner header — so the
+     h1 rendered 24px UNDERNEATH the header and "START" was sliced in half.
+     There is no .nd-global-corner-header__spacer on this route, so this
+     padding is the only thing holding content clear of the header. */
+  .nd-flow--focused-booking > main {
+    padding-top: calc(5.4rem + 2rem) !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 {
+    font-size: 3.9rem !important;
+    line-height: 0.86 !important;
+  }
+
+  /* Subhead */
+  .nd-flow--focused-booking .nd-focused-booking h1 + p {
+    margin-top: 0.5rem !important;
+    font-size: 1rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] {
+    margin-top: 0.65rem !important;
+    gap: 0.34rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-label {
+    margin-bottom: 0.25rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito input.el-input__inner {
+    padding-top: 0.56rem !important;
+    padding-bottom: 0.56rem !important;
+    font-size: 1rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field,
+  .nd-flow--focused-booking .cognito .cog-col {
+    margin-bottom: 0.28rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-checkable {
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-helptext {
+    margin-top: 0.375rem !important;
+    font-size: 0.71875rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-button {
+    min-height: 2.9rem !important;
+    margin-top: 0 !important;
+  }
+
+  /* Deposit line, then the SMS consent line. */
+  .nd-flow--focused-booking [data-testid='landing-form'] > p {
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p:last-of-type {
+    font-size: 0.6875rem !important;
+    line-height: 1.4 !important;
+  }
+}
+/* Focused Book on SHORT desktop windows (<=899px) — compact the CHROME, not
+   the intake. The header is decoration; the form is the job, so the space comes
+   out of the logo, the round action buttons, and the announcement bar rather
+   than out of the fields a patient has to read and fill.
+   The announcement bar reads "MOBILE WELLNESS, DELIVERED. START YOUR VISIT" —
+   a call to action pointing at the page it is already on. It is the first 32px
+   to go when the window is short. */
+@media (min-width: 1024px) and (max-height: 899px) {
+  body:has(.nd-flow--focused-booking) .nd-safari-tint-bar {
+    display: none !important;
+  }
+
+  body:has(.nd-flow--focused-booking) .nd-corner-header__mark {
+    width: 1.75rem !important;
+    height: 2.5rem !important;
+  }
+
+  body:has(.nd-flow--focused-booking) .nd-corner-header__contact a,
+  body:has(.nd-flow--focused-booking) .nd-corner-menu__toggle {
+    width: 2.7rem !important;
+    min-width: 2.7rem !important;
+    height: 2.7rem !important;
+    min-height: 2.7rem !important;
+  }
+
+  /* Tracks the compacted header exactly: no announcement bar, 86px of header. */
+  .nd-flow--focused-booking > main {
+    padding-top: 5.4rem !important;
+    padding-bottom: 0.4rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 {
+    font-size: 3.1rem !important;
+    line-height: 0.9 !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 + p {
+    margin-top: 0.35rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] {
+    margin-top: 0.45rem !important;
+    gap: 0.28rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito input.el-input__inner {
+    padding-top: 0.48rem !important;
+    padding-bottom: 0.48rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field,
+  .nd-flow--focused-booking .cognito .cog-col {
+    margin-bottom: 0.2rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-button {
+    min-height: 2.75rem !important;
+  }
+}
+/* Focused Book on the SHORTEST desktop windows (<=809px). Below this the
+   intake genuinely cannot fit at a legible size, so the page scrolls the last
+   few pixels rather than shrinking type further — measured 12px of scroll at
+   1024x768, and nothing is clipped. */
+@media (min-width: 1024px) and (max-height: 809px) {
+  .nd-flow--focused-booking > main {
+    padding-top: 5.4rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+
+  body:has(.nd-flow--focused-booking) .nd-corner-header__mark {
+    width: 1.55rem !important;
+    height: 2.2rem !important;
+  }
+
+  body:has(.nd-flow--focused-booking) .nd-corner-header__contact a,
+  body:has(.nd-flow--focused-booking) .nd-corner-menu__toggle {
+    width: 2.45rem !important;
+    min-width: 2.45rem !important;
+    height: 2.45rem !important;
+    min-height: 2.45rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 {
+    font-size: 2.7rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-focused-booking h1 + p {
+    margin-top: 0.3rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] {
+    margin-top: 0.38rem !important;
+    gap: 0.22rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-label {
+    margin-bottom: 0.18rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito input.el-input__inner {
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-field,
+  .nd-flow--focused-booking .cognito .cog-col {
+    margin-bottom: 0.14rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-checkable {
+    font-size: 0.78125rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-helptext {
+    margin-top: 0.2rem !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .nd-flow--focused-booking .cognito .cog-button {
+    min-height: 2.45rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p {
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-form'] > p:last-of-type {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+  }
+}
+/* Once Cognito swaps in its confirmation it sets .is-success on the form. The
+   surrounding Avalon microcopy is written in the future tense ("we'll text
+   you...", "by submitting...", "let's get started") and reads as stale next to
+   the confirmation. Keyed off Cognito's own class, so the copy swap itself
+   needs no JS. (CognitoSubmitPing watches the same class to fire the admin SMS
+   alert; it observes class attributes only and never reads a field.)
+   Scoped to the .nd-flow ancestor rather than a `~` sibling of .cognito: the
+   subhead sits BEFORE the embed and a sibling combinator only reaches forwards.
+   .nd-flow also covers the non-focused render path, which has no
+   .nd-focused-booking wrapper. */
+.nd-flow:has(.cog-form.is-success) [data-when='pre-submit'] {
+  display: none;
+}
+/* Same reason, other direction: the deposit CTA wraps its button and microcopy
+   in a grid, and `revert` would resolve a div to plain block and collapse the
+   gap. Named explicitly rather than widening the rule above. */
+.nd-flow:has(.cog-form.is-success) [data-testid='landing-deposit-cta'] {
+  display: grid;
+}
+/* --- Focused Book: short desktop windows, balance pass ---------------------
+   A 1277x715 Safari window (a MacBook with the toolbar showing) exposed three
+   faults that the earlier height tiers did not:
+
+   1. `padding-top: 5.4rem` was written to "track the compacted header exactly"
+      at 86px. Tracking it exactly is the bug — the heading started on the
+      header's bottom edge with zero air, so START and RECEIVED read as though
+      they were clipped by the chrome above them.
+   2. Those tiers compress the FORM column only. The rail was never touched, so
+      at 693px against 629px of usable height it was the rail — not the intake —
+      that pushed 01/02/03 off the bottom of the screen.
+   3. The service map alone was 310px: 45% of the rail, and the single largest
+      element on a screen whose job is a two-field form. Shrinking it is what
+      buys the breathing room back, and it belongs behind the request facts in
+      the hierarchy anyway.
+
+   The columns bottom-align on their own once the rail is no longer the taller
+   of the two — the existing spacer absorbs the slack. */
+@media (min-width: 1024px) and (max-height: 899px) {
+  /* Header is 86px. This leaves ~32px of air beneath it rather than none. */
+  .nd-flow--focused-booking > main {
+    padding-top: 7.4rem !important;
+  }
+
+  /* Constrain the CONTAINER, not the image. .nd-desktop-service-coverage is a
+     grid with an explicit height and the img is height:100% + object-fit:cover,
+     so capping the img's max-height just strands it inside its cell with dead
+     space above — the map has to keep filling the panel to read as a panel. */
+  .nd-flow--focused-booking .nd-desktop-service-coverage {
+    height: 13rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy {
+    padding-top: 2rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy p {
+    font-size: 2rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy span {
+    margin-top: 0.9rem !important;
+  }
+
+  /* Even rhythm rather than the 68px rows the taller tiers use. */
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] dl {
+    margin-top: 1.35rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] dl > div {
+    padding-top: 0.95rem !important;
+    padding-bottom: 0.95rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] ol {
+    margin-top: 1.5rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] ol li > span:first-child {
+    font-size: 2.5rem !important;
+  }
+
+  /* Post-submit the left column collapses to a heading, one button and three
+     links while the rail keeps its full height, which left the confirmation
+     stranded against the top of a tall empty column. Centre it so the two
+     sides read as a pair. */
+  .nd-flow--focused-booking:has(.cog-form.is-success) .nd-focused-booking__form-column {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+}
+/* The shortest desktop windows (<=809px) take the same treatment, a step
+   firmer: the map gives up more height so the air under the header survives. */
+@media (min-width: 1024px) and (max-height: 809px) {
+  .nd-flow--focused-booking > main {
+    padding-top: 7.1rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage {
+    height: 10.75rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy {
+    padding-top: 1.35rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy p {
+    font-size: 1.75rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy span {
+    margin-top: 0.65rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] dl {
+    margin-top: 1.1rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] dl > div {
+    padding-top: 0.8rem !important;
+    padding-bottom: 0.8rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] ol {
+    margin-top: 1rem !important;
+  }
+
+  .nd-flow--focused-booking [data-testid='landing-request-rail'] ol li > span:first-child {
+    font-size: 2.25rem !important;
   }
 }

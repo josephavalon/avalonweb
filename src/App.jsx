@@ -181,6 +181,7 @@ const EventsPage = lazyRoute(() => import('./pages/Events'));
 const CannabisCeNight = lazyRoute(() => import('./pages/CannabisCeNight'));
 const NurseDelivery = lazyRoute(() => import('./pages/NurseDelivery'));
 const RequestReceived = lazyRoute(() => import('./pages/RequestReceived'));
+const StartDeposit    = lazyRoute(() => import('./pages/StartDeposit'));
 const Vitalice = lazyRoute(() => import('./pages/Vitalice'));
 const NurseInvoice = lazyRoute(() => import('./pages/NurseInvoice'));
 const NurseLogin = lazyRoute(() => import('./pages/NurseLogin'));
@@ -396,6 +397,7 @@ function AppRoutes() {
                 /nurse-delivery stays for existing links and the ?path=guided flow. */}
             <Route path="/start" element={<NurseDelivery entry="book" />} />
             <Route path="/start/received" element={<RequestReceived />} />
+            <Route path="/start/deposit"   element={<StartDeposit />} />
             <Route path="/nurse-delivery" element={<NurseDelivery />} />
             {/* Vital Ice × Avalon co-branded appointment intake.
                 Separate Cognito form; same PHI posture as /start. */}

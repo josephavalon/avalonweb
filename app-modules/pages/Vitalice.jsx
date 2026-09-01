@@ -3,14 +3,28 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import AvalonMark from '@/components/AvalonMark';
 import CognitoFormEmbed from '@/components/forms/CognitoFormEmbed';
+import CognitoSubmitPing from '@/components/forms/CognitoSubmitPing';
 import { useSeo } from '@/lib/seo';
 
-// Vital Ice × Avalon evergreen appointment front door.
+// Vital Ice × Avalon — Outside Lands weekend front door.
 // Same PHI posture as /start (see CognitoFormEmbed): the sealed Cognito form is
 // the only intake surface; this page never observes a submit. The account key
 // is shared with the shipping Avalon intake, but data-form points at a separate
 // campaign form so submissions land in a dedicated Cognito entry queue.
 const VITALICE_FORM_NUMBER = import.meta.env.VITE_COGNITO_VITALICE_FORM_ID;
+
+const OFFER_META = [
+  { label: 'Date', value: 'Saturday, August 8' },
+  { label: 'Time', value: '11 AM–2 PM' },
+  { label: 'Visit', value: '10–30 min' },
+  { label: 'Payment', value: 'On site' },
+];
+
+const OFFER_ITEMS = [
+  { name: 'Hydration IV', note: 'electrolytes', price: '$120' },
+  { name: 'Festival IV', note: 'anti-nausea, anti-inflammatory, B-12', price: '$160' },
+  { name: 'B-12 Shot', note: 'solo · or $40 as an IV add-on', price: '$60' },
+];
 
 // Exact reproduction of the Vital Ice header monogram from vitalicesf.com
 // (their <header> SVG, verified 2026-08-05): a thin horizontal rail above
@@ -85,11 +99,66 @@ function CoBrandRibbon() {
   );
 }
 
+function OfferPanel() {
+  return (
+    <aside data-testid="vitalice-offer-panel" className="lg:sticky lg:top-24">
+      <div className="rounded-[2rem] border border-foreground/[0.10] bg-background px-6 py-6 shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)] md:px-8 md:py-8">
+        <p className="av-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+          Vital Ice Member Offer
+        </p>
+        <div className="mt-3 h-[3px] w-14 rounded-full bg-[#4FB3B8]" aria-hidden="true" />
+        <h2 className="mt-4 font-heading uppercase tracking-tight text-foreground text-[2.5rem] leading-[0.9] md:text-[3rem]">
+          Outside Lands
+          <br />
+          Weekend Menu
+        </h2>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          {OFFER_META.map((meta) => (
+            <div
+              key={meta.label}
+              className="rounded-2xl border border-foreground/[0.10] bg-[#fffdf8] px-4 py-3"
+            >
+              <p className="av-mono text-[10px] uppercase tracking-[0.16em] text-foreground/50">
+                {meta.label}
+              </p>
+              <p className="mt-1 font-body text-[15px] font-semibold text-foreground">
+                {meta.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <dl className="mt-7">
+          {OFFER_ITEMS.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-start justify-between gap-4 border-t border-foreground/[0.10] py-4 last:pb-0"
+            >
+              <div>
+                <dt className="font-body text-[15px] font-bold text-foreground md:text-base">
+                  {item.name}
+                </dt>
+                <p className="mt-0.5 font-body text-[12px] text-foreground/60 md:text-[13px]">
+                  {item.note}
+                </p>
+              </div>
+              <dd className="av-mono text-right text-[18px] font-semibold tabular-nums text-foreground md:text-[20px]">
+                {item.price}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </aside>
+  );
+}
+
 export default function Vitalice() {
   useSeo({
-    title: 'Vital Ice × Avalon — Treatment Menu',
+    title: 'Vital Ice × Avalon — Outside Lands',
     description:
-      'Vital Ice members: request a preferred appointment time for a mobile IV or B-12 shot with Avalon Vitality.',
+      'Vital Ice members: reserve a mobile IV or shot for Outside Lands weekend, Saturday August 8, 11 AM–2 PM.',
     path: '/vitalice',
   });
 
@@ -110,7 +179,7 @@ export default function Vitalice() {
             legibility duty via their own opaque cream fill + shadow. */}
       </div>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 md:px-6 md:pt-10 lg:px-8">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-24 md:px-6 md:pt-28 lg:px-8 lg:pt-32">
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +187,7 @@ export default function Vitalice() {
         >
           <CoBrandRibbon />
 
-          <div className="mx-auto mt-8 max-w-2xl lg:mt-10">
+          <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 lg:items-start">
             {/* START card */}
             <div className="rounded-[2rem] border border-foreground/[0.10] bg-background px-6 py-8 shadow-[0_20px_60px_-30px_rgba(43,33,27,0.35)] md:px-10 md:py-10">
               <div className="flex items-center gap-2 text-foreground">
@@ -143,24 +212,25 @@ export default function Vitalice() {
                   Reserve Your Appointment
                 </h2>
                 <p className="mt-4 font-body text-[15px] leading-[1.55] text-foreground/75 md:text-base">
-                  Choose your preferred appointment date and time. Our team will text to confirm availability.
+                  Outside Lands appointments at Vital Ice are available Saturday, August 8 from 11:00 AM–2:00 PM.
                 </p>
                 <div className="mt-5 flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-[#4FB3B8]" strokeWidth={1.75} />
                   <p className="font-body text-[14px] leading-[1.55] text-foreground/75 md:text-[15px]">
-                    Complete the form below to request your appointment.
+                    Complete the form below.
                   </p>
                 </div>
               </div>
 
               <div className="mt-8 grid gap-4" data-testid="vitalice-form">
-                <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} appointmentFields treatmentField />
+                <CognitoFormEmbed compact tight formNumber={VITALICE_FORM_NUMBER} />
+                <CognitoSubmitPing source="vitalice" />
 
                 <p
                   data-when="pre-submit"
                   className="font-body text-sm font-medium leading-[1.55] text-foreground/65"
                 >
-                  Payment on site · No deposit required.
+                  Payment on site · No deposit required for this event.
                 </p>
                 <p
                   data-when="pre-submit"
@@ -181,6 +251,8 @@ export default function Vitalice() {
                 </Link>
               </div>
             </div>
+
+            <OfferPanel />
           </div>
         </motion.section>
       </main>

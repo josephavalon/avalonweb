@@ -36,7 +36,7 @@ export function isSmsConfigured() {
 // E.164 number, but the admin Communications page accepts free-form input like
 // "(415) 555-0100" or "415-555-0100", so strip formatting and default a bare
 // 10-digit number to US/CA (+1).
-function toE164(phone) {
+export function toE164(phone) {
   const raw = String(phone || '').trim();
   if (!raw) return '';
   if (raw.startsWith('+')) {
@@ -48,6 +48,43 @@ function toE164(phone) {
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   return `+${digits}`;
+}
+
+// Internal alert fan-out list. ADMIN_ALERT_PHONES is a comma-separated E.164
+// list of the admins who should get a buzz when a new request lands on the
+// site. Deliberately NOT VITE_-prefixed: a VITE_ var is inlined into the public
+// bundle, which would publish the founders' mobile numbers.
+//
+// Capped at 5 so a fat-fingered env value cannot fan a paid SMS out to an
+// unbounded list, and validated strictly so one bad entry drops itself instead
+// of failing the whole send.
+export const MAX_ADMIN_ALERT_PHONES = 5;
+
+// Email counterpart to the phone list. Email is the reliable half of the alert:
+// SMS to US mobiles is subject to carrier A2P filtering that can silently drop
+// a message the provider reports as "sent" (observed 2026-08-31), whereas mail
+// either lands or bounces visibly. Both channels fire, neither depends on the
+// other, and a failure in one never suppresses the other.
+export function adminAlertEmails(env = process.env) {
+  const seen = new Set();
+  for (const raw of String(env.ADMIN_ALERT_EMAILS || '').split(',')) {
+    const candidate = String(raw || '').trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(candidate)) continue;
+    seen.add(candidate);
+    if (seen.size >= MAX_ADMIN_ALERT_PHONES) break;
+  }
+  return [...seen];
+}
+
+export function adminAlertPhones(env = process.env) {
+  const seen = new Set();
+  for (const raw of String(env.ADMIN_ALERT_PHONES || '').split(',')) {
+    const candidate = toE164(raw);
+    if (!/^\+[1-9]\d{6,14}$/.test(candidate)) continue; // strict E.164
+    seen.add(candidate);
+    if (seen.size >= MAX_ADMIN_ALERT_PHONES) break;
+  }
+  return [...seen];
 }
 
 /**
@@ -88,7 +125,33 @@ export async function sendSms({ to, body }, opts = {}) {
       console.warn('[send-sms] provider send failed', { status: resp.status, detail: String(detail).slice(0, 400) });
       return { ok: false, code: 'provider_send_failed', status: 502, providerStatus: resp.status };
     }
-    return { ok: true, normalizedTo: recipient };
+    // Surface what the provider actually said. Without this a "sent" result is
+    // unfalsifiable: Quo can accept a message the carrier later drops, and a
+    // 2xx alone cannot be told apart from a delivered text.
+    //
+    // Read the STATUS as well as the id. A provider that answers 2xx with
+    // status 'queued' has taken responsibility for the message; one that
+    // answers 2xx with an error or a rejected status has not, and those two
+    // look identical if you only check resp.ok.
+    let providerId = null;
+    let providerStatus = null;
+    let providerMeta = null;
+    try {
+      const payload = await resp.json();
+      const data = payload?.data ?? payload;
+      providerId = data?.id ?? null;
+      providerStatus = data?.status ?? null;
+      // Field names only, never values — the response echoes the recipient
+      // number and must not be logged verbatim.
+      providerMeta = {
+        keys: data && typeof data === 'object' ? Object.keys(data).slice(0, 20) : null,
+        direction: data?.direction ?? null,
+        error: data?.error ?? data?.errorCode ?? data?.errorMessage ?? null,
+      };
+    } catch {
+      /* a 2xx with no JSON body is still a successful send */
+    }
+    return { ok: true, normalizedTo: recipient, providerId, providerStatus, providerMeta };
   } catch (err) {
     console.warn('[send-sms] provider request error', safeLogContext(err, 'send_sms_provider_request_failed'));
     return { ok: false, code: 'provider_request_failed', status: 502 };

@@ -45,6 +45,8 @@
     "test:release": "node scripts/release-qa.mjs",
     "test:team": "node scripts/verify-team-access.mjs",
     "verify:signup": "node scripts/verify-signup.mjs",
+    "verify:start-alert": "node scripts/verify-start-alert.mjs",
+    "verify:start-deposit": "node scripts/verify-start-deposit.mjs",
     "verify:team-invite": "node scripts/verify-team-invite.mjs",
     "test:oauth-config": "node scripts/verify-oauth.mjs",
     "verify:booking-to-acuity": "node scripts/verify-booking-to-acuity.mjs",
