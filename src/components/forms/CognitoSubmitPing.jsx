@@ -23,17 +23,31 @@ import { pingIntakeAlert } from '@/lib/intakeAlert';
  */
 export default function CognitoSubmitPing({ source = 'start' }) {
   useEffect(() => {
-    let done = false;
+    // Edge-triggered, not once-and-done.
+    //
+    // This used to set done = true and disconnect the observer on the first
+    // success, so a second submission in the same page-load was never seen.
+    // Cognito can return to its default state and be submitted again ("submit
+    // another response", a back-navigation, a reset), and that second request
+    // is just as real as the first — an admin who never hears about it has no
+    // other signal that it happened.
+    //
+    // Instead: fire on the transition INTO success, then re-arm once the form
+    // leaves the success state. The class sits on the node for as long as the
+    // confirmation is shown, so without the re-arm step a single submission
+    // would ping on every subsequent class mutation.
+    let armed = true;
 
     const isSuccess = (node) =>
       node instanceof Element
       && node.classList.contains('cog-form')
       && node.classList.contains('is-success');
 
+    const anySuccessOnPage = () => Boolean(document.querySelector('.cog-form.is-success'));
+
     const fire = () => {
-      if (done) return;
-      done = true;
-      observer.disconnect();
+      if (!armed) return;
+      armed = false;
       pingIntakeAlert(source);
     };
 
@@ -44,19 +58,20 @@ export default function CognitoSubmitPing({ source = 'start' }) {
           return;
         }
       }
+      // No success node in this batch — if none remains on the page at all the
+      // form has been reset, so the next submission should alert again.
+      if (!armed && !anySuccessOnPage()) armed = true;
     });
 
     // Cognito can flip the class before this effect runs (bfcache restore, a
     // fast submit, a remount). Check once so that race doesn't cost an alert.
-    if (document.querySelector('.cog-form.is-success')) {
-      fire();
-    } else {
-      observer.observe(document.body, {
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['class'],
-      });
-    }
+    if (anySuccessOnPage()) fire();
+
+    observer.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'],
+    });
 
     return () => observer.disconnect();
   }, [source]);
