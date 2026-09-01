@@ -13901,10 +13901,14 @@ html.av-browser-espresso #root {
   }
 
   .nd-footer--global-mobile .nd-footer__notice p {
+    /* The mobile footer re-declares the notice, so raising the desktop rule
+       alone left phones — where most of this traffic reads — still at 9.44px.
+       Same 0.75rem floor. The 20rem measure is already ~53 characters at this
+       size, so only the size moves. */
     max-width: 20rem;
     margin: 0 auto;
     color: var(--nd-ink, #2b211b) !important;
-    font-size: 0.59rem;
+    font-size: 0.75rem;
     font-weight: 450;
     line-height: 1.55;
     text-align: center;
