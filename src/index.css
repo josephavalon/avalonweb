@@ -12314,8 +12314,11 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   -webkit-appearance: none !important;
   appearance: none !important;
   display: block !important;
-  height: 3.8125rem !important;
-  min-height: 3.8125rem !important;
+  /* auto, not a fixed 3.8125rem. The focused-booking height tiers set the field
+     padding for short windows, and a hard height overrode every one of them —
+     five fields locked at 61px is 104px the intake cannot give back, which is
+     what pushed the START button under the fold on a laptop. */
+  height: auto !important;
   width: 100% !important;
   box-sizing: border-box !important;
   padding: 1.125rem 1.25rem !important;
