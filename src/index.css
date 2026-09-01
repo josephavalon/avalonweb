@@ -13572,10 +13572,24 @@ html.av-browser-espresso #root {
     padding-top: 7.4rem !important;
   }
 
-  .nd-flow--focused-booking .nd-desktop-service-coverage img {
-    max-height: 11.5rem !important;
-    object-fit: cover !important;
-    object-position: center 42% !important;
+  /* Constrain the CONTAINER, not the image. .nd-desktop-service-coverage is a
+     grid with an explicit height and the img is height:100% + object-fit:cover,
+     so capping the img's max-height just strands it inside its cell with dead
+     space above — the map has to keep filling the panel to read as a panel. */
+  .nd-flow--focused-booking .nd-desktop-service-coverage {
+    height: 13rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy {
+    padding-top: 2rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy p {
+    font-size: 2rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy span {
+    margin-top: 0.9rem !important;
   }
 
   /* Even rhythm rather than the 68px rows the taller tiers use. */
@@ -13614,8 +13628,20 @@ html.av-browser-espresso #root {
     padding-top: 7.1rem !important;
   }
 
-  .nd-flow--focused-booking .nd-desktop-service-coverage img {
-    max-height: 8rem !important;
+  .nd-flow--focused-booking .nd-desktop-service-coverage {
+    height: 10.75rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy {
+    padding-top: 1.35rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy p {
+    font-size: 1.75rem !important;
+  }
+
+  .nd-flow--focused-booking .nd-desktop-service-coverage__copy span {
+    margin-top: 0.65rem !important;
   }
 
   .nd-flow--focused-booking [data-testid='landing-request-rail'] dl {
