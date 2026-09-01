@@ -195,7 +195,7 @@ export default function Login({ defaultAudience = 'patient' }) {
   const requestedNurse = searchParams.get('role') === 'nurse';
   const requestedOrganizer = searchParams.get('portal') === 'organizer';
   const [audience, setAudience] = useState(requestedOrganizer ? 'organizer' : defaultAudience === 'admin' || requestedNurse ? 'staff' : 'patient');
-  const [staffMode, setStaffMode] = useState(defaultAudience === 'admin' ? 'admin' : 'nurse');
+  const [staffMode, setStaffMode] = useState(requestedNurse ? 'nurse' : defaultAudience === 'admin' ? 'admin' : 'nurse');
   const isStaff = audience === 'staff';
   const isAdmin = isStaff && staffMode === 'admin';
   const isNurse = isStaff && staffMode === 'nurse';
@@ -815,7 +815,7 @@ export default function Login({ defaultAudience = 'patient' }) {
       className="relative min-h-screen min-h-dvh bg-[#f6f2eb] px-4 pb-10 pt-24 text-[#2b211b] md:px-6 md:pb-14 md:pt-28"
       style={{ backgroundColor: '#f6f2eb' }}
     >
-      <main className="relative mx-auto grid min-h-[calc(100dvh-8.5rem)] w-full max-w-5xl place-items-center">
+      <main className="relative mx-auto grid min-h-[calc(100dvh-8.5rem)] w-full max-w-[68rem] place-items-center md:min-h-[calc(100dvh-10.5rem)]">
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
