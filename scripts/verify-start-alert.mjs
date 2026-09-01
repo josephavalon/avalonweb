@@ -43,7 +43,11 @@ const pass = (msg) => console.log(`  ok  ${msg}`);
 const ENDPOINT = '/api/notify/intake-alert';
 
 async function call({ method = 'POST', nonce, body, source = 'start' } = {}) {
-  const headers = {};
+  // The endpoint requires a recognised Origin (it used to skip that check
+  // entirely when the header was absent, which is exactly what curl sends).
+  // Drill the same shape a browser sends, or every assertion below tests the
+  // 403 path instead of the real one.
+  const headers = { Origin: new URL(apiBase).origin };
   if (nonce) headers['x-avalon-alert-nonce'] = nonce;
   if (body) headers['Content-Type'] = 'application/json';
   const res = await fetch(`${apiBase}${ENDPOINT}?source=${source}`, {
@@ -99,7 +103,10 @@ else pass('GET rejected');
 // 5. the spend cap
 let sawLimit = false;
 for (let i = 0; i < 12 && !sawLimit; i += 1) {
-  const res = await call({ nonce: `${nonce}-burst-${i}` });
+  // Hex only. These used to be `${nonce}-burst-${i}`, and "burst" is not
+  // [a-f0-9-] — so every call 400'd on invalid_nonce and never reached the
+  // limiter. This assertion had never once run.
+  const res = await call({ nonce: `${nonce}-${i.toString(16)}` });
   if (res.status === 429) sawLimit = true;
 }
 if (!sawLimit) {

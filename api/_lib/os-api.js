@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getAuthedUser } from './supabase-auth.js';
+import { getAuthedUser, operatorMfaBlocked } from './supabase-auth.js';
 
 export function osBetaEnabled() {
   return [process.env.AVALON_OS_BETA, process.env.VITE_AVALON_OS_BETA]
@@ -46,6 +46,9 @@ export async function requireOsOperator(req, res, id) {
     fail(res, 403, 'tenant_required', 'A tenant-scoped operator profile is required.', { requestId: id });
     return null;
   }
+  // Same operator-tier MFA rule requireAdmin/requireRole apply. Without this,
+  // MFA_ENFORCED=true would leave the entire api/os/v1/* surface password-only.
+  if (operatorMfaBlocked(authed, res)) return null;
   return authed;
 }
 

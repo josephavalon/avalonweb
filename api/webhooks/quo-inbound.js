@@ -11,6 +11,7 @@
  * from, to, body|text, direction } } }. We only record incoming messages.
  */
 import { recordInbound } from '../_lib/comm-store.js';
+import { checkWebhookSecret } from '../_lib/webhook-secret.js';
 
 function pick(obj, ...keys) {
   for (const k of keys) {
@@ -24,10 +25,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const expected = process.env.QUO_WEBHOOK_SECRET;
-  if (!expected) return res.status(503).json({ error: 'Webhook not configured' });
-  const provided = String(req.query?.secret || req.headers['x-webhook-secret'] || '');
-  if (provided !== expected) return res.status(401).json({ error: 'Unauthorized' });
+  const auth = checkWebhookSecret(req, { secretEnv: 'QUO_WEBHOOK_SECRET', provider: 'quo-inbound' });
+  if (!auth.ok) {
+    return res.status(auth.status).json(auth.status === 503
+      ? { error: 'Webhook not configured' }
+      : { error: 'Unauthorized' });
+  }
 
   const payload = req.body || {};
   const type = String(payload.type || payload.event || '').toLowerCase();

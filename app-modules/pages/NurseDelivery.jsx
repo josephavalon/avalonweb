@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -19,6 +19,7 @@ import {
   getGuidedTiming,
 } from '@/data/guidedCommerce';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
+import { newNonce } from '@/lib/intakeAlert';
 import { clearGuidedFlow, readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
 
 // Nurse Delivery owns the unrestricted entry surface and the single intake.
@@ -207,6 +208,13 @@ function RequestRail({ therapyName = '', duration = '' }) {
 // typed even if someone later wires it to a form.
 function ReserveDepositButton() {
   const [state, setState] = useState('idle');
+  // One nonce per mount, not per click: it is what makes Stripe's idempotency
+  // key engage, so a double-click opens ONE session instead of two. Scoped to
+  // the component rather than sessionStorage on purpose — a session expires
+  // after 30 minutes but a Stripe idempotency key lives 24 hours, so a
+  // persisted nonce would hand a returning visitor a dead checkout URL.
+  const nonceRef = useRef(null);
+  if (nonceRef.current === null) nonceRef.current = newNonce();
 
   async function openCheckout() {
     if (state === 'pending') return;
@@ -214,6 +222,7 @@ function ReserveDepositButton() {
     try {
       const res = await fetch('/api/deposit/create-session', {
         method: 'POST',
+        headers: { 'x-avalon-deposit-nonce': nonceRef.current },
         cache: 'no-store',
       });
       const data = await res.json().catch(() => null);

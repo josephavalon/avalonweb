@@ -59,6 +59,8 @@ function constantTimeEqual(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+const SVIX_TOLERANCE_MS = 5 * 60 * 1000;
+
 // Svix signature verification (the protocol Resend uses for webhooks).
 // Header: svix-signature: "v1,<base64sig> v1,<another>"
 // Signed payload: `${svix_id}.${svix_timestamp}.${rawBody}` HMAC-SHA256 with
@@ -69,6 +71,16 @@ function verifySvixSignature({ rawBody, headers, secret }) {
   const svixTimestamp = headers['svix-timestamp'] || headers['Svix-Timestamp'];
   const svixSignature = headers['svix-signature'] || headers['Svix-Signature'];
   if (!svixId || !svixTimestamp || !svixSignature) return false;
+
+  // Reject timestamps outside the tolerance window. The timestamp is part of
+  // the SIGNED payload, so it cannot be edited — but signing it proves nothing
+  // on its own: without an age check a captured request stays valid forever and
+  // can be replayed indefinitely. Svix's spec mandates this window for exactly
+  // that reason. 5 minutes each way, symmetric to absorb clock skew.
+  const sentAtSec = Number(svixTimestamp);
+  if (!Number.isFinite(sentAtSec)) return false;
+  if (Math.abs(Date.now() - sentAtSec * 1000) > SVIX_TOLERANCE_MS) return false;
+
   const signedPayload = `${svixId}.${svixTimestamp}.${rawBody}`;
   const cleanSecret = secret.startsWith('whsec_') ? secret.slice('whsec_'.length) : secret;
   let key;

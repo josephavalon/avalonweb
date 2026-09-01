@@ -8,7 +8,7 @@ import {
   PayOpsError,
   sendPayOpsError,
 } from '../../_lib/payops-core.js';
-import { getAuthedUser } from '../../_lib/supabase-auth.js';
+import { getAuthedUser, operatorMfaBlocked } from '../../_lib/supabase-auth.js';
 
 function parseBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
@@ -28,6 +28,8 @@ async function requireFinanceAdmin(req, res, { stepUp = false } = {}) {
     res.status(403).json({ error: 'Recent multi-factor authentication is required.', code: 'finance_step_up_required' });
     return null;
   }
+  // stepUp is per-call and off by default; this is the global operator policy.
+  if (operatorMfaBlocked(authed, res)) return null;
   return authed;
 }
 

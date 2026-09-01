@@ -11,6 +11,7 @@
 import { getServiceClient } from '../_lib/supabase-auth.js';
 import { writeGfeToAcuity, deriveExpiry } from '../_lib/gfe-core.js';
 import { safeLogContext } from '../_lib/safe-error.js';
+import { checkWebhookSecret } from '../_lib/webhook-secret.js';
 
 function pick(obj, ...keys) {
   for (const k of keys) if (obj && obj[k] != null && obj[k] !== '') return obj[k];
@@ -20,10 +21,12 @@ function pick(obj, ...keys) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const expected = process.env.QUALIPHY_WEBHOOK_SECRET;
-  if (!expected) return res.status(503).json({ error: 'Webhook not configured' });
-  const provided = String(req.query?.secret || req.headers['x-webhook-secret'] || '');
-  if (provided !== expected) return res.status(401).json({ error: 'Unauthorized' });
+  const auth = checkWebhookSecret(req, { secretEnv: 'QUALIPHY_WEBHOOK_SECRET', provider: 'qualiphy-inbound' });
+  if (!auth.ok) {
+    return res.status(auth.status).json(auth.status === 503
+      ? { error: 'Webhook not configured' }
+      : { error: 'Unauthorized' });
+  }
 
   const body = req.body || {};
   const event = Number(pick(body, 'event'));

@@ -79,7 +79,8 @@ assert.match(delivery, /idempotencyKey: `avalon-nurse-invoice-\$\{invoice\.id\}`
 assert.match(delivery, /subject: 'New invoice waiting in Avalon Finance'/, 'notification must stay generic');
 assert.doesNotMatch(delivery, /buildInvoiceDocumentHtml|nurse_invoice_lines|invoice\.nurse_name|invoice\.total_cents/, 'the email worker must not egress invoice details');
 assert.doesNotMatch(delivery, /attachments\s*[:,]/, 'the retry worker must never attach receipts');
-assert.match(deliveryCron, /provided === `Bearer \$\{expected\}`/, 'the recovery cron must require the exact CRON_SECRET bearer token');
+assert.match(deliveryCron, /safeEqual\(provided\.slice\('Bearer '\.length\), expected\)/, 'the recovery cron must require the exact CRON_SECRET bearer token, compared in constant time');
+assert.doesNotMatch(deliveryCron, /provided === `Bearer/, 'the cron secret must not be compared with a short-circuiting ===');
 assert.match(deliveryCron, /MAX_PER_RUN = 25/, 'the recovery cron must cap each run');
 assert.match(vercel, /\/api\/cron\/nurse-invoice-notifications/, 'the durable Finance alert worker must be scheduled');
 assert.match(envExample, /FINANCE_NOTIFICATION_RECIPIENTS=/, 'the server-only Finance recipient allowlist must be documented');

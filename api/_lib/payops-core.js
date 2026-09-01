@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { bodyContainsPhi } from './phi-guard.js';
-import { getAuthedUser } from './supabase-auth.js';
+import { getAuthedUser, operatorMfaBlocked } from './supabase-auth.js';
 
 export const FINANCE_ROLES = Object.freeze([
   'finance_maker',
@@ -243,6 +243,12 @@ export async function requireFinanceActor(req, res, {
     res.status(403).json({ error: 'Recent multi-factor authentication is required.', code: 'finance_step_up_required' });
     return null;
   }
+  // requireAal2 is a per-route STEP-UP, opt-in and off by default. It is not
+  // the global operator policy, so on its own it left every finance, payroll
+  // and vendor-bill route under api/admin/ password-only even with
+  // MFA_ENFORCED=true. This applies the same baseline requireAdmin/requireRole
+  // do; the step-up above still stacks on top for the sensitive actions.
+  if (operatorMfaBlocked(authed, res)) return null;
   return { ...authed, financeRoles: roles };
 }
 
