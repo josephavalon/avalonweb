@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, Fingerprint,
-  Link2, MailCheck, MessageCircle, RefreshCw, Smartphone,
+  Headphones, Link2, MailCheck, RefreshCw, Smartphone,
 } from 'lucide-react';
 import { AnimatePresence, motion } from '@/components/ui/PageTransitionMotion';
 import { useAuthStore } from '@/lib/useAuthStore';
@@ -108,81 +108,6 @@ function SubmitButton({ loading, idle, busy }) {
         <ArrowRight className="h-5 w-5" strokeWidth={2} />
       )}
     </motion.button>
-  );
-}
-
-const PORTAL_CHOICES = [
-  { key: 'new', label: 'New' },
-  { key: 'returning', label: 'Member' },
-  { key: 'nurse', label: 'Nurse' },
-  { key: 'organizer', label: 'Events' },
-];
-
-function PortalChooser({ value, onChange }) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Choose your Avalon portal"
-      className="mb-6 grid grid-cols-4 rounded-full border border-[#d9d2c8] bg-[#f1ece4] p-1"
-    >
-      {PORTAL_CHOICES.map(({ key, label }) => {
-        const selected = value === key;
-        return (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            onClick={() => onChange(key)}
-            className={`min-h-[42px] min-w-0 rounded-full px-1 font-body text-[9px] font-bold uppercase tracking-[0.08em] transition-colors sm:text-[10px] sm:tracking-[0.12em] ${selected
-              ? 'bg-[#2b211b] text-[#f6f2eb] shadow-[0_5px_16px_rgba(43,33,27,0.16)]'
-              : 'text-[#6e6258] hover:bg-[#e7dfd4] hover:text-[#2b211b]'
-            }`}
-          >
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-const STAFF_PORTALS = [
-  { key: 'nurse', label: 'Nurse' },
-  { key: 'admin', label: 'Admin' },
-];
-
-function StaffPortalChooser({ value, onChange }) {
-  return (
-    <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-[#ded6ca] bg-[#f7f3ec] p-1.5 pl-3">
-      <p className="font-body text-[9px] font-bold uppercase tracking-[0.16em] text-[#6e6258]">
-        Staff access
-      </p>
-      <div
-        role="tablist"
-        aria-label="Choose staff portal"
-        className="grid min-w-[176px] grid-cols-2 rounded-full border border-[#d9d2c8] bg-[#eee7de] p-1"
-      >
-        {STAFF_PORTALS.map(({ key, label }) => {
-          const selected = value === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => onChange(key)}
-              className={`min-h-[36px] rounded-full px-3 font-body text-[9px] font-bold uppercase tracking-[0.12em] transition-colors ${selected
-                ? 'bg-[#2b211b] text-[#f6f2eb] shadow-[0_4px_12px_rgba(43,33,27,0.14)]'
-                : 'text-[#6e6258] hover:bg-[#e4dbd0] hover:text-[#2b211b]'
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -567,7 +492,7 @@ export default function Login({ defaultAudience = 'patient' }) {
 
   const displayError = fieldError || error;
   const heading = isAdmin
-    ? ['Admin', 'Sign In']
+    ? ['Admin', 'Login']
     : isNurse
       ? ['Nurse', 'Portal']
       : isOrganizer
@@ -882,13 +807,6 @@ export default function Login({ defaultAudience = 'patient' }) {
             {isPortalUser ? 'Reset password' : 'Forgot password?'}
           </button>
       ) : null}
-      <a
-        href="mailto:support@avalonvitality.co"
-        className={`group inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full font-body text-[10px] font-bold uppercase tracking-[0.14em] text-[#6e6258] transition-colors hover:text-[#2b211b] ${!isNew && !reviewAuthAvailable ? 'border-l border-[#ded6ca]' : ''}`}
-      >
-        <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.8} />
-        Need help?
-      </a>
     </div>
   );
 
@@ -901,49 +819,73 @@ export default function Login({ defaultAudience = 'patient' }) {
         {/* Card frame stays static — only the tab content below crossfades on
             selection. Top menu is global (MobileShell), so it never moves on a
             tab switch. */}
+        {/* Split card: the identity of the surface sits left, the form sits
+            right. The portal/staff tab rows that used to head this card are
+            gone — a sign-in screen that opens by asking which of four kinds of
+            person you are makes the operator read a menu before they can type.
+            The audience is still selectable by URL (?portal=organizer,
+            ?role=nurse), so every deep link that arrives here still lands on
+            the right form; it is only the visible chooser that went away. */}
         <section
-          className="flex w-full max-w-[420px] flex-col rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] p-5 shadow-[0_24px_70px_rgba(43,33,27,0.12)] sm:p-6"
+          className="grid w-full max-w-[64rem] grid-cols-1 overflow-hidden rounded-[2rem] border border-[#ded6ca] bg-[#fffdf8] shadow-[0_24px_70px_rgba(43,33,27,0.12)] md:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]"
           style={{ '--background': '40 33% 98%', '--foreground': '24 23% 14%' }}
         >
-          <PortalChooser value={activePortalChoice} onChange={switchPortal} />
-          {isStaff ? <StaffPortalChooser value={staffMode} onChange={switchStaffPortal} /> : null}
+          <div className="flex flex-col justify-center px-6 pb-2 pt-8 md:px-12 md:py-14">
+            <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[3.4rem]">
+              {heading[0]} {heading[1]}
+            </h1>
+            <span aria-hidden="true" className="mt-5 hidden h-[3px] w-[9rem] rounded-full bg-foreground md:block" />
+            <p className="mt-4 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-7 md:text-base">
+              {isOrganizer
+                ? 'Approved organizers manage event details, experience tickets, sales, and brand assets here.'
+                : isAdmin
+                  ? 'Secure access for authorized administrative staff.'
+                  : isNurse
+                    ? 'Secure access for authorized clinical staff.'
+                    : isNew
+                      ? 'Create your Avalon account to book and manage visits.'
+                      : 'Your visits, your nurse, your records. Sign in to manage your account.'}
+            </p>
+          </div>
 
-          {/* Heading + body crossfade together on every tab/view switch; keyed
-              only on audience/mode/view so it never remounts mid-form (no focus
-              loss while typing an OTP). initial={false} avoids a double-fade on
-              first mount — the card itself already fades in above. */}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={`${audience}-${staffMode}-${mode}-${view}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: EASE }}
-              className="flex-1"
+          {/* Keyed only on audience/mode/view so it never remounts mid-form (no
+              focus loss while typing an OTP). initial={false} avoids a
+              double-fade on first mount — the card itself already fades in. */}
+          <div className="flex flex-col px-6 pb-7 pt-4 md:px-12 md:py-14">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`${audience}-${staffMode}-${mode}-${view}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: EASE }}
+                className="flex-1"
+              >
+                {isNew ? <NewCustomerPanel showHeading={false} bordered={false} embedded /> : body}
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-7 flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-[#ded6ca]" />
+              <span className="font-body text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45">Need help?</span>
+              <span className="h-px flex-1 bg-[#ded6ca]" />
+            </div>
+
+            <a
+              href="tel:+14159807708"
+              className="mt-4 inline-flex items-center gap-3 rounded-2xl px-1 py-1 transition-colors hover:bg-[#f3ede4]"
             >
-              <div className="mb-3">
-                <h1 className="font-heading text-[2.6rem] uppercase leading-[0.86] tracking-tight text-foreground md:text-[2.2rem]">
-                  {heading[0]} {heading[1]}
-                </h1>
-                {isOrganizer ? (
-                  <p className="mt-3 font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2">
-                    Approved organizers manage event details, experience tickets, sales, and brand assets here.
-                  </p>
-                ) : supabaseMode && isStaff ? (
-                  <p className="mt-3 hidden font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2 md:block">
-                    Sign in with your staff email and password.
-                  </p>
-                ) : !isStaff && !isNew ? (
-                  <p className="mt-3 hidden font-body text-sm font-medium leading-relaxed text-foreground/55 md:mt-2 md:block">
-                    Your visits, your nurse, your records. Sign in to manage your account.
-                  </p>
-                ) : null}
-              </div>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f1ece4] text-foreground">
+                <Headphones className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.8} />
+              </span>
+              <span className="flex flex-col text-left">
+                <span className="font-body text-sm font-semibold text-foreground">Contact support</span>
+                <span className="font-body text-sm tracking-[0.02em] text-foreground/55">(415) 980-7708</span>
+              </span>
+            </a>
 
-              {isNew ? <NewCustomerPanel showHeading={false} bordered={false} embedded /> : body}
-            </motion.div>
-          </AnimatePresence>
-          {footer}
+            {footer}
+          </div>
         </section>
       </main>
     </div>

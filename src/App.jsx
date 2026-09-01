@@ -488,7 +488,7 @@ function AppRoutes() {
             {/* One shared sign-in surface for members, nurses, admins, and event
                 organizers. It is intentionally available on the main URL; the
                 clinical and account routes behind it keep their own guards. */}
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login defaultAudience="admin" />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/nurses" element={<Nurses />} />
             <Route path="/order" element={<FrontDoorRedirect><ManageOrder /></FrontDoorRedirect>} />
