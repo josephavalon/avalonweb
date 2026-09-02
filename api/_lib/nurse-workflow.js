@@ -13,6 +13,14 @@ export const READINESS_DOMAINS = Object.freeze([
   'route',
   'safety',
 ]);
+export const READINESS_STAGES = Object.freeze(['offer', 'claim', 'route_release', 'run_start']);
+
+export const READINESS_DOMAINS_BY_STAGE = Object.freeze({
+  offer: Object.freeze(['identity', 'license', 'schedule', 'client', 'gfe', 'patient_payment', 'safety']),
+  claim: Object.freeze(['identity', 'license', 'schedule', 'client', 'gfe', 'patient_payment', 'safety']),
+  route_release: READINESS_DOMAINS,
+  run_start: READINESS_DOMAINS,
+});
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -28,7 +36,7 @@ const NURSYS_EVIDENCE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const READY_GFE_STATES = new Set(['approved', 'clear', 'cleared', 'complete', 'completed', 'not_required']);
 const READY_PAYMENT_STATES = new Set(['authorized', 'captured', 'complete', 'completed', 'paid', 'not_required', 'waived']);
 const RUN_SELECT = 'id,shift_id,assignment_id,provider_profile_id,route_day_id,readiness_snapshot_id,offer_terms_id,guide_version_id,guide_version,status,current_step_key,started_at,clocked_in_at,clocked_out_at,closed_at,version,created_at,updated_at';
-const SNAPSHOT_SELECT = 'id,evaluation_key,shift_id,provider_profile_id,evaluator_version,source_shift_version,overall_status,claim_allowed,evidence,checked_at,expires_at,invalidated_at,invalidation_reason,created_at';
+const SNAPSHOT_SELECT = 'id,evaluation_key,shift_id,provider_profile_id,evaluation_stage,evaluator_version,source_shift_version,overall_status,claim_allowed,evidence,checked_at,expires_at,invalidated_at,invalidation_reason,created_at';
 const OFFER_TERMS_SELECT = 'id,shift_id,provider_profile_id,terms_version,status,engagement_model,gross_pay_cents,hourly_rate_cents,currency,estimated_work_minutes,estimated_travel_minutes,mileage_rate_cents,guaranteed_minimum_cents,cancellation_terms_code,expense_policy_code,expires_at,accepted_at,created_at,updated_at';
 
 export function requestError(message, code, status = 400) {
@@ -72,7 +80,7 @@ export function isNurseWorkflowMigrationError(error) {
   const code = String(error?.code || '');
   const message = String(error?.message || '');
   return ['42P01', '42703', '42883', 'PGRST200', 'PGRST202', 'PGRST203', 'PGRST204'].includes(code)
-    || /provider_work_preferences|nurse_shift_(?:domain_evidence|readiness_snapshots)|nurse_offer_(?:counters|terms)|shift_guide_(?:templates|versions)|mobile_shift_(?:runs|time_events|step_events)|shift_exceptions|record_nurse_|start_nurse_shift_run|close_nurse_shift_run|decline_operational_shift|counter_operational_shift_offer|schema cache/i.test(message);
+    || /provider_work_preferences|nurse_(?:appointment_source_events|marketplace|shift_offers|offer_deliveries|inventory_reservations|pickup_tasks|route_)|nurse_shift_(?:domain_evidence|readiness_snapshots)|nurse_offer_(?:counters|terms)|shift_guide_(?:templates|versions)|mobile_shift_(?:runs|time_events|step_events)|shift_exceptions|record_nurse_|start_nurse_shift_run|close_nurse_shift_run|decline_operational_shift|counter_operational_shift_offer|schema cache/i.test(message);
 }
 
 export function nurseWorkflowError(error, fallbackMessage = 'Nurse workflow is unavailable.') {
@@ -93,6 +101,9 @@ export function nurseWorkflowError(error, fallbackMessage = 'Nurse workflow is u
   }
   if (/current_offer_terms_required/i.test(message)) {
     return requestError('Current approved offer terms are required before accepting this shift.', 'offer_terms_required', 409);
+  }
+  if (/offer_unavailable|offer_terms_changed|accepted_terms_hash_mismatch|fresh_claim_readiness_required|inventory_reservation_(?:incomplete|unavailable)/i.test(message)) {
+    return requestError('This offer is unavailable. Refresh the Work Queue.', 'offer_unavailable', 409);
   }
   if (/engagement_model_not_approved/i.test(message)) {
     return requestError(
@@ -523,6 +534,283 @@ async function loadDomainEvidence(db, tenantId, providerProfileId, shiftId) {
   return result.data || [];
 }
 
+function inventoryLineKey({ location_id: locationId, item_id: itemId, variant_id: variantId, lot_id: lotId }) {
+  return [locationId, itemId, variantId || '-', lotId || '-'].join(':');
+}
+
+function inventoryItemKey({ item_id: itemId, variant_id: variantId, lot_id: lotId }) {
+  return [itemId, variantId || '-', lotId || '-'].join(':');
+}
+
+function kitEvidence(status, reasonCode, nowIso, expiresAt, remediation = null) {
+  return readinessDomain(status, reasonCode, 'nurse_inventory_reservations', {
+    checkedAt: nowIso,
+    expiresAt,
+    ownerRole: 'operations',
+    remediation,
+  });
+}
+
+// Release/start inventory readiness is deliberately reconstructed from the
+// pinned manifest, exact allocations, live stock ledger, lot controls, pickup
+// evidence, and accepted nurse-kit custody. Generic domain evidence cannot
+// satisfy these stages.
+async function loadCanonicalKitEvidence(
+  db,
+  tenantId,
+  providerProfileId,
+  shiftId,
+  stage,
+  now,
+  nowIso,
+  expiresAt,
+) {
+  const pinnedResult = await db.from('nurse_shift_supply_requirements')
+    .select('manifest_version_id,requirements_hash,pinned_at,invalidated_at')
+    .eq('tenant_id', tenantId)
+    .eq('shift_id', shiftId)
+    .is('invalidated_at', null)
+    .maybeSingle();
+  if (pinnedResult.error) throw pinnedResult.error;
+  if (!pinnedResult.data) {
+    return kitEvidence('blocked', 'approved_supply_manifest_required', nowIso, expiresAt,
+      'Operations must pin a clinically approved supply manifest to this shift.');
+  }
+
+  const [manifestResult, requirementsResult, reservationsResult, pickupsResult, custodyResult] = await Promise.all([
+    db.from('nurse_supply_manifest_versions')
+      .select('id,status,content_hash,requirements_hash,approved_at,retired_at')
+      .eq('tenant_id', tenantId)
+      .eq('id', pinnedResult.data.manifest_version_id)
+      .maybeSingle(),
+    db.from('nurse_supply_manifest_requirements')
+      .select('id,item_id,variant_id,quantity,lot_required,temperature_evidence_required,calibration_evidence_required')
+      .eq('tenant_id', tenantId)
+      .eq('manifest_version_id', pinnedResult.data.manifest_version_id),
+    db.from('nurse_inventory_reservations')
+      .select('id,requirement_id,location_id,item_id,variant_id,lot_id,quantity,status,expires_at,reserved_at,updated_at')
+      .eq('tenant_id', tenantId)
+      .eq('shift_id', shiftId)
+      .eq('provider_profile_id', providerProfileId)
+      .in('status', ['reserved', 'consumed']),
+    db.from('nurse_pickup_tasks')
+      .select('id,location_id,route_day_id,status,evidence_hash,completed_at,updated_at')
+      .eq('tenant_id', tenantId)
+      .eq('shift_id', shiftId)
+      .eq('provider_profile_id', providerProfileId)
+      .neq('status', 'cancelled'),
+    db.from('os_inventory_location_assignments')
+      .select('location_id,assignment_status,is_primary,accepted_at')
+      .eq('tenant_id', tenantId)
+      .eq('provider_profile_id', providerProfileId)
+      .eq('assignment_status', 'accepted')
+      .eq('is_primary', true)
+      .limit(1),
+  ]);
+  for (const result of [manifestResult, requirementsResult, reservationsResult, pickupsResult, custodyResult]) {
+    if (result.error) throw result.error;
+  }
+  const manifest = manifestResult.data;
+  const requirements = requirementsResult.data || [];
+  const reservations = reservationsResult.data || [];
+  const pickups = pickupsResult.data || [];
+  const custodyLocationId = custodyResult.data?.[0]?.location_id || null;
+  if (!manifest || manifest.status !== 'approved' || !manifest.approved_at || manifest.retired_at
+      || (manifest.requirements_hash || manifest.content_hash) !== pinnedResult.data.requirements_hash) {
+    return kitEvidence('blocked', 'approved_supply_manifest_required', nowIso, expiresAt,
+      'Operations must repin the current approved supply manifest.');
+  }
+  if (!requirements.length) {
+    return kitEvidence('blocked', 'supply_manifest_requirements_missing', nowIso, expiresAt,
+      'Inventory Operations must add approved structured requirements to the manifest.');
+  }
+  if (!custodyLocationId) {
+    return kitEvidence('blocked', 'active_nurse_kit_custody_required', nowIso, expiresAt,
+      'Operations must establish and accept the nurse kit custody assignment.');
+  }
+  const custodyLocationResult = await db.from('os_inventory_locations')
+    .select('id,location_type,status')
+    .eq('tenant_id', tenantId)
+    .eq('id', custodyLocationId)
+    .maybeSingle();
+  if (custodyLocationResult.error) throw custodyLocationResult.error;
+  if (custodyLocationResult.data?.location_type !== 'nurse_kit'
+      || custodyLocationResult.data?.status !== 'active') {
+    return kitEvidence('blocked', 'active_nurse_kit_custody_required', nowIso, expiresAt,
+      'Operations must restore an active nurse-kit custody location.');
+  }
+
+  const requirementById = new Map(requirements.map((row) => [row.id, row]));
+  for (const requirement of requirements) {
+    const allocated = reservations
+      .filter((row) => row.requirement_id === requirement.id)
+      .reduce((total, row) => total + Number(row.quantity || 0), 0);
+    if (allocated < Number(requirement.quantity || 0)) {
+      return kitEvidence('blocked', 'inventory_reservation_incomplete', nowIso, expiresAt,
+        'Inventory Operations must restore exact stock reservations for every required line.');
+    }
+  }
+  if (reservations.some((row) => row.status === 'reserved' && Date.parse(row.expires_at) <= now.getTime())) {
+    return kitEvidence('blocked', 'inventory_reservation_evidence_stale', nowIso, expiresAt,
+      'Inventory Operations must refresh expired reservations.');
+  }
+  if (reservations.some((row) => {
+    const requirement = requirementById.get(row.requirement_id);
+    return (requirement?.lot_required || requirement?.temperature_evidence_required
+      || requirement?.calibration_evidence_required) && !row.lot_id;
+  })) {
+    return kitEvidence('blocked', 'inventory_lot_required', nowIso, expiresAt,
+      'Inventory Operations must reserve an exact approved lot.');
+  }
+
+  const lotIds = [...new Set(reservations.map((row) => row.lot_id).filter(Boolean))];
+  let lots = [];
+  if (lotIds.length) {
+    const lotResult = await db.from('os_inventory_lots')
+      .select('id,item_id,variant_id,expires_on,disposition_status,temperature_controlled,temperature_evidence_expires_at,calibration_required,calibration_expires_at')
+      .eq('tenant_id', tenantId)
+      .in('id', lotIds);
+    if (lotResult.error) throw lotResult.error;
+    lots = lotResult.data || [];
+  }
+  const lotById = new Map(lots.map((row) => [row.id, row]));
+  const today = nowIso.slice(0, 10);
+  const invalidLot = reservations.find((reservation) => {
+    if (!reservation.lot_id) return false;
+    const lot = lotById.get(reservation.lot_id);
+    const requirement = requirementById.get(reservation.requirement_id);
+    return !lot
+      || lot.disposition_status !== 'available'
+      || (lot.expires_on && lot.expires_on < today)
+      || ((lot.temperature_controlled || requirement?.temperature_evidence_required)
+        && (!lot.temperature_evidence_expires_at || Date.parse(lot.temperature_evidence_expires_at) <= now.getTime()))
+      || ((lot.calibration_required || requirement?.calibration_evidence_required)
+        && (!lot.calibration_expires_at || Date.parse(lot.calibration_expires_at) <= now.getTime()));
+  });
+  if (invalidLot) {
+    return kitEvidence('blocked', 'inventory_lot_evidence_stale', nowIso, expiresAt,
+      'Inventory Operations must replace quarantined, expired, or unverified stock.');
+  }
+
+  const sourceLocationIds = [...new Set(reservations.map((row) => row.location_id).filter(Boolean))];
+  const balanceLocationIds = [...new Set([...sourceLocationIds, custodyLocationId])];
+  const balancesResult = await db.from('os_inventory_location_balances')
+    .select('location_id,item_id,variant_id,lot_id,quantity_on_hand,last_movement_at')
+    .eq('tenant_id', tenantId)
+    .in('location_id', balanceLocationIds);
+  if (balancesResult.error) throw balancesResult.error;
+  const balances = new Map((balancesResult.data || []).map((row) => [inventoryLineKey(row), Number(row.quantity_on_hand || 0)]));
+  if (sourceLocationIds.length) {
+    const commitmentsResult = await db.from('nurse_inventory_reservations')
+      .select('location_id,item_id,variant_id,lot_id,quantity')
+      .eq('tenant_id', tenantId)
+      .in('location_id', sourceLocationIds)
+      .in('status', ['prepared', 'reserved'])
+      .gt('expires_at', nowIso)
+      .limit(5000);
+    if (commitmentsResult.error) throw commitmentsResult.error;
+    const commitments = new Map();
+    for (const row of commitmentsResult.data || []) {
+      const key = inventoryLineKey(row);
+      commitments.set(key, (commitments.get(key) || 0) + Number(row.quantity || 0));
+    }
+    for (const [key, quantity] of commitments) {
+      if (quantity > (balances.get(key) || 0)) {
+        return kitEvidence('blocked', 'inventory_reservation_overcommitted', nowIso, expiresAt,
+          'Inventory Operations must reconcile competing reservations against the live stock ledger.');
+      }
+    }
+  }
+
+  const requiredAtSource = new Map();
+  const requiredInCustody = new Map();
+  const transferredToCustody = new Map();
+  for (const reservation of reservations) {
+    const sourceKey = inventoryLineKey(reservation);
+    if (reservation.status === 'reserved') {
+      requiredAtSource.set(sourceKey, (requiredAtSource.get(sourceKey) || 0) + Number(reservation.quantity || 0));
+    }
+    const custodyKey = inventoryItemKey(reservation);
+    requiredInCustody.set(custodyKey, (requiredInCustody.get(custodyKey) || 0) + Number(reservation.quantity || 0));
+    if (reservation.status === 'consumed') {
+      transferredToCustody.set(custodyKey, (transferredToCustody.get(custodyKey) || 0) + Number(reservation.quantity || 0));
+    }
+  }
+  const custodyBalances = new Map();
+  for (const row of balancesResult.data || []) {
+    if (row.location_id === custodyLocationId) custodyBalances.set(inventoryItemKey(row), Number(row.quantity_on_hand || 0));
+  }
+
+  const activePickup = pickups.filter((row) => row.status !== 'completed');
+  if (pickups.some((row) => row.status === 'blocked')) {
+    return kitEvidence('blocked', 'pickup_inventory_blocked', nowIso, expiresAt,
+      'Inventory Operations must resolve the blocked pickup task.');
+  }
+  if (stage === 'route_release') {
+    for (const [key, quantity] of requiredAtSource) {
+      if ((balances.get(key) || 0) < quantity) {
+        return kitEvidence('blocked', 'inventory_source_balance_insufficient', nowIso, expiresAt,
+          'Inventory Operations must restore the reserved source-of-record balance.');
+      }
+    }
+    for (const [key, quantity] of transferredToCustody) {
+      if ((custodyBalances.get(key) || 0) < quantity) {
+        return kitEvidence('blocked', 'nurse_kit_balance_insufficient', nowIso, expiresAt,
+          'Inventory Operations must reconcile the completed transfer into the nurse kit.');
+      }
+    }
+    if (activePickup.some((row) => !row.route_day_id)) {
+      return kitEvidence('blocked', 'pickup_route_stop_required', nowIso, expiresAt,
+        'Operations must place each required pickup on this route before release.');
+    }
+    if (activePickup.length) {
+      const routeDayIds = [...new Set(activePickup.map((row) => row.route_day_id))];
+      const routeDaysResult = await db.from('provider_route_days')
+        .select('id,current_plan_version_id')
+        .eq('tenant_id', tenantId)
+        .eq('provider_profile_id', providerProfileId)
+        .in('id', routeDayIds);
+      if (routeDaysResult.error) throw routeDaysResult.error;
+      const currentPlanIds = new Set((routeDaysResult.data || []).map((row) => row.current_plan_version_id).filter(Boolean));
+      const pickupPlanStopsResult = await db.from('nurse_route_plan_stops')
+        .select('pickup_task_id,plan_version_id')
+        .eq('tenant_id', tenantId)
+        .in('pickup_task_id', activePickup.map((row) => row.id));
+      if (pickupPlanStopsResult.error) throw pickupPlanStopsResult.error;
+      const routedPickupIds = new Set((pickupPlanStopsResult.data || [])
+        .filter((row) => currentPlanIds.has(row.plan_version_id))
+        .map((row) => row.pickup_task_id));
+      if (activePickup.some((row) => !routedPickupIds.has(row.id))) {
+        return kitEvidence('blocked', 'pickup_route_stop_required', nowIso, expiresAt,
+          'Operations must include every required pickup in the current feasible plan.');
+      }
+    }
+    const offKitReservation = reservations.some((row) => row.location_id !== custodyLocationId && row.status !== 'consumed');
+    if (offKitReservation && !activePickup.length) {
+      return kitEvidence('blocked', 'pickup_orchestration_required', nowIso, expiresAt,
+        'Operations must create a navigable pickup task for off-kit inventory.');
+    }
+    return kitEvidence('ready', activePickup.length ? 'pickup_routed_inventory_reserved' : 'nurse_kit_inventory_verified',
+      nowIso, expiresAt);
+  }
+
+  if (pickups.some((row) => row.status !== 'completed' || !row.completed_at || !row.evidence_hash)) {
+    return kitEvidence('blocked', 'pickup_custody_incomplete', nowIso, expiresAt,
+      'Complete the verified pickup and custody transfer before starting this appointment.');
+  }
+  if (reservations.some((row) => row.status !== 'consumed' && row.location_id !== custodyLocationId)) {
+    return kitEvidence('blocked', 'inventory_not_in_nurse_custody', nowIso, expiresAt,
+      'Inventory Operations must complete the canonical transfer into the assigned nurse kit.');
+  }
+  for (const [key, quantity] of requiredInCustody) {
+    if ((custodyBalances.get(key) || 0) < quantity) {
+      return kitEvidence('blocked', 'nurse_kit_balance_insufficient', nowIso, expiresAt,
+        'Inventory Operations must reconcile the nurse-kit stock ledger before care starts.');
+    }
+  }
+  return kitEvidence('ready', 'nurse_kit_custody_and_stock_verified', nowIso, expiresAt);
+}
+
 async function loadAppointmentReadiness(db, tenantId, appointmentId) {
   if (!appointmentId) return null;
   const result = await db.from('appointments')
@@ -543,17 +831,16 @@ async function loadLicenseEvidence(db, tenantId, providerProfileId) {
   return result.data || [];
 }
 
-async function loadRouteEvidence(db, tenantId, providerProfileId, appointmentId, shift) {
+async function loadRouteEvidence(db, tenantId, providerProfileId, appointmentId, shift, stage = 'run_start') {
   if (!appointmentId) return null;
   const routeDate = new Date(shift.starts_at).toLocaleDateString('en-CA', {
     timeZone: shift.timezone || 'America/Los_Angeles',
   });
   const days = await db.from('provider_route_days')
-    .select('id,status,assignment_revision,acknowledged_revision')
+    .select('id,status,assignment_revision,acknowledged_revision,current_plan_version_id')
     .eq('tenant_id', tenantId)
     .eq('provider_profile_id', providerProfileId)
     .eq('route_date', routeDate)
-    .eq('status', 'active')
     .limit(1);
   if (days.error) throw days.error;
   const day = (days.data || [])[0];
@@ -570,7 +857,24 @@ async function loadRouteEvidence(db, tenantId, providerProfileId, appointmentId,
     day.acknowledged_revision
     && Date.parse(day.acknowledged_revision) >= Date.parse(day.assignment_revision),
   );
-  return stop.data?.selected && routeAcknowledged ? { day, stop: stop.data } : null;
+  let planStop = null;
+  if (day.current_plan_version_id) {
+    const planStopResult = await db.from('nurse_route_plan_stops')
+      .select('id,stop_key,sequence_number,latitude,longitude,planned_arrival_at,planned_departure_at')
+      .eq('tenant_id', tenantId)
+      .eq('plan_version_id', day.current_plan_version_id)
+      .eq('appointment_id', appointmentId)
+      .maybeSingle();
+    if (planStopResult.error) throw planStopResult.error;
+    planStop = planStopResult.data || null;
+  }
+  const selected = Boolean(stop.data?.selected && planStop);
+  const stageReady = stage === 'route_release'
+    ? ['feasible', 'released', 'acknowledged', 'active', 'paused'].includes(day.status)
+    : stage === 'run_start'
+      ? ['acknowledged', 'active', 'paused'].includes(day.status) && routeAcknowledged
+      : selected;
+  return selected && stageReady ? { day, stop: { ...stop.data, plan_stop: planStop } } : null;
 }
 
 async function hasSafetyHold(db, tenantId, patientPersonId) {
@@ -643,7 +947,16 @@ export async function loadOfferTermsById(db, tenantId, providerProfileId, offerT
   return result.data ? { ...result.data, claim_eligible: false, historical: true } : null;
 }
 
-export async function evaluateShiftReadiness({ db, authed, provider, shift, preferences = null, now = new Date() }) {
+export async function evaluateShiftReadiness({
+  db,
+  authed,
+  provider,
+  shift,
+  preferences = null,
+  now = new Date(),
+  stage = 'claim',
+}) {
+  const normalizedStage = READINESS_STAGES.includes(stage) ? stage : 'claim';
   const nowIso = now.toISOString();
   const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
   const [domainEvidence, licenses, schedulingIssue, appointment, offerTerms] = await Promise.all([
@@ -723,12 +1036,16 @@ export async function evaluateShiftReadiness({ db, authed, provider, shift, pref
         : 'Update availability or contact Operations.',
     });
 
-  domains.kit = stored.kit || readinessDomain('unavailable', 'kit_readiness_evidence_missing', 'kit_custody', {
-    checkedAt: null,
-    expiresAt: null,
-    ownerRole: 'operations',
-    remediation: 'Complete a verified kit custody and count check before accepting work.',
-  });
+  domains.kit = ['route_release', 'run_start'].includes(normalizedStage)
+    ? await loadCanonicalKitEvidence(
+      db, authed.tenantId, provider.id, shift.id, normalizedStage, now, nowIso, expiresAt,
+    )
+    : stored.kit || readinessDomain('unavailable', 'kit_readiness_evidence_missing', 'kit_custody', {
+      checkedAt: null,
+      expiresAt: null,
+      ownerRole: 'operations',
+      remediation: 'Inventory readiness is verified after claim and before route release.',
+    });
 
   if (isEvent) {
     for (const key of ['client', 'gfe', 'patient_payment']) {
@@ -780,7 +1097,9 @@ export async function evaluateShiftReadiness({ db, authed, provider, shift, pref
       checkedAt: nowIso, expiresAt, ownerRole: 'event_operations', remediation: null,
     });
   } else {
-    const routeEvidence = await loadRouteEvidence(db, authed.tenantId, provider.id, shift.appointment_id, shift);
+    const routeEvidence = await loadRouteEvidence(
+      db, authed.tenantId, provider.id, shift.appointment_id, shift, normalizedStage,
+    );
     const routeFallback = routeEvidence
       ? readinessDomain('ready', 'assigned_route_stop_verified', 'provider_route_day_stops', {
         checkedAt: nowIso, expiresAt, ownerRole: 'operations', remediation: null,
@@ -789,9 +1108,11 @@ export async function evaluateShiftReadiness({ db, authed, provider, shift, pref
         checkedAt: nowIso,
         expiresAt,
         ownerRole: 'operations',
-        remediation: 'Operations must release a feasible route before this work can be accepted.',
+        remediation: 'Choose an origin and ask Operations to release a feasible route before starting work.',
       });
-    domains.route = storedOrFallback(stored.route, routeFallback);
+    domains.route = ['route_release', 'run_start'].includes(normalizedStage)
+      ? routeFallback
+      : storedOrFallback(stored.route, routeFallback);
   }
 
   if (isEvent && !appointment?.patient_person_id) {
@@ -816,13 +1137,22 @@ export async function evaluateShiftReadiness({ db, authed, provider, shift, pref
       });
   }
 
-  const domainsReady = READINESS_DOMAINS.every((key) => READY_STATES.has(domains[key]?.status));
-  const ready = domainsReady && offerTerms.claim_eligible === true && engagementMatchesOffer;
-  const claimAllowed = ready;
+  // Claiming must happen before the nurse supplies an origin and before a
+  // route can be planned. Route and kit are therefore visible during offer
+  // evaluation but become blocking only for route release and run start.
+  const blockingDomains = READINESS_DOMAINS_BY_STAGE[normalizedStage];
+  const domainsReady = blockingDomains.every((key) => READY_STATES.has(domains[key]?.status));
+  const termsRequired = normalizedStage === 'offer' || normalizedStage === 'claim';
+  const termsReady = !termsRequired || (offerTerms.claim_eligible === true && engagementMatchesOffer);
+  const ready = domainsReady && termsReady;
+  const claimAllowed = normalizedStage === 'offer' || normalizedStage === 'claim' ? ready : false;
+  const startAllowed = normalizedStage === 'run_start' && ready && alreadyAssigned;
   const readiness = {
+    stage: normalizedStage,
     status: ready ? 'ready' : 'blocked',
     claim_allowed: claimAllowed,
-    start_allowed: claimAllowed && alreadyAssigned,
+    route_release_allowed: normalizedStage === 'route_release' && ready && alreadyAssigned,
+    start_allowed: startAllowed,
     checked_at: nowIso,
     expires_at: expiresAt,
     domains,
@@ -833,8 +1163,8 @@ export async function evaluateShiftReadiness({ db, authed, provider, shift, pref
       expires_at: offerTerms.expires_at,
     },
     blockers: [
-      ...READINESS_DOMAINS.filter((key) => !READY_STATES.has(domains[key]?.status)),
-      ...(offerTerms.claim_eligible && engagementMatchesOffer ? [] : ['offer_terms']),
+      ...blockingDomains.filter((key) => !READY_STATES.has(domains[key]?.status)),
+      ...(termsReady ? [] : ['offer_terms']),
     ],
   };
 
@@ -843,10 +1173,14 @@ export async function evaluateShiftReadiness({ db, authed, provider, shift, pref
     tenant_id: authed.tenantId,
     shift_id: shift.id,
     provider_profile_id: provider.id,
-    evaluator_version: 'nurse-readiness-v1',
+    evaluation_stage: normalizedStage,
+    evaluator_version: `nurse-readiness-v2-${normalizedStage}`,
     source_shift_version: shift.version,
     overall_status: readiness.status,
-    claim_allowed: readiness.claim_allowed,
+    // Legacy run RPCs use this boolean as their generic executable gate. The
+    // stage column prevents a run-start snapshot from satisfying an offer
+    // claim while preserving compatibility until every DB reader is upgraded.
+    claim_allowed: normalizedStage === 'run_start' ? readiness.start_allowed : readiness.claim_allowed,
     evidence: evidenceArray,
     checked_at: nowIso,
     expires_at: expiresAt,
@@ -881,9 +1215,11 @@ export async function loadRunReadiness(db, tenantId, providerProfileId, readines
   const evidence = Array.isArray(result.data.evidence) ? result.data.evidence : [];
   return {
     status: result.data.overall_status,
+    stage: result.data.evaluation_stage || 'claim',
     claim_allowed: Boolean(result.data.claim_allowed),
     start_allowed: Boolean(
-      result.data.claim_allowed
+      (result.data.evaluation_stage || 'claim') === 'run_start'
+      && result.data.overall_status === 'ready'
       && !result.data.invalidated_at
       && Date.parse(result.data.expires_at) > Date.now(),
     ),
@@ -905,12 +1241,13 @@ export async function loadRunReadiness(db, tenantId, providerProfileId, readines
 export async function loadRunGuide(db, tenantId, run) {
   if (!run?.guide_version_id) return null;
   const versionResult = await db.from('shift_guide_versions')
-    .select('id,template_id,version,status,steps,required_closeout_keys,source_reference,approved_at')
+    .select('id,template_id,version,status,publication_status,steps,required_closeout_keys,source_reference,approved_at,published_at')
     .eq('tenant_id', tenantId)
     .eq('id', run.guide_version_id)
     .maybeSingle();
   if (versionResult.error) throw versionResult.error;
   if (!versionResult.data || !['approved', 'retired'].includes(versionResult.data.status)) return null;
+  if (!['published', 'retired', 'legacy_approved'].includes(versionResult.data.publication_status)) return null;
   const templateResult = await db.from('shift_guide_templates')
     .select('id,template_key,name,work_kind,protocol_key,role_required,active')
     .eq('tenant_id', tenantId)
@@ -928,11 +1265,13 @@ export async function loadRunGuide(db, tenantId, run) {
     role_required: templateResult.data.role_required,
     version: versionResult.data.version,
     status: versionResult.data.status,
+    publication_status: versionResult.data.publication_status,
     steps: Array.isArray(versionResult.data.steps) ? versionResult.data.steps : [],
     required_closeout_keys: Array.isArray(versionResult.data.required_closeout_keys)
       ? versionResult.data.required_closeout_keys : [],
     source_reference: versionResult.data.source_reference,
     approved_at: versionResult.data.approved_at,
+    published_at: versionResult.data.published_at,
   };
 }
 
@@ -1001,18 +1340,21 @@ export async function loadRunEvents(db, tenantId, providerProfileId, runId) {
 }
 
 export async function loadRouteForShift(db, tenantId, providerProfileId, shift) {
-  const evidence = await loadRouteEvidence(db, tenantId, providerProfileId, shift.appointment_id, shift);
+  const evidence = await loadRouteEvidence(
+    db, tenantId, providerProfileId, shift.appointment_id, shift, 'run_start',
+  );
   if (!evidence) return null;
-  const address = cleanText(shift.location_address, 300);
+  const destination = evidence.stop.plan_stop
+    ? `${Number(evidence.stop.plan_stop.latitude)},${Number(evidence.stop.plan_stop.longitude)}` : '';
   return {
     route_day_id: evidence.day.id,
     route_status: evidence.day.status,
     stop_id: evidence.stop.id,
     assignment_revision: evidence.day.assignment_revision,
     acknowledged_revision: evidence.day.acknowledged_revision,
-    navigation: address ? {
-      apple_maps_url: `https://maps.apple.com/?q=${encodeURIComponent(address)}`,
-      google_maps_url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`,
+    navigation: destination ? {
+      apple_maps_url: `https://maps.apple.com/?daddr=${encodeURIComponent(destination)}&dirflg=d`,
+      google_maps_url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`,
     } : null,
     continuous_location_tracking: false,
   };

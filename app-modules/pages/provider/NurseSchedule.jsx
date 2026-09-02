@@ -9,6 +9,7 @@ import {
   Loader2,
   MapPin,
   RefreshCw,
+  SignalZero,
   ShieldCheck,
   SlidersHorizontal,
   XCircle,
@@ -20,6 +21,7 @@ import { apiGet, apiPost } from '@/lib/apiClient';
 import { assertApiResponse, hasObjectRows, invalidApiResponse } from '@/lib/apiResponse';
 import { nursePortalNav } from '@/lib/nursePortalNav';
 import { useSeo } from '@/lib/seo';
+import { hasSupabase, supabase } from '@/lib/supabase';
 
 const FILTERS = [
   ['offers', 'Offers'],
@@ -46,6 +48,10 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
   month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles',
 });
 const MONEY_FORMATTER = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+const makeIdempotencyKey = () => globalThis.crypto?.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+  const random = Math.floor(Math.random() * 16);
+  return (character === 'x' ? random : (random & 0x3) | 0x8).toString(16);
+});
 
 const dayKey = (value) => {
   const date = new Date(value);
@@ -75,6 +81,39 @@ const hasOfferTerms = (shift) => Boolean(
   && shift.offer_terms.claim_eligible === true
   && ['proposed', 'accepted'].includes(text(shift.offer_terms.status).toLowerCase()),
 );
+
+function mergeWorkItems(shifts, offers) {
+  const rows = new Map();
+  (Array.isArray(shifts) ? shifts : []).forEach((shift) => rows.set(shift.id, shift));
+  (Array.isArray(offers) ? offers : []).forEach((offer) => {
+    const embedded = offer?.shift && typeof offer.shift === 'object' ? offer.shift : offer?.work_item && typeof offer.work_item === 'object' ? offer.work_item : {};
+    const shiftId = offer?.shift_id || embedded.id || offer?.work_item_id;
+    if (!shiftId) return;
+    const existing = rows.get(shiftId) || {};
+    rows.set(shiftId, {
+      ...embedded,
+      ...existing,
+      id: shiftId,
+      version: existing.version ?? embedded.version ?? offer.shift_version,
+      status: existing.status || embedded.status || 'offered',
+      assignment: existing.assignment || { status: 'offered' },
+      offer_id: offer.id || existing.offer_id,
+      offer_version: offer.version ?? existing.offer_version,
+      terms_hash: offer.terms_hash || existing.terms_hash,
+      offer_terms: offer.terms && typeof offer.terms === 'object'
+        ? {
+          ...offer.terms,
+          terms_hash: offer.terms_hash || offer.terms.terms_hash,
+          status: offer.terms.status || existing.offer_terms?.status || 'proposed',
+          claim_eligible: offer.terms.claim_eligible ?? existing.offer_terms?.claim_eligible ?? ['offered', 'delivered', 'viewed'].includes(text(offer.status).toLowerCase()),
+        }
+        : existing.offer_terms || embedded.offer_terms,
+      readiness: offer.readiness || existing.readiness || embedded.readiness,
+      expires_at: offer.expires_at || existing.expires_at,
+    });
+  });
+  return [...rows.values()];
+}
 
 function filterShift(shift, filter) {
   const today = dayKey(new Date());
@@ -189,12 +228,13 @@ function OfferTerms({ terms }) {
     [text(terms.expense_policy_code), 'Expenses', labelCase(terms.expense_policy_code)],
     [text(terms.status).toLowerCase() === 'accepted' && terms.accepted_at, 'Accepted', formatDateTime(terms.accepted_at)],
     [text(terms.status).toLowerCase() === 'proposed' && terms.expires_at, 'Offer deadline', formatDateTime(terms.expires_at)],
+    [text(terms.terms_hash), 'Terms fingerprint', text(terms.terms_hash)],
   ].filter(([show]) => show).map(([, label, value]) => ({ label, value }));
   return (
     <section className="mt-3 rounded-2xl border border-foreground/10 bg-background/55 p-3">
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/45">Offer terms</p>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
-        {facts.map((fact) => <div key={fact.label}><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/35">{fact.label}</p><p className="mt-0.5 text-xs leading-relaxed text-foreground/70">{fact.value}</p></div>)}
+        {facts.map((fact) => <div key={fact.label}><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/35">{fact.label}</p><p className={`mt-0.5 text-xs leading-relaxed text-foreground/70 ${fact.label === 'Terms fingerprint' ? 'break-all font-mono text-[10px]' : ''}`}>{fact.value}</p></div>)}
       </div>
       {!facts.length ? <p className="mt-2 text-xs text-foreground/55">Verified terms are attached to this offer.</p> : null}
     </section>
@@ -244,12 +284,12 @@ function ShiftCard({ shift, busy, onAction }) {
             <span className={`rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${statusTone(status)}`}>{labelCase(status)}</span>
           </div>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-foreground/65"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{dateLabel}</p>
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-foreground/45"><MapPin className="h-3.5 w-3.5 shrink-0" />{shift.location_name || shift.service_area || 'Location available after acceptance'}</p>
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-foreground/45"><MapPin className="h-3.5 w-3.5 shrink-0" />{accepted ? (shift.location_name || shift.service_area || 'Approved location') : (shift.service_area || 'Location available after acceptance')}</p>
           {shift.event ? <p className="mt-1 text-xs text-foreground/45">Event assignment: {shift.event.name || 'Approved event'}</p> : null}
         </div>
         {accepted ? (
-          <Link to={`/provider/shifts/${encodeURIComponent(shift.id)}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-background">
-            Open shift <ChevronRight className="h-3.5 w-3.5" />
+          <Link to={shift.event || shift.event_container_id ? `/provider/shifts/${encodeURIComponent(shift.id)}` : '/provider/today'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-background">
+            {shift.event || shift.event_container_id ? 'Open shift' : 'Open Today'} <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         ) : null}
       </div>
@@ -307,26 +347,54 @@ export default function NurseSchedule() {
     path: '/provider/shifts',
     robots: 'noindex, nofollow, noarchive',
   });
-  const [state, setState] = useState({ loading: true, error: '', shifts: [], provider: null });
+  const [state, setState] = useState({ loading: true, error: '', shifts: [], provider: null, cursor: '', capabilities: null });
   const [filter, setFilter] = useState('offers');
   const [busy, setBusy] = useState('');
   const [actionError, setActionError] = useState('');
-  const load = useCallback(async () => {
-    setState((current) => ({ ...current, loading: true, error: '' }));
+  const [online, setOnline] = useState(() => navigator.onLine);
+  const load = useCallback(async ({ quiet = false } = {}) => {
+    if (!quiet) setState((current) => ({ ...current, loading: true, error: '' }));
     try {
       const from = new Date(Date.now() - 120 * 86400000).toISOString();
       const to = new Date(Date.now() + 366 * 86400000).toISOString();
       const data = await apiGet(`/api/me/shifts?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-      assertApiResponse(data, { arrays: ['shifts'] }, 'Scheduling returned an invalid work queue response.');
-      if (!hasObjectRows(data.shifts, ['id', 'version', 'status', 'starts_at', 'ends_at'])) {
+      assertApiResponse(data, {}, 'Scheduling returned an invalid work queue response.');
+      if (Array.isArray(data.shifts)) assertApiResponse(data, { arrays: ['shifts'] }, 'Scheduling returned an invalid work queue response.');
+      const workItems = mergeWorkItems(data.shifts, data.offers);
+      if (!Array.isArray(data.shifts) && !Array.isArray(data.offers)) throw invalidApiResponse('Scheduling returned no work collection.');
+      if (!hasObjectRows(workItems, ['id', 'version', 'status', 'starts_at', 'ends_at'])) {
         throw invalidApiResponse('Scheduling returned invalid work items.');
       }
-      setState({ loading: false, error: '', shifts: data.shifts, provider: data.provider && typeof data.provider === 'object' ? data.provider : null });
+      setState({ loading: false, error: '', shifts: workItems, provider: data.provider && typeof data.provider === 'object' ? data.provider : null, cursor: text(data.cursor || data.next_cursor), capabilities: data.capabilities && typeof data.capabilities === 'object' ? data.capabilities : null });
     } catch (error) {
-      setState((current) => ({ ...current, loading: false, error: error.message || 'Could not load work.', shifts: [] }));
+      setState((current) => ({ ...current, loading: false, error: error.message || 'Could not load work.' }));
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const onOnline = () => { setOnline(true); load({ quiet: true }); };
+    const onOffline = () => setOnline(false);
+    const onVisibility = () => { if (document.visibilityState === 'visible' && navigator.onLine) load({ quiet: true }); };
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    document.addEventListener('visibilitychange', onVisibility);
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible' && navigator.onLine) load({ quiet: true }); }, 20000);
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); document.removeEventListener('visibilitychange', onVisibility); window.clearInterval(timer); };
+  }, [load]);
+  useEffect(() => {
+    const providerId = text(state.provider?.id);
+    if (!hasSupabase || state.capabilities?.realtime_offer_alerts !== true || !providerId) return undefined;
+    const channel = supabase
+      .channel(`nurse-shift-offers-${providerId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'nurse_shift_offers',
+        filter: `provider_profile_id=eq.${providerId}`,
+      }, () => load({ quiet: true }))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [load, state.capabilities?.realtime_offer_alerts, state.provider?.id]);
 
   const rows = useMemo(() => state.shifts.filter((shift) => filterShift(shift, filter)), [filter, state.shifts]);
   const counts = useMemo(() => Object.fromEntries(FILTERS.map(([key]) => [key, state.shifts.filter((shift) => filterShift(shift, key)).length])), [state.shifts]);
@@ -337,11 +405,22 @@ export default function NurseSchedule() {
     setBusy(shift.id);
     setActionError('');
     try {
-      await apiPost('/api/me/shifts', { shiftId: shift.id, version: shift.version, action, ...extra });
+      await apiPost('/api/me/shifts', {
+        shiftId: shift.id,
+        version: shift.version,
+        expectedShiftVersion: shift.version,
+        offerId: shift.offer_id,
+        expectedOfferVersion: shift.offer_version,
+        acceptedTermsHash: action === 'claim' ? (shift.terms_hash || shift.offer_terms?.terms_hash) : undefined,
+        idempotencyKey: makeIdempotencyKey(),
+        action,
+        ...extra,
+      });
       await load();
       return true;
     } catch (error) {
-      setActionError(error.message || 'That work action could not be saved. Nothing changed.');
+      setActionError(error.status === 409 ? 'This offer is no longer available. Nothing changed; the queue has been refreshed.' : (error.message || 'That work action could not be saved. Nothing changed.'));
+      if (error.status === 409) await load();
       return false;
     } finally {
       setBusy('');
@@ -394,10 +473,11 @@ export default function NurseSchedule() {
         </div>
 
         {actionError ? <p role="alert" className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-700">{actionError}</p> : null}
+        {!online ? <p role="status" className="mt-4 flex items-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4 text-sm text-amber-800"><SignalZero className="h-4 w-4" />Offline. Existing verified offers remain visible; work actions require reconnection.</p> : null}
         {state.error ? <p role="alert" className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4 text-sm text-amber-800">The queue could not fully refresh. Existing verified records remain visible; retry before taking an action.</p> : null}
 
         <div className="mt-5 grid gap-3">
-          {rows.map((shift) => <ShiftCard key={shift.id} shift={shift} busy={busy} onAction={act} />)}
+          {rows.map((shift) => <ShiftCard key={shift.id} shift={shift} busy={busy || (!online ? 'offline' : '')} onAction={act} />)}
           {state.loading ? <p className="flex items-center gap-2 p-6 text-sm"><Loader2 className="h-4 w-4 animate-spin" />Loading persisted work</p> : null}
           {!state.loading && !rows.length ? (
             <div className="rounded-3xl border border-dashed border-foreground/15 p-10 text-center">

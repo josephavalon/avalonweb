@@ -23,6 +23,7 @@ import {
   requireUuid,
   resolveNurseProvider,
 } from '../_lib/nurse-workflow.js';
+import { enqueueMarketplaceJob } from '../_lib/nurse-marketplace.js';
 
 const TIME_ACTIONS = new Set(['clock_in', 'break_start', 'break_end', 'clock_out']);
 const STEP_RESOLUTIONS = new Set([
@@ -139,6 +140,7 @@ async function loadContext({ authed, provider, shiftId, readiness = null }) {
         provider,
         shift: owned.shift,
         preferences,
+        stage: 'run_start',
       });
       currentReadiness = evaluated.readiness;
     }
@@ -166,6 +168,7 @@ async function loadContext({ authed, provider, shiftId, readiness = null }) {
       provider,
       shift: owned.shift,
       preferences,
+      stage: 'run_start',
     });
     currentReadiness = evaluated.readiness;
   }
@@ -239,6 +242,7 @@ export default async function handler(req, res) {
         provider,
         shift: owned.shift,
         preferences,
+        stage: 'run_start',
       });
       if (!readiness.start_allowed) {
         return res.status(409).json({
@@ -298,6 +302,7 @@ export default async function handler(req, res) {
           provider,
           shift: owned.shift,
           preferences,
+          stage: 'run_start',
         });
         if (!readiness.start_allowed) {
           return res.status(409).json({
@@ -354,6 +359,7 @@ export default async function handler(req, res) {
           provider,
           shift: owned.shift,
           preferences,
+          stage: 'run_start',
         });
         if (readiness.status !== 'ready') {
           return res.status(409).json({
@@ -418,7 +424,55 @@ export default async function handler(req, res) {
         p_run_id: run.id,
         p_expected_version: version,
       });
-      return res.status(200).json({ ok: true, ...await loadContext({ authed, provider, shiftId }) });
+      let routeProgression = { status: 'not_required' };
+      if (run.route_day_id) {
+        const progressionKey = clientIdempotencyKey(body.idempotencyKey || body.requestKey, 'route_progression');
+        try {
+          const owned = await requireOwnedShift(authed.db, authed.tenantId, provider.id, shiftId);
+          if (owned.shift.appointment_id) {
+            const result = await callNurseRpc(authed.db, 'complete_nurse_route_stop_v1', {
+              p_tenant_id: authed.tenantId,
+              p_actor_profile_id: authed.user.id,
+              p_provider_profile_id: provider.id,
+              p_route_day_id: run.route_day_id,
+              p_appointment_id: owned.shift.appointment_id,
+              p_idempotency_key: progressionKey,
+            });
+            routeProgression = { status: 'completed', result };
+          }
+        } catch (progressionError) {
+          let recoveryQueued = false;
+          try {
+            await enqueueMarketplaceJob(authed.db, {
+              tenantId: authed.tenantId,
+              jobType: 'route_stop_reconcile',
+              idempotencyKey: `route-stop:${run.id}:${progressionKey}`,
+              payload: {
+                actorProfileId: authed.user.id,
+                providerProfileId: provider.id,
+                routeDayId: run.route_day_id,
+                shiftId,
+                shiftRunId: run.id,
+                idempotencyKey: progressionKey,
+              },
+            });
+            recoveryQueued = true;
+          } catch (queueError) {
+            console.warn('[me/shift-runs] route progression recovery enqueue failed', {
+              code: safeErrorCode(queueError, 'route_progression_enqueue_failed'),
+            });
+          }
+          console.warn('[me/shift-runs] route progression queued', {
+            code: safeErrorCode(progressionError, 'route_progression_queued'),
+          });
+          routeProgression = { status: recoveryQueued ? 'recovery_queued' : 'recovery_required' };
+        }
+      }
+      return res.status(200).json({
+        ok: true,
+        route_progression: routeProgression,
+        ...await loadContext({ authed, provider, shiftId }),
+      });
     }
 
     return res.status(400).json({ error: 'Unsupported shift-run action.', code: 'invalid_action' });

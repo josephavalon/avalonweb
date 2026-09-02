@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { requireAdmin } from '../_lib/supabase-auth.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
 import {
@@ -9,6 +10,7 @@ import {
   requireVersion,
   schedulingRpcError,
 } from '../_lib/operational-workflows.js';
+import { envEnabled } from '../_lib/nurse-marketplace.js';
 
 const SHIFT_STATUSES = ['draft', 'open', 'assigned', 'in_progress', 'completed', 'cancelled'];
 const SHIFT_SELECT = 'id,tenant_id,series_id,occurrence_key,event_container_id,appointment_id,title,starts_at,ends_at,timezone,location_name,location_address,service_area,role_required,slots_required,status,instructions,recurrence,version,created_at,updated_at';
@@ -170,6 +172,13 @@ async function createSchedule(db, authed, body) {
   const shift = cleanShiftInput(body);
   const occurrences = expandShiftOccurrences(body);
   const providerProfileIds = cleanProviderProfileIds(body.assignedProviderProfileIds || body.assignedNurseIds || []);
+  if (providerProfileIds.length && envEnabled('NURSE_SHIFT_OFFERS_ENABLED')) {
+    throw requestError(
+      'Use the governed nurse marketplace for offers or approved W-2 assignment.',
+      'nurse_marketplace_action_required',
+      409,
+    );
+  }
   if (providerProfileIds.length > shift.slots_required) {
     throw requestError('Assigned nurses exceed the number of slots.', 'too_many_assignments');
   }
@@ -207,12 +216,33 @@ async function runAction(db, authed, action, body) {
     p_expected_version: expectedVersion,
   };
   if (action === 'assign') {
+    if (envEnabled('NURSE_SHIFT_OFFERS_ENABLED')) {
+      const providerProfileId = requireUuid(body.providerProfileId, 'Provider');
+      const idempotencyKey = requireUuid(body.idempotencyKey, 'Idempotency key');
+      const requestHashBuilder = crypto.createHash('sha256');
+      requestHashBuilder['update'](JSON.stringify({
+        action: 'assign_w2', shiftId, providerProfileId, expectedVersion,
+      }));
+      const requestHash = requestHashBuilder.digest('hex');
+      return callSchedulingRpc(db, 'assign_w2_nurse_shift_v1', {
+        p_tenant_id: authed.tenantId,
+        p_actor_profile_id: authed.user.id,
+        p_shift_id: shiftId,
+        p_provider_profile_id: providerProfileId,
+        p_expected_shift_version: expectedVersion,
+        p_idempotency_key: idempotencyKey,
+        p_request_hash: requestHash,
+      });
+    }
     return callSchedulingRpc(db, 'assign_operational_shift', {
       ...common,
       p_provider_profile_id: requireUuid(body.providerProfileId, 'Provider'),
     });
   }
   if (action === 'broadcast') {
+    if (envEnabled('NURSE_SHIFT_OFFERS_ENABLED')) {
+      throw requestError('Use governed offer waves in the nurse marketplace.', 'nurse_marketplace_action_required', 409);
+    }
     return callSchedulingRpc(db, 'offer_operational_shift', {
       ...common,
       p_provider_profile_ids: cleanProviderProfileIds(body.providerProfileIds || []),

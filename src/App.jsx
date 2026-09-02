@@ -135,6 +135,7 @@ const MemberDocuments = lazyRoute(() => import('./pages/members/Documents'));
 const MembersSupport = lazyRoute(() => import('./pages/members/Support'));
 const ProviderClients = lazyRoute(() => import('./pages/provider/Clients'));
 const NurseSchedule = lazyRoute(() => import('./pages/provider/NurseSchedule'));
+const NurseTodayRoute = lazyRoute(() => import('./pages/provider/NurseTodayRoute'));
 const NurseInvoices = lazyRoute(() => import('./pages/provider/NurseInvoices'));
 const NurseGuidedShift = lazyRoute(() => import('../app-modules/pages/provider/NurseGuidedShift'));
 const NurseWorkSettings = lazyRoute(() => import('../app-modules/pages/provider/NurseWorkSettings'));
@@ -220,6 +221,8 @@ const AdminNurseInvoices = lazyRoute(() => import('./pages/admin/NurseInvoices')
 const AdminSchedulingControl = lazyRoute(() => import('./pages/admin/SchedulingControl'));
 const AdminCredentialControl = lazyRoute(() => import('./pages/admin/CredentialControl'));
 const AdminDispatchControl = lazyRoute(() => import('./pages/admin/DispatchControl'));
+const AdminInventoryRouting = lazyRoute(() => import('./pages/admin/InventoryRouting'));
+const AdminGuidePublishing = lazyRoute(() => import('./pages/admin/GuidePublishing'));
 const AdminFieldControl = lazyRoute(() => import('./pages/admin/FieldControl'));
 const AdminKitControl = lazyRoute(() => import('./pages/admin/KitControl'));
 const AdminTrainingControl = lazyRoute(() => import('./pages/admin/TrainingControl'));
@@ -526,7 +529,7 @@ function AppRoutes() {
             <Route path="/provider/shifts/:shiftId/run" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseGuidedShift /></RequireAuth>} />
             <Route path="/provider/invoices" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseInvoices /></RequireAuth>} />
             <Route path="/provider/settings" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseWorkSettings /></RequireAuth>} />
-            <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
+            <Route path="/provider/today" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseTodayRoute /></RequireAuth>} />
             <Route path="/provider/dashboard" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/appointments" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><Navigate to="/provider/shifts" replace /></RequireAuth>} />
             <Route path="/provider/clients" element={<RequireAuth allowedRoles={['nurse', 'admin']}><ProviderClients /></RequireAuth>} />
@@ -570,6 +573,8 @@ function AppRoutes() {
             <Route path="/admin/scheduling" element={<RequireAuth allowedRoles={['admin']}><AdminSchedulingControl /></RequireAuth>} />
             <Route path="/admin/credentials" element={<RequireAuth allowedRoles={['admin']}><AdminCredentialControl /></RequireAuth>} />
             <Route path="/admin/dispatch" element={<RequireAuth allowedRoles={['admin']}><AdminDispatchControl /></RequireAuth>} />
+            <Route path="/admin/inventory-routing" element={<RequireAuth allowedRoles={['admin']}><AdminInventoryRouting /></RequireAuth>} />
+            <Route path="/admin/guides" element={<RequireAuth allowedRoles={['admin']}><AdminGuidePublishing /></RequireAuth>} />
             <Route path="/admin/field" element={<RequireAuth allowedRoles={['admin']}><AdminFieldControl /></RequireAuth>} />
             <Route path="/admin/kits" element={PAYOPS_FINANCE_CORE_ENABLED
               ? <RequireAuth allowedRoles={['admin']}><Navigate to="/admin/inventory?view=kits" replace /></RequireAuth>

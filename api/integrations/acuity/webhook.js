@@ -27,6 +27,11 @@ import { sendSms, isSmsConfigured } from '../../_lib/send-sms.js';
 import { findRedemptionForAppointment, refundMemberCredit } from '../../_lib/member-credits.js';
 import { decrementForAppointment } from '../../_lib/inventory-burndown.js';
 import { loadEventsGfeTypeIds, isEventsGfeAppointment, syncEventsGfeAppointment } from '../../_lib/events-gfe.js';
+import {
+  enqueueAppointmentSourceEvent,
+  enqueueMarketplaceJob,
+  envEnabled,
+} from '../../_lib/nurse-marketplace.js';
 
 // bodyParser is disabled so we can HMAC over the exact bytes Acuity signed.
 // Re-stringifying a parsed body breaks the signature compare every time (and
@@ -59,7 +64,15 @@ async function defaultTenantId(db) {
 }
 
 function payloadHash(rawBody) {
-  return crypto.createHash('sha256').update(rawBody).digest('hex').slice(0, 16);
+  return crypto.createHash('sha256').update(rawBody).digest('hex');
+}
+
+function sourceChangeOccurredAt(...values) {
+  for (const value of values) {
+    const timestamp = Date.parse(String(value || ''));
+    if (Number.isFinite(timestamp)) return new Date(timestamp).toISOString();
+  }
+  return new Date().toISOString();
 }
 
 function httpError(message, status, code) {
@@ -379,6 +392,43 @@ async function processEventsGfeAppointment(db, { apptId, action, email, tenantId
   return res.status(200).json({ ok: true, action, eventsGfe: true, matched: sync.matched });
 }
 
+async function enqueueNurseAppointmentReconcile(db, {
+  tenantId,
+  sourceAppointmentId,
+  sourceRevision,
+  eventType,
+  payloadHash: sourcePayloadHash,
+  payload,
+  eventOccurredAt,
+  canonicalAppointmentId = null,
+}) {
+  const sourceEvent = await enqueueAppointmentSourceEvent(db, {
+    tenantId,
+    provider: 'acuity',
+    sourceAppointmentId,
+    sourceRevision,
+    eventType,
+    payloadHash: sourcePayloadHash,
+    payload,
+    signatureVerifiedAt: new Date().toISOString(),
+    eventOccurredAt,
+  });
+  if (!sourceEvent?.id) return null;
+  await enqueueMarketplaceJob(db, {
+    tenantId,
+    jobType: 'appointment_reconcile',
+    idempotencyKey: `acuity-source-event:${sourceEvent.id}`,
+    payload: {
+      event_id: sourceEvent.id,
+      source_provider: 'acuity',
+      source_appointment_id: sourceAppointmentId,
+      source_revision: sourceRevision,
+      canonical_appointment_id: canonicalAppointmentId,
+    },
+  });
+  return sourceEvent;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -432,17 +482,37 @@ export default async function handler(req, res) {
     // 1. Dedupe + log raw event. Event identity is appointment + action; the
     // payload hash only flags replay drift and must not create a second event.
     const tenantId = await defaultTenantId(db);
+    const eventsGfeTypeIds = await loadEventsGfeTypeIds(db);
     const { data: existingEvent } = await db.from('acuity_events')
       .select('id, processed_status, webhook_event_hash')
       .eq('acuity_appointment_id', String(apptId))
       .eq('action', action)
       .maybeSingle();
 
+    let preclassifiedAppointment = null;
     if (existingEvent?.processed_status === 'processed') {
-      if (existingEvent.webhook_event_hash && existingEvent.webhook_event_hash !== hash) {
-        console.warn(`[acuity/webhook] duplicate event hash drift action=${action} apptId=${apptId}`);
+      if (existingEvent.webhook_event_hash === hash
+          || !envEnabled('NURSE_AUTO_SHIFT_CREATION_ENABLED')) {
+        return res.status(200).json({ ok: true, duplicate: true });
       }
-      return res.status(200).json({ ok: true, duplicate: true });
+      console.warn(`[acuity/webhook] duplicate event hash drift action=${action} apptId=${apptId}`);
+      if (action === 'canceled') {
+        // A cancel payload must identify a confirmed non-Events type before a
+        // revisioned marketplace event may continue. Unknown classification is
+        // fail-closed and preserves the already-processed protected event.
+        if (!body.appointmentTypeID || isEventsGfeAppointment(body, eventsGfeTypeIds)) {
+          return res.status(200).json({ ok: true, duplicate: true, eventsGfe: true });
+        }
+      } else {
+        try {
+          preclassifiedAppointment = await withTimeout(getAppointment(apptId), 'acuity appointment classification');
+        } catch {
+          return res.status(200).json({ ok: true, duplicate: true, note: 'classification_unavailable' });
+        }
+        if (isEventsGfeAppointment(preclassifiedAppointment, eventsGfeTypeIds)) {
+          return res.status(200).json({ ok: true, duplicate: true, eventsGfe: true });
+        }
+      }
     }
 
     const eventPatch = {
@@ -462,9 +532,6 @@ export default async function handler(req, res) {
     const { data: eventRow } = await eventWrite.select().single();
     const eventId = eventRow?.id;
 
-    // Events GFE appointment type ids — loaded once per invocation (ET3).
-    const eventsGfeTypeIds = await loadEventsGfeTypeIds(db);
-
     // 2. canceled — flip status on the canonical row, refund any redeemed
     //    visit credit, and send a PHI-free cancellation SMS. Done (no Acuity
     //    fetch needed; the canonical row already has contact/time in payload).
@@ -476,12 +543,35 @@ export default async function handler(req, res) {
         return processEventsGfeAppointment(db, { apptId, action, email: '', tenantId, eventId, res });
       }
 
+      let existingMobileWork = null;
+      if (envEnabled('NURSE_AUTO_SHIFT_CREATION_ENABLED')) {
+        const mobileWorkResult = await db.from('nurse_work_source_links').select('id')
+          .eq('tenant_id', tenantId).eq('source_provider', 'acuity')
+          .eq('source_appointment_id', String(apptId)).maybeSingle();
+        if (mobileWorkResult.error) throw mobileWorkResult.error;
+        existingMobileWork = mobileWorkResult.data || null;
+      }
       // Load the canonical row first so we can: (a) refund a redeemed credit
       // tied to it, and (b) pull a phone/time for the SMS.
       const { data: canceledRow } = await db.from('appointments')
         .select('id, external_payload')
         .eq('acuity_appointment_id', String(apptId))
         .maybeSingle();
+
+      if (existingMobileWork) {
+        await enqueueNurseAppointmentReconcile(db, {
+          tenantId,
+          sourceAppointmentId: String(apptId),
+          sourceRevision: String(body.lastModified || body.updatedAt || hash),
+          eventType: 'cancelled',
+          payloadHash: hash,
+          payload: body,
+          // Ordering follows the source mutation/revision chronology, never the
+          // appointment service time (which legitimately moves earlier).
+          eventOccurredAt: sourceChangeOccurredAt(body.lastModified, body.updatedAt),
+          canonicalAppointmentId: canceledRow?.id || null,
+        });
+      }
 
       await db.from('appointments')
         .update({ status: 'canceled', updated_at: new Date().toISOString() })
@@ -541,9 +631,9 @@ export default async function handler(req, res) {
     }
 
     // 3. scheduled / rescheduled / changed — fetch full appt then upsert canonical row.
-    let appt;
+    let appt = preclassifiedAppointment;
     try {
-      appt = await withTimeout(getAppointment(apptId), 'acuity appointment fetch');
+      appt ||= await withTimeout(getAppointment(apptId), 'acuity appointment fetch');
     } catch (err) {
       if (eventId) {
         await db.from('acuity_events').update({
@@ -572,6 +662,20 @@ export default async function handler(req, res) {
     }
 
     const appointmentRecordId = await upsertAppointment(db, appt, action);
+    if (envEnabled('NURSE_AUTO_SHIFT_CREATION_ENABLED')) {
+      await enqueueNurseAppointmentReconcile(db, {
+        tenantId,
+        sourceAppointmentId: String(apptId),
+        sourceRevision: String(appt.lastModified || appt.updatedAt || body.lastModified || body.updatedAt || hash),
+        eventType: action,
+        payloadHash: hash,
+        payload: { ...body, appointment: appt },
+        eventOccurredAt: sourceChangeOccurredAt(
+          appt.lastModified, appt.updatedAt, body.lastModified, body.updatedAt,
+        ),
+        canonicalAppointmentId: appointmentRecordId || null,
+      });
+    }
     if (appointmentRecordId) {
       await writeAuditEvent(db, {
         tenantId, action: `acuity_webhook_appointment_${action}`,

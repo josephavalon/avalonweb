@@ -1,5 +1,6 @@
 import {
   BriefcaseBusiness,
+  CalendarClock,
   FileText,
   Package,
   Settings,
@@ -10,6 +11,7 @@ import { PAYOPS_FINANCE_CORE_ENABLED } from './payOpsFinanceCore.js';
 export function nursePortalNav(activeShiftId = '') {
   return [
     { label: 'Work', to: '/provider/shifts', icon: BriefcaseBusiness, exact: true },
+    { label: 'Today', to: '/provider/today', icon: CalendarClock, exact: true },
     ...(activeShiftId ? [{
       label: 'Shift',
       to: `/provider/shifts/${encodeURIComponent(activeShiftId)}`,
