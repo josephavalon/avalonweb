@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import Navbar from '@/components/landing/Navbar';
+import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useCart } from '@/context/CartContext';
@@ -111,7 +112,11 @@ function SectionLabel({ children }) {
 
 export default function ProductDetail() {
   const { category, slug } = useParams();
-  const match = getProduct(category, slug);
+  // CBD is held from the public apex pending clinical + legal review. Null the
+  // match so the "Product missing" branch runs for every /products/cbd/* slug,
+  // including the PRODUCT_SLUG_ALIASES variants.
+  const matchedProduct = getProduct(category, slug);
+  const match = CBD_HIDDEN && isCbdProtocolKey(category) ? undefined : matchedProduct;
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const { clearItems, addItem } = useCart();
@@ -123,6 +128,11 @@ export default function ProductDetail() {
     title: match ? `${match.treatment.name} — Mobile IV Therapy — Avalon Vitality` : 'Product Not Found — Avalon Vitality',
     description: match?.treatment.seoDescription || match?.treatment.desc || 'Avalon Vitality mobile IV therapy in the San Francisco Bay Area.',
     path: match ? `/products/${category}/${slug}` : undefined,
+    // Unknown/withheld product → tell crawlers not to index. Without this the
+    // miss branch below returns HTTP 200 with the default "index, follow",
+    // i.e. a soft 404 that Google keeps indexed for weeks. ProtocolPage.jsx
+    // has always done this; this page did not.
+    robots: match ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
     jsonLd: match ? buildProductJsonLd({ category: match.category, categorySlug: category, product: match.treatment, slug, price: numericPrice }) : undefined,
   });
 

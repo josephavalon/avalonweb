@@ -7,6 +7,7 @@ import {
   isLegacyStripeMetadataPayload,
 } from '../api/_checkout-fulfillment.js';
 import { runFrontDoorChecks } from './front-door-qa.mjs';
+import { runCbdVisibilityChecks } from './cbd-visibility-qa.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -704,6 +705,16 @@ async function checkFrontDoorLockdown() {
   }
 }
 
+// CBD IV is withheld from the public apex pending clinical + legal review.
+// VITE_HIDE_CBD is a build flag with no runtime preview, so a lost gate is
+// invisible until the category reappears in production. Imported, not shelled
+// out to, for the same reason as the front-door check above.
+async function checkCbdVisibility() {
+  for (const failure of await runCbdVisibilityChecks()) {
+    fail(`cbd visibility: ${failure}`);
+  }
+}
+
 scanDist();
 checkStripeMetadataShape();
 checkStripeMetadataFallbackIsLegacyOnly();
@@ -721,6 +732,7 @@ checkServiceWorkerKillSwitch();
 checkNoProdDeployAutomation();
 checkAdminApiFunctionsAreDeployable();
 await checkFrontDoorLockdown();
+await checkCbdVisibility();
 
 if (failed) {
   console.error('\nLaunch-blocker QA failed.');

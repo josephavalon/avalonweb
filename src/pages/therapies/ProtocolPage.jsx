@@ -6,6 +6,7 @@ import Navbar from '@/components/landing/Navbar';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
 import { IV_SESSIONS } from '@/config/verticals';
+import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
 import GlassCard from '@/components/ui/GlassCard';
 import PremiumButton from '@/components/ui/PremiumButton';
 import ClinicalTrustStrip from '@/components/clinical/ClinicalTrustStrip';
@@ -37,7 +38,11 @@ export default function ProtocolPage() {
   const navigate = useNavigate();
 
   const resolvedSlug = SLUG_ALIASES[String(slug || '').toLowerCase()] || slug;
-  const protocol = IV_SESSIONS.find((s) => s.key === resolvedSlug);
+  // CBD is held from the public apex pending clinical + legal review. Treat
+  // /therapies/cbd (and the cbd-iv alias above) as an unknown slug so the
+  // existing noindex + <NotFound /> path below runs unchanged.
+  const matchedProtocol = IV_SESSIONS.find((s) => s.key === resolvedSlug);
+  const protocol = CBD_HIDDEN && isCbdProtocolKey(resolvedSlug) ? undefined : matchedProtocol;
   const price = priceForProtocol(protocol);
   const ingredients = getComposition(protocol);
   const mechanism = getMechanism(protocol);

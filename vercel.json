@@ -29,7 +29,21 @@
   ],
   "redirects": [
     { "source": "/mo", "destination": "https://www.avalonvitality.co/", "permanent": false },
-    { "source": "/mo/", "destination": "https://www.avalonvitality.co/", "permanent": false }
+    { "source": "/mo/", "destination": "https://www.avalonvitality.co/", "permanent": false },
+    { "source": "/products/cbd/:path*", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/products/cbd/:path*", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/services/cbd", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/services/cbd", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/therapies/cbd", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/therapies/cbd", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/therapies/cbd-iv", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/therapies/cbd-iv", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/cbd-iv-therapy-bay-area", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/cbd-iv-therapy-bay-area", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/events/cannabis-ce", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/events/cannabis-ce", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/learn/:slug(.*cbd.*)", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
+    { "source": "/learn/:slug(.*cbd.*)", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true }
   ],
   "rewrites": [
     {
