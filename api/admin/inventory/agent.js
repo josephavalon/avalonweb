@@ -22,9 +22,10 @@ function requireInternalAgent(req) {
 }
 
 async function analyze(db, tenantId) {
-  const [items, availabilityRows, demands, supplierItems, policies, unknownOrders] = await Promise.all([
+  const [items, availabilityRows, allocations, demands, supplierItems, policies, unknownOrders] = await Promise.all([
     rows(db.from('os_inventory_items').select('id,regulated_class,classification_reviewed_at,storage_policy,safety_stock,max_on_hand,automation_eligible,status').eq('tenant_id', tenantId).eq('status', 'active').limit(20000)),
     rows(db.from('os_inventory_availability').select('item_id,variant_id,lot_id,quantity_available,quantity_reserved,quantity_on_order').eq('tenant_id', tenantId).limit(50000)),
+    rows(db.from('os_inventory_allocations').select('item_id,variant_id,quantity,status,expires_at').eq('tenant_id', tenantId).in('status', ['reserved', 'picking']).limit(20000)),
     rows(db.from('os_inventory_demand_episodes').select('id,item_id,variant_id,validated_quantity,status,need_by').eq('tenant_id', tenantId).limit(20000)),
     rows(db.from('os_inventory_supplier_items').select('id,vendor_id,item_id,variant_id,units_per_pack,minimum_order_packs,order_multiple_packs,lead_time_days,unit_price_cents,price_effective_at,price_expires_at,substitution_policy,automation_eligible,status').eq('tenant_id', tenantId).limit(20000)),
     rows(db.from('os_inventory_procurement_policies').select('id,status,budget_remaining_cents,max_order_total_cents,max_units_per_line,max_lead_time_days,expiry_risk_days,effective_at,expires_at,version').eq('tenant_id', tenantId).eq('status', 'approved').lte('effective_at', new Date().toISOString()).order('version', { ascending: false }).limit(1)),
@@ -34,7 +35,7 @@ async function analyze(db, tenantId) {
   const lots = lotIds.length ? await rows(db.from('os_inventory_lots').select('id,expires_on').eq('tenant_id', tenantId).in('id', lotIds).limit(50000)) : [];
   const expiryByLot = new Map(lots.map((lot) => [lot.id, lot.expires_on]));
   const availability = availabilityRows.map((row) => ({ ...row, expires_on: expiryByLot.get(row.lot_id) || null }));
-  const input = { items, availability, demands, supplierItems, policy: policies[0] || null, unknownOrderCount: unknownOrders.length };
+  const input = { items, availability, allocations, demands, supplierItems, policy: policies[0] || null, unknownOrderCount: unknownOrders.length };
   return { input, proposal: calculateA1ReorderProposal(input) };
 }
 

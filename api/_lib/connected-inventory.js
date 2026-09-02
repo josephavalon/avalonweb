@@ -52,7 +52,7 @@ export function isConnectedInventoryMigrationError(error) {
   const code = String(error?.code || '');
   const message = String(error?.message || '');
   return ['42P01', '42703', '42883', 'PGRST200', 'PGRST202', 'PGRST204'].includes(code)
-    || /os_inventory_(?:availability|kits|handoffs|count_|demand_|supplier_items|requisitions|receiving_|agent_|automation_|exceptions)|submit_inventory_purchase_order|approve_inventory_purchase_order|record_manual_purchase_order_event|start_inventory_count|submit_inventory_count|receive_inventory_handoff|schema cache/i.test(message);
+    || /os_inventory_(?:availability|available_to_promise|kits|handoffs|count_|demand_|supplier_items|supplier_connections|requisitions|receiving_|agent_|automation_|exceptions|holds|allocations|readiness_|shipments|recall_|temperature_|calibration_)|submit_inventory_purchase_order|approve_inventory_purchase_order|record_manual_purchase_order_event|start_inventory_count|submit_inventory_count|receive_inventory_handoff|schema cache/i.test(message);
 }
 
 export function connectedInventoryError(error, fallback = 'Connected inventory is unavailable.') {
@@ -79,9 +79,9 @@ async function checked(query) {
 }
 
 export async function loadConnectedInventoryOverview(db, tenantId) {
-  const [availability, kits, assignments, counts, demands, handoffs, supplierItems, requisitions, purchaseOrders, inspections, exceptions, proposals, controls, policies] = await Promise.all([
-    checked(db.from('os_inventory_availability')
-      .select('location_id,location_type,item_id,variant_id,lot_id,quantity_on_hand,quantity_usable,quantity_reserved,quantity_available,quantity_in_transit,quantity_on_order,quantity_quarantined,quantity_recalled,quantity_expired,quantity_damaged,quantity_disputed,last_movement_at')
+  const [availability, kits, assignments, counts, demands, handoffs, supplierItems, requisitions, purchaseOrders, inspections, exceptions, proposals, controls, policies, holds, allocations, readiness, shipments, connections, recalls] = await Promise.all([
+    checked(db.from('os_inventory_available_to_promise')
+      .select('location_id,location_type,item_id,variant_id,lot_id,quantity_on_hand,quantity_usable,quantity_reserved,quantity_pending_allocation,quantity_available,quantity_in_transit,quantity_on_order,quantity_quarantined,quantity_recalled,quantity_expired,quantity_damaged,quantity_disputed,last_movement_at')
       .eq('tenant_id', tenantId).limit(50000)),
     checked(db.from('os_inventory_kits')
       .select('id,location_id,kit_code,barcode,qr_code,seal_code,status,version,updated_at')
@@ -122,6 +122,24 @@ export async function loadConnectedInventoryOverview(db, tenantId) {
     checked(db.from('os_inventory_procurement_policies')
       .select('id,status,budget_remaining_cents,max_order_total_cents,max_units_per_line,max_lead_time_days,expiry_risk_days,version,created_by,approved_by,approved_at,effective_at,expires_at,created_at')
       .eq('tenant_id', tenantId).order('version', { ascending: false }).limit(500)),
+    checked(db.from('os_inventory_holds')
+      .select('id,hold_type,item_id,variant_id,lot_id,location_id,kit_id,status,reason_code,placed_at,released_at,version,updated_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(10000)),
+    checked(db.from('os_inventory_allocations')
+      .select('id,demand_episode_id,source_location_id,destination_location_id,item_id,variant_id,lot_id,quantity,status,expires_at,version,updated_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(20000)),
+    checked(db.from('os_inventory_readiness_evaluations')
+      .select('id,shift_id,kit_id,manifest_version_id,count_session_id,evaluator_version,outcome,rule_results,evaluated_at,expires_at,invalidated_at,invalidation_code')
+      .eq('tenant_id', tenantId).order('evaluated_at', { ascending: false }).limit(10000)),
+    checked(db.from('os_inventory_shipments')
+      .select('id,purchase_order_id,shipment_reference,carrier_code,tracking_reference,status,expected_at,delivered_at,version,updated_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(10000)),
+    checked(db.from('os_inventory_supplier_connections')
+      .select('id,vendor_id,adapter_key,status,masked_account_label,health_code,last_validated_at,version,updated_at')
+      .eq('tenant_id', tenantId).order('updated_at', { ascending: false }).limit(1000)),
+    checked(db.from('os_inventory_recall_events')
+      .select('id,source_type,source_reference,status,classification,summary_code,opened_at,reviewed_at,version,updated_at')
+      .eq('tenant_id', tenantId).order('opened_at', { ascending: false }).limit(5000)),
   ]);
   const assignmentByKit = byKey(assignments, 'kit_id');
   const latestCountByKit = new Map();
@@ -163,7 +181,7 @@ export async function loadConnectedInventoryOverview(db, tenantId) {
     exceptions,
     proposals,
     controls,
-    policies,
+    policies, holds, allocations, readiness, shipments, connections, recalls,
   };
 }
 
@@ -176,12 +194,12 @@ export async function loadConnectedNurseKit(db, tenantId, nurseProfileId) {
   if (assignmentResult.error) throw assignmentResult.error;
   const assignment = assignmentResult.data;
   if (!assignment?.kit_id) return { assigned: false, assignment: null, kit: null, items: [], counts: [], handoffs: [], requests: [], exceptions: [] };
-  const [kit, availability, counts, handoffs, requests, exceptions] = await Promise.all([
+  const [kit, availability, counts, handoffs, requests, exceptions, readiness] = await Promise.all([
     checked(db.from('os_inventory_kits')
       .select('id,kit_code,barcode,qr_code,seal_code,status,version,updated_at')
       .eq('tenant_id', tenantId).eq('id', assignment.kit_id).limit(1)),
-    checked(db.from('os_inventory_availability')
-      .select('item_id,variant_id,lot_id,quantity_on_hand,quantity_usable,quantity_reserved,quantity_available,quantity_in_transit,quantity_quarantined,quantity_recalled,quantity_expired,quantity_damaged,quantity_disputed,last_movement_at')
+    checked(db.from('os_inventory_available_to_promise')
+      .select('item_id,variant_id,lot_id,quantity_on_hand,quantity_usable,quantity_reserved,quantity_pending_allocation,quantity_available,quantity_in_transit,quantity_quarantined,quantity_recalled,quantity_expired,quantity_damaged,quantity_disputed,last_movement_at')
       .eq('tenant_id', tenantId).eq('location_id', assignment.location_id).limit(5000)),
     checked(db.from('os_inventory_count_sessions')
       .select('id,status,snapshot_at,count_reason,version,submitted_at,reviewed_at,updated_at')
@@ -200,6 +218,10 @@ export async function loadConnectedNurseKit(db, tenantId, nurseProfileId) {
       .eq('tenant_id', tenantId).in('status', ['open', 'investigating'])
       .or(`entity_id.eq.${assignment.kit_id},entity_id.eq.${assignment.location_id}`)
       .order('created_at', { ascending: false }).limit(100)),
+    checked(db.from('os_inventory_readiness_evaluations')
+      .select('id,outcome,evaluator_version,evaluated_at,expires_at,invalidated_at,invalidation_code')
+      .eq('tenant_id', tenantId).eq('kit_id', assignment.kit_id)
+      .order('evaluated_at', { ascending: false }).limit(25)),
   ]);
   const itemIds = [...new Set(availability.map((row) => row.item_id).concat(requests.map((row) => row.item_id)).filter(Boolean))];
   const variantIds = [...new Set(availability.map((row) => row.variant_id).filter(Boolean))];
@@ -235,11 +257,11 @@ export async function loadConnectedNurseKit(db, tenantId, nurseProfileId) {
       disposition: lotMap.get(row.lot_id)?.disposition_status || null,
       recallStatus: lotMap.get(row.lot_id)?.disposition_status === 'recalled' ? 'recalled' : null,
     })),
-    counts, handoffs, requests, exceptions,
+    counts, handoffs, requests, exceptions, readiness,
   };
 }
 
-export function calculateA1ReorderProposal({ items = [], availability = [], demands = [], supplierItems = [], policy = null, unknownOrderCount = 0, now = new Date() } = {}) {
+export function calculateA1ReorderProposal({ items = [], availability = [], allocations = [], demands = [], supplierItems = [], policy = null, unknownOrderCount = 0, now = new Date() } = {}) {
   const itemById = byKey(items, 'id');
   const supplierByItem = new Map();
   for (const supplier of supplierItems) {
@@ -270,6 +292,12 @@ export function calculateA1ReorderProposal({ items = [], availability = [], dema
     if (demand.need_by && (!current.earliestNeedBy || demand.need_by < current.earliestNeedBy)) current.earliestNeedBy = demand.need_by;
     groupedDemand.set(key, current);
   }
+  const pendingAllocationByItem = new Map();
+  for (const allocation of allocations) {
+    if (!['reserved', 'picking'].includes(allocation.status) || Date.parse(allocation.expires_at) <= now.getTime()) continue;
+    const key = `${allocation.item_id}:${allocation.variant_id || ''}`;
+    pendingAllocationByItem.set(key, number(pendingAllocationByItem.get(key)) + number(allocation.quantity));
+  }
   const lines = [];
   const evaluations = [];
   let proposedTotalCents = 0;
@@ -292,7 +320,8 @@ export function calculateA1ReorderProposal({ items = [], availability = [], dema
       return total + (expires <= expiryCutoff.getTime() ? number(row.quantity_available) : 0);
     }, 0);
     const safetyStock = number(item?.safety_stock);
-    const projectedUsable = available + current.onOrder;
+    const pendingAllocation = number(pendingAllocationByItem.get(key));
+    const projectedUsable = Math.max(0, available + current.onOrder - pendingAllocation);
     const netNeed = Math.max(0, demand.quantity + safetyStock - projectedUsable);
     const classificationReady = Boolean(item && item.automation_eligible === true
       && item.regulated_class !== 'unknown' && item.classification_reviewed_at
@@ -332,6 +361,7 @@ export function calculateA1ReorderProposal({ items = [], availability = [], dema
       safetyStock,
       projectedUsable,
       expiryRiskQuantity,
+      pendingAllocation,
       reserved: current.reserved,
       netNeed,
       unitsPerPack: pack,

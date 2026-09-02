@@ -43,6 +43,24 @@ export default async function handler(req, res) {
         p_supplier_item_id: cleanUuid(body.supplierItemId, 'supplierItemId'),
         p_expected_version: cleanExpectedVersion(body.expectedVersion), p_idempotency_key: key,
       });
+    } else if (action === 'review_supplier') {
+      const approvedMarkets = Array.isArray(body.approvedMarkets) ? body.approvedMarkets.map((value) => String(value).trim().toUpperCase()).filter(Boolean).slice(0, 50) : [];
+      const credentialEvidenceRefs = Array.isArray(body.credentialEvidenceRefs) ? body.credentialEvidenceRefs.map((value) => String(value).trim().slice(0, 200)).filter(Boolean).slice(0, 50) : [];
+      record = await rpc(authed.db, 'review_inventory_supplier', {
+        p_tenant_id: authed.tenantId, p_actor_profile_id: authed.user.id,
+        p_vendor_id: cleanUuid(body.vendorId, 'vendorId'), p_expected_version: cleanExpectedVersion(body.expectedVersion),
+        p_legal_name: String(body.legalName || '').trim(), p_supplier_class: String(body.supplierClass || '').trim().toLowerCase(),
+        p_approved_markets: approvedMarkets, p_credential_evidence_refs: credentialEvidenceRefs,
+        p_ordering_channel: String(body.orderingChannel || 'manual').trim().toLowerCase(), p_idempotency_key: key,
+      });
+    } else if (action === 'register_connection') {
+      record = await rpc(authed.db, 'register_inventory_supplier_connection', {
+        p_tenant_id: authed.tenantId, p_actor_profile_id: authed.user.id,
+        p_vendor_id: cleanUuid(body.vendorId, 'vendorId'), p_adapter_key: String(body.adapterKey || 'manual_export').trim().toLowerCase(),
+        p_secret_reference: body.secretReference ? String(body.secretReference).trim().slice(0, 200) : null,
+        p_masked_account_label: body.maskedAccountLabel ? String(body.maskedAccountLabel).trim().slice(0, 100) : null,
+        p_idempotency_key: key,
+      });
     } else throw new PayOpsError('Supplier catalog action is invalid.', 'inventory_supplier_action_invalid', 400);
     return res.status(201).json({ ok: true, action, record });
   } catch (error) { return sendConnectedInventoryError(res, error, 'Supplier catalog could not be updated.'); }

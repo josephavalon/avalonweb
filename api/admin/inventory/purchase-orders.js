@@ -30,9 +30,11 @@ export default async function handler(req, res) {
     } else if (action === 'record_event') {
       const evidence = body.evidence && typeof body.evidence === 'object' && !Array.isArray(body.evidence) ? body.evidence : {};
       assertInventoryEvidenceSafe(evidence);
+      const eventType = String(body.eventType || '').trim().toLowerCase();
+      if (eventType === 'shipped') throw new PayOpsError('Record shipment lines and tracking through the shipment resource.', 'inventory_shipment_resource_required', 400);
       record = await rpc(authed.db, 'record_manual_purchase_order_event', {
         ...common,
-        p_event_type: String(body.eventType || '').trim().toLowerCase(),
+        p_event_type: eventType,
         p_external_order_id: body.externalOrderId ? String(body.externalOrderId).trim().slice(0, 180) : null,
         p_evidence: evidence,
       });

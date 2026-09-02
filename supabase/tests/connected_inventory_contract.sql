@@ -1,5 +1,5 @@
 -- Connected Inventory V1 database postflight contract.
--- Run only after migrations 083-089 in the target Supabase environment.
+-- Run only after migrations 083-093 in the target Supabase environment.
 -- This script is read-only and fails closed on a missing or over-permissive contract.
 
 begin;
@@ -22,7 +22,14 @@ begin
     'os_inventory_receiving_inspections',
     'os_inventory_receiving_inspection_lines',
     'os_inventory_agent_proposals', 'os_inventory_agent_evaluations',
-    'os_inventory_automation_controls', 'os_inventory_procurement_policies'
+    'os_inventory_automation_controls', 'os_inventory_procurement_policies',
+    'os_inventory_supplier_connections', 'os_inventory_holds',
+    'os_inventory_hold_events', 'os_inventory_recall_events',
+    'os_inventory_recall_targets', 'os_inventory_temperature_events',
+    'os_inventory_calibration_events', 'os_inventory_allocations',
+    'os_inventory_readiness_evaluations', 'os_inventory_shipments',
+    'os_inventory_shipment_lines', 'os_inventory_requisition_events',
+    'os_inventory_supplier_event_inbox'
   ] loop
     if not exists (
       select 1
@@ -54,6 +61,14 @@ begin
     end if;
   end loop;
 
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='os_inventory_available_to_promise'
+      and column_name='quantity_pending_allocation'
+  ) then
+    raise exception 'connected_inventory_contract: allocation-aware availability missing';
+  end if;
+
   foreach v_function in array array[
     'start_inventory_count', 'submit_inventory_count',
     'review_inventory_count', 'dispatch_inventory_handoff',
@@ -66,7 +81,16 @@ begin
     'approve_inventory_supplier_item', 'assign_connected_kit_custody',
     'create_inventory_procurement_policy',
     'approve_inventory_procurement_policy',
-    'set_inventory_automation_control'
+    'set_inventory_automation_control', 'place_inventory_hold',
+    'release_inventory_hold', 'allocate_inventory_demand',
+    'transition_inventory_requisition', 'record_inventory_shipment',
+    'create_supply_manifest_version', 'approve_supply_manifest_version',
+    'evaluate_connected_shift_readiness', 'create_inventory_requisition',
+    'convert_inventory_requisition_to_purchase_order',
+    'review_inventory_supplier', 'register_inventory_supplier_connection',
+    'record_inventory_recall', 'record_inventory_temperature_event',
+    'record_inventory_calibration_event', 'transition_inventory_demand',
+    'transition_inventory_allocation'
   ] loop
     if not exists (
       select 1 from pg_proc procedure
@@ -101,6 +125,13 @@ begin
     where tgname='os_purchase_order_events_immutable' and not tgisinternal
   ) then
     raise exception 'connected_inventory_contract: approved PO or event immutability trigger missing';
+  end if;
+
+  if exists (
+    select 1 from public.os_inventory_supplier_connections
+    where status not in ('disabled','configuration_required','validation_failed','manual_only')
+  ) then
+    raise exception 'connected_inventory_contract: executable supplier connection present in V1';
   end if;
 end $$;
 
