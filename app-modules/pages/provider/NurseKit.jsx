@@ -14,6 +14,8 @@ import { apiGet, authedFetch } from '@/lib/apiClient';
 import { invalidApiResponse, isResponseObject } from '@/lib/apiResponse';
 import { nursePortalNav } from '@/lib/nursePortalNav';
 import { useSeo } from '@/lib/seo';
+import { queueInventoryAction, replayInventoryActions } from '@/lib/inventoryOfflineQueue';
+import { supabase } from '@/lib/supabase';
 
 const RESTOCK_REASONS = [
   ['BELOW_PAR', 'Below kit target'],
@@ -117,6 +119,36 @@ function normalizeKit(raw) {
         variantId: safeText(request.variant_id || request.variantId) || null,
       }))
       .filter((request) => request.id),
+    connected: isResponseObject(raw.connected) ? {
+      assigned: raw.connected.assigned === true,
+      assignment: isResponseObject(raw.connected.assignment) ? {
+        id: safeText(raw.connected.assignment.id),
+        locationId: safeText(raw.connected.assignment.location_id),
+        status: safeText(raw.connected.assignment.assignment_status),
+        version: Number(raw.connected.assignment.version || 0),
+      } : null,
+      kit: isResponseObject(raw.connected.kit) ? {
+        id: safeText(raw.connected.kit.id),
+        code: safeText(raw.connected.kit.kit_code),
+        status: safeText(raw.connected.kit.status),
+        version: Number(raw.connected.kit.version || 0),
+        sealCode: safeText(raw.connected.kit.seal_code) || null,
+      } : null,
+      items: Array.isArray(raw.connected.items) ? raw.connected.items.filter(isResponseObject).map((item) => ({
+        itemId: safeText(item.item_id), variantId: safeText(item.variant_id) || null, lotId: safeText(item.lot_id) || null,
+        name: safeText(item.name, 'Inventory item'), unit: safeText(item.unit, 'unit'),
+        available: safeQuantity(item.quantity_available), reserved: safeQuantity(item.quantity_reserved),
+        inTransit: safeQuantity(item.quantity_in_transit), quarantined: safeQuantity(item.quantity_quarantined),
+        recalled: safeQuantity(item.quantity_recalled), expired: safeQuantity(item.quantity_expired),
+        damaged: safeQuantity(item.quantity_damaged), disputed: safeQuantity(item.quantity_disputed),
+        lotCode: safeText(item.lotCode || item.lot_code) || null, expiresOn: safeText(item.expiresOn || item.expires_on) || null,
+        recallStatus: safeText(item.recallStatus || item.recall_status) || null,
+      })).filter((item) => item.itemId) : [],
+      counts: Array.isArray(raw.connected.counts) ? raw.connected.counts.filter(isResponseObject) : [],
+      handoffs: Array.isArray(raw.connected.handoffs) ? raw.connected.handoffs.filter(isResponseObject) : [],
+      requests: Array.isArray(raw.connected.requests) ? raw.connected.requests.filter(isResponseObject) : [],
+      exceptions: Array.isArray(raw.connected.exceptions) ? raw.connected.exceptions.filter(isResponseObject) : [],
+    } : null,
   };
 }
 
@@ -208,6 +240,7 @@ export default function NurseKit() {
   const [actionError, setActionError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [countDraft, setCountDraft] = useState(null);
 
   const load = useCallback(async () => {
     setState((current) => ({ ...current, loading: true, error: '' }));
@@ -219,6 +252,23 @@ export default function NurseKit() {
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const replay = async () => {
+      if (!navigator.onLine) return;
+      const { data } = await supabase.auth.getSession();
+      const sessionId = data?.session?.user?.id;
+      if (!sessionId) return;
+      const outcomes = await replayInventoryActions({
+        sessionId,
+        send: (row) => authedFetch(row.endpoint, { method: 'POST', headers: { 'Idempotency-Key': row.idempotencyKey }, body: JSON.stringify(row.payload) }),
+      });
+      if (outcomes.some((row) => row.status === 'conflict')) setNotice('An offline inventory action conflicts with newer server state and requires review.');
+      else if (outcomes.some((row) => row.status === 'replayed')) { setNotice('Offline inventory actions synchronized.'); await load(); }
+    };
+    window.addEventListener('online', replay);
+    replay();
+    return () => window.removeEventListener('online', replay);
+  }, [load]);
 
   const openUse = useCallback((item) => {
     setAction({ type: 'use', item, reasonCode: 'SHIFT_USE', idempotencyKey: requestKey('nurse-kit-use') });
@@ -261,47 +311,129 @@ export default function NurseKit() {
             lotId: action.item.lotId,
             quantity: '1',
           };
-      const response = await authedFetch('/api/me/kit', {
+      const endpoint = state.kit?.connected && action.type === 'restock' ? '/api/me/kit/restock-requests' : state.kit?.connected ? '/api/me/kit/movements' : '/api/me/kit';
+      const response = await authedFetch(endpoint, {
         method: 'POST',
         headers: { 'Idempotency-Key': action.idempotencyKey },
         body: JSON.stringify(payload),
       });
-      if (!isResponseObject(response) || response.ok !== true || !isResponseObject(response.kit)) {
+      if (!isResponseObject(response) || response.ok !== true) {
         throw invalidApiResponse('Inventory returned an invalid confirmation.');
       }
-      const kit = normalizeKit(response.kit);
       const completedType = action.type;
-      setState({ loading: false, error: '', kit });
+      await load();
       setAction(null);
       setNotice(completedType === 'restock' ? 'Restock request saved for Avalon Operations.' : 'Kit count updated from the confirmed stock movement.');
     } catch (error) {
+      if (action?.type === 'restock' && state.kit?.connected && !navigator.onLine) {
+        const { data } = await supabase.auth.getSession();
+        const sessionId = data?.session?.user?.id;
+        if (sessionId) {
+          await queueInventoryAction({ sessionId, type: 'restock', endpoint: '/api/me/kit/restock-requests', payload: {
+            reasonCode: action.reasonCode,
+            lines: [{ itemId: action.item.itemId, variantId: action.item.variantId, quantity: action.quantity }],
+          }, idempotencyKey: action.idempotencyKey });
+          setAction(null);
+          setNotice('Restock request queued securely on this device. It will synchronize after reconnecting.');
+          setBusy(false);
+          return;
+        }
+      }
       setActionError(error.message || 'The kit action could not be saved.');
     } finally {
       setBusy(false);
     }
-  }, [action]);
+  }, [action, load, state.kit]);
 
   const acceptAssignment = useCallback(async () => {
     if (!state.kit?.location || state.kit.location.assignmentStatus !== 'assigned') return;
     setBusy(true);
     setNotice('');
     try {
-      const response = await authedFetch('/api/me/kit', {
+      const connected = state.kit.connected;
+      const response = await authedFetch(connected ? '/api/me/kit/custody' : '/api/me/kit', {
         method: 'POST',
         headers: { 'Idempotency-Key': requestKey('nurse-kit-accept') },
-        body: JSON.stringify({ action: 'accept_assignment' }),
+        body: JSON.stringify(connected ? { action: 'accept', kitId: connected.kit?.id, expectedVersion: connected.assignment?.version } : { action: 'accept_assignment' }),
       });
-      if (!isResponseObject(response) || response.ok !== true || !isResponseObject(response.kit)) {
+      if (!isResponseObject(response) || response.ok !== true) {
         throw invalidApiResponse('Inventory returned an invalid kit acceptance.');
       }
-      setState({ loading: false, error: '', kit: normalizeKit(response.kit) });
+      await load();
       setNotice('Kit custody accepted. Your future count and restock actions remain tied to this assignment.');
     } catch (error) {
       setState((current) => ({ ...current, error: error.message || 'Kit custody could not be accepted.' }));
     } finally {
       setBusy(false);
     }
-  }, [state.kit]);
+  }, [load, state.kit]);
+
+  const startCount = useCallback(async () => {
+    setBusy(true); setNotice('');
+    try {
+      await authedFetch('/api/me/kit/counts', { method: 'POST', headers: { 'Idempotency-Key': requestKey('nurse-kit-count-start') }, body: JSON.stringify({ action: 'start', reasonCode: 'scheduled' }) });
+      const response = await apiGet('/api/me/kit/counts');
+      setCountDraft({ count: response.count, lines: (response.lines || []).map((line) => ({ ...line, actualQuantity: '' })) });
+      setNotice('Blind count started. Expected quantities stay hidden until submission.');
+      await load();
+    } catch (error) { setState((current) => ({ ...current, error: error.message || 'Count could not be started.' })); }
+    finally { setBusy(false); }
+  }, [load]);
+
+  const openActiveCount = useCallback(async () => {
+    setBusy(true);
+    try {
+      const response = await apiGet('/api/me/kit/counts');
+      setCountDraft(response.count ? { count: response.count, lines: (response.lines || []).map((line) => ({ ...line, actualQuantity: line.actual_quantity ?? '' })) } : null);
+    } catch (error) { setState((current) => ({ ...current, error: error.message || 'Count could not be loaded.' })); }
+    finally { setBusy(false); }
+  }, []);
+
+  const submitCount = useCallback(async () => {
+    if (!countDraft || countDraft.lines.some((line) => !/^\d+(?:\.\d{1,3})?$/.test(String(line.actualQuantity)))) { setNotice('Enter every count using no more than three decimal places.'); return; }
+    const key = requestKey('nurse-kit-count-submit');
+    const payload = { action: 'submit', countSessionId: countDraft.count.id, expectedVersion: countDraft.count.version, lines: countDraft.lines.map((line) => ({ lineId: line.id, actualQuantity: String(line.actualQuantity), scannedIdentifier: line.scanned_identifier || null })) };
+    setBusy(true);
+    try {
+      await authedFetch('/api/me/kit/counts', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify(payload) });
+      setCountDraft(null); setNotice('Count submitted. Any variance is held for independent review.'); await load();
+    } catch (error) {
+      if (!navigator.onLine) {
+        const { data } = await supabase.auth.getSession(); const sessionId = data?.session?.user?.id;
+        if (sessionId) { await queueInventoryAction({ sessionId, type: 'count', endpoint: '/api/me/kit/counts', payload, idempotencyKey: key }); setCountDraft(null); setNotice('Count queued securely for reconnect. Version conflicts require review.'); setBusy(false); return; }
+      }
+      setNotice(error.message || 'Count could not be submitted.');
+    } finally { setBusy(false); }
+  }, [countDraft, load]);
+
+  const receiveHandoff = useCallback(async (handoff, result) => {
+    setBusy(true);
+    try {
+      await authedFetch('/api/me/kit/handoffs', { method: 'POST', headers: { 'Idempotency-Key': requestKey(`nurse-kit-handoff-${handoff.id}`) }, body: JSON.stringify({ handoffId: handoff.id, expectedVersion: handoff.version, result, reasonCode: result === 'accepted' ? null : 'HANDOFF_DISPUTED' }) });
+      setNotice(result === 'accepted' ? 'Handoff accepted into your kit.' : 'Handoff moved to exception review; stock was not credited to your kit.'); await load();
+    } catch (error) { setNotice(error.message || 'Handoff could not be recorded.'); }
+    finally { setBusy(false); }
+  }, [load]);
+
+  const updateCustody = useCallback(async (actionName) => {
+    const connected = state.kit?.connected;
+    if (!connected?.kit?.id || connected.assignment?.status !== 'accepted') return;
+    if (actionName === 'report_lost' && !window.confirm('Report this physical kit lost? Its custody and readiness will be blocked immediately.')) return;
+    setBusy(true); setNotice('');
+    try {
+      await authedFetch('/api/me/kit/custody', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`nurse-kit-${actionName}`) },
+        body: JSON.stringify({ action: actionName, kitId: connected.kit.id,
+          expectedVersion: connected.assignment.version,
+          reasonCode: actionName === 'report_lost' ? 'KIT_REPORTED_LOST' : 'NURSE_REQUESTED_RETURN' }),
+      });
+      setNotice(actionName === 'report_lost'
+        ? 'Kit reported lost. Readiness is blocked and Operations has a critical exception.'
+        : 'Kit return requested. Keep custody until Operations completes the handoff.');
+      await load();
+    } catch (error) { setNotice(error.message || 'Custody could not be updated.'); }
+    finally { setBusy(false); }
+  }, [load, state.kit]);
 
   const navItems = useMemo(() => nursePortalNav(), []);
   const kit = state.kit;
@@ -351,7 +483,7 @@ export default function NurseKit() {
           items={kit?.items || []}
           loading={state.loading}
           onRefresh={load}
-          onUseOne={openUse}
+          onUseOne={kit?.connected ? undefined : openUse}
           onRequestRestock={openRestock}
           pendingRestockKeys={pendingRestockKeys}
           actionsDisabled={kit?.location?.assignmentStatus !== 'accepted' || kit?.location?.status !== 'active'}
@@ -369,6 +501,13 @@ export default function NurseKit() {
             </>
           ) : null}
         />
+
+        {kit?.connected?.assigned && <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-foreground/40">Connected custody</p><h2 className="mt-1 text-base font-semibold">{kit.connected.kit?.code || 'Physical nurse kit'}</h2><p className="mt-1 text-xs text-foreground/50">{labelCase(kit.connected.kit?.status, 'Pending')} · availability excludes reserved, quarantined, expired, and recalled lots.</p></div><div className="flex flex-wrap gap-2"><button type="button" disabled={busy || kit.connected.assignment?.status !== 'accepted'} onClick={kit.connected.counts.some((count) => ['draft', 'in_progress'].includes(count.status)) ? openActiveCount : startCount} className="min-h-10 rounded-full border border-foreground/12 px-4 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">{kit.connected.counts.some((count) => ['draft', 'in_progress'].includes(count.status)) ? 'Continue count' : 'Start blind count'}</button>{kit.connected.assignment?.status === 'accepted' ? <><button type="button" disabled={busy || kit.connected.kit?.status !== 'in_custody'} onClick={() => updateCustody('request_return')} className="min-h-10 rounded-full border border-foreground/12 px-4 text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">Request return</button><button type="button" disabled={busy || !['in_custody', 'return_pending'].includes(kit.connected.kit?.status)} onClick={() => updateCustody('report_lost')} className="min-h-10 rounded-full border border-red-500/25 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-red-700 disabled:opacity-40">Report lost</button></> : null}</div></div>
+          {(kit.connected.items.some((item) => Number(item.expired) > 0 || Number(item.recalled) > 0 || Number(item.damaged) > 0 || Number(item.disputed) > 0 || item.recallStatus === 'recalled')) && <p role="alert" className="mt-4 rounded-xl border border-red-500/20 bg-red-500/[0.06] p-3 text-xs text-red-700">Expired, recalled, damaged, or disputed stock is blocked from readiness. Follow Operations quarantine instructions.</p>}
+          {countDraft && <div className="mt-5 space-y-3"><p className="text-xs font-semibold">Blind count · {countDraft.lines.length} lines</p>{countDraft.lines.map((line, index) => { const item = kit.connected.items.find((candidate) => candidate.itemId === line.item_id && (candidate.variantId || '') === (line.variant_id || '') && (candidate.lotId || '') === (line.lot_id || '')); return <label key={line.id} className="block text-xs text-foreground/60">{item?.name || 'Inventory item'}{item?.lotCode ? ` · Lot ${item.lotCode}` : ''}<input type="number" min="0" step="0.001" value={line.actualQuantity} onChange={(event) => setCountDraft((current) => ({ ...current, lines: current.lines.map((entry, lineIndex) => lineIndex === index ? { ...entry, actualQuantity: event.target.value } : entry) }))} className={INPUT_CLASS} /></label>;})}<button type="button" disabled={busy} onClick={submitCount} className="min-h-11 w-full rounded-full bg-foreground px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-background disabled:opacity-40">Submit count</button></div>}
+          {kit.connected.handoffs.filter((handoff) => ['in_transit', 'ready_pickup'].includes(handoff.status)).map((handoff) => <div key={handoff.id} className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-background/55 p-3"><div><p className="text-xs font-semibold">Incoming sealed handoff</p><p className="mt-1 text-[10px] text-foreground/45">Seal {handoff.seal_code || 'not recorded'} · inspect before accepting</p></div><div className="flex gap-2"><button type="button" disabled={busy} onClick={() => receiveHandoff(handoff, 'disputed')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase">Dispute</button><button type="button" disabled={busy} onClick={() => receiveHandoff(handoff, 'accepted')} className="rounded-full bg-foreground px-3 py-2 text-[9px] font-bold uppercase text-background">Accept</button></div></div>)}
+        </section>}
 
         {kit?.assigned && (
           <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5">
