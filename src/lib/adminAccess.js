@@ -48,6 +48,9 @@ export const LIVE_ADMIN_ROUTES = Object.freeze([
     '/admin/inventory', // shared typed stock and nurse-kit custody (admin-only)
   ] : []),
   '/admin/scheduling', // admin-only credential-gated workforce scheduling
+  '/admin/dispatch', // mobile-service offer and route release control
+  '/admin/inventory-routing', // mobile-service manifest, reservation, and pickup control
+  '/admin/guides', // governed clinical guide publishing
   '/admin/nurse-invoices', // contractor pay review (admin-only)
   '/admin/team',
   '/admin/gfe', // GFE policy toggles (admin-only)

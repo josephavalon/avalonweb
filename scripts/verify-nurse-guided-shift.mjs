@@ -185,7 +185,7 @@ for (const [path, source] of nurseApis) {
 assert.doesNotMatch(engagementApi, /req\.method === 'PUT'|req\.method === 'POST'|\.update\(|\.upsert\(/, 'a nurse must not self-select an employment classification');
 assert.match(workflow, /requested === 'contractor_approved'/, 'contractor mode must require the human-approved persisted state');
 
-// ── Readiness: every domain present, fresh, and server-derived ──────────────
+// ── Readiness: every domain evidenced; blocking is stage-aware ─────────────
 
 const readinessDomains = [
   'identity', 'license', 'schedule', 'kit', 'client', 'gfe',
@@ -198,7 +198,12 @@ for (const domain of readinessDomains) {
 for (const field of ['status', 'reason_code', 'source', 'checked_at', 'expires_at', 'owner_role', 'remediation']) {
   assert.match(workflow, new RegExp(`\\b${field}\\b`), `readiness output is missing ${field}`);
 }
-assert.match(workflow, /READINESS_DOMAINS\.every\(\(key\) => READY_STATES\.has\(domains\[key\]\?\.status\)\)/, 'readiness must require every domain');
+assert.match(workflow, /const READINESS_DOMAINS_BY_STAGE = Object\.freeze\(/, 'readiness must define explicit stage gates');
+assert.match(workflow, /offer: Object\.freeze\(\[[^\]]*'identity'[^\]]*'safety'[^\]]*\]\)/, 'offer readiness must retain eligibility and safety gates');
+assert.match(workflow, /claim: Object\.freeze\(\[[^\]]*'identity'[^\]]*'safety'[^\]]*\]\)/, 'claim readiness must retain eligibility and safety gates');
+assert.match(workflow, /route_release: READINESS_DOMAINS/, 'route release must require every readiness domain');
+assert.match(workflow, /run_start: READINESS_DOMAINS/, 'run start must require every readiness domain');
+assert.match(workflow, /blockingDomains\.every\(\(key\) => READY_STATES\.has\(domains\[key\]\?\.status\)\)/, 'the selected stage must fail closed on every blocking domain');
 assert.match(workflow, /status: ready \? 'ready' : 'blocked'/);
 assert.match(workflow, /claim_allowed: claimAllowed/);
 assert.match(workflow, /Date\.parse\(expiry\) <= Date\.parse\(nowIso\)[\s\S]*readiness_evidence_stale/, 'expired evidence must fail closed');
@@ -215,7 +220,7 @@ assert.match(shiftsApi, /evaluateShiftReadiness/);
 assert.match(shiftsApi, /const READINESS_SOURCE = Symbol\('nurseReadinessSource'\)/, 'raw readiness inputs must use a non-serializable server-only key');
 assert.match(shiftsApi, /\[READINESS_SOURCE\]: \{ \.\.\.shift, assignment \}/, 'the server must retain the raw shift solely for readiness evaluation');
 assert.match(shiftsApi, /const sourceShift = shift\[READINESS_SOURCE\] \|\| shift;[\s\S]{0,180}?const \{ \[READINESS_SOURCE\]: ignoredSource, \.\.\.publicShift \} = shift;/, 'raw readiness inputs must be removed before the API response is built');
-assert.match(shiftsApi, /evaluateShiftReadiness\(\{ db, authed, provider, shift: sourceShift, preferences \}\)/, 'readiness must evaluate the raw server record, not the redacted public offer');
+assert.match(shiftsApi, /evaluateShiftReadiness\(\{[\s\S]{0,180}?db,[\s\S]{0,80}?authed,[\s\S]{0,80}?provider,[\s\S]{0,80}?shift: sourceShift,[\s\S]{0,80}?preferences,[\s\S]{0,80}?stage: sourceShift\.assignment \? 'route_release' : 'offer',[\s\S]{0,40}?\}\)/, 'readiness must evaluate the raw server record at an explicit stage, not the redacted public offer');
 assert.match(shiftsApi, /readiness\.claim_allowed|readiness\?\.claim_allowed/, 'claim must honor only server-derived readiness');
 assert.doesNotMatch(shiftsApi, /(?:body|req\.body)\.(?:readiness|claimAllowed|claim_allowed)/, 'claim must not trust browser readiness');
 assert.match(migration, /from public\.nurse_shift_readiness_snapshots[\s\S]{0,700}?overall_status = 'ready'[\s\S]{0,220}?claim_allowed[\s\S]{0,220}?invalidated_at is null[\s\S]{0,220}?expires_at > clock_timestamp\(\)/, 'claiming or starting a run must require a current, non-invalidated ready snapshot');

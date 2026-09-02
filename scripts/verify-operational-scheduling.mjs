@@ -171,7 +171,8 @@ for (const path of [
 }
 assert.match(routes, /path="\/provider" element=\{<Navigate to="\/provider\/shifts" replace \/>\}/,
   'the provider root must enter the guarded work route instead of reopening generic login');
-for (const legacyPath of ['/provider/today', '/provider/dashboard', '/provider/dispatch', '/provider/field', '/provider/shift']) {
+assert.match(routes, /path="\/provider\/today"[\s\S]{0,220}<NurseTodayRoute \/>/, '/provider/today must render the live route-day workflow');
+for (const legacyPath of ['/provider/dashboard', '/provider/dispatch', '/provider/field', '/provider/shift']) {
   assert.match(routes, new RegExp(`path="${legacyPath.replaceAll('/', '\\/')}"[\\s\\S]{0,220}<Navigate to="\\/provider\\/shifts"`), `${legacyPath} must redirect to live shifts`);
 }
 assert.match(routes, /path="\/provider\/reports"[\s\S]{0,220}<Navigate to="\/provider\/invoices"/, 'legacy invented reports must redirect to live invoices');

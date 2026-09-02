@@ -225,7 +225,6 @@ forbid('api/admin/email-templates.js', [
 
 for (const relativePath of [
   'app-modules/pages/admin/CredentialControl.jsx',
-  'app-modules/pages/admin/DispatchControl.jsx',
   'app-modules/pages/admin/FieldControl.jsx',
   'app-modules/pages/admin/TrainingControl.jsx',
   'app-modules/pages/admin/ShiftMarketplace.jsx',
@@ -239,6 +238,25 @@ for (const relativePath of [
 ]) {
   requireProductionGate(relativePath);
 }
+
+forbid('app-modules/pages/admin/DispatchControl.jsx', [
+  '@/fixtures',
+  'commandMockData',
+  'adminMockData',
+]);
+requireText('app-modules/pages/admin/DispatchControl.jsx', [
+  'NurseOperations',
+  'view="dispatch"',
+]);
+forbid('app-modules/pages/admin/NurseOperations.jsx', [
+  '@/fixtures',
+  'commandMockData',
+  'adminMockData',
+]);
+requireText('app-modules/pages/admin/NurseOperations.jsx', [
+  'No sample or cached records are shown',
+  '/api/admin/nurse-marketplace',
+]);
 
 for (const [relativePath, unavailableCopy] of [
   ['app-modules/pages/admin/FinanceControl.jsx', 'No zeroed or sample finance metrics are shown'],

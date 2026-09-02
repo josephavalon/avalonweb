@@ -1,9 +1,8 @@
 /**
  * GET /api/admin/inventory-low
  *
- * Staff/admin read-only list of inventory items whose on-hand quantity has
- * fallen at-or-below their configured reorder threshold (`min_level` on the
- * `items` table). Powers the "Low stock" banner at the top of /admin/inventory
+ * Staff/admin read-only list derived from the typed os_* inventory ledger.
+ * Powers the "Low stock" banner at the top of /admin/inventory
  * so staff get a heads-up before a clinical bag/add-on runs out mid-route.
  *
  * Sort: most under-stocked first (largest deficit), then by name.
@@ -12,6 +11,7 @@
 
 import { requireStaff } from '../_lib/supabase-auth.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { connectedInventoryFlags } from '../_lib/connected-inventory.js';
 
 const MAX_ROWS = 100;
 
@@ -27,26 +27,33 @@ export default async function handler(req, res) {
   const { db } = authed;
 
   try {
-    // Load all live items; filter to qty <= min_level in JS so we can compute
-    // the deficit ordering without a stored generated column.
-    const { data, error } = await db.from('items')
-      .select('id, name, sku, qty, min_level, unit, folder_id, updated_at')
-      .is('deleted_at', null)
-      .limit(2000);
-    if (error) throw error;
+    const catalogResult = await db.from('os_inventory_items')
+      .select('id,name,sku,reorder_point,unit,folder_id,updated_at')
+      .eq('tenant_id', authed.tenantId).eq('status', 'active').is('archived_at', null).limit(2000);
+    if (catalogResult.error) throw catalogResult.error;
+    const flags = connectedInventoryFlags();
+    const balanceResult = flags.connected
+      ? await db.from('os_inventory_availability').select('item_id,quantity_available').eq('tenant_id', authed.tenantId).limit(50000)
+      : await db.from('os_inventory_location_balances').select('item_id,quantity_on_hand').eq('tenant_id', authed.tenantId).limit(50000);
+    if (balanceResult.error) throw balanceResult.error;
+    const quantities = new Map();
+    for (const balance of balanceResult.data || []) {
+      const value = flags.connected ? balance.quantity_available : balance.quantity_on_hand;
+      quantities.set(balance.item_id, (quantities.get(balance.item_id) || 0) + Number(value || 0));
+    }
 
-    const rows = (data || [])
+    const rows = (catalogResult.data || [])
       .map((r) => ({
         id:           r.id,
         name:         r.name,
         sku:          r.sku || null,
-        qty:          Number(r.qty || 0),
-        minLevel:     Number(r.min_level || 0),
+        qty:          Number(quantities.get(r.id) || 0),
+        minLevel:     Number(r.reorder_point || 0),
         unit:         r.unit || 'units',
         folderId:     r.folder_id || null,
         updatedAt:    r.updated_at || null,
-        deficit:      Math.max(0, Number(r.min_level || 0) - Number(r.qty || 0)),
-        out:          Number(r.qty || 0) <= 0,
+        deficit:      Math.max(0, Number(r.reorder_point || 0) - Number(quantities.get(r.id) || 0)),
+        out:          Number(quantities.get(r.id) || 0) <= 0,
       }))
       // Threshold rule: at-or-below configured min_level. Items with
       // min_level=0 are excluded unless they're fully out of stock (qty<=0

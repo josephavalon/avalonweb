@@ -189,6 +189,9 @@ const NAV_LIVE = [
   {
     label: 'Operations', icon: ShieldCheck, children: [
       { label: 'Scheduling', to: '/admin/scheduling' },
+      { label: 'Dispatch', to: '/admin/dispatch' },
+      { label: 'Inventory routing', to: '/admin/inventory-routing' },
+      { label: 'Guide publishing', to: '/admin/guides' },
       { label: 'Team', to: '/admin/team' },
       {
         label: 'Clinical', children: [

@@ -11,6 +11,10 @@ const DISPLAY_TIMEZONE = 'America/Los_Angeles';
 const SCHEDULE_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   dateStyle: 'medium', timeStyle: 'short', timeZone: DISPLAY_TIMEZONE,
 });
+const makeIdempotencyKey = () => globalThis.crypto?.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+  const random = Math.floor(Math.random() * 16);
+  return (character === 'x' ? random : (random & 0x3) | 0x8).toString(16);
+});
 
 function localFormValue(value) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -85,7 +89,7 @@ export default function SchedulingControl() {
   const action = async (actionName, shift, providerProfileId) => {
     setActionBusy(shift.id);
     setState((current) => ({ ...current, error: '' }));
-    try { await apiPost('/api/admin/scheduling', { action: actionName, shiftId: shift.id, version: shift.version, providerProfileId }); await load(); }
+    try { await apiPost('/api/admin/scheduling', { action: actionName, shiftId: shift.id, version: shift.version, providerProfileId, idempotencyKey: makeIdempotencyKey() }); await load(); }
     catch (error) { setState((current) => ({ ...current, error: error.message })); }
     finally { setActionBusy(''); }
   };

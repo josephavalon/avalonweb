@@ -20,6 +20,13 @@ import {
   requireUuid,
   resolveNurseProvider,
 } from '../_lib/nurse-workflow.js';
+import {
+  actOnNurseOffer,
+  loadNurseOffers,
+  loadOffer,
+  nurseMarketplaceCapabilities,
+  sanitizeMarketplaceCounter,
+} from '../_lib/nurse-marketplace.js';
 
 const SHIFT_SELECT = 'id,series_id,occurrence_key,event_container_id,appointment_id,title,starts_at,ends_at,timezone,location_name,location_address,service_area,role_required,slots_required,status,instructions,version';
 const ASSIGNMENT_SELECT = 'id,shift_id,provider_profile_id,status,offered_at,claimed_at,assigned_at,completed_at,created_at,updated_at';
@@ -110,7 +117,14 @@ async function enrichShifts({ db, authed, provider, shifts, preferences }) {
       const sourceShift = shift[READINESS_SOURCE] || shift;
       const { [READINESS_SOURCE]: ignoredSource, ...publicShift } = shift;
       const [{ readiness, offerTerms }, run] = await Promise.all([
-        evaluateShiftReadiness({ db, authed, provider, shift: sourceShift, preferences }),
+        evaluateShiftReadiness({
+          db,
+          authed,
+          provider,
+          shift: sourceShift,
+          preferences,
+          stage: sourceShift.assignment ? 'route_release' : 'offer',
+        }),
         loadLatestRun(db, authed.tenantId, provider.id, shift.id),
       ]);
       void ignoredSource;
@@ -156,7 +170,29 @@ async function reloadShiftContext(authed, provider, shiftId, preferences) {
   const { readiness, offerTerms } = await evaluateShiftReadiness({
     db: authed.db, authed, provider, shift: withAssignment, preferences,
   });
-  return { shift: withAssignment, assignment, run, readiness, offer_terms: offerTerms };
+  let routeDay = null;
+  if (assignment && shift.appointment_id) {
+    const stopResult = await authed.db.from('provider_route_day_stops')
+      .select('route_day_id')
+      .eq('tenant_id', authed.tenantId)
+      .eq('appointment_id', shift.appointment_id)
+      .eq('assigned_provider_profile_id', provider.id)
+      .eq('selected', true)
+      .limit(1)
+      .maybeSingle();
+    if (stopResult.error) throw stopResult.error;
+    if (stopResult.data?.route_day_id) {
+      const dayResult = await authed.db.from('provider_route_days')
+        .select('id,route_date,status,version,current_plan_version_id,assignment_revision,acknowledged_revision')
+        .eq('tenant_id', authed.tenantId)
+        .eq('provider_profile_id', provider.id)
+        .eq('id', stopResult.data.route_day_id)
+        .maybeSingle();
+      if (dayResult.error) throw dayResult.error;
+      routeDay = dayResult.data || null;
+    }
+  }
+  return { shift: withAssignment, assignment, run, route_day: routeDay, readiness, offer_terms: offerTerms };
 }
 
 export default async function handler(req, res) {
@@ -170,7 +206,30 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const shifts = await loadShifts(authed.db, authed, provider, req.query || {});
       const enriched = await enrichShifts({ db: authed.db, authed, provider, shifts, preferences });
-      return res.status(200).json({ shifts: enriched, provider: publicProvider(provider, engagement) });
+      const capabilities = nurseMarketplaceCapabilities();
+      const offerFeed = capabilities.offers
+        ? await loadNurseOffers(authed.db, {
+          tenantId: authed.tenantId,
+          providerProfileId: provider.id,
+          cursor: req.query?.cursor || null,
+          limit: req.query?.limit || 100,
+        })
+        : { offers: [], cursor: req.query?.cursor || null };
+      return res.status(200).json({
+        shifts: enriched,
+        provider: publicProvider(provider, engagement),
+        offers: offerFeed.offers,
+        cursor: offerFeed.cursor,
+        capabilities,
+        realtime: capabilities.realtime_offer_alerts ? {
+          enabled: true,
+          schema: 'public',
+          table: 'nurse_shift_offers',
+          event: '*',
+          filter: `provider_profile_id=eq.${provider.id}`,
+        } : { enabled: false },
+        recovery_poll_seconds: 20,
+      });
     }
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'GET, POST');
@@ -180,7 +239,7 @@ export default async function handler(req, res) {
     const body = parseJsonBody(req);
     const action = String(body.action || '').toLowerCase();
     const shiftId = requireUuid(body.shiftId, 'Shift id');
-    const version = requirePositiveVersion(body.version, 'Shift version');
+    const version = requirePositiveVersion(body.expectedShiftVersion ?? body.version, 'Shift version');
     const [shift, assignment] = await Promise.all([
       loadShiftById(authed.db, authed.tenantId, shiftId),
       loadOwnAssignment(authed.db, authed.tenantId, provider.id, shiftId),
@@ -194,9 +253,50 @@ export default async function handler(req, res) {
       p_expected_version: version,
     };
 
+    const offerId = body.offerId ? requireUuid(body.offerId, 'Offer id') : null;
+    if (offerId) {
+      const offerVersion = requirePositiveVersion(body.expectedOfferVersion, 'Offer version');
+      const requestKey = requireUuid(body.idempotencyKey || body.requestKey, 'Idempotency key');
+      const offer = await loadOffer(authed.db, authed.tenantId, provider.id, offerId);
+      if (offer.shift_id !== shiftId) {
+        throw requestError('Offer is unavailable.', 'offer_unavailable', 409);
+      }
+      if (action === 'claim') {
+        // Persist current claim-stage evidence before entering the transactional
+        // RPC. Do not reject on mutable shift/assignment state here: the same
+        // idempotency key must reach SQL so a lost successful response can be
+        // replayed even after the winner changed those rows.
+        await evaluateShiftReadiness({
+          db: authed.db, authed, provider, shift: current, preferences, stage: 'claim',
+        });
+      }
+      const result = await actOnNurseOffer(authed.db, {
+        tenantId: authed.tenantId,
+        actorProfileId: authed.user.id,
+        providerProfileId: provider.id,
+        offer,
+        shiftVersion: version,
+        offerVersion,
+        idempotencyKey: requestKey,
+        action,
+        acceptedTermsHash: body.acceptedTermsHash,
+        requestedTerms: action === 'counter'
+          ? sanitizeMarketplaceCounter(body.counter || body.requestedTerms) : null,
+      });
+      const context = await reloadShiftContext(authed, provider, shiftId, preferences);
+      return res.status(200).json({ ok: true, result, request_key: requestKey, ...context });
+    }
+
+    if (nurseMarketplaceCapabilities().offers && ['claim', 'decline', 'counter'].includes(action)) {
+      return res.status(409).json({
+        error: 'A current offer is required. Refresh the Work Queue.',
+        code: 'offer_required',
+      });
+    }
+
     if (action === 'claim') {
       const { readiness } = await evaluateShiftReadiness({
-        db: authed.db, authed, provider, shift: current, preferences,
+        db: authed.db, authed, provider, shift: current, preferences, stage: 'claim',
       });
       if (!readiness.claim_allowed || shift.status !== 'open'
         || ['claimed', 'assigned', 'completed'].includes(assignment?.status)) {

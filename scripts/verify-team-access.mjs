@@ -94,15 +94,17 @@ check('admin can open only live admin routes when preview is off', () => {
   for (const p of LIVE_ADMIN_ROUTES.filter((route) => route !== '/admin/os')) {
     assert.equal(canAccessAdminRoute('admin', p), true);
   }
-  for (const p of ['/admin/crm', '/admin/credentials', '/admin/field', '/admin/client-heat-map', '/admin/dispatch']) {
+  for (const p of ['/admin/crm', '/admin/credentials', '/admin/field', '/admin/client-heat-map']) {
     assert.equal(canAccessAdminRoute('admin', p), false);
   }
 });
-check('dispatch and preview surfaces are redirect-only when preview is off', () => {
-  for (const role of ['admin', 'staff']) {
-    assert.equal(canAccessAdminRoute(role, '/admin/dispatch'), false);
-    assert.equal(canAccessAdminRoute(role, '/admin/client-heat-map'), false);
+check('persisted Nurse operations are admin-only while preview surfaces stay hidden', () => {
+  for (const p of ['/admin/dispatch', '/admin/inventory-routing', '/admin/guides']) {
+    assert.equal(canAccessAdminRoute('admin', p), true);
+    assert.equal(canAccessAdminRoute('staff', p), false);
   }
+  assert.equal(canAccessAdminRoute('admin', '/admin/client-heat-map'), false);
+  assert.equal(canAccessAdminRoute('staff', '/admin/client-heat-map'), false);
 });
 check('Agent BD stays hidden until its separate release', () => {
   for (const role of ['admin', 'staff']) {
@@ -122,6 +124,8 @@ check('staff is blocked from hidden preview and sensitive routes when preview is
     '/admin/field',
     '/admin/client-heat-map',
     '/admin/dispatch',
+    '/admin/inventory-routing',
+    '/admin/guides',
     '/admin/robbot3k',
     '/admin/robbot3k/prospect/example',
     '/admin/nurse-invoices',

@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import {
   cleanCents,
@@ -14,6 +15,7 @@ import {
   storeIdempotentResponse,
 } from '../_lib/os-api.js';
 import { loadAdminInventory } from '../_lib/shared-inventory.js';
+import { connectedInventoryFlags, inventoryCanaryProfileAllowed, loadConnectedInventoryOverview } from '../_lib/connected-inventory.js';
 import { requireAdmin } from '../_lib/supabase-auth.js';
 
 const MOVEMENT_TYPES = new Set(['receive', 'consume', 'adjust', 'expire', 'shrink', 'return']);
@@ -206,6 +208,35 @@ async function mutateInventory(authed, body, key) {
   }
 
   if (action === 'fulfill_restock') {
+    const flags = connectedInventoryFlags();
+    if (flags.connected && inventoryCanaryProfileAllowed(authed.user.id)) {
+      if (flags.killSwitch) throw new PayOpsError('Connected inventory writes are paused.', 'inventory_kill_switch_active', 503);
+      const requestId = cleanUuid(body.restockRequestId, 'restockRequestId');
+      const requestResult = await authed.db.from('os_inventory_restock_requests')
+        .select('id,location_id,status,version,os_inventory_restock_request_lines(id,item_id,variant_id,requested_quantity)')
+        .eq('tenant_id', authed.tenantId).eq('id', requestId).maybeSingle();
+      if (requestResult.error) throw normalizePayOpsDbError(requestResult.error);
+      const request = requestResult.data;
+      const lines = request?.os_inventory_restock_request_lines || [];
+      if (!request || request.status !== 'packing' || request.version !== cleanExpectedVersion(body.expectedVersion) || lines.length !== 1) {
+        throw new PayOpsError('This restock request needs a refresh or structured review.', 'inventory_restock_version_conflict', 409);
+      }
+      const kitResult = await authed.db.from('os_inventory_kits').select('id')
+        .eq('tenant_id', authed.tenantId).eq('location_id', request.location_id).maybeSingle();
+      if (kitResult.error) throw normalizePayOpsDbError(kitResult.error);
+      if (!kitResult.data?.id) throw new PayOpsError('A physical kit is required.', 'inventory_physical_kit_required', 409);
+      const result = await authed.db.rpc('dispatch_inventory_handoff', {
+        p_tenant_id: authed.tenantId, p_actor_profile_id: authed.user.id,
+        p_kit_id: kitResult.data.id, p_from_location_id: cleanUuid(body.fromLocationId, 'fromLocationId'),
+        p_restock_request_id: requestId,
+        p_lines: [{ itemId: lines[0].item_id, variantId: lines[0].variant_id,
+          lotId: optionalUuid(body.lotId, 'lotId'), quantity: String(lines[0].requested_quantity) }],
+        p_seal_code: null,
+        p_idempotency_key: `restock-dispatch:${crypto.createHash('sha256').update(key).digest('hex')}`,
+      });
+      if (result.error) throw normalizePayOpsDbError(result.error);
+      return { action, record: { ...result.data, fulfillmentReference: text(body.fulfillmentReference, 'fulfillment_reference', 160, { required: true }), compatibilityLifecycle: 'dispatch_then_accept' } };
+    }
     const result = await authed.db.rpc('fulfill_inventory_restock_request', {
       p_tenant_id: authed.tenantId,
       p_actor_profile_id: authed.user.id,
@@ -345,6 +376,9 @@ export default async function handler(req, res) {
     if (!authed) return;
     if (req.method === 'GET') {
       const data = await loadAdminInventory(authed.db, authed.tenantId);
+      const flags = connectedInventoryFlags();
+      const canaryAllowed = flags.connected && inventoryCanaryProfileAllowed(authed.user.id);
+      if (canaryAllowed) data.connected = await loadConnectedInventoryOverview(authed.db, authed.tenantId);
       await writeAuditEvent(authed.db, {
         tenantId: authed.tenantId,
         actorProfileId: authed.user.id,
@@ -353,7 +387,13 @@ export default async function handler(req, res) {
         phiTouched: false,
         payload: { locationCount: data.locations.length, catalogCount: data.catalog.length },
       });
-      return res.status(200).json({ status: 'AVAILABLE', data });
+      return res.status(200).json({ status: 'AVAILABLE', flags: {
+        connectedInventory: canaryAllowed,
+        manualProcurement: canaryAllowed && flags.manualProcurement,
+        a1Drafts: canaryAllowed && flags.a1Drafts,
+        supplierExecution: canaryAllowed && flags.supplierExecution,
+        inventoryKillSwitch: flags.killSwitch,
+      }, data });
     }
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'GET, POST');
@@ -370,6 +410,10 @@ export default async function handler(req, res) {
       }
       res.setHeader('X-Idempotent-Replay', 'true');
       return res.status(previous.response_status || 200).json(previous.response_body);
+    }
+    const flags = connectedInventoryFlags();
+    if (flags.connected && inventoryCanaryProfileAllowed(authed.user.id) && flags.killSwitch) {
+      throw new PayOpsError('Connected inventory writes are paused.', 'inventory_kill_switch_active', 503);
     }
     const result = await mutateInventory(authed, body, key);
     const response = { ok: true, result };

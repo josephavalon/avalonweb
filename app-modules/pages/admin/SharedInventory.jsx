@@ -79,11 +79,18 @@ function ActionPanel({ title, children, onClose, onSubmit, submitting, submitLab
 }
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-foreground/12 bg-background/65 px-3 text-sm outline-none focus:border-foreground/35';
+const INVENTORY_SECTIONS = ['stock', 'kits', 'requests', 'orders', 'suppliers', 'receiving', 'exceptions'];
+
+function ConnectedSummary({ title, description, count, empty }) {
+  return <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5"><div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold">{title}</h2><p className="mt-1 text-xs leading-relaxed text-foreground/50">{description}</p></div><span className="rounded-full border border-foreground/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/50">{count}</span></div>{count === 0 ? <p className="mt-5 rounded-xl border border-dashed border-foreground/12 p-5 text-center text-xs text-foreground/45">{empty}</p> : null}</section>;
+}
 
 export default function SharedInventory() {
   const pendingKeys = useRef(new Map());
-  const [searchParams] = useSearchParams();
-  const inventoryView = searchParams.get('view') === 'kits' ? 'kits' : 'all';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSection = searchParams.get('section') || (searchParams.get('view') === 'kits' ? 'kits' : 'stock');
+  const activeSection = INVENTORY_SECTIONS.includes(requestedSection) ? requestedSection : 'stock';
+  const inventoryView = activeSection === 'kits' ? 'kits' : 'all';
   const [state, setState] = useState({ loading: true, error: '', data: null });
   const [selectedLocationId, setSelectedLocationId] = useState('');
   const [panel, setPanel] = useState('');
@@ -111,7 +118,7 @@ export default function SharedInventory() {
       if (!data || !Array.isArray(data.locations) || !Array.isArray(data.catalog)) {
         throw new Error('Inventory returned an invalid typed-source response.');
       }
-      setState({ loading: false, error: '', data });
+      setState({ loading: false, error: '', data: { ...data, runtimeFlags: response?.flags || {} } });
       setSelectedLocationId((current) => {
         const visible = inventoryView === 'kits'
           ? data.locations.filter((row) => row.type === 'nurse_kit')
@@ -154,6 +161,7 @@ export default function SharedInventory() {
   }, [load, post]);
 
   const data = state.data;
+  const connected = data?.connected || null;
   const selectedLocation = data?.locations?.find((row) => row.id === selectedLocationId) || null;
   const items = selectedLocation?.items || [];
   const transferItem = items.find((item) => item.itemId === transferForm.itemId && (item.variantId || '') === transferForm.variantId && (item.lotId || '') === transferForm.lotId) || null;
@@ -265,11 +273,12 @@ export default function SharedInventory() {
   };
   const openPurchaseOrderReceipt = (order, line) => {
     const outstanding = Math.max(0, Number(line.quantityOrdered || 0) - Number(line.quantityReceived || 0));
+    const connectedOrder = connectedOrderFor(order.id);
     setPurchaseOrderReceiptForm({
       purchaseOrderId: order.id,
       purchaseOrderLineId: line.id,
       expectedPurchaseOrderVersion: Number(order.version),
-      locationId: purchaseOrderReceiptLocations[0]?.id || '',
+      locationId: connectedOrder?.ship_to_location_id || purchaseOrderReceiptLocations[0]?.id || '',
       lotId: '',
       quantity: String(outstanding),
     });
@@ -301,19 +310,56 @@ export default function SharedInventory() {
           fulfillmentReference: fulfillmentForm.fulfillmentReference,
         }),
       });
-      if (response?.ok !== true || !response?.result?.record?.fulfillmentTransferGroupId) {
-        throw new Error('Inventory did not confirm the atomic kit transfer and fulfillment.');
+      const record = response?.result?.record;
+      if (response?.ok !== true || (connected ? record?.status !== 'in_transit' : !record?.fulfillmentTransferGroupId)) {
+        throw new Error('Inventory did not confirm the protected restock lifecycle.');
       }
       setFulfillmentForm(EMPTY_FULFILLMENT);
       setPanel('');
       await load();
-      setActionStatus('Stock transferred into the nurse kit and the restock request was fulfilled.');
+      setActionStatus(connected
+        ? 'Stock moved into transit. The nurse must inspect and accept the handoff before the kit and request are credited.'
+        : 'Stock transferred into the nurse kit and the restock request was fulfilled.');
     } catch (error) {
       setActionError(error.message || 'The restock could not be fulfilled. Retry uses the same protected request identifiers.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const receivePurchaseOrder = async (event) => {
+    if (!connected) {
+      return submit(event, { action: 'receive_purchase_order_line', ...purchaseOrderReceiptForm },
+        `inventory-purchase-order-receipt-${purchaseOrderReceiptForm.purchaseOrderLineId}`,
+        () => setPurchaseOrderReceiptForm(EMPTY_PURCHASE_ORDER_RECEIPT));
+    }
+    event.preventDefault(); setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/receiving', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-inspection-${purchaseOrderReceiptForm.purchaseOrderLineId}`) },
+        body: JSON.stringify({ action: 'create_inspection', purchaseOrderId: purchaseOrderReceiptForm.purchaseOrderId,
+          locationId: purchaseOrderReceiptForm.locationId, conditionCode: 'RECEIVED_OK', temperatureEvidence: {},
+          lines: [{ purchaseOrderLineId: purchaseOrderReceiptForm.purchaseOrderLineId,
+            lotId: purchaseOrderReceiptForm.lotId, quantityReceived: purchaseOrderReceiptForm.quantity,
+            quantityAccepted: purchaseOrderReceiptForm.quantity, disposition: 'accepted', evidence: {} }] }),
+      });
+      setPurchaseOrderReceiptForm(EMPTY_PURCHASE_ORDER_RECEIPT); setPanel(''); await load();
+      setActionStatus('Receiving inspection saved. Post it separately after review to create ledger stock.');
+    } catch (error) { setActionError(error.message || 'The receiving inspection could not be saved.'); }
+    finally { setSubmitting(false); }
+  };
+
+  const postInspection = useCallback(async (inspection) => {
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/receiving', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-inspection-${inspection.id}-post`) },
+        body: JSON.stringify({ action: 'post_inspection', inspectionId: inspection.id, expectedVersion: inspection.version }),
+      });
+      await load(); setActionStatus('Inspection posted to the append-only stock ledger. Vendor AP can reference the committed PO and receipt evidence.');
+    } catch (error) { setActionError(error.message || 'The inspection could not be posted.'); }
+    finally { setSubmitting(false); }
+  }, [load]);
 
   const transitionRestock = async (request, nextStatus) => {
     setSubmitting(true);
@@ -336,6 +382,150 @@ export default function SharedInventory() {
     }
   };
 
+  const connectedOrderFor = useCallback((orderId) => (connected?.purchaseOrders || [])
+    .find((order) => order.id === orderId), [connected]);
+
+  const updateConnectedOrder = useCallback(async (order, action, extra = {}) => {
+    const current = connectedOrderFor(order.id);
+    if (!current) { setActionError('Refresh to load the connected purchase-order version.'); return; }
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/purchase-orders', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-po-${order.id}-${action}`) },
+        body: JSON.stringify({ action, purchaseOrderId: order.id, expectedVersion: current.version, ...extra }),
+      });
+      await load();
+      setActionStatus(action === 'submit' ? 'Purchase order frozen and submitted for independent Procurement approval.'
+        : action === 'approve' ? 'Exact purchase-order payload approved. Any commercial change now requires a new draft.'
+          : 'Manual supplier evidence recorded. Avalon did not contact the supplier.');
+    } catch (error) { setActionError(error.message || 'The purchase order action could not be recorded.'); }
+    finally { setSubmitting(false); }
+  }, [connectedOrderFor, load]);
+
+  const exportConnectedOrder = useCallback(async (order) => {
+    const current = connectedOrderFor(order.id);
+    if (!current) { setActionError('Refresh to load the connected purchase-order version.'); return; }
+    const preview = window.open('about:blank', '_blank');
+    if (preview) preview.opener = null;
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      const document = await apiGet(`/api/admin/inventory/purchase-order-document?id=${encodeURIComponent(order.id)}&format=json`);
+      await authedFetch('/api/admin/inventory/purchase-orders', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-po-${order.id}-manual-exported`) },
+        body: JSON.stringify({ action: 'record_event', purchaseOrderId: order.id, expectedVersion: current.version,
+          eventType: 'manual_exported', evidence: { documentPayloadHash: document.payloadHash, deliveryMode: 'HUMAN_MANUAL' } }),
+      });
+      const url = URL.createObjectURL(new Blob([document.html], { type: 'text/html' }));
+      if (preview) preview.location = url; else window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+      await load();
+      setActionStatus('Immutable order document opened for a human to save or print. Avalon did not transmit it.');
+    } catch (error) { if (preview) preview.close(); setActionError(error.message || 'The manual order document could not be prepared.'); }
+    finally { setSubmitting(false); }
+  }, [connectedOrderFor, load]);
+
+  const recordConnectedOrderEvent = useCallback(async (order, eventType) => {
+    if (eventType === 'shipped') {
+      const current = connectedOrderFor(order.id);
+      const shipmentReference = window.prompt('Supplier shipment reference:', '') ?? null;
+      if (shipmentReference === null || !shipmentReference.trim()) return;
+      const trackingReference = window.prompt('Carrier tracking reference (optional):', '') ?? null;
+      if (trackingReference === null) return;
+      const lines = (order.lines || []).map((line) => ({
+        purchaseOrderLineId: line.id,
+        quantityShipped: String(Math.max(0, Number(line.quantityOrdered || 0) - Number(line.quantityReceived || 0))),
+      })).filter((line) => Number(line.quantityShipped) > 0);
+      if (!current || !lines.length) { setActionError('No outstanding approved order lines are available for shipment.'); return; }
+      setSubmitting(true); setActionError(''); setActionStatus('');
+      try {
+        await authedFetch('/api/admin/inventory/shipments', {
+          method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-po-${order.id}-shipment`) },
+          body: JSON.stringify({ action: 'record_shipment', purchaseOrderId: order.id, expectedVersion: current.version,
+            shipmentReference: shipmentReference.trim(), trackingReference: trackingReference.trim() || null,
+            lines, evidence: { recordedFrom: 'HUMAN_MANUAL' } }),
+        });
+        await load(); setActionStatus('Shipment evidence recorded. Stock remains unavailable until an independent receiving inspection is posted.');
+      } catch (error) { setActionError(error.message || 'Shipment evidence could not be recorded.'); }
+      finally { setSubmitting(false); }
+      return;
+    }
+    const reference = window.prompt(`External reference for ${eventType.replaceAll('_', ' ')} (leave blank only if unavailable):`, '') ?? null;
+    if (reference === null) return;
+    const evidenceReference = window.prompt('Non-PHI evidence reference (document ID, tracking ID, or coded note):', '') ?? null;
+    if (evidenceReference === null) return;
+    await updateConnectedOrder(order, 'record_event', {
+      eventType, externalOrderId: reference || null,
+      evidence: { evidenceReference: evidenceReference || 'NOT_AVAILABLE', recordedFrom: 'HUMAN_MANUAL' },
+    });
+  }, [connectedOrderFor, load, updateConnectedOrder]);
+
+  const placeLocationHold = useCallback(async () => {
+    if (!selectedLocationId) { setActionError('Select a stock location before placing a hold.'); return; }
+    const reasonCode = window.prompt('Structured hold reason code:', 'MANUAL_SAFETY_REVIEW') ?? null;
+    if (reasonCode === null) return;
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/safety', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-hold-${selectedLocationId}`) },
+        body: JSON.stringify({ action: 'place_hold', holdType: 'manual_safety', locationId: selectedLocationId,
+          reasonCode: reasonCode.trim().toUpperCase(), evidence: { recordedFrom: 'HUMAN_ADMIN' } }),
+      });
+      await load(); setActionStatus('Safety hold placed. Affected availability and current readiness are invalidated.');
+    } catch (error) { setActionError(error.message || 'Safety hold could not be placed.'); }
+    finally { setSubmitting(false); }
+  }, [load, selectedLocationId]);
+
+  const releaseSafetyHold = useCallback(async (hold) => {
+    const reasonCode = window.prompt('Clinical release reason code:', 'CLINICAL_REVIEW_COMPLETE') ?? null;
+    if (reasonCode === null) return;
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/safety', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-hold-${hold.id}-release`) },
+        body: JSON.stringify({ action: 'release_hold', holdId: hold.id, expectedVersion: hold.version, reasonCode: reasonCode.trim().toUpperCase() }),
+      });
+      await load(); setActionStatus('Clinical hold release recorded. Readiness still requires a fresh evaluation.');
+    } catch (error) { setActionError(error.message || 'Safety hold could not be released.'); }
+    finally { setSubmitting(false); }
+  }, [load]);
+
+  const updateRequisition = useCallback(async (requisition, action) => {
+    const payload = { action, requisitionId: requisition.id, expectedVersion: requisition.version,
+      expectedCalculationHash: requisition.calculation_hash };
+    if (action === 'convert') {
+      const orderNumber = window.prompt('New purchase-order number:', `PO-${requisition.requisition_number}`) ?? null;
+      if (orderNumber === null || !orderNumber.trim()) return;
+      const expectedOn = window.prompt('Expected delivery date (YYYY-MM-DD):', new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)) ?? null;
+      if (expectedOn === null) return;
+      Object.assign(payload, { orderNumber: orderNumber.trim(), expectedOn, taxCents: 0, shippingCents: 0 });
+    }
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/requisitions', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-requisition-${requisition.id}-${action}`) },
+        body: JSON.stringify(payload),
+      });
+      await load(); setActionStatus(action === 'convert' ? 'Approved requisition converted to a draft PO. It is not approved or sent.' : `Requisition ${action} recorded against the exact calculation hash.`);
+    } catch (error) { setActionError(error.message || 'Requisition could not be updated.'); }
+    finally { setSubmitting(false); }
+  }, [load]);
+
+  const updateDemand = useCallback(async (demand, action) => {
+    const defaultReason = action === 'close' ? 'FULFILLMENT_EVIDENCE_REVIEWED' : `ADMIN_${action.toUpperCase()}`;
+    const reasonCode = window.prompt('Structured decision reason code:', defaultReason) ?? null;
+    if (reasonCode === null || !reasonCode.trim()) return;
+    setSubmitting(true); setActionError(''); setActionStatus('');
+    try {
+      await authedFetch('/api/admin/inventory/demand', {
+        method: 'POST', headers: { 'Idempotency-Key': requestKey(`inventory-demand-${demand.id}-${action}`) },
+        body: JSON.stringify({ action, demandEpisodeId: demand.id, expectedVersion: demand.version,
+          reasonCode: reasonCode.trim().toUpperCase() }),
+      });
+      await load(); setActionStatus(`Demand ${action.replaceAll('_', ' ')} decision recorded with versioned evidence.`);
+    } catch (error) { setActionError(error.message || 'Demand decision could not be recorded.'); }
+    finally { setSubmitting(false); }
+  }, [load]);
+
   return (
     <AdminShell title="Inventory">
       {!data && !state.loading ? (
@@ -347,6 +537,13 @@ export default function SharedInventory() {
         <div className="space-y-5">
           {actionError && <div role="alert" className="rounded-2xl border border-red-500/20 bg-red-500/[0.07] px-4 py-3 text-sm text-red-700">{actionError}</div>}
           {actionStatus && <div role="status" className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.07] px-4 py-3 text-sm text-emerald-800">{actionStatus}</div>}
+
+          <nav aria-label="Inventory sections" className="flex gap-2 overflow-x-auto rounded-2xl border border-foreground/10 bg-foreground/[0.025] p-2">
+            {INVENTORY_SECTIONS.map((section) => <button key={section} type="button" aria-current={activeSection === section ? 'page' : undefined} onClick={() => setSearchParams({ section })} className={`min-h-10 shrink-0 rounded-xl px-4 text-[10px] font-bold uppercase tracking-[0.12em] ${activeSection === section ? 'bg-foreground text-background' : 'text-foreground/55 hover:bg-foreground/[0.05]'}`}>{section}</button>)}
+          </nav>
+
+          {!connected && <div role="status" className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-sm text-amber-800">Connected workflows are disabled. Existing typed stock remains readable; custody, inspections, manual procurement, and A1 stay blocked until migrations and server flags are verified.</div>}
+          {connected && <div role="status" className="rounded-2xl border border-foreground/10 bg-foreground/[0.025] px-4 py-3 text-xs text-foreground/55">Manual procurement: {data?.runtimeFlags?.manualProcurement ? 'enabled for this server' : 'off'} · A1 drafts: {data?.runtimeFlags?.a1Drafts ? 'enabled' : 'off'} · Supplier execution: off · Kill switch: {data?.runtimeFlags?.inventoryKillSwitch ? 'active' : 'released'}</div>}
 
           {panel === 'item' && (
             <ActionPanel title="Add inventory item" onClose={() => setPanel('')} submitting={submitting} submitLabel="Add item" onSubmit={(event) => submit(event, { action: 'create_item', ...itemForm, tags: itemForm.tags.split(',').map((tag) => tag.trim()).filter(Boolean) }, 'inventory-item', () => setItemForm(EMPTY_ITEM))}>
@@ -474,11 +671,8 @@ export default function SharedInventory() {
           )}
 
           {panel === 'purchase-order-receipt' && (
-            <ActionPanel title="Receive purchase order stock" onClose={() => setPanel('')} submitting={submitting} submitLabel="Receive into stock" onSubmit={(event) => submit(event, {
-              action: 'receive_purchase_order_line',
-              ...purchaseOrderReceiptForm,
-            }, `inventory-purchase-order-receipt-${purchaseOrderReceiptForm.purchaseOrderLineId}`, () => setPurchaseOrderReceiptForm(EMPTY_PURCHASE_ORDER_RECEIPT))}>
-              <p className="text-xs leading-relaxed text-foreground/50">Receipt is atomic: the PO line, lot cost, location balance, PO status, and Finance source reference update together.</p>
+            <ActionPanel title={connected ? 'Create receiving inspection' : 'Receive purchase order stock'} onClose={() => setPanel('')} submitting={submitting} submitLabel={connected ? 'Save inspection' : 'Receive into stock'} onSubmit={receivePurchaseOrder}>
+              <p className="text-xs leading-relaxed text-foreground/50">{connected ? 'This records reviewed receipt evidence first. Stock is created only when the versioned inspection is posted from Receiving.' : 'Receipt is atomic: the PO line, lot cost, location balance, PO status, and Finance source reference update together.'}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-semibold text-foreground/60">Item<input readOnly value={purchaseOrderReceiptLine ? `${purchaseOrderReceiptLine.itemName}${purchaseOrderReceiptLine.variantName ? ` · ${purchaseOrderReceiptLine.variantName}` : ''}` : 'Purchase order item'} className={`${inputClass} mt-1.5 opacity-70`} /></label>
                 <label className="text-xs font-semibold text-foreground/60">Receive at<select required value={purchaseOrderReceiptForm.locationId} onChange={(event) => setPurchaseOrderReceiptForm((row) => ({ ...row, locationId: event.target.value }))} className={`${inputClass} mt-1.5`}><option value="">Choose central location</option>{purchaseOrderReceiptLocations.map((location) => <option key={location.id} value={location.id}>{location.name} · {location.code}</option>)}</select></label>
@@ -498,7 +692,7 @@ export default function SharedInventory() {
             </ActionPanel>
           )}
 
-          <SharedInventoryWorkspace
+          {(activeSection === 'stock' || activeSection === 'kits') && <SharedInventoryWorkspace
             mode="admin"
             title={inventoryView === 'kits' ? 'Nurse Kits' : 'Inventory'}
             subtitle={inventoryView === 'kits' ? 'Manage assigned nurse kits, custody, par levels, lot-aware transfers, expiry, and restock from the same controlled inventory source.' : 'Sortly-style stock control for central inventory, nurse kits, event packs, lots, expiry, restock, and custody—backed by one append-only typed source.'}
@@ -523,9 +717,15 @@ export default function SharedInventory() {
                 <button type="button" onClick={() => { setPanel('purchase-order'); setActionError(''); }} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-foreground/12 px-4 text-[10px] font-bold uppercase tracking-[0.12em]"><ShoppingCart className="h-3.5 w-3.5" /> Draft PO</button>
               </>
             )}
-          />
+          />}
 
-          <section className="overflow-hidden rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025]">
+          {activeSection === 'suppliers' && <div className="grid gap-4 lg:grid-cols-2"><ConnectedSummary title="Supplier catalog" description="Reviewed supplier SKUs, explicit pack conversions, price validity, and substitution policy." count={connected?.supplierItems?.length || 0} empty="No supplier catalog has been approved. Procurement remains fail-closed." /><ConnectedSummary title="Connection health" description="Only masked health and managed-secret references are visible. Every electronic adapter is non-executable in V1." count={connected?.connections?.length || 0} empty="No supplier connection is configured. Manual export remains the only supported handoff." /></div>}
+          {activeSection === 'receiving' && <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5"><div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold">Receiving inspections</h2><p className="mt-1 text-xs leading-relaxed text-foreground/50">Only manually sent, immutable POs can be inspected. Posting is a separate version-checked ledger action.</p></div><span className="rounded-full border border-foreground/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/50">{connected?.inspections?.length || 0}</span></div><div className="mt-4 grid gap-2">{(connected?.inspections || []).map((inspection) => <div key={inspection.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-background/55 p-3"><div><p className="text-xs font-semibold">Inspection {inspection.id.slice(0, 8)}</p><p className="mt-1 text-[10px] text-foreground/45">{inspection.condition_code || 'Condition pending'} · {inspection.status}</p></div>{['accepted', 'partial', 'quarantined'].includes(inspection.status) ? <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement} onClick={() => postInspection(inspection)} className="rounded-full bg-foreground px-3 py-2 text-[9px] font-bold uppercase text-background disabled:opacity-40">Post receipt</button> : null}</div>)}{!connected?.inspections?.length ? <p className="rounded-xl border border-dashed border-foreground/12 p-5 text-center text-xs text-foreground/45">No receiving inspection is open.</p> : null}</div></section>}
+          {activeSection === 'exceptions' && <><div className="grid gap-4 lg:grid-cols-3"><ConnectedSummary title="Inventory exceptions" description="Count conflicts, custody disputes, and missing reservations remain persisted until reviewed." count={connected?.exceptions?.length || 0} empty="No connected inventory exception is currently visible." /><ConnectedSummary title="Safety holds" description="Active recall, temperature, calibration, damage, and suspect-product holds block usable stock and readiness." count={(connected?.holds || []).filter((hold) => hold.status === 'active').length} empty="No active safety hold is recorded." /><ConnectedSummary title="Recall investigations" description="External signals remain human-reviewed; a feed never resolves or releases affected stock by itself." count={(connected?.recalls || []).filter((recall) => !['closed', 'not_applicable'].includes(recall.status)).length} empty="No open recall investigation is recorded." /></div>{connected && <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-base font-semibold">Safety control</h2><p className="mt-1 text-xs text-foreground/50">Inventory Admin may quarantine; only an assigned Clinical approver can release a hold.</p></div><button type="button" disabled={submitting || !selectedLocationId} onClick={placeLocationHold} className="min-h-10 rounded-full bg-foreground px-4 text-[9px] font-bold uppercase text-background disabled:opacity-40">Hold selected location</button></div><div className="mt-4 grid gap-2">{(connected.holds || []).filter((hold) => hold.status === 'active').map((hold) => <div key={hold.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-background/55 p-3"><div><p className="text-xs font-semibold">{hold.hold_type.replaceAll('_', ' ')}</p><p className="mt-1 text-[10px] text-foreground/45">{hold.reason_code} · version {hold.version}</p></div><button type="button" disabled={submitting} onClick={() => releaseSafetyHold(hold)} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Clinical release</button></div>)}</div></section>}</>}
+
+          {activeSection === 'receiving' && connected && <div className="grid gap-4 sm:grid-cols-2"><ConnectedSummary title="Inbound shipments" description="Shipment notices remain uninspected and cannot make stock usable." count={connected?.shipments?.length || 0} empty="No inbound shipment is recorded." /><ConnectedSummary title="Receipt exceptions" description="Short, over, damaged, wrong-lot, and temperature cases remain held for review." count={(connected?.exceptions || []).filter((entry) => entry.exception_type === 'receiving_variance').length} empty="No receipt exception is open." /></div>}
+
+          {activeSection === 'orders' && <section className="overflow-hidden rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-foreground/10 px-5 py-4">
               <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground/[0.06]"><ShoppingCart className="h-4 w-4 text-foreground/55" /></div><div><h2 className="text-base font-semibold">Procurement snapshot</h2><p className="mt-0.5 text-xs text-foreground/45">Draft and open inventory commitments; never payment authorization.</p></div></div>
               <span className="rounded-full border border-foreground/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.13em] text-foreground/50">{(data?.vendors || []).length} vendors</span>
@@ -539,20 +739,23 @@ export default function SharedInventory() {
                     <article key={order.id} className="space-y-3 px-5 py-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div><p className="text-sm font-semibold">{order.orderNumber}</p><p className="mt-1 text-[11px] text-foreground/45">{vendor?.name || 'Vendor not assigned'}{order.expectedOn ? ` · Expected ${order.expectedOn}` : ''}</p></div>
-                        <div className="flex flex-wrap items-center gap-2"><span className="rounded-full border border-foreground/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/55">{order.status}</span><span className="text-sm font-semibold tabular-nums">{cents(total)}</span>{order.status === 'draft' && <button type="button" disabled={submitting} onClick={() => openPurchaseOrderLine(order)} className="rounded-full border border-foreground/12 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">Add line</button>}</div>
+                        <div className="flex flex-wrap items-center gap-2"><span className="rounded-full border border-foreground/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/55">{connectedOrderFor(order.id)?.status || order.status}</span><span className="text-sm font-semibold tabular-nums">{cents(total)}</span>{order.status === 'draft' && <button type="button" disabled={submitting} onClick={() => openPurchaseOrderLine(order)} className="rounded-full border border-foreground/12 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">Add line</button>}{connected && order.status === 'draft' && <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement || !(order.lines || []).length || !purchaseOrderReceiptLocations.length} onClick={() => updateConnectedOrder(order, 'submit', { shipToLocationId: purchaseOrderReceiptLocations[0]?.id })} className="rounded-full bg-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-background disabled:opacity-40">Submit</button>}{connectedOrderFor(order.id)?.status === 'pending_approval' && <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement} onClick={() => updateConnectedOrder(order, 'approve', { expectedPayloadHash: connectedOrderFor(order.id)?.payload_hash })} className="rounded-full bg-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-background disabled:opacity-40">Approve exact payload</button>}{connectedOrderFor(order.id)?.status === 'approved' && <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement} onClick={() => exportConnectedOrder(order)} className="rounded-full border border-foreground/12 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">Open manual document</button>}{connectedOrderFor(order.id)?.status === 'approved' && <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement} onClick={() => recordConnectedOrderEvent(order, 'manual_sent')} className="rounded-full border border-foreground/12 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">Record sent</button>}{['sent', 'acknowledged'].includes(connectedOrderFor(order.id)?.status) && <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement} onClick={() => recordConnectedOrderEvent(order, connectedOrderFor(order.id)?.status === 'sent' ? 'acknowledged' : 'shipped')} className="rounded-full border border-foreground/12 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] disabled:opacity-40">Record {connectedOrderFor(order.id)?.status === 'sent' ? 'acknowledgement' : 'shipment'}</button>}</div>
                       </div>
                       {(order.lines || []).length ? <div className="space-y-2">{order.lines.map((line) => {
                         const outstanding = Math.max(0, Number(line.quantityOrdered || 0) - Number(line.quantityReceived || 0));
-                        return <div key={line.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-foreground/8 bg-background/50 px-3 py-2"><div><p className="text-xs font-semibold">{line.itemName}{line.variantName ? ` · ${line.variantName}` : ''}</p><p className="mt-0.5 text-[10px] text-foreground/45">{line.quantityReceived} / {line.quantityOrdered} received · {cents(line.unitCostCents)} each</p></div>{outstanding > 0 && ['draft', 'submitted', 'partially_received'].includes(order.status) && <button type="button" disabled={submitting} onClick={() => openPurchaseOrderReceipt(order, line)} className="rounded-full bg-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-background disabled:opacity-40">Receive</button>}</div>;
+                        const connectedStatus = connectedOrderFor(order.id)?.status;
+                        return <div key={line.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-foreground/8 bg-background/50 px-3 py-2"><div><p className="text-xs font-semibold">{line.itemName}{line.variantName ? ` · ${line.variantName}` : ''}</p><p className="mt-0.5 text-[10px] text-foreground/45">{line.quantityReceived} / {line.quantityOrdered} received · {cents(line.unitCostCents)} each</p></div>{!connected && outstanding > 0 && ['draft', 'submitted', 'partially_received'].includes(order.status) && <button type="button" disabled={submitting} onClick={() => openPurchaseOrderReceipt(order, line)} className="rounded-full bg-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-background disabled:opacity-40">Receive</button>}{connected && outstanding > 0 && ['sent', 'acknowledged', 'partially_received'].includes(connectedStatus) && <button type="button" disabled={submitting || !data?.runtimeFlags?.manualProcurement} onClick={() => openPurchaseOrderReceipt(order, line)} className="rounded-full bg-foreground px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-background disabled:opacity-40">Inspect receipt</button>}</div>;
                       })}</div> : <p className="text-[11px] text-foreground/40">No ordered items yet. Add a line before receiving inventory.</p>}
                     </article>
                   );
                 })}
               </div>
             ) : <div className="px-5 py-10 text-center text-xs text-foreground/45">No purchase orders recorded in the typed source.</div>}
-          </section>
+          </section>}
 
-          <section className="overflow-hidden rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025]">
+          {activeSection === 'orders' && connected && <><div className="grid gap-4 sm:grid-cols-2"><ConnectedSummary title="Purchase requisitions" description="Validated demand becomes a versioned requisition before any PO. Approval binds the exact calculation hash." count={connected?.requisitions?.length || 0} empty="No requisition has been created." /><ConnectedSummary title="A1 draft proposals" description="A1 may explain demand and draft requisitions only. It cannot create, approve, transmit, or pay a PO." count={connected?.proposals?.length || 0} empty="No A1 draft proposal exists." /></div>{connected.requisitions?.length ? <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5"><h2 className="text-base font-semibold">Requisition authority queue</h2><div className="mt-4 grid gap-2">{connected.requisitions.map((requisition) => <div key={requisition.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-background/55 p-3"><div><p className="text-xs font-semibold">{requisition.requisition_number}</p><p className="mt-1 text-[10px] text-foreground/45">{requisition.source} · {requisition.status} · v{requisition.version}</p></div><div className="flex gap-2">{requisition.status === 'draft' && <button type="button" disabled={submitting} onClick={() => updateRequisition(requisition, 'submit')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Submit</button>}{requisition.status === 'pending_approval' && <button type="button" disabled={submitting} onClick={() => updateRequisition(requisition, 'approve')} className="rounded-full bg-foreground px-3 py-2 text-[9px] font-bold uppercase text-background disabled:opacity-40">Approve exact</button>}{requisition.status === 'approved' && <button type="button" disabled={submitting} onClick={() => updateRequisition(requisition, 'convert')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Create draft PO</button>}</div></div>)}</div></section> : null}</>}
+
+          {activeSection === 'requests' && <section className="overflow-hidden rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-foreground/10 px-5 py-4">
               <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground/[0.06]"><ClipboardList className="h-4 w-4 text-foreground/55" /></div><div><h2 className="text-base font-semibold">Nurse kit restock queue</h2><p className="mt-0.5 text-xs text-foreground/45">Requests are tied to the nurse's assigned kit and structured reason.</p></div></div>
               <span className="rounded-full border border-foreground/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.13em] text-foreground/50">{(data?.restockRequests || []).filter((request) => !['fulfilled', 'rejected', 'cancelled'].includes(request.status)).length} open</span>
@@ -576,7 +779,8 @@ export default function SharedInventory() {
             ) : (
               <div className="px-5 py-12 text-center"><Gauge className="mx-auto h-7 w-7 text-foreground/25" /><p className="mt-3 text-sm font-semibold">No restock requests yet</p><p className="mt-1 text-xs text-foreground/45">Nurse requests will appear here without exposing patient or appointment data.</p></div>
             )}
-          </section>
+          </section>}
+          {activeSection === 'requests' && connected && <><div className="grid gap-4 sm:grid-cols-2"><ConnectedSummary title="Demand episodes" description="Repeated taps and offline replay retain lineage without multiplying the same unresolved shortage." count={(connected?.demands || []).filter((entry) => !['denied', 'cancelled', 'closed'].includes(entry.status)).length} empty="No unresolved demand episode exists." /><ConnectedSummary title="Reserved allocations" description="Allocation reduces availability before a physical handoff and expires if picking does not proceed." count={(connected?.allocations || []).filter((entry) => ['reserved', 'picking'].includes(entry.status)).length} empty="No central stock allocation is reserved." /></div>{connected.demands?.length ? <section className="rounded-[1.5rem] border border-foreground/10 bg-foreground/[0.025] p-5"><h2 className="text-base font-semibold">Independent demand decisions</h2><p className="mt-1 text-xs text-foreground/50">Each item shortage advances independently. Closing requires receipt, handoff, or resolved-exception proof.</p><div className="mt-4 grid gap-2">{connected.demands.slice(0, 50).map((demand) => <div key={demand.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-background/55 p-3"><div><p className="text-xs font-semibold">{demand.reason_code.replaceAll('_', ' ')} · {demand.validated_quantity}</p><p className="mt-1 text-[10px] text-foreground/45">{demand.status} · version {demand.version}</p></div><div className="flex flex-wrap gap-2">{demand.status === 'submitted' && <button type="button" disabled={submitting} onClick={() => updateDemand(demand, 'triage')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Triage</button>}{['submitted', 'triaged', 'partial'].includes(demand.status) && <button type="button" disabled={submitting} onClick={() => updateDemand(demand, 'approve')} className="rounded-full bg-foreground px-3 py-2 text-[9px] font-bold uppercase text-background disabled:opacity-40">Approve</button>}{['submitted', 'triaged', 'partial'].includes(demand.status) && <button type="button" disabled={submitting} onClick={() => updateDemand(demand, 'deny')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Deny</button>}{['approved', 'partial'].includes(demand.status) && <button type="button" disabled={submitting} onClick={() => updateDemand(demand, 'await_purchase')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Needs purchase</button>}{['received', 'disputed', 'allocated', 'partial'].includes(demand.status) && <button type="button" disabled={submitting} onClick={() => updateDemand(demand, 'close')} className="rounded-full border border-foreground/12 px-3 py-2 text-[9px] font-bold uppercase disabled:opacity-40">Close with proof</button>}</div></div>)}</div></section> : null}</>}
         </div>
       )}
     </AdminShell>
