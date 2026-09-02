@@ -13,6 +13,7 @@ import MobilePublicFooter from '@/components/landing/MobilePublicFooter';
 import CareAcuityForward from '@/components/CareAcuityForward';
 import FrontDoorRedirect from '@/components/FrontDoorRedirect';
 import { isFrontDoorHost } from '@/lib/frontDoor';
+import { CBD_HIDDEN, isCbdRoutePath } from '@/lib/cbdVisibility';
 import { CartProvider } from '@/context/CartContext';
 import { AuthStoreProvider, useAuthStore } from '@/lib/useAuthStore';
 import PageTransition from '@/components/ui/PageTransition';
@@ -373,9 +374,11 @@ function AppRoutes() {
           <Suspense fallback={<RouteFallback />}>
             <Routes location={location}>
             <Route path="/" element={<Home />} />
-            {servicePillars.map((page) => (
-              <Route key={page.path} path={page.path} element={<SeoPillarPage />} />
-            ))}
+            {servicePillars
+              .filter((page) => !(CBD_HIDDEN && isCbdRoutePath(page.path)))
+              .map((page) => (
+                <Route key={page.path} path={page.path} element={<SeoPillarPage />} />
+              ))}
             <Route path="/locations" element={<LocationsHub />} />
             <Route path="/locations/:slug" element={<LocationPage />} />
             <Route path="/learn" element={<LearnHub />} />
@@ -387,14 +390,14 @@ function AppRoutes() {
             <Route path="/products/dehydration-iv" element={<Navigate to="/products/iv-vitamins/dehydration" replace />} />
             <Route path="/services/iv-vitamins" element={<Navigate to="/protocols" replace />} />
             <Route path="/services/nad" element={<Navigate to="/protocols#iv-nad" replace />} />
-            <Route path="/services/cbd" element={<Navigate to="/protocols#iv-cbd" replace />} />
+            <Route path="/services/cbd" element={CBD_HIDDEN ? <NotFound /> : <Navigate to="/protocols#iv-cbd" replace />} />
             <Route path="/products/iv-vitamins" element={<Navigate to="/protocols" replace />} />
             <Route path="/products/:category/:slug" element={<ProductDetail />} />
             <Route path="/apply" element={<Apply />} />
             <Route path="/launches/:slug" element={<EventPage />} />
             <Route path="/events/:slug/kiosk" element={<EventKiosk />} />
             <Route path="/events/:slug/board" element={<EventBoard />} />
-            <Route path="/events/cannabis-ce" element={<CannabisCeNight />} />
+            <Route path="/events/cannabis-ce" element={CBD_HIDDEN ? <NotFound /> : <CannabisCeNight />} />
             {/* /start is the canonical short URL for the focused booking screen.
                 /nurse-delivery stays for existing links and the ?path=guided flow. */}
             <Route path="/start" element={<NurseDelivery entry="book" />} />

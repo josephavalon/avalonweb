@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check, Clock, House, ShieldCheck } from 'lucide-
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { getProduct } from '@/data/products';
 import { useSeo } from '@/lib/seo';
+import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
 
 function productPrice(product) {
   return product.oneTime || product.price || 'Price confirmed before booking';
@@ -29,12 +30,21 @@ function productIngredients(product) {
 
 export default function ConsumerProduct() {
   const { category, slug } = useParams();
-  const match = getProduct(category, slug);
+  // CBD is held from the public apex pending clinical + legal review. Nulling the
+  // match sends every /products/cbd/* slug (canonical AND the PRODUCT_SLUG_ALIASES
+  // variants) down the redirect path below. The vercel.json 301 is the primary
+  // defense for crawlers; this is the in-app half.
+  const matchedProduct = getProduct(category, slug);
+  const match = CBD_HIDDEN && isCbdProtocolKey(category) ? undefined : matchedProduct;
 
   useSeo({
     title: match ? `${match.treatment.name} — Avalon Vitality` : 'Treatment Not Found — Avalon Vitality',
     description: match?.treatment.seoDescription || match?.treatment.desc || 'Avalon Vitality mobile IV therapy.',
     path: match ? `/products/${category}/${slug}` : undefined,
+    // Without this the miss branch answers HTTP 200 under useSeo's default
+    // "index, follow" — a soft 404 Google keeps indexed for weeks. The client
+    // <Navigate> below is invisible to a crawler that does not run JS.
+    robots: match ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
   });
 
   if (!match) return <Navigate to="/protocols" replace />;

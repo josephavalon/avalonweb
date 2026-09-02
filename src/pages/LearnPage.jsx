@@ -6,6 +6,7 @@ import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import MedicalReviewNote from '@/components/seo/MedicalReviewNote';
 import { useSeo } from '@/lib/seo';
 import NotFound from '@/pages/NotFound';
+import { CBD_HIDDEN, isCbdRoutePath } from '@/lib/cbdVisibility';
 import {
   LOCAL_BUSINESS_PROFILE,
   MEDICAL_REVIEW,
@@ -197,7 +198,11 @@ export function LearnHub() {
 
 export default function LearnPage() {
   const { slug } = useParams();
-  const article = getArticleBySlug(slug);
+  // The /learn hub only lists indexedEducationArticles, which already excludes
+  // the four noindex CBD guides — but the direct slug route still resolves them,
+  // so gate it here. Falls through to the noindex + <NotFound /> path below.
+  const matchedArticle = getArticleBySlug(slug);
+  const article = CBD_HIDDEN && isCbdRoutePath(`/learn/${slug || ''}`) ? undefined : matchedArticle;
   // Unknown slug → noindex (branded NotFound renders below). Otherwise honor the
   // per-article noindex flag; else default to index.
   const robots = !article || article.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';

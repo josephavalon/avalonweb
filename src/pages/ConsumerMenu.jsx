@@ -3,8 +3,13 @@ import { ArrowRight, ChevronDown } from 'lucide-react';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { productsByCategory, slugify } from '@/data/products';
 import { useSeo } from '@/lib/seo';
+import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
-const CATEGORY_ORDER = ['iv-vitamins', 'nad', 'cbd', 'iv-addons', 'shots'];
+// NOTE: this is the component behind /protocols — src/App.jsx imports it as
+// `const Menu = lazyRoute(() => import('./pages/ConsumerMenu'))`. The similarly
+// named app-modules/pages/Menu.jsx is NOT routed and does not ship.
+const CATEGORY_ORDER = ['iv-vitamins', 'nad', 'cbd', 'iv-addons', 'shots']
+  .filter((slug) => !(CBD_HIDDEN && slug === 'cbd'));
 
 const SECTION_EYEBROWS = {
   'iv-addons': 'Added to any IV',

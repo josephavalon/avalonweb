@@ -5,6 +5,7 @@ import { Droplets, Zap, Gem, Leaf, FlaskConical, Sparkles } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
+import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
 const EASE = [0.16, 1, 0.3, 1];
 const REVEAL = {
@@ -121,10 +122,10 @@ const CATEGORIES = [
         name: 'NAD+ (Nicotinamide Adenine Dinucleotide)',
         description: 'Coenzyme involved in cellular energy production and normal metabolic processes.',
       },
-      {
+      ...(CBD_HIDDEN ? [] : [{
         name: 'CBD (Cannabidiol)',
         description: 'CBD IV information is held for clinical approval, legal review, and compliance-approved copy.',
-      },
+      }]),
     ],
   },
 ];

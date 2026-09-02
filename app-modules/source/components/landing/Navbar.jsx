@@ -12,6 +12,7 @@ import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
 import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
 import { isFrontDoorHost } from '@/lib/frontDoor';
+import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
 const MAIN_LINKS_FULL = [
   { to: '/protocols', label: 'Menu' },
@@ -28,7 +29,7 @@ const IV_TILES = [
   { title: 'IV Vitamins', desc: '8 hydration & wellness protocols', img: '/bags/energy.webp', href: '/protocols#iv-vitamins' },
   { title: 'IV NAD+',     desc: '7 dosage tiers · 250–1500 mg',     img: '/bags/nad.webp',    href: '/protocols#iv-nad' },
   { title: 'IV CBD',      desc: '5 dosage tiers · 33–132 mg',       img: '/bags/cbd.webp',    href: '/protocols#iv-cbd' },
-];
+].filter((tile) => !(CBD_HIDDEN && tile.href === '/protocols#iv-cbd'));
 
 // Width of the portal-side hover surface. Must be at least as wide as the
 // visible panel (280px) so diagonal cursor drift from the trigger toward the
