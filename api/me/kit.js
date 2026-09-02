@@ -1,6 +1,7 @@
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { cleanIdempotencyKey, cleanUuid, normalizePayOpsDbError, PayOpsError, sendPayOpsError } from '../_lib/payops-core.js';
 import { loadNurseKit } from '../_lib/shared-inventory.js';
+import { connectedInventoryFlags, inventoryCanaryProfileAllowed, loadConnectedNurseKit } from '../_lib/connected-inventory.js';
 import { requireRole } from '../_lib/supabase-auth.js';
 import { NURSE_ROLES, resolveNurseProvider } from '../_lib/nurse-workflow.js';
 
@@ -50,6 +51,9 @@ export default async function handler(req, res) {
     }
     if (req.method === 'GET') {
       const kit = await loadNurseKit(authed.db, authed.tenantId, authed.user.id, provider.id);
+      const flags = connectedInventoryFlags();
+      const canaryAllowed = flags.connected && inventoryCanaryProfileAllowed(authed.user.id);
+      if (canaryAllowed) kit.connected = await loadConnectedNurseKit(authed.db, authed.tenantId, authed.user.id);
       await writeAuditEvent(authed.db, {
         tenantId: authed.tenantId,
         actorProfileId: authed.user.id,
@@ -59,7 +63,7 @@ export default async function handler(req, res) {
         phiTouched: false,
         payload: { assigned: kit.assigned, itemLineCount: kit.items.length },
       });
-      return res.status(200).json({ status: 'AVAILABLE', kit });
+      return res.status(200).json({ status: 'AVAILABLE', flags: { connectedInventory: canaryAllowed }, kit });
     }
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'GET, POST');
@@ -67,6 +71,8 @@ export default async function handler(req, res) {
     }
     const body = parseBody(req);
     const key = cleanIdempotencyKey(req);
+    const flags = connectedInventoryFlags();
+    const canaryAllowed = flags.connected && inventoryCanaryProfileAllowed(authed.user.id);
     const current = await loadNurseKit(authed.db, authed.tenantId, authed.user.id, provider.id);
     if (!current.assigned || !current.location?.id) {
       throw new PayOpsError('An active nurse kit assignment is required.', 'nurse_kit_assignment_required', 409);
@@ -88,6 +94,13 @@ export default async function handler(req, res) {
     if (action === 'record_movement') {
       const movementType = String(body.movementType || '').trim().toLowerCase();
       const reasonCode = String(body.reasonCode || '').trim().toUpperCase();
+      if (canaryAllowed && reasonCode === 'SHIFT_USE') {
+        throw new PayOpsError(
+          'Connected shift consumption must reconcile exact reserved kit stock at shift closeout.',
+          'connected_inventory_reservation_reconciliation_required',
+          409,
+        );
+      }
       if (!MOVEMENT_REASONS[movementType]?.has(reasonCode)) {
         throw new PayOpsError('Choose a valid structured kit reason.', 'nurse_kit_reason_invalid', 400);
       }

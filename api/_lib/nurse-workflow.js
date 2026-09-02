@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { safeErrorCode } from './safe-error.js';
+import { connectedInventoryFlags, inventoryCanaryProfileAllowed } from './connected-inventory.js';
 
 export const NURSE_ROLES = Object.freeze(['nurse', 'rn', 'np', 'admin']);
 export const READINESS_DOMAINS = Object.freeze([
@@ -638,6 +639,46 @@ async function loadCanonicalKitEvidence(
       || custodyLocationResult.data?.status !== 'active') {
     return kitEvidence('blocked', 'active_nurse_kit_custody_required', nowIso, expiresAt,
       'Operations must restore an active nurse-kit custody location.');
+  }
+  let connectedCanary = false;
+  if (connectedInventoryFlags().connected) {
+    const canaryProfile = await db.from('provider_profiles').select('profile_id')
+      .eq('tenant_id', tenantId).eq('id', providerProfileId).maybeSingle();
+    if (canaryProfile.error) throw canaryProfile.error;
+    connectedCanary = inventoryCanaryProfileAllowed(canaryProfile.data?.profile_id);
+  }
+  if (connectedCanary) {
+    const itemIds = [...new Set(requirements.map((row) => row.item_id).filter(Boolean))];
+    const [physicalKitResult, countResult, catalogResult] = await Promise.all([
+      db.from('os_inventory_kits').select('id,status,version').eq('tenant_id', tenantId)
+        .eq('location_id', custodyLocationId).maybeSingle(),
+      db.from('os_inventory_count_sessions').select('id,status,snapshot_at,submitted_at,reviewed_at,version')
+        .eq('tenant_id', tenantId).eq('location_id', custodyLocationId)
+        .in('status', ['reconciled', 'approved_adjustment'])
+        .order('reviewed_at', { ascending: false }).limit(1).maybeSingle(),
+      itemIds.length ? db.from('os_inventory_items')
+        .select('id,regulated_class,classification_reviewed_at,base_uom,storage_policy')
+        .eq('tenant_id', tenantId).in('id', itemIds) : Promise.resolve({ data: [], error: null }),
+    ]);
+    for (const result of [physicalKitResult, countResult, catalogResult]) if (result.error) throw result.error;
+    const allowedKitStates = stage === 'run_start' ? ['in_custody'] : ['in_custody', 'handoff_pending'];
+    if (!physicalKitResult.data || !allowedKitStates.includes(physicalKitResult.data.status)) {
+      return kitEvidence('blocked', 'physical_kit_custody_not_ready', nowIso, expiresAt,
+        'Operations must resolve the physical kit custody or handoff state.');
+    }
+    if ((catalogResult.data || []).length !== itemIds.length || (catalogResult.data || []).some((item) => (
+      item.regulated_class === 'unknown' || !item.classification_reviewed_at || !item.base_uom
+        || !item.storage_policy || typeof item.storage_policy.storageClass !== 'string'
+    ))) {
+      return kitEvidence('blocked', 'inventory_classification_required', nowIso, expiresAt,
+        'Clinical and Inventory Operations must review classification and units for every required item.');
+    }
+    const acceptedAt = custodyResult.data?.[0]?.accepted_at ? Date.parse(custodyResult.data[0].accepted_at) : 0;
+    const reviewedAt = countResult.data?.reviewed_at ? Date.parse(countResult.data.reviewed_at) : 0;
+    if (!reviewedAt || reviewedAt < now.getTime() - 24 * 60 * 60 * 1000 || reviewedAt < acceptedAt) {
+      return kitEvidence('blocked', 'fresh_accepted_count_required', nowIso, expiresAt,
+        'Complete a blind kit count after custody acceptance and within the last 24 hours.');
+    }
   }
 
   const requirementById = new Map(requirements.map((row) => [row.id, row]));

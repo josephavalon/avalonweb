@@ -22,6 +22,7 @@ import {
   SHIFT_MARKETPLACE_MODE,
   SHIFT_MARKETPLACE_RULES,
 } from '../../src/lib/shiftMarketplaceBrain.js';
+import { connectedInventoryFlags } from '../_lib/connected-inventory.js';
 
 const APPT_LIMIT = 200;
 const NURSE_LIMIT = 100;
@@ -140,7 +141,7 @@ export default async function handler(req, res) {
   const dataSources = {
     appointments: { table: 'appointments', count: 0, missing: false },
     nurses: { table: 'profiles', count: 0, missing: false },
-    inventory: { table: 'items', count: 0, missing: false },
+    inventory: { table: 'os_inventory_availability', count: 0, missing: false },
   };
 
   const horizonIso = new Date(Date.now() + HORIZON_DAYS * 24 * 60 * 60 * 1000).toISOString();
@@ -224,18 +225,33 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── 3. Inventory (best-effort) ──────────────────────────────────────────────
+  // ── 3. Typed inventory availability (best-effort) ──────────────────────────
   try {
-    const { data, error } = await db.from('items')
-      .select('id, name, category, sku, notes, supplier, qty, min_level')
-      .limit(INVENTORY_LIMIT);
+    const flags = connectedInventoryFlags();
+    const catalogResult = await db.from('os_inventory_items')
+      .select('id,name,sku,tags,reorder_point,unit,status')
+      .eq('tenant_id', tenantId).eq('status', 'active').limit(INVENTORY_LIMIT);
+    const balanceResult = flags.connected
+      ? await db.from('os_inventory_availability').select('item_id,quantity_available').eq('tenant_id', tenantId).limit(50000)
+      : await db.from('os_inventory_location_balances').select('item_id,quantity_on_hand').eq('tenant_id', tenantId).limit(50000);
+    const error = catalogResult.error || balanceResult.error;
     if (error) {
       if (isMissingRelation(error)) {
         dataSources.inventory.missing = true;
-        warnings.push('items (inventory) table missing — kit factor scoring degraded');
+        warnings.push('typed inventory is unavailable — kit factor scoring degraded');
       } else { throw error; }
     } else {
-      inventory = data || [];
+      const quantities = new Map();
+      for (const row of balanceResult.data || []) {
+        const value = flags.connected ? row.quantity_available : row.quantity_on_hand;
+        quantities.set(row.item_id, (quantities.get(row.item_id) || 0) + Number(value || 0));
+      }
+      inventory = (catalogResult.data || []).map((row) => ({
+        ...row,
+        category: Array.isArray(row.tags) ? row.tags[0] : null,
+        qty: quantities.get(row.id) || 0,
+        min_level: row.reorder_point || 0,
+      }));
       dataSources.inventory.count = inventory.length;
     }
   } catch (err) {

@@ -1,5 +1,5 @@
 /**
- * Inventory burndown — decrement on-hand stock for items consumed by a visit.
+ * Inventory closeout bridge.
  *
  * Called by the Acuity webhook when an appointment transitions to "completed"
  * (or, when Acuity doesn't fire a completed event, when scheduled/rescheduled
@@ -20,11 +20,10 @@
  *       ]}] }
  *   Acuity-only (no checkout context): nothing to burn down → skip.
  *
- * MATCHING — items in the `items` inventory table are matched by:
- *   1. exact lowercased SKU
- *   2. exact lowercased name
- *   3. slug(name) === slug(key/label)
- *   Unknown keys are logged and skipped (NEVER throw).
+ * Acuity payload labels are not authoritative inventory identifiers. This
+ * bridge therefore records an exception and never guesses a stock decrement.
+ * Exact consumption is posted later from pinned reservation IDs by the
+ * connected shift reconciliation command.
  *
  * NEVER THROWS from decrementForAppointment — wrap in try/catch upstream as
  * belt-and-suspenders. All per-item errors are swallowed + logged so a single
@@ -125,27 +124,6 @@ export function parseConsumedItems(externalPayload = {}) {
 }
 
 /**
- * Match a consumed entry to an inventory row. Returns the row or null.
- */
-function findInventoryRow(rows, entry) {
-  if (!rows || !rows.length) return null;
-  const candidates = [normKey(entry.key), normKey(entry.label), slug(entry.key), slug(entry.label)]
-    .filter(Boolean);
-  if (!candidates.length) return null;
-  for (const row of rows) {
-    const sku = normKey(row.sku);
-    const name = normKey(row.name);
-    const nameSlug = slug(row.name);
-    const skuSlug = slug(row.sku);
-    if (sku && candidates.includes(sku)) return row;
-    if (name && candidates.includes(name)) return row;
-    if (nameSlug && candidates.includes(nameSlug)) return row;
-    if (skuSlug && candidates.includes(skuSlug)) return row;
-  }
-  return null;
-}
-
-/**
  * decrementForAppointment — idempotent stock decrement for one appointment.
  *
  * Returns:
@@ -192,77 +170,25 @@ export async function decrementForAppointment({ db, appointment } = {}) {
       return { ok: false, code: safeErrorCode(insertErr, 'inventory_consumption_insert_failed') };
     }
 
-    if (!consumed.length) {
-      return { ok: true, processed: true, decremented: 0, skipped: [] };
-    }
-
-    // ── Load inventory rows we might decrement ───────────────────────────────
-    let inventoryRows = [];
+    let shiftId = null;
     try {
-      const { data, error } = await db.from('items')
-        .select('id, name, sku, qty, min_level')
-        .is('deleted_at', null);
-      if (error) throw error;
-      inventoryRows = data || [];
+      const shiftResult = await db.from('operational_shifts').select('id')
+        .eq('tenant_id', tenantId).eq('appointment_id', appointment.id).maybeSingle();
+      if (!shiftResult.error) shiftId = shiftResult.data?.id || null;
+      await db.from('os_inventory_exceptions').insert({
+        tenant_id: tenantId,
+        exception_type: 'shift_closeout_reconciliation',
+        severity: 'critical',
+        entity_type: shiftId ? 'operational_shifts' : 'appointments',
+        entity_id: shiftId || appointment.id,
+        reason_code: shiftId ? 'RESERVATION_CLOSEOUT_REQUIRED' : 'SHIFT_MANIFEST_MISSING',
+        evidence: { appointmentId: appointment.id, shiftId, consumedLineCount: consumed.length },
+      });
     } catch (err) {
-      // If items table is missing or RLS blocks us, skip gracefully.
-      console.warn('[inventory-burndown] items lookup failed',
-        safeLogContext(err, 'inventory_items_lookup_failed'));
-      return { ok: true, processed: true, decremented: 0, skipped: consumed.map((c) => ({ key: c.key, reason: 'items_lookup_failed' })) };
+      console.warn('[inventory-burndown] connected closeout exception failed',
+        safeLogContext(err, 'inventory_closeout_exception_failed'));
     }
-
-    let decremented = 0;
-    const skipped = [];
-    const applied = [];
-
-    for (const entry of consumed) {
-      const row = findInventoryRow(inventoryRows, entry);
-      if (!row) {
-        skipped.push({ key: entry.key || entry.label, reason: 'unknown_item' });
-        continue;
-      }
-      const before = Number(row.qty || 0);
-      const after = before - entry.qty; // allow negative — operator surfaces as "out" + alert
-      try {
-        const { error: updErr } = await db.from('items')
-          .update({ qty: after, updated_at: new Date().toISOString() })
-          .eq('id', row.id);
-        if (updErr) throw updErr;
-        decremented += entry.qty;
-        applied.push({
-          itemId:   row.id,
-          itemName: row.name,
-          sku:      row.sku || null,
-          qtyBefore: before,
-          qtyAfter:  after,
-          qtyDelta:  -entry.qty,
-          matchedFrom: entry.key || entry.label,
-        });
-        // Mirror to the inventory `transactions` activity log if present.
-        try {
-          await db.from('transactions').insert({
-            item_id:    row.id,
-            item_name:  row.name,
-            type:       'check_out',
-            qty_before: before,
-            qty_after:  after,
-            note:       `Auto-decrement: visit completed (appt ${appointment.id})`,
-            user_name:  'System (Acuity)',
-          });
-        } catch (txErr) {
-          // Activity log is best-effort — main decrement already succeeded.
-          console.warn('[inventory-burndown] transaction log failed',
-            safeLogContext(txErr, 'inventory_transaction_log_failed'));
-        }
-        // Locally update the row's qty so subsequent same-key entries in this
-        // loop see the new value (defensive; we already merged duplicates).
-        row.qty = after;
-      } catch (err) {
-        skipped.push({ key: entry.key || entry.label, reason: safeErrorCode(err, 'item_update_failed') });
-        console.warn('[inventory-burndown] item update failed',
-          safeLogContext(err, 'inventory_item_update_failed'));
-      }
-    }
+    const skipped = consumed.map((entry) => ({ key: entry.key || entry.label, reason: 'reservation_reconciliation_required' }));
 
     // ── Audit ────────────────────────────────────────────────────────────────
     try {
@@ -274,9 +200,10 @@ export async function decrementForAppointment({ db, appointment } = {}) {
         phiTouched: false,
         payload: {
           appointmentId: appointment.id,
-          decrementedUnits: decremented,
-          applied,
+          decrementedUnits: 0,
+          applied: [],
           skipped,
+          failClosed: true,
         },
       });
     } catch (err) {
@@ -285,7 +212,7 @@ export async function decrementForAppointment({ db, appointment } = {}) {
         safeLogContext(err, 'inventory_burndown_audit_failed'));
     }
 
-    return { ok: true, processed: true, decremented, applied, skipped };
+    return { ok: true, processed: true, decremented: 0, applied: [], skipped, reason: 'reservation_reconciliation_required' };
   } catch (err) {
     // Belt-and-suspenders: this helper MUST NOT throw.
     console.warn('[inventory-burndown] unhandled', safeLogContext(err, 'inventory_burndown_unhandled'));
