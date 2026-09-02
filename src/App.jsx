@@ -23,7 +23,7 @@ import { PAYOPS_FINANCE_CORE_ENABLED } from '@/lib/payOpsFinanceCore';
 import { isPublicChromeRoute } from '@/lib/publicChrome';
 import MfaGate from '@/components/auth/MfaGate';
 import IdleWarning from '@/components/auth/IdleWarning';
-import { requiresPrivilegedMfa } from '@/lib/portalAccess';
+import { adminDestinationForProviderPath, requiresPrivilegedMfa } from '@/lib/portalAccess';
 
 // Operator-tier MFA enforcement. Off by default; flip VITE_MFA_ENFORCED=true
 // (and the server's MFA_ENFORCED) only AFTER admins have enrolled a factor,
@@ -71,8 +71,10 @@ function RequireAuth({ children, allowedRoles }) {
     return <Navigate to="/account/new-password" replace />;
   }
   const role = user.role ?? null;
+  const adminProviderDestination = adminDestinationForProviderPath(pathname, user);
+  if (adminProviderDestination) return <Navigate to={adminProviderDestination} replace />;
   if (allowedRoles && !allowedRoles.includes(role)) {
-    if (user.role === 'admin' || user.role === 'staff') return <Navigate to="/admin" replace />;
+    if (role === 'admin' || role === 'staff') return <Navigate to="/admin" replace />;
     if (['nurse', 'rn', 'np'].includes(user.role)) return <Navigate to="/provider/shifts" replace />;
     if (user.role === 'promoter') return <Navigate to="/organizer" replace />;
     if (user.role === 'client') return <Navigate to="/members/dashboard" replace />;
@@ -518,7 +520,7 @@ function AppRoutes() {
             <Route path="/members/billing" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberBilling /></RequireAuth>} />
             <Route path="/members/documents" element={<RequireAuth allowedRoles={['client', 'admin']}><MemberDocuments /></RequireAuth>} />
             <Route path="/members/support" element={<RequireAuth allowedRoles={['client', 'admin']}><MembersSupport /></RequireAuth>} />
-            <Route path="/provider" element={<FrontDoorRedirect><Navigate to="/login" replace /></FrontDoorRedirect>} />
+            <Route path="/provider" element={<Navigate to="/provider/shifts" replace />} />
             <Route path="/provider/shifts" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseSchedule /></RequireAuth>} />
             <Route path="/provider/shifts/:shiftId" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseGuidedShift /></RequireAuth>} />
             <Route path="/provider/shifts/:shiftId/run" element={<RequireAuth allowedRoles={['nurse', 'rn', 'np', 'admin']}><NurseGuidedShift /></RequireAuth>} />

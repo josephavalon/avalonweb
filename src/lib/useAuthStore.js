@@ -142,13 +142,31 @@ function supabaseMfaState(authUser = {}) {
 function readSession() {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    const session = raw ? JSON.parse(raw) : null;
+    let session = raw ? JSON.parse(raw) : null;
     if (!session) return null;
     if (session.expiresAt && Date.now() > new Date(session.expiresAt).getTime()) {
       sessionStorage.removeItem(SESSION_KEY);
       appendActivity('Session expired', { role: session.role, username: session.username });
       return null;
     }
+    // Re-resolve the stored demo portal contract on every load. This safely
+    // migrates sessions created before an access-policy update (for example an
+    // Admin previously downcast to a Nurse UI role) without asking the operator
+    // to clear browser storage or keeping stale route authority alive.
+    const canonicalRole = String(session.primaryRole || session.role || '').trim().toLowerCase();
+    const portalSession = resolvePortalSession({
+      canonicalRole,
+      requestedPortal: session.activePortal,
+    });
+    session = {
+      ...session,
+      primaryRole: canonicalRole,
+      activePortal: portalSession.activePortal,
+      portalAccess: portalSession.portalAccess,
+      role: portalSession.role,
+      redirect: portalSession.redirect,
+    };
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { /* private mode — keep the readable session */ }
     return session;
   } catch { return null; }
 }

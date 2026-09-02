@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
+  adminDestinationForProviderPath,
   allowedPortalsForUser,
   newCustomerDestinationForUser,
   readPortalIntent,
@@ -8,6 +9,7 @@ import {
   requiresPrivilegedMfa,
   resolvePortalSession,
 } from '../src/lib/portalAccess.js';
+import { canAccessAdminRoute } from '../src/lib/adminAccess.js';
 
 const authUser = {
   app_metadata: {},
@@ -23,13 +25,54 @@ assert.deepEqual(
 
 for (const [entry, expectedRole, expectedRedirect] of [
   ['customer', 'client', '/members/dashboard'],
-  ['nurse', 'nurse', '/provider/shift'],
+  ['nurse', 'admin', '/admin/scheduling'],
   ['admin', 'admin', '/admin'],
 ]) {
   const resolved = resolvePortalSession({ canonicalRole: 'admin', authUser, requestedPortal: entry });
   assert.equal(resolved.activePortal, entry, `${entry}: selected portal should persist`);
   assert.equal(resolved.role, expectedRole, `${entry}: effective UI role should match`);
   assert.equal(resolved.redirect, expectedRedirect, `${entry}: redirect should match`);
+}
+
+const nurseSession = resolvePortalSession({ canonicalRole: 'nurse', authUser: {}, requestedPortal: 'nurse' });
+assert.equal(nurseSession.activePortal, 'nurse', 'a canonical Nurse should keep the Nurse portal');
+assert.equal(nurseSession.role, 'nurse', 'a canonical Nurse should keep the Nurse authorization role');
+assert.equal(nurseSession.redirect, '/provider/shift', 'a canonical Nurse should keep the Nurse work entry');
+
+const adminInNursePortal = { primaryRole: 'admin', role: 'admin', activePortal: 'nurse' };
+assert.equal(
+  adminDestinationForProviderPath('/provider/shifts', adminInNursePortal),
+  '/admin/scheduling',
+  'Admin opening the Nurse work queue should receive the tenant-wide scheduling control',
+);
+assert.equal(
+  adminDestinationForProviderPath('/provider/shifts/11111111-1111-4111-8111-111111111111/run', adminInNursePortal),
+  '/admin/scheduling',
+  'Admin must not enter a provider-owned guided shift through a deep link',
+);
+assert.equal(
+  adminDestinationForProviderPath('/provider/shifts', { primaryRole: 'admin', role: 'nurse', activePortal: 'nurse' }),
+  '',
+  'a stale downcast session must re-resolve before it can enter an Admin control surface',
+);
+assert.equal(
+  adminDestinationForProviderPath('/provider/shifts', { primaryRole: 'nurse', role: 'nurse', activePortal: 'nurse' }),
+  '',
+  'a real Nurse must remain on the provider-owned work queue',
+);
+assert.equal(
+  adminDestinationForProviderPath('/members/dashboard', adminInNursePortal),
+  '',
+  'the Admin provider redirect must not capture non-provider routes',
+);
+for (const providerPath of [
+  '/provider/shifts', '/provider/shifts/example/run', '/provider/today', '/provider/settings',
+  '/provider/invoices', '/provider/kit', '/provider/clients', '/provider/communications',
+  '/provider/crm', '/provider/acuity', '/provider/staff', '/provider/training',
+]) {
+  const destination = adminDestinationForProviderPath(providerPath, adminInNursePortal);
+  assert.equal(canAccessAdminRoute('admin', destination), true,
+    `${providerPath} must resolve to a live Admin destination, received ${destination}`);
 }
 
 const adminCustomerSession = resolvePortalSession({ canonicalRole: 'admin', authUser, requestedPortal: 'customer' });
@@ -78,6 +121,9 @@ assert.match(migration, /raise exception 'Profile authority fields cannot be cha
 assert.match(migration, /clear_own_password_rotation_flag/);
 
 const serverAuth = fs.readFileSync(new URL('../api/_lib/supabase-auth.js', import.meta.url), 'utf8');
+const authStore = fs.readFileSync(new URL('../src/lib/useAuthStore.js', import.meta.url), 'utf8');
+assert.match(authStore, /function readSession\(\)[\s\S]*?resolvePortalSession\(\{[\s\S]*?canonicalRole,[\s\S]*?requestedPortal: session\.activePortal/,
+  'stored local sessions must re-resolve the current portal authorization contract on refresh');
 assert.match(serverAuth, /\.insert\(row\)/,
   'first-touch profile bootstrap must be insert-only');
 assert.doesNotMatch(serverAuth, /\.upsert\(row/,

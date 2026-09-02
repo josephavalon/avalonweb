@@ -56,7 +56,10 @@ export function resolvePortalSession({ canonicalRole, authUser, requestedPortal 
     ? requested
     : (DEFAULT_PORTAL[role] || 'customer');
   const config = PORTALS[portal] || PORTALS.customer;
-  const effectiveRole = portal === 'admin' && role === 'staff'
+  const adminNurseControl = portal === 'nurse' && role === 'admin';
+  const effectiveRole = adminNurseControl
+    ? 'admin'
+    : portal === 'admin' && role === 'staff'
     ? 'staff'
     : portal === 'organizer' && role === 'admin'
       ? 'admin'
@@ -66,8 +69,31 @@ export function resolvePortalSession({ canonicalRole, authUser, requestedPortal 
     activePortal: portal,
     portalAccess: allowedPortals,
     role: effectiveRole,
-    redirect: config.redirect,
+    redirect: adminNurseControl ? '/admin/scheduling' : config.redirect,
   };
+}
+
+// Provider routes are self-service surfaces: their APIs bind every nurse action
+// to the authenticated RN/NP provider profile. A canonical Admin must use the
+// tenant-wide control surfaces instead of being treated as, or silently
+// impersonating, a nurse. Keep this mapping pure so the route guard and release
+// checks share one explicit authorization contract.
+export function adminDestinationForProviderPath(pathname, user) {
+  const primaryRole = String(user?.primaryRole || user?.role || '').trim().toLowerCase();
+  const activeRole = String(user?.role || '').trim().toLowerCase();
+  const path = String(pathname || '').split(/[?#]/, 1)[0].replace(/\/+$/, '') || '/';
+  if (primaryRole !== 'admin' || activeRole !== 'admin'
+      || (path !== '/provider' && !path.startsWith('/provider/'))) return '';
+
+  if (/^\/provider\/(?:invoices|invoicing|reports)(?:\/|$)/.test(path)) return '/admin/nurse-invoices';
+  if (/^\/provider\/(?:finance|accounting)(?:\/|$)/.test(path)) return '/admin/finance';
+  if (/^\/provider\/clients(?:\/|$)/.test(path)) return '/admin/clients';
+  if (/^\/provider\/kits?(?:\/|$)/.test(path)) return '/admin/finance';
+  if (/^\/provider\/communications(?:\/|$)/.test(path)) return '/admin/messages';
+  if (/^\/provider\/crm(?:\/|$)/.test(path)) return '/admin/clients';
+  if (/^\/provider\/acuity(?:\/|$)/.test(path)) return '/admin/bookings';
+  if (/^\/provider\/(?:staff|training)(?:\/|$)/.test(path)) return '/admin/team';
+  return '/admin/scheduling';
 }
 
 export function rememberPortalIntent(portal, email = '') {

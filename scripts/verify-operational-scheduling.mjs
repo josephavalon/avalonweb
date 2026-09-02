@@ -20,6 +20,10 @@ const invoicePage = read('../app-modules/pages/provider/NurseInvoices.jsx');
 const routes = read('../src/App.jsx');
 const adminShell = read('../src/components/admin/AdminShell.jsx');
 const adminAccess = read('../src/lib/adminAccess.js');
+const requireAuthBlock = routes.slice(
+  routes.indexOf('function RequireAuth'),
+  routes.indexOf('const LAZY_ROUTE_RELOAD_KEY'),
+);
 
 const validShift = {
   title: 'Monday mobile coverage',
@@ -129,6 +133,32 @@ assert.match(providerPage, /\/provider\/shifts\/\$\{encodeURIComponent\(shift\.i
 assert.match(guidedPage, /\/api\/me\/shift-runs/, 'guided shift must use the persisted shift-run API');
 assert.match(settingsPage, /\/api\/me\/business-profile/, 'nurse settings must use the persisted business-profile API');
 
+assert.match(
+  routes,
+  /import \{[^}]*adminDestinationForProviderPath[^}]*\} from '@\/lib\/portalAccess'/,
+  'the application guard must import the canonical Admin provider-route resolver',
+);
+assert.match(
+  requireAuthBlock,
+  /adminDestinationForProviderPath\(pathname,\s*user\)/,
+  'RequireAuth must redirect canonical Admin provider routes before mounting Nurse self-service',
+);
+assert.match(
+  requireAuthBlock,
+  /const\s+role\s*=\s*user\.role[\s\S]*?adminDestinationForProviderPath\(pathname,\s*user\)/,
+  'route authorization must resolve the active role before mapping Admin provider routes',
+);
+assert.match(
+  requireAuthBlock,
+  /allowedRoles && !allowedRoles\.includes\(role\)/,
+  'route authorization must not broaden non-Admin portal roles through canonical-role unions',
+);
+assert.ok(
+  requireAuthBlock.indexOf('adminDestinationForProviderPath(pathname, user)')
+    < requireAuthBlock.lastIndexOf('return children'),
+  'the Admin provider redirect must run before protected Nurse content renders',
+);
+
 for (const path of [
   '/provider/shifts',
   '/provider/shifts/:shiftId',
@@ -139,6 +169,8 @@ for (const path of [
 ]) {
   assert.ok(routes.includes(`path="${path}"`), `missing route ${path}`);
 }
+assert.match(routes, /path="\/provider" element=\{<Navigate to="\/provider\/shifts" replace \/>\}/,
+  'the provider root must enter the guarded work route instead of reopening generic login');
 for (const legacyPath of ['/provider/today', '/provider/dashboard', '/provider/dispatch', '/provider/field', '/provider/shift']) {
   assert.match(routes, new RegExp(`path="${legacyPath.replaceAll('/', '\\/')}"[\\s\\S]{0,220}<Navigate to="\\/provider\\/shifts"`), `${legacyPath} must redirect to live shifts`);
 }
