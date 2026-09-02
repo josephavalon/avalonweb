@@ -26,6 +26,26 @@ const dist = path.join(repoRoot, 'dist');
 const indexPath = path.join(dist, 'index.html');
 const TODAY = new Date().toISOString().slice(0, 10);
 const IS_AVALON_OS_BETA_BUILD = String(process.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
+// CBD IV is held from the public apex pending clinical + legal review. Set
+// VITE_HIDE_CBD=true on the `avalonweb` Vercel project only; beta leaves it
+// unset so the category stays reviewable there.
+//
+// This mirrors src/lib/cbdVisibility.js rather than importing it: that module
+// reads import.meta.env, which Node cannot evaluate. Same deliberate
+// duplication as IS_AVALON_OS_BETA_BUILD above. scripts/cbd-visibility-qa.mjs
+// asserts the two prefix lists do not drift.
+const HIDE_CBD = String(process.env.VITE_HIDE_CBD || '').trim().toLowerCase() === 'true';
+const CBD_ROUTE_PREFIXES = ['/services/cbd', '/therapies/cbd', '/products/cbd', '/cbd-iv-therapy-bay-area'];
+const CBD_LEARN_PATTERN = /^\/learn\/[a-z0-9-]*cbd/i;
+function isCbdRoutePath(routePath = '') {
+  const p = String(routePath || '').trim().toLowerCase();
+  if (!p) return false;
+  if (CBD_LEARN_PATTERN.test(p)) return true;
+  return CBD_ROUTE_PREFIXES.some((prefix) => p === prefix || p.startsWith(`${prefix}/`));
+}
+// One filter at the dedupeRoutes boundary covers pillars, protocol routes,
+// product routes, learn articles and noindexStaticRoutes in a single place.
+const dropCbd = (routes) => (HIDE_CBD ? routes.filter((r) => !isCbdRoutePath(r.path)) : routes);
 const PRIVATE_BETA_ROBOTS = 'noindex, nofollow, noarchive';
 
 function removeFinderSuffixArtifacts(dir) {
@@ -365,7 +385,7 @@ const productRoutes = Object.entries(productsByCategory).flatMap(([categorySlug,
   })
 ));
 
-const renderRoutes = dedupeRoutes([
+const renderRoutes = dropCbd(dedupeRoutes([
   ...publicStaticRoutes,
   ...serviceRoutes,
   ...protocolRoutes,
@@ -375,7 +395,7 @@ const renderRoutes = dedupeRoutes([
   learnHub,
   ...articleRoutes,
   ...noindexStaticRoutes.map((page) => ({ ...page, noindex: true })),
-]);
+]));
 
 renderRoutes.forEach((route) => {
   let kind = 'page';
@@ -385,7 +405,7 @@ renderRoutes.forEach((route) => {
   writeRoute(route, kind);
 });
 
-writeSitemap(dedupeRoutes([
+writeSitemap(dropCbd(dedupeRoutes([
   ...publicStaticRoutes,
   ...indexedServicePillars.map((page) => ({ ...page, priority: '0.85', changefreq: 'weekly' })),
   ...protocolRoutes.filter((page) => !page.noindex),
@@ -394,7 +414,7 @@ writeSitemap(dedupeRoutes([
   ...locationRoutes,
   learnHub,
   ...indexedEducationArticles.map((page) => ({ ...page, priority: '0.65', changefreq: 'monthly' })),
-]));
+])));
 ensureCanonicalRootHtml('index');
 ensureCanonicalRootHtml('b2b');
 

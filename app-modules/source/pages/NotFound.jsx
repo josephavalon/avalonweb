@@ -11,6 +11,9 @@ export default function NotFound() {
     title: '404 — Avalon Vitality',
     description: 'Page not found.',
     path: '/404',
+    // useSeo defaults to "index, follow", so without this every 404 on the site
+    // invites indexing — including routes deliberately gated to <NotFound />.
+    robots: 'noindex, nofollow',
   });
 
   return (

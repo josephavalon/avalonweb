@@ -19,9 +19,14 @@ import { slugify } from '@/data/products';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import ExitStoreDialog from '@/components/store/ExitStoreDialog';
 import useBackExitConfirm from '@/hooks/useBackExitConfirm';
+import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
-const FEATURED_KEYS = ['hydration', 'energy', 'myers', 'recovery', 'nad', 'cbd'];
-const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set([]);
+const FEATURED_KEYS = ['hydration', 'energy', 'myers', 'recovery', 'nad', 'cbd']
+  .filter((key) => !(CBD_HIDDEN && key === 'cbd'));
+// CBD IV is hidden on the public apex pending clinical + legal review. See
+// src/lib/cbdVisibility.js — this filter alone is NOT enough, the hardcoded
+// #iv-cbd Foldout below has to be gated too or it renders as an empty section.
+const HIDDEN_PUBLIC_PROTOCOL_KEYS = new Set(CBD_HIDDEN ? ['cbd'] : []);
 const DOSE_PROTOCOL_KEYS = new Set(['nad', 'cbd']);
 const PUBLIC_SESSIONS = IV_SESSIONS.filter((session) => !HIDDEN_PUBLIC_PROTOCOL_KEYS.has(session.key));
 const DEFAULT_ORDER = new Map(PUBLIC_SESSIONS.map((session, index) => [session.key, index]));
@@ -273,7 +278,7 @@ export default function Menu() {
     const map = {
       '#iv-vitamins': 'vitamins',
       '#iv-nad': 'nad',
-      '#iv-cbd': 'cbd',
+      ...(CBD_HIDDEN ? {} : { '#iv-cbd': 'cbd' }),
       '#protocol-directory': 'all',
     };
     const key = map[hash];
@@ -344,11 +349,13 @@ export default function Menu() {
               <ProtocolList id="iv-nad-protocols" sessions={nadSessions} expandDoses />
             </Foldout>
           </div>
-          <div id="iv-cbd" className="scroll-mt-44">
-            <Foldout title="IV CBD" icon={CannabisLeaf} meta={drips(cbdCount)} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
-              <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} expandDoses />
-            </Foldout>
-          </div>
+          {!CBD_HIDDEN && (
+            <div id="iv-cbd" className="scroll-mt-44">
+              <Foldout title="IV CBD" icon={CannabisLeaf} meta={drips(cbdCount)} open={Boolean(openSections.cbd)} onToggle={() => toggleSection('cbd')}>
+                <ProtocolList id="iv-cbd-protocols" sessions={cbdSessions} expandDoses />
+              </Foldout>
+            </div>
+          )}
         </section>
 
         <section id="protocol-directory" className="mt-4 scroll-mt-44 md:mt-6">
