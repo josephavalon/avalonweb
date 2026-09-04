@@ -240,6 +240,7 @@ const AdminSupportTickets = lazyRoute(() => import('./pages/admin/SupportTickets
 const AdminReconciliation = lazyRoute(() => import('./pages/admin/Reconciliation'));
 const Review = lazyRoute(() => import('./pages/Review'));
 const MemberRedeemGift = lazyRoute(() => import('./pages/members/RedeemGift'));
+const MembershipPricing = lazyRoute(() => import('./pages/MembershipPricing'));
 const InviteAccept = lazyRoute(() => import('./pages/InviteAccept'));
 const NewPassword = lazyRoute(() => import('./pages/NewPassword'));
 
@@ -419,13 +420,9 @@ function AppRoutes() {
             <Route path="/trips/:visitId" element={<TripPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQPage />} />
-            {/* Plans + plan checkout are pulled for now (2026-07-29). Redirected
-                rather than 404'd: ~18 internal links and any live inbound link
-                still land somewhere useful. Subscription/PlanCheckout stay
-                imported and unreachable — restore by swapping these back. */}
-            <Route path="/membership" element={<Navigate to="/start" replace />} />
-            <Route path="/subscription" element={<Navigate to="/start" replace />} />
-            <Route path="/plan" element={<Navigate to="/start" replace />} />
+            <Route path="/membership" element={<MembershipPricing />} />
+            <Route path="/subscription" element={<Navigate to="/membership" replace />} />
+            <Route path="/plan" element={<Navigate to="/membership" replace />} />
             <Route path="/corporate" element={<Corporate />} />
             <Route path="/launches" element={<EventsPage />} />
             <Route path="/events" element={<EventsPage />} />
@@ -474,9 +471,9 @@ function AppRoutes() {
             <Route path="/iv-therapy" element={<Navigate to="/protocols" replace />} />
             <Route path="/dashboard" element={<FrontDoorRedirect><Navigate to="/members/dashboard" replace /></FrontDoorRedirect>} />
             <Route path="/kiosk" element={<FrontDoorRedirect><Navigate to="/login?next=/kiosk" replace /></FrontDoorRedirect>} />
-            <Route path="/plans" element={<Navigate to="/start" replace />} />
-            <Route path="/plans/checkout" element={<Navigate to="/start" replace />} />
-            <Route path="/plan-checkout" element={<Navigate to="/start" replace />} />
+            <Route path="/plans" element={<Navigate to="/membership" replace />} />
+            <Route path="/plans/checkout" element={<Navigate to="/membership" replace />} />
+            <Route path="/plan-checkout" element={<Navigate to="/membership" replace />} />
             <Route path="/therapies/:slug" element={<ProtocolPage />} />
             <Route path="/protocols" element={<Menu />} />
             {/* /menu canonicalized to /protocols — both surfaces served the

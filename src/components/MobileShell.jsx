@@ -13,6 +13,7 @@ const CHROME_FREE = /^\/(?:vitalice|events\/[^/]+\/(kiosk|board))\/?$/;
 const INTERNAL_CHROME_FREE = /^\/(?:admin|provider|members|organizer)(?:\/|$)/;
 const CURRENT_CONSUMER_SURFACES = [
   /^\/$/,
+  /^\/membership\/?$/,
   /^\/(?:nurse-delivery|protocols|subscription)(?:\/|$)/,
   /^\/products(?:\/|$)/,
   /^\/(?:events|launches)\/?$/,
