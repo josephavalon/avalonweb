@@ -218,7 +218,6 @@ function TherapyPreview() {
         <RevealItem className="home-v2__founder-banner">
           <span>Grand opening</span>
           <p><strong>Founder pricing from $175.</strong> 30 days.</p>
-          <small>Ends Oct 3</small>
         </RevealItem>
       </RevealGroup>
       <RevealGroup className="home-v2__therapy-grid" stagger={0.06}>

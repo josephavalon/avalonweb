@@ -450,6 +450,57 @@ Findings and fixes:
 
 final result: passed
 
+---
+
+# Homepage Founder Banner — End-Date Removal
+
+## Visual evidence
+
+- Source annotation: `.context/attachments/wfXLwK/Screenshot 2026-09-04 at 6.54.57 AM.png`
+  (`242 × 90` source pixels), identifying the `ENDS OCT 3` text and its trailing
+  banner cell for removal.
+- Browser-rendered implementation: `.context/homepage-v2-1440.png`
+  (`1440 × 4142` full-page pixels from a Chrome CSS viewport of `1440 × 1000`,
+  device scale factor 1).
+- Focused implementation evidence:
+  `.context/homepage-founder-banner-without-end-date.png` (`1380 × 220`).
+- Combined comparison input:
+  `.context/homepage-founder-banner-removal-comparison.png` (`1380 × 440`),
+  with the annotated source above the post-fix browser capture.
+- State: homepage therapy module at rest, no form data entered.
+
+## Findings
+
+- No actionable P0, P1, or P2 mismatch remains. The requested end-date text is
+  absent, and the founder banner retains one continuous rounded outline with
+  intentional open space instead of a replacement label.
+- Typography remains on Avalon's existing display/body families and weights.
+  The surviving founder-pricing sentence keeps its original hierarchy and does
+  not reflow at the measured desktop viewport.
+- Spacing, border radius, cream surface, dark badge, and one-pixel outline are
+  unchanged. Removing the final cell reduces noise without shifting the therapy
+  cards below it.
+- Existing product images and icon assets are unchanged and remain sharp. No
+  new or substituted visual asset was introduced.
+- Copy now reads `Grand opening · Founder pricing from $175. · 30 days.` with no
+  duplicate deadline.
+
+## Comparison history
+
+- Pass 1 removed the isolated `ENDS OCT 3` element, captured the revised module,
+  and compared it with the supplied annotation in one combined image. No
+  follow-up visual correction was required.
+
+## Automated checks
+
+- `npm run lint`: passed (235 source files).
+- `npm run build`: passed.
+- `npm run test:homepage-v2`: passed across seven responsive viewports, the
+  guided picker, and service-area map states.
+- `git diff --check`: passed.
+
+final result: passed
+
 # Homepage V2 — Essential Copy Pass
 
 ## Source visual truth
