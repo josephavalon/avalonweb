@@ -16,6 +16,7 @@ import { isFrontDoorHost } from '@/lib/frontDoor';
 // an individually provisioned account or a canonical Admin account.
 const OS_ITEMS = [
   { label: 'Start', to: '/start' },
+  { label: 'Memberships', to: '/membership' },
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
@@ -24,6 +25,7 @@ const OS_ITEMS = [
 
 const FRONT_DOOR_ITEMS = [
   { label: 'Request a visit', to: '/start' },
+  { label: 'Memberships', to: '/membership' },
   { label: 'Help', to: '/nurse-delivery?path=guided' },
   { label: 'Menu', to: '/protocols' },
   { label: 'Events', to: '/events' },
