@@ -1,65 +1,33 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check } from 'lucide-react';
-import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
-import { pingIntakeAlert } from '@/lib/intakeAlert';
-import { readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
+import { ArrowRight, FileText } from 'lucide-react';
 import { useSeo } from '@/lib/seo';
 
-const DIRECT_RECEIPT_KEY = 'av.request.receipt.v1';
-
+// A visit to this public URL is not evidence that a form was submitted.
+// Actual Cognito success remains responsible for submission notifications.
 export default function RequestReceived() {
   useSeo({
-    title: 'Request Received — Avalon Vitality',
-    description: 'Your Avalon Vitality request has been received.',
+    title: 'Request follow-up — Avalon Vitality',
+    description: 'Next steps for your Avalon Vitality visit request. Our team confirms availability and clinical eligibility.',
     path: '/start/received',
     robots: 'noindex, nofollow',
   });
 
-  useEffect(() => {
-    // Belt to CognitoSubmitPing's braces: if Cognito redirects here instead of
-    // swapping in place, this is the only signal that a request landed. Both
-    // share one sessionStorage key, so the admins still get exactly one text.
-    pingIntakeAlert('start');
-
-    const storedFlow = readGuidedFlow();
-    const flow = Number.isFinite(storedFlow?.selectedAt) ? storedFlow : null;
-    if (flow?.submittedAt) return;
-    if (!flow) {
-      try {
-        const submittedAt = window.sessionStorage.getItem(DIRECT_RECEIPT_KEY);
-        if (submittedAt && Number.isFinite(Number(submittedAt))) return;
-      } catch { /* continue */ }
-    }
-
-    const tracked = flow
-      ? trackConsented(ANALYTICS_EVENTS.REQUEST_SUBMITTED, {
-          flow_id: flow.id,
-          elapsed_ms: Math.max(0, Date.now() - Number(flow.recommendedAt || flow.selectedAt)),
-        })
-      : trackConsented(ANALYTICS_EVENTS.REQUEST_SUBMITTED);
-
-    if (!tracked) return;
-    if (flow) timestampGuidedFlow(flow.id, 'submittedAt');
-    else {
-      try { window.sessionStorage.setItem(DIRECT_RECEIPT_KEY, String(Date.now())); } catch { /* best-effort dedupe */ }
-    }
-  }, []);
-
   return (
     <div className="nd-flow nd-request-received app-shell min-h-[100svh] bg-background text-foreground">
       <main>
-        <div className="nd-request-received__mark" aria-hidden="true"><Check /></div>
-        <p>Request received</p>
-        <h1>WE'LL TAKE IT FROM HERE.</h1>
+        <div className="nd-request-received__mark" aria-hidden="true"><FileText /></div>
+        <p>Request follow-up</p>
+        <h1>YOUR NEXT STEPS.</h1>
         <span>
-          Your care team will review your request and contact you to confirm eligibility and next steps.
+          If you submitted the visit request form, our team will contact you to confirm
+          availability, clinical eligibility and next steps. If you have not submitted
+          a form yet, continue to the visit request below.
         </span>
         <div>
-          <Link to="/">
-            Return home <ArrowRight aria-hidden="true" />
+          <Link to="/start">
+            Request a visit <ArrowRight aria-hidden="true" />
           </Link>
-          <Link to="/protocols">View therapies</Link>
+          <a href="tel:+14159807708">Call (415) 980-7708</a>
         </div>
       </main>
     </div>
