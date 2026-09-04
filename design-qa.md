@@ -2004,3 +2004,56 @@ Viewport, normalization, and state:
 Focused-region comparison was required because the requested correction concerns exact line wrapping in a small hero-copy region. The full seven-viewport homepage suite also passed, including the new line-count and no-wrap regression assertions.
 
 final result: passed
+
+---
+
+# Homepage Header — Remove Redundant Desktop Links
+
+Source visual truth:
+
+- `.context/attachments/DYwPy6/Screenshot 2026-09-04 at 1.52.47 PM.png`.
+- User correction: remove `Therapies`, `Safety`, and `Support` beside the header controls because those destinations already exist in the menu panel.
+
+Implementation evidence:
+
+- Desktop open-menu state: `.context/header-links-removed-desktop.png`.
+- Mobile open-menu state: `.context/header-links-removed-mobile.png`.
+- Focused source/implementation comparison: `.context/header-links-removed-comparison.png`.
+
+Viewport, normalization, and state:
+
+- Source: 2536 × 1480 physical pixels including 84px browser chrome; the application region was cropped to 2536 × 1396.
+- Desktop implementation: 2536 × 1396 CSS viewport at 1× density.
+- Mobile implementation: 390 × 844 CSS viewport at 1× density.
+- The comparison scales both desktop application regions to 1268 × 698 without aspect distortion.
+- Required state: public homepage with the menu panel open; no personal data was entered or displayed.
+
+## Findings
+
+- [P2 resolved] the desktop header repeated three destinations already exposed in the menu panel.
+  - Location: homepage header, immediately left of the contact and menu controls.
+  - Evidence: the source/implementation comparison shows the three words removed while the open panel retains `Help`, `Menu`, and `Safety`.
+  - Impact: the header is quieter and the primary controls have more breathing room.
+  - Fix: removed the duplicate navigation markup and its dedicated stylesheet as one unit.
+
+## Required fidelity surfaces
+
+- Fonts and typography: unchanged; only the redundant words were removed.
+- Spacing and layout rhythm: the contact and menu controls remain right-aligned with no horizontal overflow.
+- Colors and visual tokens: unchanged.
+- Image quality and asset fidelity: unchanged.
+- Copy and content: menu-panel destinations remain available, including `Request a visit`, `Help`, `Menu`, `Events`, `Safety`, and `Login`.
+
+## Interaction and accessibility
+
+- Text, call, and menu controls retain accessible labels.
+- The menu opens successfully and its destination links remain visible.
+- Desktop and mobile browser checks found zero horizontal overflow, no console errors, no page errors, and no Vite error overlay.
+
+## Comparison history
+
+- The source showed `Therapies`, `Safety`, and `Support` simultaneously with the open menu panel.
+- The post-fix comparison shows only the contact and menu controls in the header while preserving the panel destinations.
+- `npm run lint`, `npm run build`, the 99-check consumer-offering suite, and the seven-viewport homepage suite passed.
+
+final result: passed

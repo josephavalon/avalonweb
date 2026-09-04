@@ -49,6 +49,7 @@ try {
     assert(therapyImagesLoaded, `expected three loaded therapy previews at ${width}px`);
     assert(await page.getByRole('heading', { name: 'Explore therapies' }).isVisible(), `therapy heading missing at ${width}px`);
     assert(await page.getByText('Founder pricing from $175.').isVisible(), `founder pricing missing at ${width}px`);
+    assert(!(await page.getByRole('navigation', { name: 'Explore Avalon' }).count()), `redundant desktop header links remain at ${width}px`);
     const visibleTaglineLines = await page.locator('.nd-hero__tagline-line:visible').evaluateAll((lines) => lines.map((line) => {
       const rect = line.getBoundingClientRect();
       const lineHeight = Number.parseFloat(getComputedStyle(line).lineHeight);
