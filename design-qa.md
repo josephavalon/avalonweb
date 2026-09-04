@@ -452,6 +452,84 @@ final result: passed
 
 ---
 
+# Homepage Mobile Density and Banner Underline
+
+## Visual evidence
+
+- Source visual truth: `.context/attachments/XEurFa/IMG_3582.png`
+  (`1320 × 2868` source pixels, iPhone Safari screenshot supplied by the user).
+- Browser-rendered implementation: `.context/homepage-mobile-final-390.png`
+  (`780 × 1688` pixels from a Chrome `390 × 844` CSS viewport at device scale
+  factor 2).
+- Full mobile implementation: `.context/homepage-v2-390.png`
+  (`780 × 9752` pixels from the same viewport and density).
+- Combined focused comparison: `.context/homepage-mobile-spacing-comparison-final.png`
+  (`1560 × 1300`, supplied screenshot left and implementation right,
+  normalized to the same 780px content width and cropped to the opening state).
+- State: homepage at `scrollY = 0`, cookie choice resolved, no personal data
+  entered. The supplied reference includes Safari chrome, so the comparison is
+  restricted to the app-owned banner, navigation, hero, and action stack.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] The mobile action stack extended `26.8px` beneath the fixed
+  trusted-by rail. START is now `104px` high and the two helper rows are `60px`
+  each; the stack ends at `732.4px`, leaving `27.6px` before the rail begins at
+  `760px`. The press rail still closes the first viewport at exactly `844px`.
+- [P2 resolved] The banner link's border was attached to its full `44px` hit
+  box, placing the visible rule on the bottom edge of the banner. The hit box
+  remains `44px` high, while a nested text span now carries the underline
+  `14.2px` above the banner edge.
+- [P2 resolved] Large mobile headlines consumed multiple lines and created
+  inconsistent module rhythm. The hero and five major module titles now use
+  one-line mobile copy, a shared `36–44.8px` display scale, and compact section
+  spacing. Desktop wording remains unchanged.
+- [P2 resolved] The long promotional sentence crowded narrow banner widths.
+  Mobile now uses the concise `Founder pricing · from $175` label. The banner
+  reports a `390px` scroll width in a `390px` viewport and the complete page has
+  no horizontal overflow.
+- Fonts and typography retain Avalon's existing display and body families,
+  weights, case, and letter-spacing. The focused comparison confirms that the
+  new hero headline clears the nurse subject while keeping the same hierarchy.
+- Spacing and layout rhythm are materially tighter without reducing primary
+  touch targets. Module heights at 390px fell to `777.8px` (therapies),
+  `681.1px` (clinical trust), `883.8px` (picker), `746.8px` (service area), and
+  `352px` (closing actions).
+- Colors, borders, radii, supplied photography, therapy imagery, press logos,
+  and icon-library assets remain unchanged. No placeholder or fabricated
+  visual asset was introduced.
+- Copy keeps the critical promise and clinical qualifiers. Mobile-only title
+  trims are visual; accessible labels preserve the fuller clinician and picker
+  names.
+- No actionable P0, P1, or P2 visual issue remains in the requested surfaces.
+
+## Comparison history
+
+- Pass 1 reproduced the supplied opening state and confirmed that the helper
+  card collided with the press rail and the banner underline sat on the border.
+- Pass 2 compacted the action stack and module rhythm, moved the underline to
+  the text, and exposed two remaining inconsistencies: oversized picker/area
+  titles and promotional banner overflow at 390px.
+- Pass 3 normalized all major mobile titles, shortened the mobile banner copy,
+  and re-captured the combined comparison. The action stack, rail, underline,
+  headlines, and banner now pass visual and measured checks.
+
+## Verification
+
+- Primary actions remain linked and the guided picker plus service-area map
+  interactions passed.
+- Browser console warnings/errors: none across the homepage QA matrix.
+- `npm run lint`: passed (235 source files).
+- `npm run build`: passed, including B2B and 137 SEO route outputs.
+- `npm run test:homepage-v2`: passed at `320`, `375`, `390`, `414`, `768`,
+  `1024`, and `1440px`, including explicit mobile collision, banner overflow,
+  underline placement, one-line heading, image, pricing, picker, and map checks.
+- `git diff --check`: passed.
+
+final result: passed
+
+---
+
 # Homepage Founder Banner — End-Date Removal
 
 ## Visual evidence

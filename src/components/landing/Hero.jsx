@@ -152,11 +152,7 @@ export default function Hero({ showTail = true, showPress = showTail, enhanced =
             <div className="nd-hero__message">
               <h1 id="nd-hero-title">
                 <span className="nd-hero__headline-desktop">Wellness Delivered</span>
-                <span className="nd-hero__headline-mobile">
-                  Wellness
-                  <br />
-                  Delivered
-                </span>
+                <span className="nd-hero__headline-mobile">Wellness Delivered</span>
               </h1>
               <p className="nd-hero__tagline">
                 <span className="nd-hero__tagline-desktop">
@@ -167,9 +163,7 @@ export default function Hero({ showTail = true, showPress = showTail, enhanced =
                   On-demand.
                 </span>
                 <span className="nd-hero__tagline-mobile">
-                  IV therapies and more.
-                  <br />
-                  By registered nurses.
+                  IV therapies. Registered nurses.
                   <br />
                   On-demand.
                 </span>

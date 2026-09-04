@@ -9,6 +9,10 @@
   overflow-x: clip;
 }
 
+.home-v2__title-mobile {
+  display: none;
+}
+
 /* The enhanced homepage starts below the fixed header. Size its hero to the
    remaining first viewport so the press feed is the closing rail on load,
    rather than leaving a blank header-sized tail beneath it. */
@@ -1843,27 +1847,50 @@
 
 @media (max-width: 800px) {
   .home-v2 {
-    --home-module-title: clamp(3.15rem, 16vw, 4.8rem);
+    --home-module-title: clamp(2.25rem, 10.4vw, 2.8rem);
+  }
+
+  .home-v2__title-desktop {
+    display: none;
+  }
+
+  .home-v2__title-mobile {
+    display: inline;
+  }
+
+  .home-v2__heading h2,
+  .home-v2__menu-head h2,
+  .home-v2__picker-copy h2,
+  .home-v2__trust-copy h2,
+  .home-v2__final-cta h2 {
+    max-width: none;
+    font-size: var(--home-module-title) !important;
+    white-space: nowrap;
+  }
+
+  .home-v2__area .home-v2__heading h2 {
+    font-size: var(--home-module-title) !important;
   }
 
   .home-v2__section {
     padding-right: 1rem;
     padding-left: 1rem;
-    padding-top: 2.4rem;
-    padding-bottom: 2.4rem;
+    padding-top: 1.85rem;
+    padding-bottom: 1.85rem;
   }
 
   .home-v2__therapies {
-    padding-top: 2.5rem;
+    padding-top: 1.85rem;
   }
 
   .home-v2__heading {
-    margin-bottom: 2rem;
+    gap: 0.55rem;
+    margin-bottom: 1.15rem;
   }
 
   .home-v2__trust-hero {
     grid-template-columns: 1fr;
-    gap: 1.4rem;
+    gap: 1rem;
   }
 
   .home-v2__trust-copy h2 {
@@ -1914,14 +1941,14 @@
   }
 
   .home-v2__menu-head {
-    gap: 0.8rem;
-    margin-bottom: 1.5rem;
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
   }
 
   .home-v2__menu-headrow {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.7rem;
   }
 
   .home-v2__menu-trust {
@@ -2148,9 +2175,9 @@
   }
 
   .home-v2__picker {
-    gap: 1.35rem;
-    padding-top: 2.4rem;
-    padding-bottom: 2.4rem;
+    gap: 1rem;
+    padding-top: 1.85rem;
+    padding-bottom: 1.85rem;
     padding-right: 1rem;
     padding-left: 1rem;
   }
@@ -2166,7 +2193,7 @@
   .home-v2__picker-help { display: inline-flex; }
 
   .home-v2__area {
-    gap: 1.35rem;
+    gap: 1rem;
   }
 
   .home-v2__area-map {
@@ -2179,6 +2206,115 @@
   }
 
   .home-v2__events-link { gap: 1rem; }
+}
+
+/* Mobile opening composition: keep the trusted-by feed pinned to the bottom
+   of the first viewport without letting the action stack run underneath it. */
+@media (max-width: 900px) {
+  body:has(.nd-home) .nd-hero__mobile-panel .nd-hero__message h1 {
+    font-size: clamp(2.15rem, 9.4vw, 2.45rem) !important;
+    line-height: 0.9 !important;
+    white-space: nowrap !important;
+  }
+
+  body:has(.nd-home) .nd-hero__mobile-panel .nd-hero__tagline {
+    width: min(14rem, 100%) !important;
+    max-width: 14rem !important;
+    margin-top: 0.55rem !important;
+    font-size: clamp(0.82rem, 3.45vw, 0.92rem) !important;
+    line-height: 1.3 !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary,
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary:first-child {
+    min-height: 6.5rem !important;
+    padding: 0.8rem 1rem !important;
+    grid-template-columns: minmax(0, 1fr) 3.25rem !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__copy strong {
+    font-size: clamp(2.5rem, 11vw, 3rem) !important;
+  }
+
+  body:has(.nd-home) .nd-hero__paths .nd-path--primary .nd-path__action {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+    min-width: 3.25rem !important;
+    min-height: 3.25rem !important;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts {
+    margin-top: 0.65rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost {
+    min-height: 3.75rem;
+    padding: 0.55rem 0.9rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost + .nd-ghost {
+    padding-left: 0.9rem;
+  }
+
+  body:has(.nd-home) .nd-hero__ghosts .nd-ghost__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .home-v2__trust-copy,
+  .home-v2__picker-copy {
+    gap: 0.55rem;
+  }
+
+  .home-v2__trust-intro {
+    margin-top: 0;
+  }
+
+  .home-v2__trust-actions {
+    margin-top: 0.15rem;
+  }
+
+  .home-v2__leadership-card {
+    padding-top: 0.95rem;
+  }
+
+  .home-v2__care-journey {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+  }
+
+  .home-v2__area .home-v2__heading {
+    margin-bottom: 0.55rem;
+  }
+
+  .home-v2__events-link {
+    min-height: 5.25rem;
+    padding: 1rem;
+  }
+
+  .home-v2__events-link strong {
+    font-size: clamp(1.85rem, 8.5vw, 2.3rem);
+  }
+
+  .home-v2__final-cta {
+    padding: 2rem 1rem;
+  }
+
+  .home-v2__final-cta > p {
+    margin-bottom: 0.65rem;
+  }
+
+  .home-v2__final-cta > a {
+    min-height: 6.75rem;
+    margin-top: 0.85rem;
+    padding: 1rem 1.15rem;
+  }
+
+  .home-v2__final-cta > a strong {
+    font-size: clamp(2.75rem, 12vw, 3.4rem);
+  }
 }
 
 @media (max-width: 430px) {

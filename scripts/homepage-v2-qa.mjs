@@ -75,6 +75,35 @@ try {
       const utilityCta = page.getByRole('link', { name: 'Start your visit' });
       const box = await utilityCta.boundingBox();
       assert(box && box.height >= 44, `utility CTA is ${box?.height || 0}px high at ${width}px`);
+      const mobileLayout = await page.evaluate(() => {
+        const paths = document.querySelector('.nd-hero__paths')?.getBoundingClientRect();
+        const press = document.querySelector('.nd-press')?.getBoundingClientRect();
+        const banner = document.querySelector('.nd-safari-tint-bar')?.getBoundingClientRect();
+        const underline = document.querySelector('.nd-safari-tint-bar a > span')?.getBoundingClientRect();
+        const headings = [...document.querySelectorAll(
+          '.home-v2__menu-head h2, .home-v2__trust-copy h2, .home-v2__picker-copy h2, .home-v2__area-copy h2, .home-v2__final-cta h2',
+        )].map((heading) => {
+          const rect = heading.getBoundingClientRect();
+          const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
+          return { height: rect.height, lineHeight };
+        });
+        return {
+          actionOverlap: paths && press ? paths.bottom - press.top : 0,
+          bannerOverflow: document.querySelector('.nd-safari-tint-bar')?.scrollWidth - window.innerWidth,
+          underlineGap: banner && underline ? banner.bottom - underline.bottom : 0,
+          headings,
+        };
+      });
+      assert(mobileLayout.actionOverlap <= 0, `hero actions overlap the trusted-by rail by ${mobileLayout.actionOverlap}px at ${width}px`);
+      assert(mobileLayout.bannerOverflow <= 0, `founder banner overflows by ${mobileLayout.bannerOverflow}px at ${width}px`);
+      assert(
+        mobileLayout.underlineGap >= 4 && mobileLayout.underlineGap <= 20,
+        `utility CTA underline is ${mobileLayout.underlineGap}px from the banner edge at ${width}px`,
+      );
+      assert(
+        mobileLayout.headings.every(({ height, lineHeight }) => height <= lineHeight * 1.15),
+        `homepage module heading wrapped at ${width}px`,
+      );
     }
 
     assert(!await page.locator('.vite-error-overlay').count(), `Vite error overlay at ${width}px`);

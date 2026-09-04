@@ -10162,6 +10162,10 @@ body:has(.nd-hero) {
   align-items: center;
 }
 
+.nd-safari-tint-bar__copy-mobile {
+  display: none;
+}
+
 .nd-safari-tint-bar a {
   /* "Start your visit" is a CTA repeated on every page, and with no padding its
      hit box was only as tall as the text: 101x10 on a phone, 114x11 on desktop.
@@ -10173,15 +10177,24 @@ body:has(.nd-hero) {
   display: inline-flex;
   height: 100%;
   align-items: center;
-  border-bottom: 1px solid currentColor;
+  border-bottom: 0;
   color: inherit;
   text-decoration: none;
 }
 
-.nd-safari-tint-bar a:hover,
-.nd-safari-tint-bar a:focus-visible {
+.nd-safari-tint-bar a > span {
+  padding-bottom: 0.16rem;
+  border-bottom: 1px solid currentColor;
+}
+
+.nd-safari-tint-bar a:hover > span,
+.nd-safari-tint-bar a:focus-visible > span {
   border-bottom-color: transparent;
-  outline: none;
+}
+
+.nd-safari-tint-bar a:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: -0.3rem;
 }
 
 .nd-global-corner-header__spacer {
@@ -10470,6 +10483,14 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
   .nd-safari-tint-bar span,
   .nd-safari-tint-bar a {
     white-space: nowrap;
+  }
+
+  .nd-safari-tint-bar__copy-desktop {
+    display: none;
+  }
+
+  .nd-safari-tint-bar__copy-mobile {
+    display: inline;
   }
 
   .nd-safari-tint-bar a {

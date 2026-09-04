@@ -194,6 +194,15 @@ function SectionHeading({ eyebrow, title, body, id }) {
   );
 }
 
+function ResponsiveTitle({ desktop, mobile }) {
+  return (
+    <>
+      <span className="home-v2__title-desktop">{desktop}</span>
+      <span className="home-v2__title-mobile">{mobile}</span>
+    </>
+  );
+}
+
 function TherapyPreview() {
   const sectionRef = useSectionView('therapies');
   const therapies = useMemo(() => THERAPY_KEYS
@@ -204,7 +213,9 @@ function TherapyPreview() {
     <section ref={sectionRef} className="home-v2__section home-v2__therapies" aria-labelledby="home-v2-therapies">
       <RevealGroup className="home-v2__menu-head" stagger={0.07}>
         <RevealItem as="p" className="home-v2__eyebrow">What we deliver</RevealItem>
-        <RevealItem as="h2" id="home-v2-therapies">Explore therapies</RevealItem>
+        <RevealItem as="h2" id="home-v2-therapies">
+          <ResponsiveTitle desktop="Explore therapies" mobile="Explore therapies" />
+        </RevealItem>
         <RevealItem className="home-v2__menu-headrow">
           <ul className="home-v2__menu-trust" aria-label="Clinical standards">
             <li><ShieldCheck aria-hidden="true" />Licensed RNs</li>
@@ -282,7 +293,12 @@ function TrustSection() {
       <div className="home-v2__trust-hero">
         <RevealGroup className="home-v2__trust-copy" stagger={0.07}>
           <RevealItem as="p" className="home-v2__eyebrow">The people behind your care</RevealItem>
-          <RevealItem as="h2" id="home-v2-trust">Clinician led.<br />Nurse delivered.</RevealItem>
+          <RevealItem as="h2" id="home-v2-trust" aria-label="Clinician led. Nurse delivered.">
+            <ResponsiveTitle
+              desktop={<>Clinician led.<br />Nurse delivered.</>}
+              mobile="Clinician-led care."
+            />
+          </RevealItem>
           <RevealItem as="p" className="home-v2__trust-intro">
             Physician reviewed. California-licensed RNs. Cleared before dispatch.
           </RevealItem>
@@ -364,7 +380,9 @@ function GuidedPicker() {
     <section ref={sectionRef} className="home-v2__section home-v2__picker" aria-labelledby="home-v2-picker-title">
       <div className="home-v2__picker-copy">
         <p className="home-v2__eyebrow">Help me choose</p>
-        <h2 id="home-v2-picker-title">Find your starting point.</h2>
+        <h2 id="home-v2-picker-title" aria-label="Find your starting point.">
+          <ResponsiveTitle desktop="Find your starting point." mobile="Find your start." />
+        </h2>
         <a className="home-v2__picker-help" href="sms:+14159807708">Talk to us <ArrowRight aria-hidden="true" /></a>
       </div>
 
@@ -470,7 +488,12 @@ function ServiceArea() {
       <div className="home-v2__area-copy">
         <SectionHeading
           eyebrow="Where we go"
-          title={<>Bay Area care.<br />At your door.</>}
+          title={(
+            <ResponsiveTitle
+              desktop={<>Bay Area care.<br />At your door.</>}
+              mobile="Bay Area care."
+            />
+          )}
           body="Five Bay Area counties."
           id="home-v2-area"
         />
@@ -550,7 +573,7 @@ function ClosingActions() {
       </Link>
       <div className="home-v2__final-cta">
         <p>Ready when you are.</p>
-        <h2>Care comes to you.</h2>
+        <h2><ResponsiveTitle desktop="Care comes to you." mobile="Care comes to you." /></h2>
         <Link
           to="/start"
           onClick={() => trackConsented(ANALYTICS_EVENTS.START_CLICKED, { source: 'homepage_v2_final' })}
