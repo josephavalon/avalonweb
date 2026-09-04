@@ -29,7 +29,7 @@ export default function StartDeposit() {
 
   return (
     <div className="nd-flow app-shell min-h-[100svh] bg-background text-foreground">
-      <main className="mx-auto w-full max-w-xl px-5 pb-24 pt-16 md:px-8 md:pt-24">
+      <main className="mx-auto w-full max-w-xl px-5 pb-24 pt-32 md:px-8">
         <div className="nd-request-received__mark" aria-hidden="true"><FileText /></div>
 
         <h1 className="mt-6 font-heading text-[4.25rem] uppercase leading-none tracking-tight text-foreground md:text-[6rem]">
