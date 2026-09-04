@@ -11,9 +11,10 @@ const EASE = [0.16, 1, 0.3, 1];
 
 export default function B2BThankYou() {
   useSeo({
-    title: 'Group Recovery Request — Avalon Vitality',
-    description: 'Your Avalon Vitality group recovery request has been received.',
+    title: 'Group request follow-up — Avalon Vitality',
+    description: 'Contact Avalon Vitality to confirm availability, care requirements and next steps for your group visit.',
     path: '/b2b/thank-you',
+    robots: 'noindex, nofollow',
   });
 
   return (
@@ -30,10 +31,10 @@ export default function B2BThankYou() {
           <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-end">
             <div>
               <h1 className="font-heading text-[4.2rem] uppercase leading-[0.84] tracking-tight text-foreground md:text-[7.8rem]">
-                Request<br />Received
+                Group request<br />Follow-up
               </h1>
               <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-foreground/58 md:text-lg">
-                Your Avalon group request is in. We will confirm timing, staffing, protocol, and payment by text.
+                If you have contacted our team about a group visit, we will coordinate availability, care requirements and next steps with you. If you have not sent an inquiry, email our team below to get started.
               </p>
             </div>
 
@@ -48,8 +49,8 @@ export default function B2BThankYou() {
                   <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
                 </span>
                 <div>
-                  <p className="font-body text-[10px] uppercase tracking-[0.22em] text-accent/80">Ops Queue</p>
-                  <p className="mt-1 font-body text-sm font-semibold text-foreground">Acuity, staffing, and GFE routing next.</p>
+                  <p className="font-body text-[10px] uppercase tracking-[0.22em] text-accent/80">What happens next</p>
+                  <p className="mt-1 font-body text-sm font-semibold text-foreground">Our team confirms the details before your visit.</p>
                 </div>
               </div>
             </motion.div>
@@ -57,9 +58,9 @@ export default function B2BThankYou() {
 
           <div className="mt-8 grid gap-3 md:grid-cols-3">
             {[
-              ['01', 'Review size + timing'],
-              ['02', 'Confirm protocol + staff'],
-              ['03', 'Recover on site'],
+              ['01', 'Share group size + timing'],
+              ['02', 'Discuss care + staffing'],
+              ['03', 'Confirm your visit'],
             ].map(([step, label]) => (
               <motion.div
                 key={step}
@@ -84,10 +85,10 @@ export default function B2BThankYou() {
             </PremiumButton>
             <PremiumButton
               as={Link}
-              to="/launches"
+              to="/start"
               className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-6 font-body text-xs font-semibold uppercase tracking-[0.2em] text-background transition-opacity hover:opacity-85"
             >
-              Launches <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+              Request an individual visit <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
             </PremiumButton>
           </div>
         </motion.section>

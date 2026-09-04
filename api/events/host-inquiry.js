@@ -3,15 +3,15 @@
  *
  * Admit info only — setting, date, headcounts, contact email. Nothing
  * medical is asked or accepted (amendment F). Delivery is an internal
- * email via Resend; with no key configured it degrades to a logged
- * placeholder per the repo's placeholder rule, still returning ok so the
- * builder UX can be exercised end-to-end before credentials land.
+ * email via Resend. Only provider-accepted delivery returns success; contact
+ * details are never written to application logs when delivery is unavailable.
  */
 import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 
 const INTERNAL_TO = 'littonjose@gmail.com';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DELIVERY_RETRY = 'We could not send your inquiry. Please try again, or call (415) 980-7708.';
 
 const clean = (v, max) => String(v ?? '').trim().slice(0, max);
 const count = (v, max) => Math.min(Math.max(parseInt(v, 10) || 0, 0), max);
@@ -64,22 +64,28 @@ export default async function handler(req, res) {
       inquiry.phone ? `Mobile: ${inquiry.phone}` : null,
     ].filter(Boolean).join('\n');
 
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'Avalon Events <support@avalonvitality.co>',
-        to: INTERNAL_TO,
-        ...(inquiry.email ? { replyTo: inquiry.email } : {}),
-        subject: `Event inquiry — ${inquiry.where} · ${inquiry.date}`,
-        text: lines,
-      });
-    } else {
-      console.log('[events-host-inquiry] placeholder mode (no RESEND_API_KEY):\n' + lines);
+    const resendKey = process.env.RESEND_API_KEY?.trim();
+    if (!resendKey) {
+      console.error('[events-host-inquiry] delivery_unconfigured');
+      return res.status(503).json({ ok: false, error: DELIVERY_RETRY });
+    }
+
+    const resend = new Resend(resendKey);
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'Avalon Events <support@avalonvitality.co>',
+      to: INTERNAL_TO,
+      ...(inquiry.email ? { replyTo: inquiry.email } : {}),
+      subject: `Event inquiry — ${inquiry.where} · ${inquiry.date}`,
+      text: lines,
+    });
+    if (result?.error || typeof result?.data?.id !== 'string' || !result.data.id.trim()) {
+      console.error('[events-host-inquiry] delivery_rejected');
+      return res.status(502).json({ ok: false, error: DELIVERY_RETRY });
     }
 
     return res.status(200).json({ ok: true });
-  } catch (err) {
-    console.error('[events-host-inquiry]', err?.message || err);
-    return res.status(500).json({ ok: false, error: 'Something went wrong — try again.' });
+  } catch {
+    console.error('[events-host-inquiry] request_failed');
+    return res.status(500).json({ ok: false, error: DELIVERY_RETRY });
   }
 }
