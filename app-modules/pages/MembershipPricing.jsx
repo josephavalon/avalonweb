@@ -88,7 +88,7 @@ function EssentialItem({ icon: Icon, title, children, className = '' }) {
 }
 
 export default function MembershipPricing() {
-  useSeo({ title: 'Founder Memberships — Avalon Vitality', description: 'Founder membership pricing for Vitamin IV and NAD+ IV care.' });
+  useSeo({ title: 'Founder Memberships — Avalon Vitality', description: 'Founder membership pricing for Vitamin IV and NAD+ IV care.', path: '/membership' });
 
   return (
     <>

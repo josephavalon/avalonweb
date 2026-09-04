@@ -830,6 +830,14 @@ export const publicStaticRoutes = [
   // /subscription pulled from the sitemap 2026-07-29 — the route now redirects
   // to /start, so prerendering it would publish a page that no longer exists.
   {
+    path: '/membership',
+    title: 'Founder Memberships — Avalon Vitality',
+    description: 'Founder membership pricing for Vitamin IV and NAD+ IV care.',
+    h1: 'Care that keeps up.',
+    priority: '0.8',
+    changefreq: 'monthly',
+  },
+  {
     path: '/pricing',
     title: 'Transparent Pricing — Avalon Vitality',
     description: 'Avalon Vitality pricing for mobile recovery appointments, memberships, event service, and clinician-reviewed protocols.',
