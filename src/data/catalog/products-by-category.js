@@ -189,9 +189,9 @@ const PRODUCT_SLUG_ALIASES = {
     travel: 'jet-lag-iv',
     'travel-iv': 'jet-lag-iv',
     'night-out-iv': 'post-night-out-iv',
-    'launch-performance': 'performance-iv',
+    'launch-performance': 'event-performance-iv',
     'launch-recovery': 'recovery-iv',
-    'food-poisoning': 'food-poisoning-recovery-iv',
+    'food-poisoning': 'food-poisoning-iv',
   },
   nad: {
     'nad-250mg': 'nad-iv-250mg',

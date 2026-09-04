@@ -26,6 +26,9 @@
   "redirects": [
     { "source": "/mo", "destination": "https://www.avalonvitality.co/", "permanent": false },
     { "source": "/mo/", "destination": "https://www.avalonvitality.co/", "permanent": false },
+    { "source": "/newsletter", "destination": "/start", "permanent": false },
+    { "source": "/waitlist", "destination": "/book", "permanent": false },
+    { "source": "/organizer/login", "destination": "/login?portal=organizer", "permanent": false },
     { "source": "/products/cbd/:path*", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },
     { "source": "/products/cbd/:path*", "has": [{ "type": "host", "value": "avalonvitality.co" }], "destination": "/protocols", "permanent": true },
     { "source": "/services/cbd", "has": [{ "type": "host", "value": "www.avalonvitality.co" }], "destination": "/protocols", "permanent": true },

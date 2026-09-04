@@ -1,0 +1,61 @@
+.guided-commerce .guided-best__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+  padding: 1rem 0;
+  border-block: 1px solid #d9d2c8;
+}
+
+.guided-commerce .guided-best__facts dt {
+  font-family: var(--font-body);
+  font-size: .8rem;
+  color: #6e6258;
+}
+
+.guided-commerce .guided-best__facts dd {
+  margin: .35rem 0 0;
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  color: #2b211b;
+}
+
+.guided-commerce .guided-best__ingredients,
+.guided-commerce .guided-best__deposit {
+  margin: .75rem 0;
+  font-family: var(--font-body);
+  font-size: .875rem;
+  line-height: 1.55;
+  color: #6e6258;
+}
+
+.guided-commerce .guided-best__ingredients strong {
+  display: block;
+  margin-bottom: .25rem;
+  color: #2b211b;
+}
+
+.guided-commerce .guided-best__detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-size: .875rem;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+.guided-commerce .guided-best__detail-link svg { width: 1rem; }
+.guided-commerce .guided-best__detail-link:focus-visible { outline: 2px solid #2b211b; outline-offset: 4px; }
+.guided-commerce .guided-alternative__facts { display: block; padding-top: .5rem; font-size: .875rem; color: #6e6258; }
+.guided-commerce .guided-alternatives > button { padding-block: 1rem; }
+.guided-commerce .guided-clinical-note { font-size: .875rem; color: #6e6258; }
+
+@media (max-width: 799px) {
+  .guided-commerce .guided-commerce__main { min-height: 0; padding-top: 1.5rem; }
+  .guided-commerce .guided-question { min-height: 26rem; align-content: start; padding-top: 3.5rem; }
+  .guided-commerce .guided-back { top: 0; }
+  .guided-commerce .guided-results { align-content: start; padding-top: 3.25rem; }
+}

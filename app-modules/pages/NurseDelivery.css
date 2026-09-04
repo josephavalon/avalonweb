@@ -1,0 +1,333 @@
+/* The request form needs room for readable care, price and consent details.
+   Only this public request surface opts out of the old fixed-height layout. */
+html.av-cream:has(.nd-request-page),
+html.av-cream body:has(.nd-request-page) {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.nd-request-page.nd-flow {
+  height: auto;
+  min-height: 100svh !important;
+  overflow: visible;
+}
+
+.nd-request-page.nd-flow > main {
+  display: block;
+  max-width: 74rem;
+  min-height: 0 !important;
+  padding: 8rem 2rem 4rem !important;
+  overflow: visible;
+}
+
+.nd-request-page.nd-flow > main > * {
+  margin-block: 0;
+}
+
+.nd-request-page .nd-request-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.nd-request-page.nd-flow .nd-focused-booking__form-column {
+  display: block !important;
+  min-width: 0;
+}
+
+.nd-request-page.nd-flow h1 {
+  font-size: clamp(3.4rem, 6.5vw, 5.25rem) !important;
+  line-height: 0.96 !important;
+  white-space: normal !important;
+}
+
+.nd-request-page.nd-flow h1 + p {
+  margin-top: 1rem !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+}
+
+.nd-request-page .nd-request-preferences {
+  margin-top: 1.25rem;
+  color: #6e6258;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.nd-request-page .nd-request-preferences strong {
+  color: #2b211b;
+  font-weight: 600;
+}
+
+.nd-request-page.nd-flow [data-testid='landing-form'] {
+  margin-top: 1.25rem !important;
+  gap: 1rem !important;
+}
+
+.nd-request-page .nd-request-rail {
+  display: block;
+  margin-top: 0 !important;
+}
+
+.nd-request-page .nd-request-summary {
+  padding: 1.5rem;
+  border: 1px solid #d9d2c8;
+  border-radius: 1.35rem;
+}
+
+.nd-request-page .nd-request-summary--mobile {
+  display: none;
+}
+
+.nd-request-page .nd-request-inline-summary .nd-request-summary {
+  margin-top: 1.25rem;
+}
+
+.nd-request-page .nd-request-summary__eyebrow {
+  color: #6e6258;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nd-request-page.nd-flow .nd-request-summary dl {
+  margin-top: 1rem !important;
+}
+
+.nd-request-page.nd-flow .nd-request-summary dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 0 !important;
+  border-top: 1px solid #d9d2c8;
+}
+
+.nd-request-page .nd-request-summary dt {
+  flex: 0 0 32%;
+  color: #6e6258;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.nd-request-page .nd-request-summary dd {
+  min-width: 0;
+  color: #2b211b;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.nd-request-page .nd-request-summary__note,
+.nd-request-page .nd-request-summary__next {
+  color: #6e6258;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.nd-request-page .nd-request-summary__next {
+  margin-top: 0.75rem;
+  color: #2b211b;
+}
+
+.nd-request-page.nd-flow .nd-request-steps {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem !important;
+}
+
+.nd-request-page .nd-request-steps li {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.nd-request-page.nd-flow .nd-request-steps li > span:first-child {
+  flex: 0 0 2rem;
+  color: #6e6258;
+  font-size: 1rem !important;
+}
+
+.nd-request-page .nd-request-steps strong {
+  color: #2b211b;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.nd-request-page .nd-request-steps p {
+  margin-top: 0.25rem;
+  color: #6e6258;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.nd-request-page .nd-request-coverage {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #d9d2c8;
+  color: #6e6258;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.nd-request-page .nd-request-coverage p {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  color: #2b211b;
+  font-size: 0.875rem;
+}
+
+.nd-request-page .nd-request-coverage svg {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.nd-request-page .nd-request-mobile-coverage {
+  display: none;
+}
+
+.nd-request-page .nd-request-coverage a,
+.nd-request-page .nd-focused-booking__sms-note a,
+.nd-request-page .nd-request-safety a {
+  color: #2b211b;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.nd-request-page.nd-flow [data-testid='landing-form'] > p.nd-focused-booking__deposit-note,
+.nd-request-page.nd-flow [data-testid='landing-form'] > p.nd-focused-booking__sms-note,
+.nd-request-page.nd-flow [data-testid='landing-form'] > p.nd-request-safety {
+  margin: 0;
+  padding: 0 !important;
+  color: #6e6258 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+  text-align: left;
+}
+
+.nd-request-page.nd-flow .nd-focused-booking__sms-note,
+.nd-request-page.nd-flow .nd-request-safety {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.nd-request-page .nd-request-safety svg {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+/* Style only. The Cognito-owned controls, values and submission stay intact. */
+.nd-request-page.nd-flow .cognito .cog-label,
+.nd-request-page.nd-flow .cognito-skeleton__label {
+  margin-bottom: 0.5rem !important;
+  color: #6e6258 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.4 !important;
+}
+
+.nd-request-page.nd-flow .cognito .cog-page {
+  row-gap: 0.75rem !important;
+}
+
+.nd-request-page.nd-flow .cognito .cog-field,
+.nd-request-page.nd-flow .cognito .cog-col {
+  margin-bottom: 0.5rem !important;
+}
+
+.nd-request-page.nd-flow .cognito input.el-input__inner,
+.nd-request-page.nd-flow .cognito select.el-input__inner {
+  height: 3.25rem !important;
+  min-height: 3.25rem !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 1rem !important;
+  line-height: 1.4 !important;
+}
+
+.nd-request-page.nd-flow .cognito .el-date-editor,
+.nd-request-page.nd-flow .cognito .el-date-editor.el-input {
+  min-height: 3.25rem !important;
+}
+
+.nd-request-page.nd-flow .cognito .cog-checkable,
+.nd-request-page.nd-flow .cognito .el-checkbox__label,
+.nd-request-page.nd-flow .cognito .cog-helptext,
+.nd-request-page.nd-flow .cognito .cog-helptext p,
+.nd-request-page.nd-flow .cognito-skeleton__consent,
+.nd-request-page.nd-flow .cognito-skeleton__help {
+  color: #6e6258 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.55 !important;
+}
+
+.nd-request-page.nd-flow .cognito .cog-helptext {
+  margin-top: 0.5rem !important;
+}
+
+.nd-request-page.nd-flow .cognito .cog-button,
+.nd-request-page.nd-flow .cognito-skeleton__button {
+  height: auto !important;
+  min-height: 3.25rem !important;
+  padding-block: 0.875rem !important;
+  font-size: 0.9375rem !important;
+}
+
+.nd-request-page.nd-flow .cognito-skeleton__field {
+  height: 3.25rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+/* Retain the existing CSS-only success behavior, even when consent is visible
+   at every screen size before submission. */
+.nd-request-page.nd-flow:has(.cog-form.is-success) [data-when='pre-submit'] {
+  display: none !important;
+}
+
+@media (max-width: 1023px) {
+  .nd-request-page.nd-flow > main {
+    max-width: 40rem;
+    padding: 6.5rem 1.25rem 3rem !important;
+  }
+
+  .nd-request-page .nd-request-layout {
+    display: block;
+  }
+
+  .nd-request-page .nd-request-rail {
+    display: none;
+  }
+
+  .nd-request-page .nd-request-summary--mobile,
+  .nd-request-page .nd-request-mobile-coverage {
+    display: block;
+  }
+
+  .nd-request-page .nd-request-summary--mobile {
+    margin-top: 1.25rem;
+    padding: 1.125rem;
+  }
+
+  .nd-request-page.nd-flow h1 {
+    font-size: clamp(2.9rem, 11.5vw, 4rem) !important;
+  }
+
+  .nd-request-page.nd-flow .cognito .cog-row:has(input[type='date']):has(input[type='time']),
+  .nd-request-page.nd-flow .cognito-skeleton__appointment-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .nd-request-page .nd-request-mobile-coverage .nd-request-coverage {
+    margin-top: 0.25rem;
+  }
+}

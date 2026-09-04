@@ -5,6 +5,7 @@ import { formatPrice, founderPricingFor } from '@/data/catalog/founder-pricing';
 import { getProduct } from '@/data/products';
 import { useSeo } from '@/lib/seo';
 import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
+import { consumerProductIngredients } from '@/data/consumerOffering';
 
 function productPrice(product) {
   return product.oneTime || product.price || 'Price confirmed before booking';
@@ -20,13 +21,6 @@ function bookingPath(product, category, slug) {
   if (product.protocolKey) params.set('protocol', product.protocolKey);
   if (product.doseKey) params.set('dose', product.doseKey);
   return `/nurse-delivery?${params.toString()}`;
-}
-
-const SERVICE_DETAIL_PATTERN = /clinici|registered nurse|appointment|administration|visit|review|window/i;
-
-function productIngredients(product) {
-  const source = product.ingredients || product.included || product.benefits || [];
-  return [...new Set(source.filter((item) => item && !SERVICE_DETAIL_PATTERN.test(item)))].slice(0, 10);
 }
 
 export default function ConsumerProduct() {
@@ -52,7 +46,7 @@ export default function ConsumerProduct() {
 
   const { treatment } = match;
   const founderPricing = treatment.addOnOnly ? null : founderPricingFor(treatment, category);
-  const ingredients = productIngredients(treatment);
+  const ingredients = consumerProductIngredients(treatment);
   const duration = treatment.duration || treatment.timeline?.at(-1)?.value || 'Timing confirmed before care';
 
   return (
@@ -80,14 +74,14 @@ export default function ConsumerProduct() {
 
           {treatment.addOnOnly ? (
             <aside className="nd-product-page__booking" aria-label="Booking">
-              <p>Per shot</p>
+              <p>{category === 'shots' ? 'Per shot' : 'Per add-on'}</p>
               <strong>{productPrice(treatment)}</strong>
               <Link to="/protocols">
                 Choose an IV
                 <ArrowRight aria-hidden="true" />
               </Link>
               <small>
-                Shots are added to an IV visit and aren&apos;t available on their own.
+                Add-ons are added to an IV visit and aren&apos;t available on their own.
                 Pick your IV first, then add this at booking.
               </small>
             </aside>
@@ -106,12 +100,12 @@ export default function ConsumerProduct() {
                 <strong>{productPrice(treatment)}</strong>
               )}
               <Link to={bookingPath(treatment, category, slug)}>
-                Book
+                Request a visit
                 <ArrowRight aria-hidden="true" />
               </Link>
               <small>
-                A $50 deposit is requested after acceptance, applies to your visit,
-                and is refunded if you&apos;re not clinically eligible.
+                Your care team confirms availability and eligibility. A $50 deposit
+                is credited toward your visit and refunded if you&apos;re not clinically eligible.
               </small>
             </aside>
           )}

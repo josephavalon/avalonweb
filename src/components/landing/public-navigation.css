@@ -1,0 +1,24 @@
+.nd-corner-header__desktop-nav { display: none; }
+
+@media (min-width: 1024px) {
+  .nd-corner-header__desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: auto;
+    margin-right: 2rem;
+    font-family: var(--font-body);
+    font-size: .875rem;
+    font-weight: 600;
+  }
+
+  .nd-corner-header__desktop-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: #2b211b;
+  }
+
+  .nd-corner-header__desktop-nav a:hover { text-decoration: underline; text-underline-offset: .25em; }
+  .nd-corner-header__desktop-nav a:focus-visible { outline: 2px solid #2b211b; outline-offset: 4px; }
+}

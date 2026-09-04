@@ -20,23 +20,18 @@ import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import AddressAutocomplete from '@/components/store/AddressAutocomplete';
 import { Reveal, RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import { IV_SESSIONS } from '@/data/catalog';
+import { formatPrice } from '@/data/catalog/founder-pricing';
+import { resolveConsumerOffering } from '@/data/consumerOffering';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
 import { COVERED_ZIPS, extractZip } from '@/lib/serviceArea';
 import './homepage-v2.css';
+import './homepage-audit-fixes.css';
 
 const THERAPY_KEYS = ['hydration', 'myers', 'postnight'];
 
-const THERAPY_PROMOTION = {
-  hydration: { standard: 200, founder: 175 },
-  myers: { standard: 285, founder: 195, badge: 'Most booked' },
-  postnight: { standard: 285, founder: 195 },
-};
-
-const THERAPY_DETAIL_PATHS = {
-  hydration: '/products/iv-vitamins/hydration-iv',
-  myers: '/products/iv-vitamins/myers-cocktail-iv',
-  postnight: '/products/iv-vitamins/post-night-out-iv',
-};
+function therapyOffer(therapy) {
+  return resolveConsumerOffering({ protocolKey: therapy?.key });
+}
 
 const BENEFIT_COPY = {
   hydration: 'Fluids + electrolytes.',
@@ -192,6 +187,7 @@ function TherapyPreview() {
   const therapies = useMemo(() => THERAPY_KEYS
     .map((key) => IV_SESSIONS.find((item) => item.key === key))
     .filter(Boolean), []);
+  const startingPrice = Math.min(...therapies.map((therapy) => therapyOffer(therapy).price));
 
   return (
     <section ref={sectionRef} className="home-v2__section home-v2__therapies" aria-labelledby="home-v2-therapies">
@@ -212,13 +208,13 @@ function TherapyPreview() {
         </RevealItem>
         <RevealItem className="home-v2__founder-banner">
           <span>Grand opening</span>
-          <p><strong>Founder pricing from $175.</strong> 30 days.</p>
+          <p><strong>Founder pricing from {formatPrice(startingPrice)}.</strong></p>
         </RevealItem>
       </RevealGroup>
       <RevealGroup className="home-v2__therapy-grid" stagger={0.06}>
         {therapies.map((therapy) => {
           const Icon = therapy.icon;
-          const promotion = THERAPY_PROMOTION[therapy.key];
+          const { founderPricing: promotion, price, detailsPath } = therapyOffer(therapy);
           const bookingParams = new URLSearchParams({
             therapy: therapy.key,
             protocol: therapy.key,
@@ -232,19 +228,20 @@ function TherapyPreview() {
               </div>
               <div className="home-v2__therapy-body">
                 <div className="home-v2__therapy-title-row">
-                  <h3>{therapy.label}{promotion.badge ? <span>{promotion.badge}</span> : null}</h3>
+                  <h3>{therapy.label}</h3>
                   <span className="home-v2__therapy-money">
-                    <span><s>${promotion.standard}</s><strong>${promotion.founder}</strong></span>
-                    <small>Per visit</small>
+                    <span>{promotion ? <s>{formatPrice(promotion.standard)}</s> : null}<strong>{formatPrice(price)}</strong></span>
+                    <small>Per visit · {therapy.duration}</small>
                   </span>
                 </div>
                 <p>{BENEFIT_COPY[therapy.key] || therapy.tagline}</p>
-                <Link className="home-v2__therapy-details" to={THERAPY_DETAIL_PATHS[therapy.key]}>
+                <Link className="home-v2__therapy-details" to={detailsPath}>
                   Ingredients &amp; details
                 </Link>
               </div>
               <span className="home-v2__therapy-money home-v2__therapy-money--mobile">
-                <span><s>${promotion.standard}</s><strong>${promotion.founder}</strong></span>
+                <span>{promotion ? <s>{formatPrice(promotion.standard)}</s> : null}<strong>{formatPrice(price)}</strong></span>
+                <small>Per visit</small>
                 <small>{therapy.duration}</small>
               </span>
               <Link
@@ -252,8 +249,7 @@ function TherapyPreview() {
                 to={`/start?${bookingParams.toString()}`}
                 onClick={() => trackConsented(ANALYTICS_EVENTS.START_CLICKED, { source: 'homepage_v2_menu', therapy: therapy.key })}
               >
-                <span className="home-v2__therapy-cta-desktop">Book this visit</span>
-                <span className="home-v2__therapy-cta-mobile">Book</span>
+                <span>Request this visit</span>
                 <ArrowRight aria-hidden="true" />
               </Link>
             </RevealItem>
@@ -264,7 +260,8 @@ function TherapyPreview() {
         <Link className="home-v2__section-link" to="/protocols">
           Full menu <ArrowRight aria-hidden="true" />
         </Link>
-        <p>Clinical review required. $50 deposit applied.</p>
+        <p>Clinical review required. $50 deposit credited toward your visit. Our team confirms availability.</p>
+        <Link className="home-v2__safety-link" to="/safety">How we keep care safe <ArrowRight aria-hidden="true" /></Link>
       </Reveal>
     </section>
   );
@@ -296,7 +293,7 @@ function GuidedPicker() {
     ? 'event'
     : GOALS.find((goal) => goal.id === answers.goal)?.therapy || 'hydration';
   const resultSession = IV_SESSIONS.find((therapy) => therapy.key === resultKey);
-  const resultPrice = resultSession?.price;
+  const resultOffer = therapyOffer(resultSession);
   const startParams = new URLSearchParams({
     therapy: resultKey,
     protocol: resultKey,
@@ -361,12 +358,15 @@ function GuidedPicker() {
               ) : (
                 <>
                   <h3>{RESULT_COPY[resultKey] || resultSession?.label}</h3>
-                  <span>{resultPrice ? `From $${resultPrice}. ` : ''}Clinician-confirmed before dispatch.</span>
+                  <span className="home-v2__picker-summary">{formatPrice(resultOffer.price)} per visit · {resultSession.duration}</span>
+                  <span>{resultSession.inside}</span>
+                  <span>Clinical review required. Our team confirms eligibility and availability before your visit.</span>
+                  <Link className="home-v2__picker-details" to={resultOffer.detailsPath}>Ingredients &amp; details <ArrowRight aria-hidden="true" /></Link>
                   <Link
                     to={`/start?${startParams.toString()}`}
                     onClick={() => trackConsented(ANALYTICS_EVENTS.START_CLICKED, { source: 'homepage_v2_picker', therapy: resultKey })}
                   >
-                    Start <ArrowRight aria-hidden="true" />
+                    Request a visit <ArrowRight aria-hidden="true" />
                   </Link>
                 </>
               )}
@@ -453,7 +453,7 @@ function ServiceArea() {
             <>
               <strong>{result.title}</strong>
               {result.status === 'covered'
-                ? <Link to="/start?source=homepage-service-area">Start a visit <ArrowRight aria-hidden="true" /></Link>
+                ? <Link to="/start?source=homepage-service-area">Request a visit <ArrowRight aria-hidden="true" /></Link>
                 : <a href="sms:+14159807708">Text us <ArrowRight aria-hidden="true" /></a>}
             </>
           ) : null}
@@ -508,7 +508,7 @@ function ClosingActions() {
           to="/start"
           onClick={() => trackConsented(ANALYTICS_EVENTS.START_CLICKED, { source: 'homepage_v2_final' })}
         >
-          <span><strong>Start</strong><small>Under a minute. $50 deposit applied.</small></span>
+          <span><strong>Request a visit</strong><small>Our team confirms availability. $50 deposit credited toward your visit.</small></span>
           <ArrowRight aria-hidden="true" />
         </Link>
       </div>

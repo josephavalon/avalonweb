@@ -13,7 +13,7 @@ const GROUPS = [
   {
     label: 'Services',
     links: [
-      { label: 'Start', to: '/start' },
+      { label: 'Request a visit', to: '/start' },
       { label: 'Menu', to: '/protocols' },
       { label: 'Events', to: '/events' },
     ],

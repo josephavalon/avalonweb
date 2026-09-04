@@ -62,8 +62,13 @@ try {
     );
     const cardText = await page.locator('.home-v2__therapy-card').allTextContents();
     assert(cardText[0]?.includes('$200') && cardText[0]?.includes('$175'), `Hydration pricing is incorrect at ${width}px`);
-    assert(cardText[1]?.includes('$285') && cardText[1]?.includes('$195'), `Myers pricing is incorrect at ${width}px`);
-    assert(cardText[2]?.includes('$285') && cardText[2]?.includes('$195'), `Hangover pricing is incorrect at ${width}px`);
+    assert(cardText[1]?.includes('$250') && cardText[1]?.includes('$195'), `Myers pricing is incorrect at ${width}px`);
+    assert(cardText[2]?.includes('$250') && cardText[2]?.includes('$195'), `Hangover pricing is incorrect at ${width}px`);
+    for (const card of await page.locator('.home-v2__therapy-card').all()) {
+      assert(await card.getByRole('link', { name: 'Ingredients & details' }).isVisible(), `therapy details unavailable at ${width}px`);
+      assert(await card.getByRole('link', { name: 'Request this visit' }).isVisible(), `visit request unclear at ${width}px`);
+    }
+    assert(!await page.locator('.home-v2__founder-banner').getByText('30 days.').count(), `unanchored promotion countdown at ${width}px`);
     assert(!(await page.getByRole('heading', { name: /Clinician led\. Nurse delivered\./i }).count()), `removed clinician-care module is still present at ${width}px`);
     assert(!(await page.getByText(/Clinical content reviewed/i).count()), `internal review date exposed at ${width}px`);
     assert(await page.getByRole('heading', { name: 'Find your starting point' }).isVisible(), `picker missing at ${width}px`);
@@ -162,7 +167,11 @@ try {
   await page.getByRole('button', { name: 'Today' }).click({ force: true });
   await page.getByRole('button', { name: 'Home' }).click({ force: true });
   assert(await page.getByRole('heading', { name: 'Hydration IV' }).isVisible(), 'picker result did not resolve to Hydration IV');
-  const resultHref = await page.locator('.home-v2__picker-result').getByRole('link', { name: /^Start$/ }).getAttribute('href');
+  const pickerResult = page.locator('.home-v2__picker-result');
+  assert(await pickerResult.getByText('$175 per visit · 30-45 min').isVisible(), 'picker result must show the current visit price and duration');
+  assert(await pickerResult.getByText("Lactated Ringer's (1000mL)", { exact: true }).isVisible(), 'picker result must show ingredients');
+  assert(await pickerResult.getByRole('link', { name: 'Ingredients & details' }).isVisible(), 'picker result must link to treatment details');
+  const resultHref = await pickerResult.getByRole('link', { name: 'Request a visit' }).getAttribute('href');
   assert(resultHref?.includes('therapy=hydration'), 'picker result did not prefill therapy');
   assert(resultHref?.includes('goal=hydration'), 'picker result did not preserve the selected goal');
   assert(resultHref?.includes('timing=today'), 'picker result did not prefill timing');
