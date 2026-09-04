@@ -452,6 +452,78 @@ final result: passed
 
 ---
 
+# Focused START — Mobile Viewport Fit
+
+## Visual evidence
+
+- Source visual truth: `.context/attachments/Vton9B/IMG_3583.png`
+  (`1320 × 2868` source pixels, iPhone Safari screenshot supplied by the user).
+- Browser-rendered implementation: `.context/start-mobile-final-390x760.png`
+  (`780 × 1520` pixels from a Chrome `390 × 760` CSS viewport at device scale
+  factor 2, live Cognito form loaded from the final preview deployment).
+- Narrow-phone implementation: `.context/start-mobile-final-320x664.png`
+  (`320 × 664` pixels at device scale factor 1).
+- Combined focused comparison: `.context/start-mobile-fit-comparison-final.png`
+  (`1560 × 1520`, supplied screenshot left and implementation right,
+  normalized to a shared 780px content width).
+- State: `/start?therapy=hydration`, pre-submit, cookie choice resolved, blank
+  form, default current appointment date and time, no personal data entered.
+
+## Findings, correction, and post-fix evidence
+
+- [P1 resolved] At the supplied mobile state, START sat beneath Safari's
+  bottom toolbar. The `min-height: 721px` tier enlarged five fields to `52px`
+  and produced a `913px` intake inside an `844px` locked viewport. The final
+  form has no internal overflow from `620–844px`; START ends at `561.8px` in a
+  `390 × 760` viewport and at `559.8px` in a `390 × 664` viewport.
+- [P2 resolved] The 44px founder banner linked back to the already-open START
+  screen and consumed scarce vertical space. It is now omitted only on the
+  focused mobile intake; the full Avalon navigation remains `57.6px` high.
+- [P2 resolved] Stacked appointment controls consumed a full extra row on
+  standard phones. Date and time now share one row from 351–760px wide. At
+  320px their native suffix icons crowded the values, so the final narrow tier
+  stacks them again and still keeps START visible at `618.9px` in a `664px`
+  viewport.
+- [P2 resolved] The two long notes beneath the embed duplicated the Cognito
+  consent copy. Mobile keeps the required consent/privacy statement and a
+  concise `$50 deposit applied to your visit. Refunded if ineligible.` line;
+  the fuller desktop copy is unchanged.
+- Typography retains Avalon's display/body families and 16px field text to
+  prevent iOS focus zoom. Labels, headline, and supporting copy remain legible
+  in both final captures.
+- All five visible inputs and START measure exactly `44px` high. The live form
+  has zero horizontal overflow at 320, 375, 390, and 430px widths.
+- Colors, one-pixel rules, radii, icons, and existing component assets remain
+  unchanged. No placeholder or fabricated visual asset was introduced.
+- No actionable P0, P1, or P2 visual issue remains in the requested state.
+
+## Comparison history
+
+- Pass 1 measured the live production form and confirmed `69px` of internal
+  overflow at 390 × 844 and an obscured START action at 390 × 760.
+- Pass 2 removed the self-referential mobile banner, restored 44px controls,
+  paired date/time, and tightened copy. The live preview then fit from 620px
+  through 844px but exposed suffix-icon crowding at 320px.
+- Pass 3 stacked date/time only below 351px and re-captured both the 320px and
+  390px states. Values, icons, consent, START, and deposit copy are fully
+  visible with no overflow.
+
+## Verification
+
+- Live Cognito form loaded with five visible 44px inputs plus its consent
+  checkbox; field focus and native date/time controls remain available.
+- Browser console checked. The only messages are the two pre-existing CSP
+  blocks for Cognito's Open Sans stylesheets; the form intentionally inherits
+  Avalon's typography and functions normally.
+- `npm run lint`: passed (235 source files).
+- `npm run build`: passed, including B2B and 137 SEO route outputs.
+- Preview deployment: `dpl_7PUZ6aDfD9envg4TSCfxBdRgJNYY` (`Ready`).
+- `git diff --check`: passed.
+
+final result: passed
+
+---
+
 # Homepage Mobile Density and Banner Underline
 
 ## Visual evidence
