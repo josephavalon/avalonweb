@@ -16,7 +16,8 @@ assert.doesNotMatch(page, /api\/memberships\/plans|membership\/review|\/login\?r
 const menuLinks = menu.match(/\{ label: 'Memberships', to: '\/membership' \}/g) || [];
 assert.equal(menuLinks.length, 2, 'Memberships must appear in both public and OS dropdown menus.');
 assert.match(menu, /Start'[^\n]*\n\s*\{ label: 'Memberships'/, 'Memberships must appear directly beneath Start in the OS menu.');
-assert.match(menu, /Request a visit'[^\n]*\n\s*\{ label: 'Memberships'/, 'Memberships must appear directly beneath the live visit-start entry.');
+const startThenMemberships = /\{ label: 'Start', to: '\/start' \},\n\s*\{ label: 'Memberships', to: '\/membership' \}/g;
+assert.equal((menu.match(startThenMemberships) || []).length, 2, 'Memberships must appear directly beneath Start in both dropdown menus.');
 
 assert.match(app, /Route path="\/membership" element=\{<MembershipPricing \/>\}/, 'The public membership route must render the pricing page.');
 
