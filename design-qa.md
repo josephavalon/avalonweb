@@ -450,8 +450,6 @@ Findings and fixes:
 
 final result: passed
 
----
-
 # Homepage Trim + START iOS Spacing Rebalance
 
 ## Visual evidence
@@ -568,8 +566,6 @@ final result: passed
 - `git diff --check`: passed.
 
 final result: passed
-
----
 
 # Homepage Mobile Density and Banner Underline
 
@@ -1960,5 +1956,51 @@ final result: passed
   assertions unrelated to this rendering change.
 - Hosted preview: `dpl_2nm4gTDExJcjXv4TtWMXcGqwM2z1` (`Ready`).
 - `git diff --check`: passed.
+
+final result: passed
+
+---
+
+# Homepage Hero — Registered Nurses Line
+
+Source visual truth:
+
+- `.context/attachments/sTmoHr/Screenshot 2026-09-04 at 12.01.49 PM.png`
+- User correction: `Registered nurses` must occupy its own line on mobile and desktop.
+
+Implementation evidence:
+
+- Desktop hero copy: `.context/hero-lines-desktop.png`.
+- Mobile hero copy: `.context/hero-lines-mobile.png`.
+- Focused source/desktop/mobile comparison: `.context/hero-lines-comparison.png`.
+
+Viewport, normalization, and state:
+
+- Required states: homepage hero at desktop and mobile widths.
+- Source image: 310 × 256 physical pixels, cropped hero detail. Desktop implementation is 375 × 248 pixels from a 1440 × 900 CSS viewport at 1× density. Mobile implementation is 248 × 95 pixels from a 390 × 844 CSS viewport at 1× density.
+- The focused comparison preserves each crop at native density and pads the shorter implementation crops to the source height; no scaling was applied.
+
+## Findings
+
+- [P2 resolved] `Registered nurses.` previously shared an inline run with the therapy phrase on mobile.
+  - Location: homepage hero tagline.
+  - Evidence: the combined comparison shows `Registered nurses.` isolated on the second line in both browser-rendered implementations.
+  - Impact: the credential no longer breaks unpredictably or runs into the therapy phrase.
+  - Fix: both responsive variants now use three explicit block-level line elements.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing desktop and mobile typography is preserved. Browser measurement confirms all three lines occupy exactly one computed line box at 1440px and 390px widths.
+- Spacing and layout rhythm: existing margins, sizing, and hero geometry are unchanged; only deterministic line breaks were added.
+- Colors and visual tokens: unchanged.
+- Image quality and asset fidelity: unchanged.
+- Copy and content: both responsive variants now explicitly render `Registered nurses.` as the second of three block-level lines.
+
+## Comparison history
+
+- Initial pass identified that mobile combined `IV therapies.` and `Registered nurses.` in one inline run.
+- The post-fix browser pass confirmed both responsive variants render three lines, the credential is line two, horizontal overflow is 0px, and no console or page errors occur.
+
+Focused-region comparison was required because the requested correction concerns exact line wrapping in a small hero-copy region. The full seven-viewport homepage suite also passed, including the new line-count and no-wrap regression assertions.
 
 final result: passed

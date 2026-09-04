@@ -49,6 +49,17 @@ try {
     assert(therapyImagesLoaded, `expected three loaded therapy previews at ${width}px`);
     assert(await page.getByRole('heading', { name: 'Explore therapies' }).isVisible(), `therapy heading missing at ${width}px`);
     assert(await page.getByText('Founder pricing from $175.').isVisible(), `founder pricing missing at ${width}px`);
+    const visibleTaglineLines = await page.locator('.nd-hero__tagline-line:visible').evaluateAll((lines) => lines.map((line) => {
+      const rect = line.getBoundingClientRect();
+      const lineHeight = Number.parseFloat(getComputedStyle(line).lineHeight);
+      return { text: line.textContent.trim(), height: rect.height, lineHeight };
+    }));
+    assert(visibleTaglineLines.length === 3, `expected three dedicated hero tagline lines at ${width}px`);
+    assert(visibleTaglineLines[1]?.text === 'Registered nurses.', `Registered nurses is not the second hero line at ${width}px`);
+    assert(
+      visibleTaglineLines.every(({ height, lineHeight }) => height <= lineHeight * 1.15),
+      `a hero tagline line wrapped at ${width}px`,
+    );
     const cardText = await page.locator('.home-v2__therapy-card').allTextContents();
     assert(cardText[0]?.includes('$200') && cardText[0]?.includes('$175'), `Hydration pricing is incorrect at ${width}px`);
     assert(cardText[1]?.includes('$285') && cardText[1]?.includes('$195'), `Myers pricing is incorrect at ${width}px`);

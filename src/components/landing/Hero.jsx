@@ -156,16 +156,14 @@ export default function Hero({ showTail = true, showPress = showTail, enhanced =
               </h1>
               <p className="nd-hero__tagline">
                 <span className="nd-hero__tagline-desktop">
-                  IV therapies and more.
-                  <br />
-                  By registered nurses.
-                  <br />
-                  On-demand.
+                  <span className="nd-hero__tagline-line">IV therapies and more.</span>
+                  <span className="nd-hero__tagline-line">Registered nurses.</span>
+                  <span className="nd-hero__tagline-line">On-demand.</span>
                 </span>
                 <span className="nd-hero__tagline-mobile">
-                  IV therapies. Registered nurses.
-                  <br />
-                  On-demand.
+                  <span className="nd-hero__tagline-line">IV therapies.</span>
+                  <span className="nd-hero__tagline-line">Registered nurses.</span>
+                  <span className="nd-hero__tagline-line">On-demand.</span>
                 </span>
               </p>
               <p className="nd-hero__lede">Mobile IVs and more.</p>

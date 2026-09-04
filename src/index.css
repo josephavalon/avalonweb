@@ -4421,6 +4421,10 @@ body:has(.nd-product) .av-home-nav__mobile button {
   line-height: 1.05;
 }
 
+.nd-hero__tagline-line {
+  display: block;
+}
+
 .nd-hero__rule {
   display: block;
   width: 4.75rem;
