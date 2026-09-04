@@ -11,7 +11,7 @@ import {
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
-import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
+import { isCareHost } from '@/lib/careHost';
 import { useSeo } from '@/lib/seo';
 import { EASE, premiumHover, premiumListContainer, premiumStaggerItem, premiumTap } from '@/lib/motion';
 import { IV_SESSIONS } from '@/config/verticals';

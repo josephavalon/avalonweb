@@ -10,7 +10,7 @@ import AppLoader from '@/components/AppLoader';
 import StickyBookBar from '@/components/landing/StickyBookBar';
 import MobileShell from '@/components/MobileShell';
 import MobilePublicFooter from '@/components/landing/MobilePublicFooter';
-import CareAcuityForward from '@/components/CareAcuityForward';
+import CareRequestRedirect from '@/components/CareRequestRedirect';
 import FrontDoorRedirect from '@/components/FrontDoorRedirect';
 import { isFrontDoorHost } from '@/lib/frontDoor';
 import { CBD_HIDDEN, isCbdRoutePath } from '@/lib/cbdVisibility';
@@ -446,15 +446,12 @@ function AppRoutes() {
             <Route path="/platform" element={<Platform />} />
             <Route path="/b2b" element={<B2B />} />
             <Route path="/b2b/thank-you" element={<B2BThankYou />} />
-            {/* PHI-collecting routes. CareAcuityForward stays OUTERMOST so apex/
-                www/care behavior is bit-for-bit unchanged (it returns null and
-                hard-navigates to Acuity before FrontDoorRedirect ever mounts).
-                FrontDoorRedirect only fires on the front-door host, where these
-                funnels must be unreachable — see src/lib/frontDoor.js. */}
-            <Route path="/custom" element={<CareAcuityForward><FrontDoorRedirect><CustomProtocol /></FrontDoorRedirect></CareAcuityForward>} />
-            <Route path="/book" element={<CareAcuityForward><FrontDoorRedirect><BookNow /></FrontDoorRedirect></CareAcuityForward>} />
-            <Route path="/booking" element={<Navigate to="/book" replace />} />
-            <Route path="/book-now" element={<Navigate to="/book" replace />} />
+            {/* Public booking links resolve to the current request form before
+                any legacy intake page can mount. Beta keeps its existing gates. */}
+            <Route path="/custom" element={<CareRequestRedirect><FrontDoorRedirect><CustomProtocol /></FrontDoorRedirect></CareRequestRedirect>} />
+            <Route path="/book" element={<CareRequestRedirect><FrontDoorRedirect><BookNow /></FrontDoorRedirect></CareRequestRedirect>} />
+            <Route path="/booking" element={<CareRequestRedirect><Navigate to="/book" replace /></CareRequestRedirect>} />
+            <Route path="/book-now" element={<CareRequestRedirect><Navigate to="/book" replace /></CareRequestRedirect>} />
             <Route path="/subscribe" element={<Navigate to="/subscription" replace />} />
             {/* Common URL guesses → canonical routes. Captures muscle memory
                 and competitor patterns that would otherwise hit the 404. */}
@@ -484,9 +481,9 @@ function AppRoutes() {
             <Route path="/menu" element={<Navigate to="/protocols" replace />} />
             <Route path="/store" element={<Navigate to="/protocols" replace />} />
             <Route path="/store/confirmation" element={<Navigate to="/protocols" replace />} />
-            <Route path="/booking/confirmation" element={<CareAcuityForward><FrontDoorRedirect><BookingConfirmation /></FrontDoorRedirect></CareAcuityForward>} />
-            <Route path="/checkout" element={<CareAcuityForward><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareAcuityForward>} />
-            <Route path="/checkout/success" element={<CareAcuityForward><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareAcuityForward>} />
+            <Route path="/booking/confirmation" element={<CareRequestRedirect><FrontDoorRedirect><BookingConfirmation /></FrontDoorRedirect></CareRequestRedirect>} />
+            <Route path="/checkout" element={<CareRequestRedirect><FrontDoorRedirect><Checkout /></FrontDoorRedirect></CareRequestRedirect>} />
+            <Route path="/checkout/success" element={<CareRequestRedirect><FrontDoorRedirect><CheckoutSuccess /></FrontDoorRedirect></CareRequestRedirect>} />
             {/* One shared sign-in surface for members, nurses, admins, and event
                 organizers. It is intentionally available on the main URL; the
                 clinical and account routes behind it keep their own guards. */}

@@ -9,7 +9,7 @@
 //     window.location, so a host gate could never drop CBD from the prerendered
 //     HTML or sitemap.xml, so scripts/build-seo-html.mjs mirrors this permanent
 //     suppression when it creates route files.
-//  2. The host lists in src/lib/frontDoor.js and CareAcuityForward.jsx are
+//  2. The host lists in src/lib/frontDoor.js and src/lib/careHost.js are
 //     load-bearing for PHI scope and asserted byte-identical against
 //     api/_lib/pre-api-guard.js by scripts/front-door-qa.mjs. Marketing
 //     visibility must not ride on a HIPAA-scope gate.

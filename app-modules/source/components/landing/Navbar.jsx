@@ -10,7 +10,7 @@ import useNavHiddenOnScrollDown from '@/hooks/useNavHiddenOnScrollDown';
 import { useAuthStore } from '@/lib/useAuthStore';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
 import AvalonMark from '@/components/AvalonMark';
-import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
+import { isCareHost } from '@/lib/careHost';
 import { isFrontDoorHost } from '@/lib/frontDoor';
 import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
@@ -293,10 +293,8 @@ function IVTherapyHover({ link, linkClassName }) {
   );
 }
 
-// Top nav "Book" now routes marketing visitors into the /nurse-delivery
-// guided intake. Care-host visitors (logged-in customer domain) still fall
-// through to ACUITY_URL via the `care ? ACUITY_URL : BOOK_URL` branch below.
-const BOOK_URL = '/nurse-delivery';
+// Booking uses the same internal request flow on every public host.
+const BOOK_URL = '/start';
 const PHONE_DISPLAY = '(415) 980-7708';
 const PHONE_URL = 'tel:+14159807708';
 const TEXT_URL = 'sms:+14159807708';
@@ -462,14 +460,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
   const signedOutLoginPath = isFrontDoorHost() ? '/nurse-login' : '/login';
   const isHomeRoute = location.pathname === '/';
   const mainLinks = care ? MAIN_LINKS_CARE : MAIN_LINKS_FULL;
-  const bookHref = care ? ACUITY_URL : BOOK_URL;
-  const bookIsExternal = care;
   const centeredLinks = [
-    { to: bookHref, label: 'Book', external: bookIsExternal },
+    { to: BOOK_URL, label: 'Book' },
     ...mainLinks,
   ];
   const mobileLinks = [
-    { to: bookHref, label: 'Book', primary: true, external: bookIsExternal },
+    { to: BOOK_URL, label: 'Book', primary: true },
     ...mainLinks,
     ...(care ? [] : user ? [{ to: dashboardPathFor(user), label: 'Dashboard' }] : [{ to: signedOutLoginPath, label: 'Login' }]),
   ];
@@ -572,7 +568,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
         {!compact && !focusMode && (
           <div className="flex items-center justify-start gap-7">
             {centeredLinks.map((link) => {
-              const active = !link.external && isActiveLink(link.to);
+              const active = isActiveLink(link.to);
               const homeHighlighted = isHomeRoute && link.label === 'Book';
               // Audit finding D8: active-page nav link gets a 1px accent
               // underline so users can tell which section they're in.
@@ -586,18 +582,12 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
               if (link.to === '/protocols') {
                 return <IVTherapyHover key={link.to} link={link} linkClassName={linkClassName} />;
               }
-              if (link.external) {
-                return (
-                  <a key={link.to} href={link.to} className={linkClassName} data-home-highlighted={homeHighlighted ? '' : undefined}>
-                    <span className="relative z-10">{link.label}</span>
-                  </a>
-                );
-              }
               return (
                 <Link
                   key={link.to}
                   to={link.to}
                   aria-current={active ? 'page' : undefined}
+                  data-home-highlighted={care && homeHighlighted ? '' : undefined}
                   className={linkClassName}
                 >
                   <span className="relative z-10">{link.label}</span>
@@ -769,7 +759,7 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
 
                 <div className="relative grid gap-1.5">
                   {mobileLinks.map((item, i) => {
-                  const active = !item.external && isActiveLink(item.to);
+                  const active = isActiveLink(item.to);
                   const isAuthRow = i === mobileLinks.length - 1 && (item.label === 'Login' || item.label === 'Dashboard');
                   const Trailing = isAuthRow ? ArrowUpRight : ChevronRight;
                   const rowClass = `av-glass-widget group relative flex min-h-[62px] items-center justify-between rounded-2xl border px-5 font-body text-[12px] uppercase tracking-[0.42em] text-foreground transition-all duration-300 ${
@@ -787,17 +777,10 @@ export default function Navbar({ showBack = false, compact = false, focusMode = 
                       key={item.to}
                       variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.36, ease: EASE } } }}
                     >
-                      {item.external ? (
-                        <a href={item.to} onClick={close} className={rowClass}>
-                          <span>{item.label}</span>
-                          <Trailing className={trailingClass} strokeWidth={1.6} />
-                        </a>
-                      ) : (
-                        <Link to={item.to} onClick={close} className={rowClass}>
-                          <span>{item.label}</span>
-                          <Trailing className={trailingClass} strokeWidth={1.6} />
-                        </Link>
-                      )}
+                      <Link to={item.to} onClick={close} className={rowClass}>
+                        <span>{item.label}</span>
+                        <Trailing className={trailingClass} strokeWidth={1.6} />
+                      </Link>
                     </motion.div>
                   );
                 })}

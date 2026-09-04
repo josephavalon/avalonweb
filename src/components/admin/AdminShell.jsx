@@ -34,9 +34,6 @@ import { apiGet } from '@/lib/apiClient';
 import { PAYOPS_FINANCE_CORE_ENABLED } from '@/lib/payOpsFinanceCore';
 import { osCapabilityPath } from '@/data/osCapabilities';
 
-// Acuity owns scheduling + nurse dispatch; everything else lives in the console.
-const ACUITY_URL = 'https://avalonvitality.as.me';
-
 // Persisted Avalon OS workspaces use one canonical capability route.
 const soon = osCapabilityPath;
 
@@ -222,7 +219,6 @@ const NAV_LIVE = [
         ],
       },
       { label: 'GFE', to: '/admin/gfe' },
-      { label: 'Acuity', href: ACUITY_URL, external: true },
       // The legacy shift marketplace stays hidden; Scheduling is the durable,
       // credential-gated operational workflow.
       { label: 'Tools', to: soon('Tools') },
