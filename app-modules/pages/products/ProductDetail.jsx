@@ -19,7 +19,7 @@ import {
 
 import Navbar from '@/components/landing/Navbar';
 import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
-import { ACUITY_URL, isCareHost } from '@/components/CareAcuityForward';
+import { isCareHost } from '@/lib/careHost';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useCart } from '@/context/CartContext';
 import { getProduct, productsByCategory, slugify } from '@/data/products';
@@ -163,7 +163,14 @@ export default function ProductDetail() {
   const care = isCareHost();
   const buyNow = () => {
     if (care) {
-      window.location.href = ACUITY_URL;
+      const params = new URLSearchParams({
+        therapy: treatment.name,
+        category,
+        product: currentSlug,
+      });
+      if (treatment.protocolKey) params.set('protocol', treatment.protocolKey);
+      if (treatment.doseKey) params.set('dose', treatment.doseKey);
+      navigate(`/start?${params.toString()}`);
       return;
     }
     clearItems();

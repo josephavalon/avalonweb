@@ -351,8 +351,8 @@ async function checkDeletedRoutes(failures) {
   }
 }
 
-// 3 + 4. Every PHI route is client-gated, and CareAcuityForward stays outermost
-//        so apex/www/care behavior is bit-for-bit unchanged.
+// 3 + 4. Every PHI route is client-gated, and CareRequestRedirect stays outermost
+//        so public booking routes never mount the legacy intake.
 async function checkRouteGates(failures) {
   const rel = 'src/App.jsx';
   const source = await read(rel);
@@ -370,10 +370,10 @@ async function checkRouteGates(failures) {
       failures.push(`${rel}: route "${route}" is not wrapped in <FrontDoorRedirect> — it would mount the PHI funnel on the front door`);
       continue;
     }
-    const care = element.indexOf('<CareAcuityForward');
+    const care = element.indexOf('<CareRequestRedirect');
     const front = element.indexOf('<FrontDoorRedirect');
     if (care !== -1 && care > front) {
-      failures.push(`${rel}: route "${route}" nests <CareAcuityForward> inside <FrontDoorRedirect> — CareAcuityForward must stay OUTERMOST so apex/care behavior is unchanged`);
+      failures.push(`${rel}: route "${route}" nests <CareRequestRedirect> inside <FrontDoorRedirect> — CareRequestRedirect must stay OUTERMOST so public booking routes cannot mount legacy intake`);
     }
   }
 }

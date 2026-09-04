@@ -23,7 +23,7 @@ export function isFrontDoorHost() {
   if (FRONT_DOOR_HOSTS.has(window.location.hostname)) return true;
   try {
     // ?frontdoor=1 previews the gate on any host; ?frontdoor=0 turns it back
-    // off. The escape hatch is deliberate — CareAcuityForward's ?care=1 has no
+    // off. The escape hatch is deliberate — isCareHost's ?care=1 has no
     // way out, which traps the session. Don't inherit that bug.
     if (window.location.search.includes('frontdoor=1')) {
       window.sessionStorage?.setItem('front-door-preview', '1');
