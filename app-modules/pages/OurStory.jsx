@@ -27,10 +27,11 @@ export default function OurStory() {
 
 
       {/* Clinical Leadership */}
-      <section
+      <main
         id="leadership"
         className="px-6 md:px-16 py-section-sm md:py-section border-t border-border"
       >
+        <h1 className="sr-only">Our Story</h1>
         <div className="max-w-content mx-auto">
           <motion.div {...REVEAL} className="mb-10 max-w-measure-lg">
             <p className="text-eyebrow text-accent font-body uppercase mb-4 inline-flex items-center gap-2">
@@ -84,7 +85,7 @@ export default function OurStory() {
             </motion.div>
           </div>
         </div>
-      </section>
+      </main>
 
       <ConsumerFooter />
     </div>

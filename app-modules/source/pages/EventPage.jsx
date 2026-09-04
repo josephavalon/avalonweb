@@ -174,6 +174,7 @@ export default function EventPage() {
     title: event ? `${event.name} — Avalon Events` : 'Avalon Events — Avalon Vitality',
     description: 'Avalon recovery lounge — reserve your spot.',
     path: `/events/${slug}`,
+    robots: event ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
   });
 
   if (loading) {

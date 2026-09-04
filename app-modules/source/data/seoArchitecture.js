@@ -967,6 +967,7 @@ export const publicStaticRoutes = [
   },
   {
     path: '/launches/bay-to-breakers-expo',
+    noindex: true,
     title: 'Bay to Breakers Expo Recovery — Avalon Vitality',
     description: 'Avalon launch recovery presale and guest workflow for Bay to Breakers Expo appointments.',
     h1: 'Bay to Breakers Expo Recovery',
@@ -975,6 +976,7 @@ export const publicStaticRoutes = [
   },
   {
     path: '/launches/bay-to-breakers-finish-line',
+    noindex: true,
     title: 'Bay to Breakers Finish Line Recovery — Avalon Vitality',
     description: 'Avalon finish-line recovery presale and guest workflow for Bay to Breakers appointments.',
     h1: 'Bay to Breakers Finish Line Recovery',
@@ -991,6 +993,7 @@ export const publicStaticRoutes = [
   },
   {
     path: '/events/private-group-recovery',
+    noindex: true,
     title: 'Private Group Recovery Event — Avalon Vitality',
     description: 'Private Avalon recovery activations for offices, hotels, venues, and groups with clinical intake planning and registered nurse staffing.',
     h1: 'Private Group Recovery',
@@ -999,6 +1002,7 @@ export const publicStaticRoutes = [
   },
   {
     path: '/launches/hotel-recovery-suite',
+    noindex: true,
     title: 'Hotel Recovery Suite Launch — Avalon Vitality',
     description: 'Avalon hotel recovery suite planning for partner properties, VIP guests, private groups, and concierge recovery support.',
     h1: 'Hotel Recovery Suite',
