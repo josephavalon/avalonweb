@@ -311,7 +311,7 @@ function Landing({
         {focused && <MobileServiceCoverage />}
 
         {therapyName && (
-          <p className="mt-5 inline-flex rounded-full border border-foreground/15 px-4 py-2 font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/65">
+          <p className="nd-focused-booking__therapy-pill mt-5 inline-flex rounded-full border border-foreground/15 px-4 py-2 font-body text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/65">
             {therapyName}
           </p>
         )}
@@ -328,14 +328,19 @@ function Landing({
               and never touches a field value. */}
           <p
             data-when="pre-submit"
-            className={`font-body font-medium text-foreground/65 ${focused ? 'text-sm leading-[1.55]' : 'text-base leading-relaxed'}`}
+            className={`nd-focused-booking__deposit-note font-body font-medium text-foreground/65 ${focused ? 'text-sm leading-[1.55]' : 'text-base leading-relaxed'}`}
           >
-            A $50 deposit holds your spot — applied to your visit, refunded if
-            ineligible. You can pay it as soon as this is sent, or wait for our call.
+            <span className="nd-focused-booking__deposit-note-desktop">
+              A $50 deposit holds your spot — applied to your visit, refunded if
+              ineligible. You can pay it as soon as this is sent, or wait for our call.
+            </span>
+            <span className="nd-focused-booking__deposit-note-mobile">
+              $50 deposit applied to your visit. Refunded if ineligible.
+            </span>
           </p>
           <p
             data-when="pre-submit"
-            className={`flex items-start gap-2 font-body font-medium text-foreground/50 ${focused ? 'text-[11px] leading-[1.55]' : 'text-[12px] leading-relaxed'}`}
+            className={`nd-focused-booking__sms-note flex items-start gap-2 font-body font-medium text-foreground/50 ${focused ? 'text-[11px] leading-[1.55]' : 'text-[12px] leading-relaxed'}`}
           >
             <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} />
             By submitting, you consent to service-related SMS from Avalon Vitality. Reply STOP to opt out. Message and data rates may apply.

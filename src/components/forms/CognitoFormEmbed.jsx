@@ -158,20 +158,24 @@ export default function CognitoFormEmbed({
         <span className="cognito-skeleton__label">Email</span>
         <span className="cognito-skeleton__field">Email address</span>
         {appointmentFields && (
-          <>
-            <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
-              Appointment date
+          <div className="cognito-skeleton__appointment-row">
+            <span className="cognito-skeleton__appointment-field">
+              <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
+                Appointment date
+              </span>
+              <span className="cognito-skeleton__field cognito-skeleton__field--appointment cognito-skeleton__field--appointment-date">
+                Today
+              </span>
             </span>
-            <span className="cognito-skeleton__field cognito-skeleton__field--appointment cognito-skeleton__field--appointment-date">
-              Today
+            <span className="cognito-skeleton__appointment-field">
+              <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
+                Appointment time
+              </span>
+              <span className="cognito-skeleton__field cognito-skeleton__field--appointment cognito-skeleton__field--appointment-time">
+                8:00 AM
+              </span>
             </span>
-            <span className="cognito-skeleton__label cognito-skeleton__label--appointment">
-              Appointment time
-            </span>
-            <span className="cognito-skeleton__field cognito-skeleton__field--appointment cognito-skeleton__field--appointment-time">
-              8:00 AM
-            </span>
-          </>
+          </div>
         )}
         {appointmentFields && !treatmentField && (
           <>
