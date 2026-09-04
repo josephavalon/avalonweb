@@ -23,20 +23,20 @@ const NAD_PLANS = founderPlans('nad', 300, 4);
 
 function FounderPlanCard({ plan }) {
   return (
-    <article className="flex min-w-0 flex-col rounded-[11px] border border-[#d8bca5] px-2.5 pb-3.5 pt-4 sm:px-3 min-[901px]:rounded-[14px] min-[901px]:px-6 min-[901px]:pb-6 min-[901px]:pt-7">
+    <article className="flex min-w-0 flex-col rounded-[11px] border border-[#d8bca5] px-2.5 pb-3.5 pt-4 sm:px-3 min-[901px]:rounded-[14px] min-[901px]:px-6 min-[901px]:pb-4 min-[901px]:pt-5">
       <h3 className="text-center font-heading text-[24px] uppercase leading-none tracking-[0.01em] text-[#21170f] min-[901px]:text-[34px]">
         {plan.name}
       </h3>
-      <p className="mx-auto mt-3 whitespace-nowrap rounded-md border border-[#b78f72] px-1.5 py-1.5 text-center font-body text-[8px] font-medium uppercase tracking-[-0.01em] text-[#21170f] sm:text-[9px] min-[901px]:mt-4 min-[901px]:px-3 min-[901px]:py-2 min-[901px]:text-[11px] min-[901px]:tracking-[0.03em]">
+      <p className="mx-auto mt-3 whitespace-nowrap rounded-md border border-[#b78f72] px-1.5 py-1.5 text-center font-body text-[8px] font-medium uppercase tracking-[-0.01em] text-[#21170f] sm:text-[9px] min-[901px]:px-3 min-[901px]:py-2 min-[901px]:text-[11px] min-[901px]:tracking-[0.03em]">
         {plan.creditsPerCycle} {plan.creditsPerCycle === 1 ? 'credit' : 'credits'} / month
       </p>
-      <p className="mt-5 whitespace-nowrap font-body text-[30px] font-light leading-none tracking-[-0.055em] text-[#21170f] sm:text-[35px] min-[901px]:mt-8 min-[901px]:text-[48px]">
+      <p className="mt-5 whitespace-nowrap font-body text-[30px] font-light leading-none tracking-[-0.055em] text-[#21170f] sm:text-[35px] min-[901px]:mt-4 min-[901px]:text-[48px]">
         {money(plan.monthlyPriceCents)}<span className="ml-0.5 text-[10px] font-normal tracking-normal min-[901px]:text-[13px]">/mo</span>
       </p>
       <Link
         to="/start"
         aria-label={`Join ${plan.name} membership — start your visit`}
-        className="founder-plan-button mt-7 flex h-[38px] min-h-0 w-full items-center justify-between rounded-[3px] bg-[#241205] px-3 font-body text-[10px] font-medium text-[#fffaf5] shadow-[0_2px_3px_rgba(36,18,5,0.25)] transition-colors hover:bg-[#3a2010] focus:outline-none focus:ring-2 focus:ring-[#8d6549] focus:ring-offset-2 min-[901px]:mt-9 min-[901px]:px-5 min-[901px]:text-[12px]"
+        className="founder-plan-button mt-7 flex h-[38px] min-h-0 w-full items-center justify-between rounded-[3px] bg-[#241205] px-3 font-body text-[10px] font-medium text-[#fffaf5] shadow-[0_2px_3px_rgba(36,18,5,0.25)] transition-colors hover:bg-[#3a2010] focus:outline-none focus:ring-2 focus:ring-[#8d6549] focus:ring-offset-2 min-[901px]:mt-4 min-[901px]:px-5 min-[901px]:text-[12px]"
       >
         <span>Join {plan.name}</span><ArrowRight className="h-4 w-4" strokeWidth={1.5} />
       </Link>
@@ -46,7 +46,7 @@ function FounderPlanCard({ plan }) {
 
 function FounderPlanGroup({ id, title, subtitle, note, plans, aside, compact = false }) {
   return (
-    <section id={id} className={compact ? 'mt-6 min-[901px]:mt-14' : 'mt-11 sm:mt-12 min-[901px]:mt-16'}>
+    <section id={id} className={compact ? 'mt-6 min-[901px]:mt-14' : 'mt-11 sm:mt-12 min-[901px]:mt-7'}>
       <div className="flex items-end justify-between gap-4 px-1.5">
         <div>
           <h2 className="font-heading text-[28px] uppercase leading-none tracking-[0.01em] text-[#21170f] min-[901px]:text-[40px]">{title}</h2>
@@ -54,7 +54,7 @@ function FounderPlanGroup({ id, title, subtitle, note, plans, aside, compact = f
         </div>
         {aside && <p className="pb-0.5 font-body text-[8px] text-[#5a4637] min-[901px]:text-[11px]">{aside}</p>}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2.5 min-[560px]:grid-cols-4 min-[901px]:mt-6 min-[901px]:gap-4">
+      <div className="mt-4 grid grid-cols-2 gap-2.5 min-[560px]:grid-cols-4 min-[901px]:mt-3 min-[901px]:gap-4">
         {plans.map((plan) => <FounderPlanCard key={plan.versionId} plan={plan} />)}
       </div>
       {note && <p className="mt-4 px-1.5 font-body text-[9px] leading-relaxed text-[#37291f] sm:text-[10px] min-[901px]:mt-5 min-[901px]:text-[12px]">{note}</p>}
@@ -104,11 +104,11 @@ export default function MembershipPricing() {
           </a>
         </header>
 
-        <section className="pt-8 text-center sm:pt-9 min-[901px]:pt-16">
+        <section className="pt-8 text-center sm:pt-9 min-[901px]:pt-8">
           <p className="mx-auto font-body text-[12px] uppercase tracking-[0.18em] min-[901px]:text-[14px] min-[901px]:tracking-[0.22em]">Founder Memberships</p>
-          <h1 className="mt-2 font-heading text-[50px] uppercase leading-[0.95] tracking-[0.005em] sm:text-[60px] min-[901px]:mt-3 min-[901px]:text-[clamp(76px,6vw,108px)]">Care that keeps up.</h1>
-          <p className="mx-auto mt-3 font-body text-[14px] text-[#37291f] min-[901px]:mt-5 min-[901px]:text-[18px]">Monthly credits. Redeem for eligible IV visits.</p>
-          <p className="mx-auto mt-4 font-body text-[10px] text-[#37291f] min-[901px]:mt-5 min-[901px]:text-[12px]">30-day enrollment <span className="px-2.5 min-[901px]:px-4">•</span> Billed monthly <span className="px-2.5 min-[901px]:px-4">•</span> 3-month minimum</p>
+          <h1 className="mt-2 font-heading text-[50px] uppercase leading-[0.95] tracking-[0.005em] sm:text-[60px] min-[901px]:text-[clamp(76px,6vw,108px)]">Care that keeps up.</h1>
+          <p className="mx-auto mt-3 font-body text-[14px] text-[#37291f] min-[901px]:text-[18px]">Monthly credits. Redeem for eligible IV visits.</p>
+          <p className="mx-auto mt-4 font-body text-[10px] text-[#37291f] min-[901px]:mt-3 min-[901px]:text-[12px]">30-day enrollment <span className="px-2.5 min-[901px]:px-4">•</span> Billed monthly <span className="px-2.5 min-[901px]:px-4">•</span> 3-month minimum</p>
         </section>
 
         <FounderPlanGroup

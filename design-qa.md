@@ -2057,3 +2057,59 @@ Viewport, normalization, and state:
 - `npm run lint`, `npm run build`, the 99-check consumer-offering suite, and the seven-viewport homepage suite passed.
 
 final result: passed
+
+---
+
+# Founder Memberships — Above-the-Fold Card Row
+
+Source visual truth:
+
+- `.context/attachments/LQGUM7/Screenshot 2026-09-04 at 4.11.11 PM.png`.
+- User correction: tighten the opening spacing so the complete first membership-card row is visible at page load without scrolling.
+
+Implementation evidence:
+
+- Production baseline at the screenshot-equivalent viewport: `.context/membership-before-1280.png`.
+- Final desktop implementation: `.context/membership-final-1280.png`.
+- Secondary desktop breakpoint: `.context/membership-final-1024.png`.
+- Mobile regression capture: `.context/membership-final-mobile.png`.
+- Normalized source/final comparison: `.context/membership-spacing-final-comparison.png`.
+
+Viewport, normalization, and state:
+
+- Source: 2048 × 1227 physical pixels, including 68px of browser chrome. Its application region is 2048 × 1159.
+- The source corresponds to an approximately 1280 × 724 CSS viewport at 160% browser scaling; the final implementation was captured directly at 1280 × 724 CSS pixels and 1× density.
+- The combined comparison crops the source application region, scales both sides to 1024 × 580, and introduces no aspect distortion.
+- Additional implementation checks used 1024 × 768 desktop and 390 × 844 mobile CSS viewports at 1× density.
+- State: public `/membership` page at initial load; no personal data was entered or displayed.
+
+## Findings
+
+- [P2 resolved] the first Vitamin IV membership row extended 130px below the screenshot-equivalent initial viewport.
+  - Location: founder-membership intro, first plan-group lead-in, and desktop plan-card vertical spacing.
+  - Evidence: the baseline card row ran from y=553 to y=854 in a 724px viewport; the final row runs from y=453 to y=698.
+  - Impact: visitors had to scroll before they could see the full founder-pricing options and their calls to action.
+  - Fix: reduced desktop-only intro padding, hero copy gaps, plan-group lead-in, grid gap, and card interior gaps without changing content or the mobile layout.
+
+## Required fidelity surfaces
+
+- Fonts and typography: all font families, sizes, weights, line heights, casing, and responsive type scales are unchanged.
+- Spacing and layout rhythm: the complete four-card row now ends 26px above the 724px viewport edge, preserving a visible lower margin instead of clipping.
+- Colors and visual tokens: backgrounds, foregrounds, borders, and button colors are unchanged.
+- Image quality and asset fidelity: no imagery or brand assets were added, removed, resized, or replaced.
+- Copy and content: founder-pricing labels, terms, tier names, credits, prices, and CTA text are unchanged.
+
+## Interaction and accessibility
+
+- All four membership cards and `Join` links remain visible and keyboard-accessible.
+- The static membership integrity suite confirms every card CTA still targets `/start` and pricing remains $195 per Vitamin IV credit and $300 per NAD+ credit.
+- Browser checks found zero horizontal overflow, no console warnings or errors, and no page errors at the tested desktop and mobile viewports.
+
+## Comparison history
+
+- The first pass reproduced the attached cutoff at 1280 × 724: the card row ended at y=854.
+- The initial correction brought the row to y=714 but left only 10px of lower breathing room.
+- The final balance pass reduced card interior gaps slightly; the full row now ends at y=698 with 26px of viewport breathing room.
+- The normalized comparison shows the original clipped row on the left and the complete, balanced row on the right.
+
+final result: passed
