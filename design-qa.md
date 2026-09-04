@@ -1916,3 +1916,49 @@ final result: passed
   thin `Start your visit` utility link) and existing Cognito/B2B console noise.
 
 final result: passed
+
+---
+
+# START Cognito — Atomic Form Load
+
+## Production diagnosis
+
+- The existing complete-form skeleton was present, but focused `/start` did
+  not pass `appointmentFields={focused}` into `CognitoFormEmbed`. Its wrapper
+  therefore used the generic `:has(form)` readiness rule.
+- On production, the wrapper hid the skeleton at `1450ms` when Cognito had
+  created a form shell with only one control. The remaining controls arrived
+  at `1501ms`, reproducing the reported staggered field paint.
+- Cognito's remote script, chunk, session, and form-definition requests remain
+  third-party work. The Avalon page already preconnects and preloads the script;
+  the owned defect was exposing Cognito's intermediate DOM state.
+
+## Correction and hosted evidence
+
+- Focused START now declares the appointment-form contract. The readiness gate
+  also explicitly requires a text field, date, time, consent checkbox, and
+  submit control before it swaps away from the complete skeleton.
+- Three hosted preview loads observed Cognito build `1 -> 4 -> 7` controls.
+  During the one- and four-control states, the skeleton remained visible and
+  the partial real form exposed zero controls. At seven controls, the complete
+  form replaced the complete skeleton in one frame.
+- Final cumulative layout shift measured `0.0048`; document height stayed at
+  the `430 x 932` viewport height. No personal data was entered or read.
+- A focused regression check now protects the START callsite and the complete
+  CSS readiness selector.
+- Homepage display titles no longer end in periods: Find your starting point,
+  Bay Area care / At your door, Nurses for your event, and Care comes to you.
+
+## Verification
+
+- `npm run lint`: passed (235 source files).
+- `npm run build`: passed, including B2B and 137 SEO route outputs.
+- `npm run test:homepage-v2`: passed across seven viewports, the guided picker,
+  and service-area map states.
+- The new atomic-form regression assertion passed. The broader
+  `npm run test:front-door` remains red on six pre-existing host/deposit
+  assertions unrelated to this rendering change.
+- Hosted preview: `dpl_2nm4gTDExJcjXv4TtWMXcGqwM2z1` (`Ready`).
+- `git diff --check`: passed.
+
+final result: passed

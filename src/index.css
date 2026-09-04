@@ -13101,12 +13101,12 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
 }
 
 .cognito-wrap:not(.cognito-wrap--appointment):has(.cognito form) .cognito-skeleton,
-.cognito-wrap--appointment:not(.cognito-wrap--treatment):has(.cognito input[type='date']):has(.cognito input[type='time']):has(.cognito input[type='checkbox']):has(.cognito .cog-button) .cognito-skeleton,
+.cognito-wrap--appointment:not(.cognito-wrap--treatment):has(.cognito input[type='text']):has(.cognito input[type='date']):has(.cognito input[type='time']):has(.cognito input[type='checkbox']):has(.cognito .cog-button) .cognito-skeleton,
 .cognito-wrap--treatment:has(.cognito select):has(.cognito input[type='date']):has(.cognito input[type='time']):has(.cognito .cog-button) .cognito-skeleton {
   display: none;
 }
 
-.cognito-wrap--appointment:not(.cognito-wrap--treatment):has(.cognito input[type='date']):has(.cognito input[type='time']):has(.cognito input[type='checkbox']):has(.cognito .cog-button) .cognito,
+.cognito-wrap--appointment:not(.cognito-wrap--treatment):has(.cognito input[type='text']):has(.cognito input[type='date']):has(.cognito input[type='time']):has(.cognito input[type='checkbox']):has(.cognito .cog-button) .cognito,
 .cognito-wrap--treatment:has(.cognito select):has(.cognito input[type='date']):has(.cognito input[type='time']):has(.cognito .cog-button) .cognito {
   position: static;
   visibility: visible;

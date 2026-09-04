@@ -203,6 +203,39 @@ async function checkSeamlessEmbed(failures) {
   }
 }
 
+// The focused START form must hold its complete placeholder until Cognito has
+// created the appointment controls and submit action. Without the focused flag,
+// the generic `:has(form)` gate reveals Cognito's empty shell first and the
+// fields visibly stream into the page over the following frames.
+async function checkFocusedIntakeLoadsAtomically(failures) {
+  const landingRel = 'app-modules/pages/NurseDelivery.jsx';
+  const cssRel = 'src/index.css';
+  const landing = await read(landingRel);
+  const css = await read(cssRel);
+
+  if (landing === null) {
+    failures.push(`${landingRel}: missing — focused START cannot declare its appointment-form loading contract`);
+  } else if (!/appointmentFields=\{focused\}/.test(landing)) {
+    failures.push(`${landingRel}: focused START must pass appointmentFields={focused} so Cognito reveals atomically`);
+  }
+
+  if (css === null) {
+    failures.push(`${cssRel}: missing — Cognito's atomic readiness gate is unavailable`);
+  } else {
+    const requiredReadiness = [
+      "input[type='text']",
+      "input[type='date']",
+      "input[type='time']",
+      "input[type='checkbox']",
+      '.cog-button',
+    ];
+    const appointmentGate = css.match(/\.cognito-wrap--appointment:not\(\.cognito-wrap--treatment\)[^{]+\.cognito-skeleton/);
+    if (!appointmentGate || requiredReadiness.some((selector) => !appointmentGate[0].includes(selector))) {
+      failures.push(`${cssRel}: appointment skeleton must wait for text, date, time, consent, and submit controls`);
+    }
+  }
+}
+
 // 2. Every brochure host must appear in BOTH host lists, and the two lists must
 //    match exactly. Drift means half the gate is open.
 // 2a. The gate must DENY BY DEFAULT.
@@ -727,6 +760,7 @@ export async function runFrontDoorChecks() {
   const failures = [];
   await checkInvoicePageIsPhiFree(failures);
   await checkSeamlessEmbed(failures);
+  await checkFocusedIntakeLoadsAtomically(failures);
   await checkHostListScope(failures);
   await checkGateDeniesByDefault(failures);
   await checkDeletedRoutes(failures);

@@ -55,7 +55,7 @@ try {
     assert(cardText[2]?.includes('$285') && cardText[2]?.includes('$195'), `Hangover pricing is incorrect at ${width}px`);
     assert(!(await page.getByRole('heading', { name: /Clinician led\. Nurse delivered\./i }).count()), `removed clinician-care module is still present at ${width}px`);
     assert(!(await page.getByText(/Clinical content reviewed/i).count()), `internal review date exposed at ${width}px`);
-    assert(await page.getByRole('heading', { name: 'Find your starting point.' }).isVisible(), `picker missing at ${width}px`);
+    assert(await page.getByRole('heading', { name: 'Find your starting point' }).isVisible(), `picker missing at ${width}px`);
     assert(await page.getByText('Five Bay Area counties.').isVisible(), `service-area copy missing at ${width}px`);
     assert(await page.getByText('Service counties').isVisible(), `interactive service map missing at ${width}px`);
     assert(await page.getByRole('button', { name: /^Explore .* County$/ }).count() === 5, `expected exactly five service counties at ${width}px`);

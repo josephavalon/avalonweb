@@ -310,8 +310,8 @@ function GuidedPicker() {
     <section ref={sectionRef} className="home-v2__section home-v2__picker" aria-labelledby="home-v2-picker-title">
       <div className="home-v2__picker-copy">
         <p className="home-v2__eyebrow">Help me choose</p>
-        <h2 id="home-v2-picker-title" aria-label="Find your starting point.">
-          <ResponsiveTitle desktop="Find your starting point." mobile="Find your start." />
+        <h2 id="home-v2-picker-title" aria-label="Find your starting point">
+          <ResponsiveTitle desktop="Find your starting point" mobile="Find your start" />
         </h2>
         <a className="home-v2__picker-help" href="sms:+14159807708">Talk to us <ArrowRight aria-hidden="true" /></a>
       </div>
@@ -420,8 +420,8 @@ function ServiceArea() {
           eyebrow="Where we go"
           title={(
             <ResponsiveTitle
-              desktop={<>Bay Area care.<br />At your door.</>}
-              mobile="Bay Area care."
+              desktop={<>Bay Area care<br />At your door</>}
+              mobile="Bay Area care"
             />
           )}
           body="Five Bay Area counties."
@@ -498,12 +498,12 @@ function ClosingActions() {
   return (
     <section ref={sectionRef} className="home-v2__closing" aria-label="Start an Avalon visit or plan an event">
       <Link className="home-v2__events-link" to="/events">
-        <span><small>Groups and venues</small><strong>Nurses for your event.</strong></span>
+        <span><small>Groups and venues</small><strong>Nurses for your event</strong></span>
         <ArrowRight aria-hidden="true" />
       </Link>
       <div className="home-v2__final-cta">
         <p>Ready when you are.</p>
-        <h2><ResponsiveTitle desktop="Care comes to you." mobile="Care comes to you." /></h2>
+        <h2><ResponsiveTitle desktop="Care comes to you" mobile="Care comes to you" /></h2>
         <Link
           to="/start"
           onClick={() => trackConsented(ANALYTICS_EVENTS.START_CLICKED, { source: 'homepage_v2_final' })}
