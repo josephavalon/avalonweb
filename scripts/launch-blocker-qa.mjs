@@ -356,7 +356,12 @@ function checkCspJsonLdHash() {
 function checkAdminEndpointsGated() {
   const adminDir = path.join(repoRoot, 'api/admin');
   if (!fs.existsSync(adminDir)) return;
-  const gates = ['requireAdmin', 'requireStaff', 'requireRole'];
+  // requireFinanceActor and requireOsOperator authenticate on top of
+  // getAuthedUser() rather than calling requireRole, so a literal-name check
+  // read them as ungated and this gate had been RED on main. They now route
+  // through operatorMfaBlocked(), which is the property this check is really
+  // asserting — so accept them, and assert that plumbing exists below.
+  const gates = ['requireAdmin', 'requireStaff', 'requireRole', 'requireFinanceActor', 'requireOsOperator', 'requireVendorActor', 'requirePayrollView', 'requirePayrollAction', 'operatorMfaBlocked'];
   for (const filePath of walkFiles(adminDir)) {
     if (!/\.(?:js|mjs|ts)$/i.test(filePath)) continue;
     const source = fs.readFileSync(filePath, 'utf8');
@@ -365,9 +370,30 @@ function checkAdminEndpointsGated() {
     }
   }
   const helperSource = readRepoFile('api/_lib/supabase-auth.js');
-  for (const required of ['mfaEnforced', "'aal2'", 'MFA_ENFORCED']) {
+  for (const required of ['mfaEnforced', "'aal2'", 'MFA_ENFORCED', 'operatorMfaBlocked']) {
     if (!helperSource.includes(required)) {
       fail(`api/_lib/supabase-auth.js missing MFA enforcement plumbing: ${required}`);
+    }
+  }
+  // The two helpers that admit the operator tier without going through
+  // requireRole must apply the shared gate, or MFA_ENFORCED silently misses
+  // every finance route and the whole of api/os/v1/*.
+  for (const rel of ['api/_lib/payops-core.js', 'api/_lib/os-api.js', 'api/admin/finance/roles.js']) {
+    if (!readRepoFile(rel).includes('operatorMfaBlocked(authed, res)')) {
+      fail(`${rel} admits admin/staff but does not call operatorMfaBlocked(authed, res) — MFA_ENFORCED would not cover its routes`);
+    }
+  }
+  // requireVendorActor / requirePayrollView / requirePayrollAction are accepted
+  // above only because they are thin wrappers that delegate to
+  // requireFinanceActor. If one ever grows its own getAuthedUser() call it
+  // would slip the gate silently, so assert the delegation still holds.
+  for (const rel of ['api/_lib/vendor-ap.js', 'api/_lib/payroll-controls.js']) {
+    const source = readRepoFile(rel);
+    if (source.includes('getAuthedUser')) {
+      fail(`${rel} calls getAuthedUser directly — it must delegate to requireFinanceActor so operatorMfaBlocked applies`);
+    }
+    if (!source.includes('requireFinanceActor')) {
+      fail(`${rel} no longer delegates to requireFinanceActor — the MFA gate would not reach its routes`);
     }
   }
 }

@@ -80,6 +80,16 @@ paid for with a dedicated CI assertion.
 | `api/invoice/submit.js` | Nurse pay data, not patient data. Free text is PHI-screened on input. | `checkInvoicePageIsPhiFree()` |
 | `api/notify/intake-alert.js` | Empty POST. `bodyParser` off, a declared body is refused unread, the parsed-body property is never referenced. Sends one frozen constant with no name, service, time, or identifier. | `checkStartPingAndDepositArePhiFree()` |
 | `api/deposit/create-session.js` | Empty POST, same body refusal. Sends Stripe no `customer_email`, no name, no phone, no address, no cart; metadata is restricted to `safeStripeMetadata()`'s frozen allowlist; writes nothing to Supabase, Acuity, or HubSpot. | `checkStartPingAndDepositArePhiFree()` |
+| `api/deposit/verify.js` | Reads one Stripe session id and returns four payment-derived fields (`ok`, `paid`, `ref`, `amountCents`). `customer_details` / `customer_email` are never read, returned, or logged, so the non-correlation below still holds. Writes nothing anywhere. | `checkStartPingAndDepositArePhiFree()` |
+
+`api/deposit/verify.js` exists because `/start/deposit` used to render "Your $50
+deposit is in" from the query string alone — it read `ref` for display, never
+read `status`, and never asked Stripe, so anyone could mint a screenshot-able
+receipt. Stripe now stamps the session id into `success_url` via
+`{CHECKOUT_SESSION_ID}` and the page verifies it before claiming payment. The
+handler also requires `metadata.kind === 'start_deposit'`: without that, any
+Avalon Checkout Session id — a booking, a plan signup, a gift card — would
+render the deposit receipt.
 
 The reviewer's objection to the deposit is that Stripe collects an email on its
 hosted page and that email belongs to a healthcare provider's customer. The

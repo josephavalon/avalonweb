@@ -109,13 +109,34 @@ export async function checkRateLimit({ key, windowMs, max, failClosed = false })
 }
 
 /**
- * Resolve the client IP from a Vercel request, with x-forwarded-for precedence.
- * Used by all API routes to scope rate-limit buckets.
+ * Resolve the client IP from a Vercel request. Used by all API routes to scope
+ * rate-limit buckets, so getting it wrong silently un-limits ~28 endpoints.
+ *
+ * This used to read `x-forwarded-for`'s FIRST element, which is the position an
+ * attacker controls when a proxy appends rather than replaces: rotating one
+ * header would have given every request a fresh bucket. The sharpest
+ * consequence was api/order-lookup.js, where the limiter is the only thing
+ * standing between a stranger and brute-forcing the email+phone pair that
+ * authorises an order lookup.
+ *
+ * Vercel does appear to normalise these headers — verified 2026-09-01 that a
+ * forged `X-Forwarded-Host` did not survive to the handler — so on Vercel today
+ * this is hardening rather than a live bypass. It is written to be correct
+ * either way: prefer Vercel's own header, and otherwise take the LAST hop,
+ * which is the one our own proxy appended and the earliest entry an attacker
+ * cannot have written.
  */
 export function clientIp(req) {
+  const vercel = req.headers['x-vercel-forwarded-for'];
+  if (typeof vercel === 'string' && vercel.trim()) return vercel.split(',')[0].trim();
+
   const fwd = req.headers['x-forwarded-for'];
-  if (typeof fwd === 'string') return fwd.split(',')[0].trim();
-  if (Array.isArray(fwd)) return fwd[0];
+  if (typeof fwd === 'string' && fwd.trim()) {
+    const hops = fwd.split(',').map((hop) => hop.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1];
+  }
+  if (Array.isArray(fwd) && fwd.length) return String(fwd[fwd.length - 1]).trim();
+
   return req.socket?.remoteAddress || 'unknown';
 }
 

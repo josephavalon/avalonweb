@@ -41,6 +41,7 @@ import { Resend } from 'resend';
 import { getServiceClient } from '../_lib/supabase-auth.js';
 import { writeAuditEvent } from '../_lib/audit-events.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { safeEqual } from '../_lib/invoice-token.js';
 
 const MAX_PER_RUN = 200;
 const LOOKBACK_HOURS_END = 24;   // "happened at least 24h ago"
@@ -49,10 +50,16 @@ const TERMINAL_EXCLUDE = new Set(['archived', 'canceled', 'cancelled', 'no_show'
 
 function authorized(req) {
   const expected = process.env.CRON_SECRET;
-  if (!expected) return false;
+  if (!expected) return false; // refuse to run if the secret isn't configured
   const header = req.headers?.authorization || req.headers?.Authorization || '';
   const match = /^Bearer\s+(.+)$/i.exec(String(header));
-  return Boolean(match && match[1].trim() === expected);
+  if (!match) return false;
+  // Constant-time. api/cron/robbot3k-*.js already compared this way; these
+  // handlers used `===`, which short-circuits on the first differing byte.
+  // Remote timing on a bearer compare is not practically exploitable through
+  // network jitter, so this is consistency rather than a live hole — but there
+  // is no reason for two of the five crons to be the odd ones out.
+  return safeEqual(match[1].trim(), expected);
 }
 
 function isProductionRuntime() {

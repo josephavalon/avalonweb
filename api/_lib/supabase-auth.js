@@ -191,6 +191,32 @@ export async function getAuthedUser(req) {
   return { user, role, email: (user.email || '').trim(), tenantId, db, aal: jwtAal(token) };
 }
 
+/**
+ * Operator-tier MFA gate, shared so every helper that admits admin/staff sees
+ * the same rule. Returns true (and writes the 403) when the caller must be
+ * turned away.
+ *
+ * Extracted 2026-09-01. requireAdmin/requireRole enforced MFA, but
+ * requireOsOperator (all of api/os/v1/*) and requireFinanceActor (the finance,
+ * payroll and vendor-bill routes under api/admin/) each re-implemented their
+ * own authorization on top of getAuthedUser() and never consulted
+ * MFA_ENFORCED. Setting the flag would therefore have looked like it covered
+ * the admin surface while leaving that whole tier on a password — the exact
+ * false assurance the flag exists to prevent.
+ */
+// 'founder' is included because api/admin/finance/roles.js admits it alongside
+// admin for finance ROLE ASSIGNMENT — privilege management, the last place an
+// elevated role should be exempt from a second factor.
+const OPERATOR_TIER_ROLES = ['admin', 'staff', 'founder'];
+
+export function operatorMfaBlocked(authed, res) {
+  if (!mfaEnforced()) return false;
+  if (!authed || !OPERATOR_TIER_ROLES.includes(authed.role)) return false;
+  if (authed.aal === 'aal2') return false;
+  res.status(403).json({ error: 'Multi-factor authentication required', code: 'mfa_required' });
+  return true;
+}
+
 /** Gate a route to admins. Writes the 401/403 response itself; returns null when blocked. */
 export async function requireAdmin(req, res) {
   const authed = await getAuthedUser(req);

@@ -203,13 +203,53 @@ client module reads `window` and lives behind the Vite `@/` alias; serverless
 functions must not depend on it. The guard script asserts the two lists are
 **identical**, so drift fails CI.
 
+### The server gate denies by default (2026-09-01)
+
+The server half no longer asks "is this host on the front-door list?". It asks
+"is this host a known OS host?", and gates everything else.
+
+That inversion closed a real hole. Under the old shape, `blockFrontDoorPhiRoute()`
+fired only on the three named hosts, so every host nobody had thought to add ran
+the PHI funnel wide open — including every `avalonweb-*.vercel.app` preview URL
+of this project. Previews have no deployment protection (`GET /` answers `200`)
+and Preview env carries `AVALON_ENABLE_LIVE_API`, `STRIPE_SECRET_KEY`,
+`ACUITY_API_KEY`, `RESEND_API_KEY` and `QUO_API_KEY`, so anyone who found one
+could drive real charges and real bookings against production vendors.
+Measured before the fix: `GET /api/create-checkout-session` answered `409` on
+`www` and `405` on a preview URL — the guard never ran there.
+
+`OS_HOSTS` in `api/_lib/pre-api-guard.js` is now the allow-list: `beta` and
+`care`, plus private/local addresses. Everything else is a front door.
+
+- **Adding a host to `OS_HOSTS` is the dangerous edit now.** It grants a host
+  the PHI funnel. `FRONT_DOOR_HOSTS` still wins over it, so the apex can never
+  be opened this way.
+- **QA against a raw preview URL** is gated like any other unknown host. The
+  normal workflow aliases a preview onto `beta.avalonvitality.co` and needs
+  nothing extra. If you genuinely need the raw URL, set
+  `AVALON_OS_EXTRA_HOSTS` (comma-separated) on that deployment. It is **inert
+  when `VERCEL_ENV=production`**, by code, not by convention — a hatch that can
+  be left on in prod is just the old bug with extra steps.
+- `hostFromRequest()` reads `x-forwarded-host`, which is now the key to the
+  gate. Verified 2026-09-01 that Vercel overrides it: `X-Forwarded-Host:
+  beta.avalonvitality.co` sent to `www` still answered `409`. **Re-test that
+  assumption if this ever moves off Vercel.**
+
+`checkGateDeniesByDefault()` in `scripts/front-door-qa.mjs` calls the real
+`isFrontDoorHost()` over an exhaustive host table. The older checks only prove
+the host *lists* look right; this one proves the *decision* is right, which is
+the thing that was actually wrong.
+
 ### The apex tripwire
 
-Neither list may contain `avalonvitality.co` or `www.avalonvitality.co`. Adding
-the apex would not "extend protection" — it would redirect the entire revenue
-funnel of the live site into `/start`. `scripts/front-door-qa.mjs` asserts this
-explicitly, because it is the one edit that looks responsible and is
-catastrophic.
+**Superseded 2026-08-03.** This section used to say neither list may contain
+`avalonvitality.co` or `www.avalonvitality.co`, because adding the apex would
+have redirected the live revenue funnel into `/start`. That reversed when the
+front door *became* the main URL: the apex and `www` now serve the PHI-free
+brochure, so both lists must contain them, and
+`REQUIRED_FRONT_DOOR_HOSTS` in `scripts/front-door-qa.mjs` asserts their
+**presence**. Removing the apex is now the catastrophic edit — it would serve
+the full PHI funnel from the live site.
 
 ### Wrapping order
 

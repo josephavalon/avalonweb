@@ -32,6 +32,47 @@ const FRONT_DOOR_HOSTS = new Set([
   'snooches.avalonvitality.co',
 ]);
 
+// Hosts that legitimately run the full OS funnel.
+//
+// 2026-09-01: the gate below was inverted to deny-by-default. It used to answer
+// "is this host on the front-door list?", which meant any host nobody thought to
+// add served the PHI routes wide open — including every *.vercel.app preview URL
+// of this project. Previews are publicly reachable (no deployment protection)
+// and Preview env carries AVALON_ENABLE_LIVE_API, STRIPE_SECRET_KEY,
+// ACUITY_API_KEY, RESEND_API_KEY and QUO_API_KEY, so a stranger who found one
+// could drive real charges and real bookings against production vendors.
+// Verified before the fix: GET /api/create-checkout-session answered 409 on www
+// and 405 on avalonweb-*.vercel.app, i.e. the guard never ran there.
+//
+// Allow-listing the OS is safe when we forget to update it; allow-listing the
+// front door was not. A new host now has to be named here on purpose before it
+// can touch PHI.
+const OS_HOSTS = new Set([
+  'beta.avalonvitality.co',
+  'care.avalonvitality.co',
+]);
+
+// Escape hatch for QA against a RAW preview URL, which is now gated like any
+// other unknown host. The normal workflow aliases a preview onto
+// beta.avalonvitality.co and needs nothing here.
+//
+// Read per-request rather than at module load so it cannot be baked into a
+// warm lambda, and INERT IN PRODUCTION no matter what the dashboard says. An
+// escape hatch that can be left on in prod is just the old bug with extra
+// steps, and a script asserting "it is unset" would only ever check the shell
+// it runs in, never Vercel. Refusing to read it is the only version of that
+// promise which cannot drift.
+const EMPTY_HOST_SET = new Set();
+
+function osExtraHosts() {
+  if (String(process.env.VERCEL_ENV || '').toLowerCase() === 'production') return EMPTY_HOST_SET;
+  const raw = String(process.env.AVALON_OS_EXTRA_HOSTS || '').trim();
+  if (!raw) return EMPTY_HOST_SET;
+  return new Set(
+    raw.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean),
+  );
+}
+
 function hostFromRequest(req = {}) {
   const raw = req.headers?.['x-forwarded-host'] || req.headers?.host || '';
   return String(raw).split(',')[0].split(':')[0].trim().toLowerCase();
@@ -42,8 +83,21 @@ export function isLocalRequest(req = {}) {
   return PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(host));
 }
 
+// True when this request must NOT be allowed to touch PHI. Deny-by-default:
+// a host is only exempt if it is explicitly a known OS host, a private/local
+// address, or named in AVALON_OS_EXTRA_HOSTS.
+//
+// hostFromRequest() reads x-forwarded-host, which is attacker-controlled in
+// principle. Verified 2026-09-01 that Vercel overrides it: sending
+// `X-Forwarded-Host: beta.avalonvitality.co` to www.avalonvitality.co still
+// answered 409, as did a bare unknown host. If this ever moves off Vercel, that
+// assumption has to be re-tested — it is now the key to the gate.
 export function isFrontDoorHost(req = {}) {
-  return FRONT_DOOR_HOSTS.has(hostFromRequest(req));
+  const host = hostFromRequest(req);
+  if (FRONT_DOOR_HOSTS.has(host)) return true;
+  if (isLocalRequest(req)) return false;
+  if (osExtraHosts().has(host)) return false;
+  return !OS_HOSTS.has(host);
 }
 
 export function frontDoorBlockedPayload(action = 'This endpoint') {

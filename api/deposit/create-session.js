@@ -66,6 +66,12 @@ const ALLOWED_RETURN_HOSTS = new Set([
   'snooches.avalonvitality.co',
 ]);
 
+// Same shape api/notify/intake-alert.js validates. The nonce is minted once per
+// submission on the client, so two clicks send the SAME one — which is what
+// makes the Stripe idempotency key below actually engage. It is random and
+// derived from nothing about the visitor, so it carries no PHI.
+const NONCE_RE = /^[a-f0-9-]{8,64}$/i;
+
 const RATE_LIMIT = { windowMs: 60 * 1000, max: 5 };
 const RATE_LIMIT_DAY = { windowMs: 24 * 60 * 60 * 1000, max: 40 };
 const SESSION_TTL_MINUTES = 30;
@@ -138,6 +144,11 @@ export default async function handler(req, res) {
     return res.status(503).json({ ok: false, code: 'stripe_not_configured' });
   }
 
+  const nonce = String(req.headers['x-avalon-deposit-nonce'] || '');
+  if (nonce && !NONCE_RE.test(nonce)) {
+    return res.status(400).json({ ok: false, code: 'invalid_nonce' });
+  }
+
   const ref = buildDepositRef();
   const base = baseUrl(req);
 
@@ -160,7 +171,10 @@ export default async function handler(req, res) {
       client_reference_id: ref,
       submit_type: 'book',
       expires_at: Math.floor(Date.now() / 1000) + SESSION_TTL_MINUTES * 60,
-      success_url: `${base}/start/deposit?ref=${encodeURIComponent(ref)}&status=paid`,
+      // {CHECKOUT_SESSION_ID} is substituted by Stripe, not by us, so it cannot
+      // be forged into a valid session. /start/deposit verifies it via
+      // api/deposit/verify.js before claiming anything was paid.
+      success_url: `${base}/start/deposit?ref=${encodeURIComponent(ref)}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/start?deposit=cancelled`,
       metadata: safeStripeMetadata({
         kind: 'start_deposit',
@@ -169,18 +183,31 @@ export default async function handler(req, res) {
       }),
     }, {
       // Two clicks on a slow connection should not open two sessions.
-      idempotencyKey: `start-deposit:${ref}`,
+      //
+      // This used to key off `ref`, which is freshly random on every request —
+      // so the key was unique every time and Stripe's idempotency never
+      // matched. The guarantee in this comment simply did not exist. The nonce
+      // is stable for one submission, so it is the only value here that can
+      // carry it. Falls back to `ref` when a caller sends no nonce, which is
+      // the old (ineffective) behaviour rather than a new failure mode.
+      idempotencyKey: `start-deposit:${nonce || ref}`,
     });
 
     if (!session?.url) {
       return res.status(502).json({ ok: false, code: 'session_url_missing' });
     }
 
+    // Read the ref back off the session rather than returning the local one.
+    // Now that idempotency actually engages, a replayed click returns the FIRST
+    // session, whose client_reference_id is the FIRST ref — and that ref is the
+    // only thread ops has between a Stripe payment and a Cognito entry. Echoing
+    // the freshly-minted local value would hand the visitor a code that matches
+    // nothing in the dashboard.
     return res.status(200).json({
       ok: true,
       url: session.url,
-      ref,
-      amountCents: DEPOSIT_CENTS,
+      ref: String(session.client_reference_id || ref),
+      amountCents: Number(session.amount_total ?? DEPOSIT_CENTS),
     });
   } catch (err) {
     console.warn('[deposit] session create failed', safeLogContext(err, 'deposit_session_failed'));

@@ -17,29 +17,78 @@ const INVALID = { error: 'This invite is invalid or has expired.', code: 'invite
 // brute-force defence — the legitimate user gets 9 misclicks before lockout.
 const INVITE_CODE_MAX_ATTEMPTS = 10;
 
-async function bumpFailedAttempts(db, invitationIds) {
-  if (!invitationIds.length) return;
-  // Fetch current counters, increment, lock+revoke any that crossed the line.
-  const { data } = await db.from('invitations')
-    .select('id, failed_attempts')
-    .in('id', invitationIds);
-  for (const row of data || []) {
-    const next = (Number(row.failed_attempts) || 0) + 1;
-    if (next >= INVITE_CODE_MAX_ATTEMPTS) {
-      await db.from('invitations').update({
-        failed_attempts: next,
-        locked_at: new Date().toISOString(),
-        status: 'revoked',
-        updated_at: new Date().toISOString(),
-      }).eq('id', row.id);
-    } else {
-      await db.from('invitations').update({
-        failed_attempts: next,
-        updated_at: new Date().toISOString(),
-      }).eq('id', row.id);
-    }
+// Compare-and-swap retries. A caller only loses the swap when a concurrent
+// guess bumped the same row, and every retry re-reads a higher counter, so the
+// loop converges fast; the bound just stops a pathological storm from spinning.
+const BUMP_CAS_MAX_RETRIES = 5;
+
+/**
+ * Increment one invitation's failed-attempt counter, locking it at the
+ * threshold.
+ *
+ * This used to read every counter, add one in JS, and write the result back.
+ * That is a read-then-write race: N guesses issued in parallel all read the
+ * same value and all write value+1, so the counter advances by 1 instead of N
+ * and the 10-attempt lockout can be outrun simply by guessing concurrently.
+ * The per-IP rate limits bounded it, but the lockout itself did not hold.
+ *
+ * The update is now guarded on the counter it read (`.eq('failed_attempts',
+ * current)`), which Postgres evaluates as part of the same statement. A racing
+ * writer therefore matches zero rows and re-reads instead of clobbering. That
+ * is an atomic increment without needing a migration or an RPC.
+ */
+async function bumpOneAttempt(db, invitationId, attempt = 0) {
+  // Retries exhausted means many guesses are landing on ONE invite at once,
+  // which is the attack signature itself — a real person fat-fingering a code
+  // never produces contention. Returning here would silently drop the
+  // increment, so an attacker could hold the counter down just by guessing in
+  // parallel. Lock instead: the failure mode has to be safe, not quiet.
+  if (attempt >= BUMP_CAS_MAX_RETRIES) {
+    await db.from('invitations').update({
+      locked_at: new Date().toISOString(),
+      status: 'revoked',
+      updated_at: new Date().toISOString(),
+    }).eq('id', invitationId).eq('status', 'pending');
+    return;
+  }
+
+  const { data: row } = await db.from('invitations')
+    .select('id, failed_attempts, status')
+    .eq('id', invitationId)
+    .maybeSingle();
+  // Already revoked/accepted by a concurrent bump — nothing left to count.
+  if (!row || row.status !== 'pending') return;
+
+  const current = row.failed_attempts === null || row.failed_attempts === undefined
+    ? null
+    : Number(row.failed_attempts);
+  const next = (current || 0) + 1;
+
+  const patch = { failed_attempts: next, updated_at: new Date().toISOString() };
+  if (next >= INVITE_CODE_MAX_ATTEMPTS) {
+    patch.locked_at = new Date().toISOString();
+    patch.status = 'revoked';
+  }
+
+  // NULL needs `.is()`; PostgREST's `.eq()` will not match it.
+  let q = db.from('invitations').update(patch).eq('id', invitationId);
+  q = current === null ? q.is('failed_attempts', null) : q.eq('failed_attempts', current);
+
+  const { data: updated } = await q.select('id');
+  if (!updated || updated.length === 0) {
+    // Lost the swap: another guess landed first. Re-read and try again.
+    await bumpOneAttempt(db, invitationId, attempt + 1);
   }
 }
+
+async function bumpFailedAttempts(db, invitationIds) {
+  if (!invitationIds.length) return;
+  await Promise.all(invitationIds.map((id) => bumpOneAttempt(db, id)));
+}
+
+// Same convention as api/_lib/safe-stripe.js — exported for the concurrency
+// test, not for production callers.
+export const __testing = { bumpFailedAttempts, INVITE_CODE_MAX_ATTEMPTS };
 
 export async function resolveInvite(db, { token, email, code, role }) {
   if (token) {

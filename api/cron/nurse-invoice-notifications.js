@@ -4,13 +4,18 @@ import {
   nurseInvoiceNotificationConfiguration,
 } from '../_lib/nurse-invoice-delivery.js';
 import { safeErrorCode, safeLogContext } from '../_lib/safe-error.js';
+import { safeEqual } from '../_lib/invoice-token.js';
 
 const MAX_PER_RUN = 25;
 
 function authorized(req) {
   const expected = String(process.env.CRON_SECRET || '');
   const provided = String(req.headers?.authorization || req.headers?.Authorization || '');
-  return Boolean(expected && provided === `Bearer ${expected}`);
+  // Constant-time, matching api/cron/robbot3k-*.js. The bearer prefix is
+  // checked separately so the secret comparison itself never short-circuits on
+  // the first differing byte.
+  if (!expected || !provided.startsWith('Bearer ')) return false;
+  return safeEqual(provided.slice('Bearer '.length), expected);
 }
 
 export default async function handler(req, res) {

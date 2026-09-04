@@ -1,8 +1,16 @@
 import crypto from 'crypto';
 import { getDefaultTenantId, getSupabaseServiceClient } from './_supabase-server.js';
 import { safeLogContext } from './_lib/safe-error.js';
+import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
 
 const MAX_PAYLOAD_BYTES = 16_384;
+
+// The only public POST here that had no limiter, while apply.js, waitlist.js and
+// events/host-inquiry.js each carry two. Analytics is the highest-volume public
+// endpoint, so the burst window is looser than theirs; the daily bucket is what
+// actually bounds unattended ingestion spam and Supabase row growth.
+const RATE_LIMIT = { windowMs: 60 * 1000, max: 60 };
+const RATE_LIMIT_DAY = { windowMs: 24 * 60 * 60 * 1000, max: 2000 };
 const DROP_KEYS = [
   'email',
   'customeremail',
@@ -86,6 +94,15 @@ function sanitizeAnalyticsObject(value) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
+  }
+
+  const ip = clientIp(req);
+  for (const limit of [RATE_LIMIT, RATE_LIMIT_DAY]) {
+    const result = await checkRateLimit({ key: `analytics:${limit.windowMs}:${ip}`, ...limit });
+    if (!result.ok) {
+      res.setHeader('Retry-After', Math.max(1, Math.ceil((result.reset - Date.now()) / 1000)));
+      return res.status(429).json({ ok: false, error: 'Too many events' });
+    }
   }
 
   const rawEvent = req.body?.event || req.body || {};

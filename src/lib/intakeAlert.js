@@ -48,7 +48,9 @@ function writeSession(key, value) {
   }
 }
 
-function newNonce() {
+// Exported so the reservation-deposit button can mint the same shape for its
+// own Stripe idempotency key — one generator, one server-side NONCE_RE.
+export function newNonce() {
   try {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
