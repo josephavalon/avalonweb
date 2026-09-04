@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { productsByCategory, slugify } from '@/data/products';
+import { formatPrice, founderPricingFor } from '@/data/catalog/founder-pricing';
 import { useSeo } from '@/lib/seo';
 import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
@@ -22,6 +23,25 @@ const SECTION_NOTES = {
 
 function price(product) {
   return product.oneTime || product.price || 'Price confirmed before booking';
+}
+
+function MenuPrice({ product, categorySlug }) {
+  const founderPricing = founderPricingFor(product, categorySlug);
+
+  if (!founderPricing) {
+    return <span className="nd-menu__item-price">{price(product)}</span>;
+  }
+
+  return (
+    <span
+      className="nd-menu__item-price nd-menu__item-price--founder"
+      aria-label={`Founder price ${formatPrice(founderPricing.founder)}, regularly ${formatPrice(founderPricing.standard)}`}
+    >
+      <small>Founder</small>
+      <strong>{formatPrice(founderPricing.founder)}</strong>
+      <s aria-hidden="true">{formatPrice(founderPricing.standard)}</s>
+    </span>
+  );
 }
 
 // Native <details> rather than a JS accordion: keyboard and screen-reader
@@ -86,7 +106,7 @@ export default function ConsumerMenu() {
                     <strong>{product.name}</strong>
                     <small>{product.benefitStatement || product.desc}</small>
                   </span>
-                  <span className="nd-menu__item-price">{price(product)}</span>
+                  <MenuPrice product={product} categorySlug={categorySlug} />
                   <ArrowRight aria-hidden="true" />
                 </Link>
               ))}

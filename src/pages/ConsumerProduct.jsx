@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Clock, House, ShieldCheck } from 'lucide-react';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
+import { formatPrice, founderPricingFor } from '@/data/catalog/founder-pricing';
 import { getProduct } from '@/data/products';
 import { useSeo } from '@/lib/seo';
 import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
@@ -50,6 +51,7 @@ export default function ConsumerProduct() {
   if (!match) return <Navigate to="/protocols" replace />;
 
   const { treatment } = match;
+  const founderPricing = treatment.addOnOnly ? null : founderPricingFor(treatment, category);
   const ingredients = productIngredients(treatment);
   const duration = treatment.duration || treatment.timeline?.at(-1)?.value || 'Timing confirmed before care';
 
@@ -91,8 +93,18 @@ export default function ConsumerProduct() {
             </aside>
           ) : (
             <aside className="nd-product-page__booking" aria-label="Booking">
-              <p>Per visit</p>
-              <strong>{productPrice(treatment)}</strong>
+              <p>{founderPricing ? 'Founder price' : 'Per visit'}</p>
+              {founderPricing ? (
+                <span
+                  className="nd-product-page__founder-price"
+                  aria-label={`Founder price ${formatPrice(founderPricing.founder)}, regularly ${formatPrice(founderPricing.standard)}`}
+                >
+                  <strong>{formatPrice(founderPricing.founder)}</strong>
+                  <s aria-hidden="true">{formatPrice(founderPricing.standard)}</s>
+                </span>
+              ) : (
+                <strong>{productPrice(treatment)}</strong>
+              )}
               <Link to={bookingPath(treatment, category, slug)}>
                 Book
                 <ArrowRight aria-hidden="true" />

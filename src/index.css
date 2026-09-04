@@ -5865,6 +5865,38 @@ body:has(.nd-home) .avalon-static-backdrop {
   white-space: nowrap;
 }
 
+.nd-menu__item-price--founder {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  justify-content: end;
+  gap: 0.12rem 0.55rem;
+  text-align: right;
+}
+
+.nd-menu__item-price--founder small {
+  grid-column: 1 / -1;
+  color: #6e6258 !important;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.nd-menu__item-price--founder strong {
+  color: #2b211b !important;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.nd-menu__item-price--founder s {
+  color: #8b8076 !important;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-decoration-thickness: 1px;
+}
+
 .nd-menu__item > svg {
   width: 1.1rem;
   height: 1.1rem;
@@ -5958,6 +5990,19 @@ body:has(.nd-home) .avalon-static-backdrop {
   font-size: clamp(2.75rem, 4vw, 4rem);
   font-weight: 400;
   line-height: 0.9;
+}
+
+.nd-product-page__founder-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.nd-product-page__founder-price s {
+  color: #8b8076 !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration-thickness: 1px;
 }
 
 .nd-product-page__booking > a {
@@ -6185,6 +6230,17 @@ body:has(.nd-home) .avalon-static-backdrop {
 
   .nd-menu__item-copy small {
     max-width: 15rem;
+  }
+
+  .nd-menu__item-price--founder {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .nd-menu__item-price--founder small,
+  .nd-menu__item-price--founder strong,
+  .nd-menu__item-price--founder s {
+    grid-column: 1;
   }
 
   /* ConsumerFooter already carries a superset of this disclaimer a few hundred
