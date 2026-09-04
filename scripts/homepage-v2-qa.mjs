@@ -53,9 +53,7 @@ try {
     assert(cardText[0]?.includes('$200') && cardText[0]?.includes('$175'), `Hydration pricing is incorrect at ${width}px`);
     assert(cardText[1]?.includes('$285') && cardText[1]?.includes('$195'), `Myers pricing is incorrect at ${width}px`);
     assert(cardText[2]?.includes('$285') && cardText[2]?.includes('$195'), `Hangover pricing is incorrect at ${width}px`);
-    assert(await page.getByRole('heading', { name: /Clinician led\. Nurse delivered\./i }).isVisible(), `trust section missing at ${width}px`);
-    assert(await page.getByText('Clinical leadership').isVisible(), `clinical leadership card missing at ${width}px`);
-    assert(await page.getByText('Private intake & consent').isVisible(), `privacy signal missing at ${width}px`);
+    assert(!(await page.getByRole('heading', { name: /Clinician led\. Nurse delivered\./i }).count()), `removed clinician-care module is still present at ${width}px`);
     assert(!(await page.getByText(/Clinical content reviewed/i).count()), `internal review date exposed at ${width}px`);
     assert(await page.getByRole('heading', { name: 'Find your starting point.' }).isVisible(), `picker missing at ${width}px`);
     assert(await page.getByText('Five Bay Area counties.').isVisible(), `service-area copy missing at ${width}px`);
@@ -81,7 +79,7 @@ try {
         const banner = document.querySelector('.nd-safari-tint-bar')?.getBoundingClientRect();
         const underline = document.querySelector('.nd-safari-tint-bar a > span')?.getBoundingClientRect();
         const headings = [...document.querySelectorAll(
-          '.home-v2__menu-head h2, .home-v2__trust-copy h2, .home-v2__picker-copy h2, .home-v2__area-copy h2, .home-v2__final-cta h2',
+          '.home-v2__menu-head h2, .home-v2__picker-copy h2, .home-v2__area-copy h2, .home-v2__final-cta h2',
         )].map((heading) => {
           const rect = heading.getBoundingClientRect();
           const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
@@ -165,7 +163,6 @@ try {
   await areaPage.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await areaPage.evaluate(() => localStorage.setItem('cookieConsent', 'allowed'));
   await areaPage.reload({ waitUntil: 'domcontentloaded' });
-  await areaPage.locator('.home-v2__trust').screenshot({ path: '.context/homepage-v2-trust-1440.png' });
   await areaPage.locator('.home-v2__picker').screenshot({ path: '.context/homepage-v2-picker-1440.png' });
   await areaPage.locator('.home-v2__area').screenshot({ path: '.context/homepage-v2-service-area.png' });
   await areaPage.locator('#home-v2-coverage').fill('94107');

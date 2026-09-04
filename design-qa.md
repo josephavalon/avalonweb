@@ -452,6 +452,53 @@ final result: passed
 
 ---
 
+# Homepage Trim + START iOS Spacing Rebalance
+
+## Visual evidence
+
+- Reported problem state: `.context/attachments/GMQAMK/IMG_3584.png`
+  (`1320 × 2868` source pixels, iPhone Safari screenshot supplied by the user).
+- Final hosted capture: `.context/start-balanced-hosted-430x932.png`
+  (`430 × 932` CSS viewport, Cognito form loaded from Vercel preview
+  `dpl_8knBkcAwAEViiACyCvMAL9VEvtZv`).
+- State: `/start`, pre-submit, cookie choice resolved, blank form, default date
+  and time, no personal data entered.
+
+## Findings and corrections
+
+- [P1 resolved] The previous fit-to-screen correction compressed the complete
+  intake into roughly half of the usable iPhone canvas. Standard-height phones
+  now use a dedicated `min-height: 780px` tier with `52px` text/date/time fields,
+  a `52px` START action, larger labels, and consistent vertical rhythm.
+- [P1 resolved] START remains fully visible: its bottom edge is `674.7px` at
+  `430 × 932` without a selected therapy, `716.8px` with Hydration selected,
+  and `713.2px` at `390 × 844`. All three pages have zero document overflow.
+- [P2 resolved] Short displays retain the compact fallback instead of forcing
+  the airy tier below the fold. At `390 × 760`, START ends at `561.8px`; at
+  `320 × 664`, appointment fields stack to protect native icons and START ends
+  at `618.9px`.
+- [P2 resolved] The homepage's Clinician led / Nurse delivered module was
+  removed in full. Explore therapies now flows directly into the guided picker,
+  preserving the existing module backgrounds and single section transition.
+- Homepage checks at `390px` and `1440px` confirm the removed heading count is
+  zero, all three therapy cards remain, the guided picker remains, and there is
+  no horizontal overflow.
+- No form submission or external communication was performed. The hosted
+  captures produced no actionable console or page errors.
+
+## Verification
+
+- `git diff --check`: passed.
+- `npm run lint`: passed (235 source files).
+- `npm run build`: passed, including B2B and 137 SEO route outputs.
+- `npm run test:homepage-v2`: passed across seven responsive viewports, the
+  guided picker, and service-area map states.
+- Hosted preview: `dpl_8knBkcAwAEViiACyCvMAL9VEvtZv` (`Ready`).
+
+final result: passed
+
+---
+
 # Focused START — Mobile Viewport Fit
 
 ## Visual evidence

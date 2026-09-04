@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
-  BriefcaseMedical,
   CalendarCheck,
   Clock3,
   ClipboardCheck,
@@ -47,21 +46,6 @@ const BENEFIT_COPY = {
   energy: 'B vitamins and amino acids for demanding days.',
   jetlag: 'Hydration and wellness support around travel.',
 };
-
-const CARE_PATH_STEPS = [
-  {
-    icon: ClipboardCheck,
-    title: 'Private intake & consent',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Clinical review',
-  },
-  {
-    icon: BriefcaseMedical,
-    title: 'Your nurse arrives',
-  },
-];
 
 const GOALS = [
   { id: 'hydration', label: 'Rehydrate', therapy: 'hydration', icon: Droplets },
@@ -282,60 +266,6 @@ function TherapyPreview() {
         </Link>
         <p>Clinical review required. $50 deposit applied.</p>
       </Reveal>
-    </section>
-  );
-}
-
-function TrustSection() {
-  const sectionRef = useSectionView('clinical_trust');
-  return (
-    <section ref={sectionRef} className="home-v2__section home-v2__trust" aria-labelledby="home-v2-trust">
-      <div className="home-v2__trust-hero">
-        <RevealGroup className="home-v2__trust-copy" stagger={0.07}>
-          <RevealItem as="p" className="home-v2__eyebrow">The people behind your care</RevealItem>
-          <RevealItem as="h2" id="home-v2-trust" aria-label="Clinician led. Nurse delivered.">
-            <ResponsiveTitle
-              desktop={<>Clinician led.<br />Nurse delivered.</>}
-              mobile="Clinician-led care."
-            />
-          </RevealItem>
-          <RevealItem as="p" className="home-v2__trust-intro">
-            Physician reviewed. California-licensed RNs. Cleared before dispatch.
-          </RevealItem>
-          <RevealItem className="home-v2__trust-actions">
-            <Link className="home-v2__trust-primary" to="/team">Care team <ArrowRight aria-hidden="true" /></Link>
-            <Link className="home-v2__trust-secondary" to="/safety">Safety standards <ArrowRight aria-hidden="true" /></Link>
-          </RevealItem>
-        </RevealGroup>
-
-        <Reveal className="home-v2__leadership-card">
-          <p className="home-v2__eyebrow">Clinical leadership</p>
-          <div className="home-v2__leader-row">
-            <span aria-hidden="true">JW</span>
-            <div><strong>Jayson Weir, MD</strong><p>Medical Director</p></div>
-          </div>
-          <div className="home-v2__leader-row">
-            <span aria-hidden="true">SW</span>
-            <div><strong>Stephanie Weeks, RN</strong><p>Director of Nursing</p></div>
-          </div>
-        </Reveal>
-      </div>
-
-      <div className="home-v2__care-journey">
-        <p className="home-v2__eyebrow">What happens before your visit</p>
-        <RevealGroup as="ol" className="home-v2__care-path" stagger={0.08}>
-          {CARE_PATH_STEPS.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <RevealItem as="li" key={step.title}>
-                <span className="home-v2__care-path-number" aria-hidden="true">{index + 1}</span>
-                <Icon aria-hidden="true" />
-                <div><strong>{step.title}</strong><p>{step.body}</p></div>
-              </RevealItem>
-            );
-          })}
-        </RevealGroup>
-      </div>
     </section>
   );
 }
@@ -590,7 +520,6 @@ export default function HomepageV2() {
   return (
     <div className="home-v2">
       <TherapyPreview />
-      <TrustSection />
       <GuidedPicker />
       <ServiceArea />
       <ClosingActions />
