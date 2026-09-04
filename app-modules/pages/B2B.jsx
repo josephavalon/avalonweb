@@ -326,7 +326,7 @@ export default function B2B() {
         .b2b-bg-pink { background-color: hsl(var(--accent)); }
         .b2b-sticky-buy {
           background-color: rgba(245, 243, 237, 0.95);
-          color: hsl(var(--background));
+          color: #2b211b;
           border: 1px solid rgba(245, 243, 237, 0.22);
           box-shadow: 0 -18px 70px rgba(0, 0, 0, 0.32);
           backdrop-filter: saturate(140%) blur(6px);
