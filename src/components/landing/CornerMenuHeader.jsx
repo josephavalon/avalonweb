@@ -5,7 +5,6 @@ import AvalonMark from '@/components/AvalonMark';
 import { AnimatePresence, motion, useReducedMotion } from '@/components/ui/PageTransitionMotion';
 import { DURATIONS, EASE } from '@/lib/motion';
 import { isFrontDoorHost } from '@/lib/frontDoor';
-import './public-navigation.css';
 
 // This header is global — it renders on the front door AND on beta, so the two
 // surfaces get two item lists rather than one edited list. Beta carries the full
@@ -110,12 +109,6 @@ export default function CornerMenuHeader() {
           Avalon Vitality
         </span>
       </Link>
-
-      <nav className="nd-corner-header__desktop-nav" aria-label="Explore Avalon">
-        <Link to="/protocols">Therapies</Link>
-        <Link to="/safety">Safety</Link>
-        <Link to="/support">Support</Link>
-      </nav>
 
       <div className="nd-corner-header__actions">
         <div className="nd-corner-header__contact" aria-label="Contact Avalon Vitality">
