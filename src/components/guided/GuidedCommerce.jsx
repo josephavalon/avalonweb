@@ -22,6 +22,8 @@ import {
 } from '@/lib/guidedSession';
 import { rankOfferings } from '@/lib/recommendationEngine';
 import { useSeo } from '@/lib/seo';
+import { resolveConsumerOffering } from '@/data/consumerOffering';
+import './guided-details.css';
 
 const STEPS = Object.freeze(['goal', 'context', 'timing', 'result']);
 
@@ -95,14 +97,20 @@ function SelectionScreen({ step, title, options, onSelect, onBack, onMenu }) {
 }
 
 function reasonFor(answers) {
-  const goal = getGuidedGoal(answers.goal)?.label.toLowerCase();
-  const context = getGuidedContext(answers.goal, answers.context)?.label.toLowerCase();
-  return `Selected for your ${goal} goal and ${context} context.`;
+  const goal = getGuidedGoal(answers.goal)?.label;
+  const context = getGuidedContext(answers.goal, answers.context)?.label;
+  return `Your preferences: ${goal} · ${context}. Your care team will review this starting point with you.`;
 }
 
 function Results({ answers, recommendations, onSelect, onBack, onMenu }) {
   const [best, ...alternatives] = recommendations;
   const headingRef = useHeadingFocus();
+  const detailsFor = (offering) => resolveConsumerOffering({
+    protocolKey: offering.protocolKey,
+    doseKey: offering.doseKey,
+    therapyName: offering.id,
+  });
+  const bestDetails = detailsFor(best.offering);
   return (
     <div className="guided-results">
       <button type="button" onClick={onBack} className="guided-back guided-back--result" aria-label="Back">
@@ -117,18 +125,31 @@ function Results({ answers, recommendations, onSelect, onBack, onMenu }) {
           tabIndex={-1}
           aria-describedby="guided-result-label guided-result-reason"
         >
-          {best.offering.name}
+          {bestDetails?.name || best.offering.name}
         </h1>
         <span id="guided-result-reason">{reasonFor(answers)}</span>
+        {bestDetails && (
+          <div className="guided-best__details">
+            <dl className="guided-best__facts" aria-label="Visit summary">
+              <div><dt>Visit price</dt><dd>{bestDetails.priceLabel}</dd></div>
+              <div><dt>Visit length</dt><dd>{bestDetails.duration}</dd></div>
+            </dl>
+            <p className="guided-best__ingredients"><strong>Ingredients</strong>{bestDetails.ingredients.join(' · ')}</p>
+            <Link className="guided-best__detail-link" to={bestDetails.detailsPath}>Ingredients &amp; visit details <ArrowRight aria-hidden="true" /></Link>
+            <p className="guided-best__deposit">$50 deposit credited toward your visit. Refunded if you are not clinically eligible.</p>
+          </div>
+        )}
         <button type="button" data-testid="guided-best-match" onClick={() => onSelect(best, 0)}>
-          Start with {best.offering.name.replace(/\s+IV(?:\s+250mg)?$/i, '')}
+          Request this visit
           <ArrowRight aria-hidden="true" />
         </button>
       </section>
 
       <section className="guided-alternatives" aria-labelledby="guided-other-options">
         <p id="guided-other-options">Other options</p>
-        {alternatives.map((item, index) => (
+        {alternatives.map((item, index) => {
+          const details = detailsFor(item.offering);
+          return (
           <button
             key={item.therapyId}
             type="button"
@@ -137,11 +158,13 @@ function Results({ answers, recommendations, onSelect, onBack, onMenu }) {
           >
             <span>
               <small>Also recommended</small>
-              <strong>{item.offering.name}</strong>
+              <strong>{details?.name || item.offering.name}</strong>
+              {details && <span className="guided-alternative__facts">{details.priceLabel} · {details.duration}</span>}
             </span>
             <ArrowRight aria-hidden="true" />
           </button>
-        ))}
+          );
+        })}
         <Link to="/protocols" onClick={onMenu} className="guided-menu-link guided-menu-link--result">
           View all therapies <ArrowRight aria-hidden="true" />
         </Link>

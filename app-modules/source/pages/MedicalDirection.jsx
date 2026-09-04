@@ -149,7 +149,7 @@ export default function MedicalDirection() {
                 </p>
                 <p className="font-body text-sm text-foreground/40 mb-4">Internal Medicine · Medical Director</p>
                 <p className="font-body text-sm text-foreground/60 leading-relaxed max-w-xl">
-                  Our medical director oversees clinical protocols, reviews formulations, and maintains physician-level escalation coverage during Avalon operating hours. License verification is maintained on file; public credential details should be rechecked before live medical launch.
+                  Our medical director oversees clinical protocols, reviews formulations, and maintains physician-level escalation coverage during Avalon operating hours. License verification is maintained on file.
                 </p>
               </div>
             </motion.div>

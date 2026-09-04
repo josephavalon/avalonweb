@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight, Plus } from 'lucide-react';
-import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
+import { B2B_PRODUCTS, COMPRESSION_ADDON, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
 import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
@@ -124,15 +124,8 @@ export default function B2B() {
       name: 'Avalon Vitality Group Recovery',
       serviceType: 'Mobile IV therapy and group wellness recovery',
       areaServed: 'San Francisco Bay Area',
-      image: ['https://www.avalonvitality.co/og-b2b.png'],
+      image: ['https://www.avalonvitality.co/og-homepage.jpg'],
       description: 'Private mobile IV, shots, and recovery support for teams, events, hotels, and offices.',
-      offers: {
-        '@type': 'Offer',
-        url: 'https://www.avalonvitality.co/b2b',
-        price: '150.00',
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
-      },
       provider: { '@type': 'Organization', name: 'Avalon Vitality', url: 'https://www.avalonvitality.co' },
     },
   });
@@ -140,13 +133,8 @@ export default function B2B() {
   // ---- state ----
   const [productId, setProductId] = useState(PUBLIC_B2B_PRODUCTS[0].id);
   const [compression, setCompression] = useState(false);
-  const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [couponError, setCouponError] = useState('');
   const [showStickyCta, setShowStickyCta] = useState(true);
   const [isLoading] = useState(false); // skeletons retired in favor of scroll-reveal
-  const [b2bSubmitted, setB2bSubmitted] = useState(false);
-  const b2bRef = useMemo(() => `B2B-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, []);
   const [quantities, setQuantities] = useState(() => {
     const q = {};
     PUBLIC_B2B_PRODUCTS.forEach((p) => { q[p.id] = 1; });
@@ -154,9 +142,6 @@ export default function B2B() {
   });
   const setQuantity = (id, n) => setQuantities((prev) => ({ ...prev, [id]: Math.max(1, Math.min(25, parseInt(n, 10) || 1)) }));
   const productQty = quantities[productId] || 1;
-  const [isGift, setIsGift] = useState(false);
-  const [giftRecipientName, setGiftRecipientName] = useState('');
-  const [giftRecipientEmail, setGiftRecipientEmail] = useState('');
 
   // ---- derived ----
   const product = useMemo(
@@ -167,7 +152,6 @@ export default function B2B() {
   const b2bIvSoldOut = b2bIvRemaining <= 0;
   const imShotRemaining = Math.max(0, IM_SHOT_INVENTORY - IM_SHOT_SOLD);
   const imShotSoldOut = imShotRemaining <= 0;
-  const selectedSoldOut = !!(product?.consumes?.includes('b2bIv') && b2bIvSoldOut);
   const productIncludesBoots = !!product?.consumes?.includes('boots');
   const productIncludesIv = !!(product?.consumes?.includes('b2bIv') || product?.consumes?.includes('cbdIv'));
   const canAddCompression = product?.kind === 'single' && productIncludesIv && !productIncludesBoots;
@@ -199,7 +183,7 @@ export default function B2B() {
     try {
       if (typeof window === 'undefined') return;
       if (typeof window.fbq === 'function') window.fbq('track', 'PageView');
-      if (typeof window.gtag === 'function') window.gtag('event', 'page_view', { page_path: '/b2b', page_title: 'B2B Presale' });
+      if (typeof window.gtag === 'function') window.gtag('event', 'page_view', { page_path: '/b2b', page_title: 'Group Recovery' });
     } catch (e) {}
   }, []);
 
@@ -218,69 +202,7 @@ export default function B2B() {
     }
   }, [canAddCompression, compression]);
 
-  const subtotal = (product.price * productQty) + (compression ? COMPRESSION_ADDON.price : 0);
-  const discount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    const c = COUPONS[appliedCoupon];
-    if (!c) return 0;
-    if (c.kind === 'percent') return Math.round(subtotal * (c.value / 100));
-    return Math.min(c.value, subtotal);
-  }, [appliedCoupon, subtotal]);
-  const total = Math.max(0, subtotal - discount);
-
-  const handleCoupon = (e) => {
-    e.preventDefault();
-    const code = couponInput.trim().toUpperCase();
-    if (!code) return;
-    if (!COUPONS[code]) {
-      setCouponError('Invalid code');
-      setAppliedCoupon(null);
-      return;
-    }
-    setAppliedCoupon(code);
-    setCouponError('');
-  };
-
-  const clearCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponInput('');
-    setCouponError('');
-  };
-
-  // Tracking pixels — fires on Pay-with-Square click. No-op if pixels not loaded.
-  const fireCheckoutEvent = () => {
-    try {
-      if (typeof window === 'undefined') return;
-      const payload = {
-        currency: 'USD',
-        value: total,
-        items: [{ id: product.id, name: product.name, price: product.price }],
-        coupon: appliedCoupon || undefined,
-      };
-      if (typeof window.fbq === 'function') {
-        window.fbq('track', 'InitiateCheckout', payload);
-      }
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', 'begin_checkout', payload);
-      }
-    } catch (e) {
-      // swallow tracking errors — never block checkout
-    }
-  };
-
-    // For Square Payment Links: open the link for the selected base item.
-  // Compression + coupon are noted in the URL params (Square's page reads memo).
-  const checkoutUrl = useMemo(() => {
-    const url = new URL(product.squareUrl);
-    const memo = [];
-    if (productQty > 1) memo.push(`Quantity: ${productQty}`);
-    if (compression) memo.push('+ Normatec compression boots ($50)');
-    if (appliedCoupon) memo.push(`Coupon ${appliedCoupon} (${COUPONS[appliedCoupon].label})`);
-    if (isGift) memo.push(`Gift for ${giftRecipientName || '(name not provided)'} <${giftRecipientEmail || 'email not provided'}>`);
-    memo.push(`Total: $${total}`);
-    if (memo.length) url.searchParams.set('memo', memo.join(' · '));
-    return url.toString();
-  }, [product.squareUrl, compression, appliedCoupon, total, isGift, giftRecipientName, giftRecipientEmail, productQty]);
+  const total = (product.price * productQty) + (compression ? COMPRESSION_ADDON.price : 0);
 
   return (
     <div className="b2b-root min-h-screen flex flex-col relative">
@@ -706,7 +628,7 @@ export default function B2B() {
                 >
                   <p className="b2b-display text-xs md:text-sm tracking-[0.32em] uppercase mb-3 b2b-pink">IV Add-On Only</p>
                   <h3 className="b2b-display text-3xl md:text-5xl uppercase mb-2 md:mb-3 leading-[0.95]">Normatec Boots</h3>
-                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.18em] uppercase mb-3 opacity-70 max-w-[14rem] mx-auto leading-snug">Add to any IV at checkout. Not sold on its own.</p>
+                  <p className="b2b-display text-[10px] md:text-xs tracking-[0.18em] uppercase mb-3 opacity-70 max-w-[14rem] mx-auto leading-snug">Add to an IV estimate. Availability confirmed with your group plan.</p>
                   <div className="flex items-baseline justify-center gap-2 mb-3">
                     <p className="b2b-display text-4xl md:text-5xl leading-none">+${COMPRESSION_ADDON.price}</p>
                     <p className="b2b-display text-xl md:text-2xl line-through opacity-50 leading-none">${COMPRESSION_ADDON.originalPrice}</p>
@@ -842,10 +764,14 @@ export default function B2B() {
         </div>
       </section>
 
-            {/* Order summary + checkout */}
+      {/* Group estimate and contact handoff. No reservation is created here. */}
       <section id="b2b-checkout" className="relative z-10 px-5 md:px-10 pb-14 md:pb-20 scroll-mt-20">
         <div className="max-w-3xl mx-auto b2b-card p-6 md:p-8">
-          <p className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-5">Your group</p>
+          <h2 className="b2b-display text-xl md:text-2xl uppercase tracking-wide mb-3">Your group estimate</h2>
+          <p className="text-sm md:text-base leading-relaxed mb-5">
+            Explore options, then contact Avalon with your date, location, and guest count.
+            Your team confirms services, pricing, and availability before booking.
+          </p>
 
           <div className="space-y-3 mb-5">
             <div className="flex justify-between gap-4">
@@ -858,82 +784,30 @@ export default function B2B() {
                 <span className="b2b-display text-lg md:text-xl">${COMPRESSION_ADDON.price}</span>
               </div>
             )}
-            {appliedCoupon && (
-              <div className="flex justify-between gap-4 b2b-pink">
-                <span className="text-sm md:text-base">Coupon {appliedCoupon}</span>
-                <span className="b2b-display text-lg md:text-xl">&minus;${discount}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Gift toggle */}
-          <div className="border-t border-white/15 pt-4 mb-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isGift}
-                onChange={(e) => setIsGift(e.target.checked)}
-                className="h-11 w-11 shrink-0 accent-foreground"
-              />
-              <span className="text-sm md:text-base leading-snug">
-                <span className="b2b-display uppercase tracking-wide">This is a gift</span>
-                <span className="block text-xs md:text-sm text-white/55 mt-0.5">We&rsquo;ll send the confirmation to the recipient.</span>
-              </span>
-            </label>
-            {isGift && (
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="Recipient name"
-                  value={giftRecipientName}
-                  onChange={(e) => setGiftRecipientName(e.target.value)}
-                  className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 text-sm text-background focus:outline-none focus:ring-2 focus:ring-foreground md:text-base"
-                />
-                <input
-                  type="email"
-                  placeholder="Recipient email"
-                  value={giftRecipientEmail}
-                  onChange={(e) => setGiftRecipientEmail(e.target.value)}
-                  className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 text-sm text-background focus:outline-none focus:ring-2 focus:ring-foreground md:text-base"
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex justify-between items-baseline border-t border-white/15 pt-4 mb-3">
-            <span className="b2b-display text-2xl md:text-3xl uppercase">Total</span>
+            <span className="b2b-display text-2xl md:text-3xl uppercase">Estimated total</span>
             <span className="b2b-display text-4xl md:text-5xl">${total}</span>
           </div>
           <p className="b2b-display text-[10px] md:text-xs tracking-[0.2em] uppercase b2b-pink mb-4 md:mb-5">
             Confirmation before dispatch
           </p>
 
-          {b2bSubmitted ? (
-            <div className="rounded-2xl border border-accent/25 bg-accent/[0.08] p-6 text-center space-y-3">
-              <p className="b2b-display text-2xl uppercase tracking-wide">We'll be in touch within 24 hours.</p>
-              <p className="text-sm text-white/60">Your inquiry has been received. Our team will reach out to confirm details and payment.</p>
-              <p className="b2b-display text-xs tracking-[0.2em] uppercase text-white/45">Ref: {b2bRef}</p>
-            </div>
-          ) : selectedSoldOut ? (
-            <button
-              type="button"
-              disabled
-              className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
-            >
-              Sold out — pick another option
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => { fireCheckoutEvent(); setB2bSubmitted(true); }}
-              className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2"
-            >
-              Reserve my slot <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
-
-          <p className="mt-4 text-xs leading-relaxed text-white/55">
-            Slot reserved instantly. Payment processed securely by Square. Avalon confirms details by text.
+          <a href="sms:+14159807708" className="b2b-btn-primary w-full inline-flex items-center justify-center gap-2">
+            Text us about your group <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <a href="tel:+14159807708" className="b2b-btn-secondary inline-flex min-h-11 items-center justify-center text-center">
+              Call (415) 980-7708
+            </a>
+            <Link to="/start?source=b2b" className="b2b-btn-secondary inline-flex min-h-11 items-center justify-center text-center">
+              Request a visit
+            </Link>
+          </div>
+          <p className="mt-4 text-sm leading-relaxed">
+            This estimate is for planning. Contact us to request your group booking;
+            selecting options here does not reserve a time or send an inquiry.
           </p>
         </div>
       </section>
@@ -1009,7 +883,7 @@ export default function B2B() {
         >
           <span className="b2b-display text-sm uppercase tracking-[0.15em] truncate">{product.name}</span>
           <span className="flex items-center gap-2 shrink-0">
-            <span className="b2b-display text-lg">${total}</span>
+            <span className="b2b-display text-lg">Est. ${total}</span>
             <ArrowRight className="w-4 h-4" />
           </span>
         </a>

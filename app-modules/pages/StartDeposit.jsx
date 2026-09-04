@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, FileText } from 'lucide-react';
 import { useSeo } from '@/lib/seo';
 
 // Stripe redirects here after the reservation deposit. Everything shown comes
@@ -14,14 +14,14 @@ export default function StartDeposit() {
   const [searchParams] = useSearchParams();
 
   useSeo({
-    title: 'Deposit Received — Avalon Vitality',
-    description: 'Your Avalon Vitality reservation deposit has been received.',
+    title: 'Deposit follow-up — Avalon Vitality',
+    description: 'Next steps after an Avalon Vitality deposit. Our team confirms payment, availability and your appointment.',
     path: '/start/deposit',
     robots: 'noindex, nofollow',
   });
 
-  // Validated rather than rendered raw: this value arrives from the query
-  // string, so it is visitor-controlled until it matches the minted shape.
+  // Format validation only: this visitor-controlled reference is not proof
+  // that checkout completed or that payment was received.
   const ref = useMemo(() => {
     const raw = String(searchParams.get('ref') || '').toUpperCase();
     return REF_RE.test(raw) ? raw : '';
@@ -30,34 +30,36 @@ export default function StartDeposit() {
   return (
     <div className="nd-flow app-shell min-h-[100svh] bg-background text-foreground">
       <main className="mx-auto w-full max-w-xl px-5 pb-24 pt-16 md:px-8 md:pt-24">
-        <div className="nd-request-received__mark" aria-hidden="true"><Check /></div>
+        <div className="nd-request-received__mark" aria-hidden="true"><FileText /></div>
 
         <h1 className="mt-6 font-heading text-[4.25rem] uppercase leading-none tracking-tight text-foreground md:text-[6rem]">
-          Reserved
+          Deposit follow-up
         </h1>
 
         <p className="mt-5 font-body text-lg font-medium leading-[1.45] text-foreground">
-          Your $50 deposit is in. It applies to your visit, and it&apos;s refunded
-          if you turn out not to be eligible.
+          If you completed your $50 deposit payment, it is credited toward your visit
+          and refunded if you are ineligible. Check your payment receipt for confirmation.
         </p>
 
         {ref && (
           <div className="mt-8 rounded-[2rem] border border-foreground/[0.10] px-6 py-5 md:px-8 md:py-7">
             <p className="av-mono text-[11px] uppercase tracking-[0.12em] text-foreground/50">
-              Your reservation code
+              Reference code
             </p>
             <p className="mt-3 av-mono text-[1.5rem] uppercase tracking-[0.08em] text-foreground md:text-[1.75rem]">
               {ref}
             </p>
             <p className="mt-3 font-body text-[13px] font-medium leading-snug text-foreground/55">
-              Give this to your care team when they call — it&apos;s how they match
-              your payment to your request.
+              Share this reference with our team so they can check any payment
+              and match it to your request.
             </p>
           </div>
         )}
 
         <p className="mt-8 font-body text-base font-medium leading-relaxed text-foreground/65">
-          We&apos;ll call to confirm the details, same day between 8am and 8pm.
+          Our team confirms payment, availability and clinical eligibility before
+          confirming your appointment. For help, call{' '}
+          <a href="tel:+14159807708" className="underline underline-offset-4">(415) 980-7708</a>.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">

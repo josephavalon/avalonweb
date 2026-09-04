@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
 import { Plus, Minus, Search } from 'lucide-react';
 import SmoothDisclosure from '@/components/ui/SmoothDisclosure';
@@ -13,11 +13,11 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How does Avalon work?',
-        a: 'Book online, choose your protocol, and we dispatch a registered nurse to your home, office, or hotel. Sessions typically take 30–90 minutes depending on the IV therapy.',
+        a: 'Request a visit online and choose a treatment or ask our team for help. We confirm your location, preferred time, availability, and clinical eligibility before arranging a registered nurse visit to your home, office, or hotel.',
       },
       {
         q: 'What areas do you serve?',
-        a: 'Avalon currently serves San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties. Enter your address at checkout to confirm availability.',
+        a: 'Avalon currently serves San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties. Check your ZIP or city on our service-area page, or contact our team to confirm your address and visit availability.',
       },
       {
         q: 'What are your hours?',
@@ -25,7 +25,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How quickly can a nurse arrive?',
-        a: 'Most sessions are available same-day. Plan clients receive a 90-minute arrival window. VIP and custom plan clients receive priority scheduling.',
+        a: 'Same-day visits depend on your location, nurse availability, and clinical eligibility. Send your preferred date and time with your request; our team confirms the arrival window before your visit.',
       },
     ],
   },
@@ -38,7 +38,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'What is NAD+ and who is it for?',
-        a: 'NAD+ (nicotinamide adenine dinucleotide) is a coenzyme found in every cell of the body, associated with cellular energy metabolism. NAD+ IV appointments run 1-4 hours across all doses and require brief health screening.',
+        a: 'NAD+ (nicotinamide adenine dinucleotide) is a coenzyme found in every cell of the body, associated with cellular energy metabolism. NAD+ IV timing varies by dose, with listed options taking up to 6 hours. Your care team confirms the expected duration and health screening before your visit.',
       },
       {
         q: 'What is glutathione?',
@@ -50,7 +50,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How long does a session take?',
-        a: 'Hydration sessions run 30-45 minutes. Most IV therapies are 45-60 minutes. NAD+ IV appointments run 1-4 hours. Your nurse will confirm timing when they arrive.',
+        a: 'Hydration sessions run 30–45 minutes. Most IV therapies are 45–60 minutes. NAD+ IV timing varies by dose, with listed options taking up to 6 hours. Our team confirms the expected duration before your visit.',
       },
     ],
   },
@@ -80,27 +80,23 @@ const FAQ_SECTIONS = [
     ],
   },
   {
-    title: 'Subscription & Booking',
+    title: 'Requests & Booking',
     items: [
       {
-        q: 'How does the subscription work?',
-        a: 'Plan clients pay a monthly fee and receive credits redeemable for IV sessions, plus a discount on all add-ons and additional sessions. Credits roll forward while active.',
+        q: 'Are subscriptions available?',
+        a: 'Online subscription enrollment is currently unavailable. Request an individual visit, or contact our team to discuss ongoing visits.',
       },
       {
-        q: 'Can I pause or cancel?',
-        a: 'Subscriptions require a 3-month minimum commitment. After that, you can cancel anytime with 30 days notice. Pausing is available once per year for up to 60 days.',
+        q: 'Does sending a request confirm my appointment?',
+        a: 'No. Your date and time are preferences until our team confirms availability, your location, and clinical eligibility. We contact you to confirm the appointment details.',
       },
       {
-        q: 'Can I share my subscription?',
-        a: 'VIP and custom plans may designate one household partner to share subscription benefits.',
+        q: 'How does the deposit work?',
+        a: 'The $50 deposit is credited toward your visit and refunded if you are not clinically eligible. You can pay after submitting your request or wait for our call. Payment alone does not confirm an appointment.',
       },
       {
-        q: "What's the commitment?",
-        a: '3 months minimum, then month-to-month.',
-      },
-      {
-        q: 'How do I book?',
-        a: 'Book at avalonvitality.co/book. Same-day appointments are available 8 AM–8 PM.',
+        q: 'How do I request a visit?',
+        a: 'Use avalonvitality.co/start to send your request and preferred date and time. Our team confirms availability and visit details. Service hours are daily, 8 AM–8 PM.',
       },
       {
         q: 'What payment methods do you accept?',
@@ -124,22 +120,31 @@ const ALL_ITEMS = FAQ_SECTIONS.flatMap((s) => s.items.map((item) => ({ ...item, 
 const EASE = [0.16, 1, 0.3, 1];
 
 function FAQItem({ faq, isOpen, onToggle }) {
+  const id = useId();
+  const triggerId = `${id}-question`;
+  const panelId = `${id}-answer`;
   return (
-    <div
-      className="border border-white/20 bg-white/[0.03] backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer"
-      onClick={onToggle}
-    >
-      <div className="flex items-center justify-between px-5 py-3 gap-4">
-        <span className="font-body text-sm text-foreground">{faq.q}</span>
-        <div className="shrink-0 w-5 h-5 flex items-center justify-center">
-          {isOpen
-            ? <Minus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
-            : <Plus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
-          }
-        </div>
-      </div>
+    <div className="border border-white/20 bg-white/[0.03] rounded-3xl overflow-hidden">
+      <h3>
+        <button
+          id={triggerId}
+          type="button"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          onClick={onToggle}
+          className="flex min-h-11 w-full items-center justify-between px-5 py-3 gap-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-foreground"
+        >
+          <span className="font-body text-sm text-foreground">{faq.q}</span>
+          <span className="shrink-0 w-5 h-5 flex items-center justify-center" aria-hidden="true">
+            {isOpen
+              ? <Minus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+              : <Plus className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+            }
+          </span>
+        </button>
+      </h3>
       <SmoothDisclosure open={isOpen}>
-        <div className="px-5 pb-4">
+        <div id={panelId} role="region" aria-labelledby={triggerId} className="px-5 pb-4">
           <p className="font-body text-sm text-foreground/70 leading-relaxed pt-2">{faq.a}</p>
         </div>
       </SmoothDisclosure>
@@ -181,6 +186,7 @@ export default function FAQ() {
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" strokeWidth={1.5} />
           <input
             type="text"
+            aria-label="Search frequently asked questions"
             placeholder="SEARCH"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setOpenKey(null); }}
@@ -207,7 +213,7 @@ export default function FAQ() {
           <div className="space-y-8">
             {FAQ_SECTIONS.map((section) => (
               <div key={section.title}>
-                <motion.p
+                <motion.h2
                   initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -215,7 +221,7 @@ export default function FAQ() {
                   className="font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-3"
                 >
                   {section.title}
-                </motion.p>
+                </motion.h2>
                 <div className="space-y-1">
                   {section.items.map((faq) => {
                     const key = `${section.title}-${faq.q}`;

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { ArrowRight, Building2, CalendarCheck, Check, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, Building2, CalendarCheck, Mail, Phone, ShieldCheck } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
@@ -34,8 +35,6 @@ export default function Corporate() {
     description: 'On-site IV therapy for teams and events in the San Francisco Bay Area.',
     path: '/corporate',
   });
-
-  const [submitted, setSubmitted] = useState(false);
 
   return (
     <div className="av-page-surface min-h-screen w-full">
@@ -110,64 +109,27 @@ export default function Corporate() {
 
         <Reveal as="section" id="proposal" className="mx-auto mt-6 max-w-6xl scroll-mt-28">
           <GlassCard tone="command" radius="1.75rem" className="p-5 md:p-6">
-            {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: EASE }}
-                className="relative flex min-h-[260px] flex-col items-center justify-center text-center"
-              >
-                <span className="flex h-12 w-12 items-center justify-center rounded-full border border-foreground/12 bg-foreground/[0.06]">
-                  <Check className="h-5 w-5 text-foreground" strokeWidth={2} />
-                </span>
-                <p className="mt-5 font-heading text-[3rem] uppercase leading-none text-foreground">Received</p>
-                <p className="mt-3 max-w-md font-body text-sm font-semibold leading-relaxed text-foreground/58">
-                  Avalon will respond within one business day.
-                </p>
-              </motion.div>
-            ) : (
-              <form
-                className="relative grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  setSubmitted(true);
-                }}
-              >
-                <label className="sr-only" htmlFor="company">Company</label>
-                <input
-                  id="company"
-                  required
-                  placeholder="Company"
-                  className="min-h-[58px] rounded-[1.2rem] border border-foreground/12 bg-foreground/[0.045] px-4 font-body text-sm font-semibold text-foreground placeholder:text-foreground/32"
-                />
-                <label className="sr-only" htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  placeholder="Work email"
-                  className="min-h-[58px] rounded-[1.2rem] border border-foreground/12 bg-foreground/[0.045] px-4 font-body text-sm font-semibold text-foreground placeholder:text-foreground/32"
-                />
-                <label className="sr-only" htmlFor="teamSize">Team size</label>
-                <select
-                  id="teamSize"
-                  required
-                  defaultValue=""
-                  className="min-h-[58px] rounded-[1.2rem] border border-foreground/12 bg-foreground/[0.045] px-4 font-body text-sm font-semibold text-foreground"
+            <div className="relative">
+              <h2 className="font-heading text-3xl uppercase leading-none text-foreground md:text-4xl">Plan your team visit</h2>
+              <p className="mt-4 max-w-2xl font-body text-base leading-relaxed text-foreground/70">
+                Email our team with your company, approximate group size, location and preferred date. We will coordinate availability, pricing and next steps with you.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <a
+                  href="mailto:support@avalonvitality.co?subject=Corporate%20wellness%20inquiry"
+                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3 font-body text-sm font-semibold text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
                 >
-                  <option value="" disabled>Team size</option>
-                  <option value="5-10">5-10</option>
-                  <option value="11-25">11-25</option>
-                  <option value="25+">25+</option>
-                </select>
-                <button
-                  type="submit"
-                  className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-foreground px-7 font-body text-xs font-black uppercase tracking-[0.14em] text-background"
-                >
-                  Send <Users className="h-4 w-4" strokeWidth={2.35} />
-                </button>
-              </form>
-            )}
+                  <Mail aria-hidden="true" className="h-4 w-4" /> Email for a team proposal
+                </a>
+                <a href="tel:+14159807708" className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-foreground/20 px-6 py-3 font-body text-sm font-semibold text-foreground">
+                  <Phone aria-hidden="true" className="h-4 w-4" /> Call (415) 980-7708
+                </a>
+              </div>
+              <p className="mt-4 font-body text-sm leading-relaxed text-foreground/65">The email link opens your email app. Send your message there to reach our team.</p>
+              <Link to="/start?source=corporate" className="mt-3 inline-flex min-h-[44px] items-center gap-2 font-body text-sm text-foreground underline underline-offset-4">
+                Request an individual visit <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </Link>
+            </div>
           </GlassCard>
         </Reveal>
       </main>

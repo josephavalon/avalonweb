@@ -895,9 +895,9 @@ export const publicStaticRoutes = [
   },
   {
     path: '/b2b',
-    title: 'Bay to Breakers Recovery Presale — Avalon Vitality',
-    description: 'Pre-buy Avalon race-day recovery for Bay to Breakers 2026 with clinician-reviewed intake, licensed registered nurse staffing, and finish-line support.',
-    h1: 'Bay to Breakers Recovery Presale',
+    title: 'Group Recovery — Avalon Vitality',
+    description: 'Private mobile IV, shots, and recovery support for teams, events, hotels, and offices across the San Francisco Bay Area.',
+    h1: 'Group Recovery',
     priority: '0.7',
     changefreq: 'weekly',
   },

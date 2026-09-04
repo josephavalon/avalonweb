@@ -14,7 +14,7 @@ const EASE = [0.16, 1, 0.3, 1];
 const ZONES = [
   {
     region: 'San Francisco',
-    sub: 'All 94xxx zip codes — full city coverage',
+    sub: 'San Francisco neighborhoods',
     areas: [
       'SoMa', 'Financial District', 'Union Square', 'Nob Hill', 'Russian Hill',
       'Pacific Heights', 'Marina District', 'Cow Hollow', 'Hayes Valley',
@@ -154,7 +154,7 @@ function ZipChecker() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" strokeWidth={1.5} />
           <input
             type="text"
-            inputMode="numeric"
+            aria-label="ZIP code or city"
             value={zip}
             onChange={handleChange}
             onKeyDown={handleKey}
@@ -176,6 +176,7 @@ function ZipChecker() {
         {result?.status === 'covered' && (
           <motion.div
             key="covered"
+            role="status"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -185,19 +186,20 @@ function ZipChecker() {
             <CheckCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
               <p className="font-body text-sm text-foreground font-medium">We cover {result.label}.</p>
-              <p className="font-body text-xs text-foreground/50 mt-0.5">{result.zone} · {result.window}. Book to confirm.</p>
+              <p className="font-body text-xs text-foreground/70 mt-0.5">{result.zone} · Request your preferred time; our team confirms availability.</p>
               <Link
-                to="/book"
-                className="inline-flex items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-accent hover:text-foreground transition-colors"
+                to="/start"
+                className="inline-flex min-h-11 items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-accent hover:text-foreground transition-colors"
               >
-                Book <ArrowRight className="w-3 h-3" strokeWidth={2} />
+                Request a visit <ArrowRight className="w-3 h-3" strokeWidth={2} />
               </Link>
             </div>
           </motion.div>
         )}
-        {result?.status === 'not_covered' && (
+        {result && result.status !== 'covered' && (
           <motion.div
             key="not"
+            role="status"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -206,13 +208,13 @@ function ZipChecker() {
           >
             <XCircle className="w-5 h-5 text-foreground/30 shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
-              <p className="font-body text-sm text-foreground/70">{zip} is outside our current coverage area.</p>
-              <p className="font-body text-xs text-foreground/40 mt-0.5">Outside current coverage.</p>
+              <p className="font-body text-sm text-foreground">Coverage check needed for {zip}.</p>
+              <p className="font-body text-sm text-foreground/70 mt-0.5">Our online checker cannot confirm this location. Contact our team to check your address and nurse availability.</p>
               <a
-                href="mailto:hello@avalonvitality.co"
-                className="inline-flex items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-foreground/40 hover:text-foreground transition-colors"
+                href="sms:+14159807708"
+                className="inline-flex min-h-11 items-center gap-1.5 mt-3 font-body text-[11px] tracking-[0.2em] uppercase text-foreground underline underline-offset-4 hover:text-foreground transition-colors"
               >
-                Contact <ArrowRight className="w-3 h-3" strokeWidth={2} />
+                Text us to confirm <ArrowRight className="w-3 h-3" strokeWidth={2} />
               </a>
             </div>
           </motion.div>

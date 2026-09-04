@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from '@/components/ui/PageTransitionMotion';
-import { Download, Mail, Image, FileText, User, Camera } from 'lucide-react';
+import { Mail, Image, FileText, User, Camera } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useSeo } from '@/lib/seo';
@@ -21,25 +21,21 @@ const BRAND_ASSETS = [
     icon: Image,
     label: 'Avalon Logo',
     desc: 'Primary lockup, dark and light variants. SVG + PNG.',
-    action: 'Coming Soon',
   },
   {
     icon: FileText,
     label: 'Brand Guidelines',
     desc: 'Color system, typography, usage rules.',
-    action: 'Coming Soon',
   },
   {
     icon: User,
     label: 'Founder Photo',
     desc: 'High-resolution headshot for editorial use.',
-    action: 'Coming Soon',
   },
   {
     icon: Camera,
     label: 'Product Photography',
     desc: 'Session photography, lifestyle images, product shots.',
-    action: 'Coming Soon',
   },
 ];
 
@@ -48,8 +44,8 @@ const FAST_FACTS = [
   { label: 'Location', value: 'San Francisco, CA' },
   { label: 'Clinicians', value: 'Licensed Registered Nurses' },
   { label: 'Delivery', value: 'Mobile — at your location' },
-  { label: 'Model', value: 'Subscription + à la carte' },
-  { label: 'Launch', value: 'SF Bay Area, 2026' },
+  { label: 'Model', value: 'Individual and group visits' },
+  { label: 'Service area', value: 'SF Bay Area' },
 ];
 
 export default function Press() {
@@ -103,16 +99,16 @@ export default function Press() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.16 }}
               className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] p-10 md:p-14 flex flex-col items-center text-center"
             >
-              <p className="font-heading text-2xl md:text-3xl text-foreground/30 uppercase mb-4">Launching 2026</p>
+              <p className="font-heading text-2xl md:text-3xl text-foreground/70 uppercase mb-4">Press updates</p>
               <p className="font-body text-sm text-foreground/40 leading-relaxed max-w-md">
-                Avalon Vitality is preparing for public launch in the San Francisco Bay Area. Press coverage will appear here as it publishes. For early access or editorial inquiries, reach us below.
+                Press coverage will appear here as it publishes. For interviews, background information or editorial inquiries, contact our team.
               </p>
               <a
                 href="mailto:press@avalonvitality.co"
                 className="mt-6 inline-flex min-h-10 items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-accent border border-accent/30 px-5 py-2.5 rounded-full hover:bg-accent/10 transition-colors duration-200"
               >
                 <Mail className="w-3.5 h-3.5" />
-                Request Early Coverage
+                Contact press team
               </a>
             </motion.div>
           </div>
@@ -147,10 +143,11 @@ export default function Press() {
                       <p className="font-body text-sm text-foreground/55 leading-relaxed mb-4">{asset.desc}</p>
                       <a
                         href="mailto:press@avalonvitality.co"
-                        className="inline-flex min-h-[44px] items-center gap-1.5 font-body text-xs tracking-[0.15em] uppercase text-foreground/35 border border-foreground/[0.1] px-3 py-1.5 rounded-full hover:border-foreground/25 hover:text-foreground/55 transition-colors duration-200"
+                        aria-label={`Request ${asset.label} assets by email`}
+                        className="inline-flex min-h-[44px] items-center gap-1.5 font-body text-xs tracking-[0.15em] uppercase text-foreground/70 border border-foreground/[0.15] px-3 py-1.5 rounded-full hover:border-foreground/40 hover:text-foreground transition-colors duration-200"
                       >
-                        <Download className="w-3 h-3" />
-                        {asset.action}
+                        <Mail aria-hidden="true" className="w-3 h-3" />
+                        Request assets
                       </a>
                     </div>
                   </motion.div>
