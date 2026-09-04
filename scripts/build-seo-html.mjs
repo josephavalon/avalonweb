@@ -26,15 +26,15 @@ const dist = path.join(repoRoot, 'dist');
 const indexPath = path.join(dist, 'index.html');
 const TODAY = new Date().toISOString().slice(0, 10);
 const IS_AVALON_OS_BETA_BUILD = String(process.env.VITE_AVALON_OS_BETA || '').trim().toLowerCase() === 'true';
-// CBD IV is held from the public apex pending clinical + legal review. Set
-// VITE_HIDE_CBD=true on the `avalonweb` Vercel project only; beta leaves it
-// unset so the category stays reviewable there.
+// CBD IV is permanently removed from customer-facing routes. Historical
+// catalog and booking compatibility data can remain, but no build may emit a
+// public CBD page or sitemap entry.
 //
 // This mirrors src/lib/cbdVisibility.js rather than importing it: that module
 // reads import.meta.env, which Node cannot evaluate. Same deliberate
 // duplication as IS_AVALON_OS_BETA_BUILD above. scripts/cbd-visibility-qa.mjs
 // asserts the two prefix lists do not drift.
-const HIDE_CBD = String(process.env.VITE_HIDE_CBD || '').trim().toLowerCase() === 'true';
+const HIDE_CBD = true;
 const CBD_ROUTE_PREFIXES = ['/services/cbd', '/therapies/cbd', '/products/cbd', '/cbd-iv-therapy-bay-area'];
 const CBD_LEARN_PATTERN = /^\/learn\/[a-z0-9-]*cbd/i;
 function isCbdRoutePath(routePath = '') {

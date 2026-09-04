@@ -450,6 +450,97 @@ Findings and fixes:
 
 final result: passed
 
+# Homepage V2 — Essential Copy Pass
+
+## Source visual truth
+
+- Picker reference: `.context/attachments/kA5Men/Screenshot 2026-09-03 at 10.28.17 PM.png` (`2520 × 1424`, double-density browser capture; normalized to `1440 × 814`).
+- Clinical-trust reference: `.context/attachments/sUIeFX/Screenshot 2026-09-03 at 10.27.16 PM.png` (`1288 × 742`; normalized to `1440 × 830`).
+- Product direction: preserve the established Avalon visual system while removing every non-critical word and shortening the mobile journey.
+
+## Implementation evidence
+
+- Full desktop: `.context/homepage-v2-1440.png` (`1440 × 4107`, CSS viewport `1440 × 1000`, device scale `1`).
+- Full mobile: `.context/homepage-v2-390.png` (`780 × 10794`, CSS viewport `390 × 844`, device scale `2`).
+- Picker: `.context/homepage-v2-picker-1440.png` (`1440 × 527`).
+- Clinical trust: `.context/homepage-v2-trust-1440.png` (`1440 × 488`).
+- Service-area default/covered: `.context/homepage-v2-service-area.png` and `.context/homepage-v2-service-area-covered.png`.
+- Side-by-side comparison inputs: `.context/design-qa-homepage-trim-picker.png` and `.context/design-qa-homepage-trim-trust.png`.
+
+## State and interaction verification
+
+- Default homepage, guided-picker completion, address coverage success/outside states, animated map focus, and five county controls.
+- Seven responsive widths plus `1024 × 768`, `1280 × 800`, and `1440 × 900` module-fit checks.
+
+## Findings
+
+- Fonts and typography: display/body hierarchy remains faithful; deleting secondary lines improves optical separation without changing the established type system.
+- Spacing and rhythm: all modules remain screen-fit on the tested desktop displays. Desktop height fell from `4790` to `4107` pixels; mobile from `12842` to `10794` pixels. The reduction is intentional and preserves touch targets.
+- Colors and tokens: cream, espresso, warm-line, and muted-copy tokens remain unchanged. No new contrast regression was introduced.
+- Image quality: hero, product bags, partner marks, and county map remain real source assets with their intended crops. No placeholder or code-drawn asset was added.
+- Copy and content: pricing, licensed-RN care, physician review, clinical clearance, leadership names/roles, intake sequence, deposit, hours, and the exact five-county boundary remain. Repeated explanations, option subtitles, city shortcuts, duplicate map instructions, and event filler were removed.
+- The desktop core promise now bypasses the stacked entrance animation and paints immediately; the fresh-load screenshot visibly includes `WELLNESS DELIVERED`.
+- No actionable P0, P1, or P2 visual mismatch remains. The lower page is materially faster to scan while retaining every critical trust and conversion signal.
+
+## Comparison history
+
+- Pass 1 removed repeated clinical, picker, city, map, and closing copy and tightened module spacing.
+- Pass 2 removed remaining redundant option and journey descriptions, shortened the event band, and preserved functional labels for assistive technology.
+- Pass 3 removed the desktop headline animation race, re-captured the page, and confirmed the promise paints on first load.
+
+## Automated checks
+
+- `npm run lint`: passed (235 source files).
+- `npm run build`: passed (137 route HTML outputs and sitemap).
+- `npm run test:homepage-v2`: passed (7 widths, guided picker, service-area states, short-desktop module fit).
+- `npm run test:cbd`: passed (13 read sites gated; public copy clean).
+- `git diff --check`: passed.
+
+final result: passed
+
+---
+
+# Homepage V2 — Unified Editorial Modules and Clinical Leadership
+
+## Visual evidence
+
+- Source visual truth: `.context/attachments/sUIeFX/Screenshot 2026-09-03 at 10.27.16 PM.png` (`1288 × 742` source pixels).
+- Browser-rendered implementation: `.context/trust-1288x744-final.png` (`1288 × 565` element pixels from a `1288 × 744` Chrome CSS viewport at device scale factor 1).
+- Normalized side-by-side comparison: `.context/design-qa-trust-comparison-final.png`.
+- Full homepage evidence: `.context/homepage-v2-1440.png` (`1440 × 4879`).
+- State: public homepage, warm consumer theme, essential cookie consent resolved, clinical module at rest, no authentication or personal data.
+
+## Findings and comparison history
+
+- [P1 resolved] The previous clinical module used a generic trust strip and a separate visit-flow module. The approved two-column leadership composition now combines the clinician narrative, named leadership card, actions, dispatch assurance, and three-step pre-visit rail in one coherent section.
+- [P2 resolved] Homepage modules used competing widths: most were constrained to `76rem`, while the hero used viewport gutters and the guided picker was full-width. Therapy, leadership, picker, service-area, event, and closing modules now share the hero's responsive viewport gutter and left headline axis.
+- [P2 resolved] Desktop therapy content exceeded short desktop displays. A content-preserving short-desktop density mode now keeps every major module within `1024 × 768`, `1280 × 800`, and `1440 × 900` viewports.
+- [P2 resolved] The first mobile implementation retained desktop leadership and care-path grids, causing horizontal overflow. Both now stack naturally at mobile widths; Chrome reports matching client and scroll widths at `390px`.
+- [P2 resolved] The map exposed counties outside the approved service region. The interactive set, customer-facing coverage copy, and ZIP eligibility source now contain only San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.
+- [P3 accepted] The reference includes a module-local Avalon lockup. The implementation relies on the site's existing persistent consumer header, avoiding a duplicate logo inside the page section.
+- [P3 accepted] The pre-visit rail is slightly denser than the reference so the shared header plus the entire module remain visible on a short desktop display.
+- No actionable P0, P1, or P2 mismatch remains.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the site-wide condensed Avalon display face, body face, weights, uppercase treatment, letter spacing, and `0.84` headline line height now match the hero across every module.
+- Spacing and layout rhythm: all modules share one viewport gutter, headline axis, vertical cadence, warm one-pixel rule language, and compact desktop fit. The clinical card and service map are capped so secondary content does not overpower their headlines.
+- Colors and visual tokens: warm paper, espresso ink, muted taupe, warm stone borders, and cream panels consistently use the homepage token set.
+- Image and icon fidelity: no raster imagery is required by the clinical reference. Existing Lucide medical, shield, identification, clipboard, and care-bag icons provide consistent real icon assets; the service map retains its supplied map asset.
+- Copy and content: the clinician names, roles, clinical oversight, intake, consent, review, and nurse-arrival copy match the approved module. Service-area copy consistently names the five approved counties.
+- Interaction and accessibility: Meet your care team and Read our safety standards are semantic links; county markers are named buttons; the address field remains a combobox; guided picker and map focus interactions pass at all tested widths.
+
+## Browser verification
+
+- Google Chrome executable: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`.
+- Homepage checks passed at `320`, `375`, `390`, `414`, `768`, `1024`, and `1440px` widths, plus short desktop viewports `1024 × 768`, `1280 × 800`, and `1440 × 900`.
+- Verified the guided picker result, five-county map count, covered and outside ZIP states, county city detail, animated map focus, loaded therapy images, first-viewport press alignment, and zero horizontal overflow.
+- Console and page errors: none in final focused clinical capture.
+
+Focused comparison was required because leadership credentials, action alignment, care-path icons, dividers, and small supporting copy were not readable enough in the full-page capture alone.
+
+final result: passed
+
 ---
 
 # Start Mobile Balance and Atomic Form Reveal

@@ -75,9 +75,9 @@ export default function StickyBookBar() {
 
   return (
     <motion.div
-      initial={false}
+      initial={{ y: 64, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.12, ease: EASE }}
+      transition={{ duration: 0.48, ease: EASE }}
       className="av-sticky-book-bar fixed inset-x-0 z-[70] transition-[opacity,transform] duration-200 md:hidden"
       style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)' }}
       aria-label="Quick booking bar"

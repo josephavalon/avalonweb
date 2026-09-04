@@ -50,6 +50,7 @@ import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import { useCart } from '@/context/CartContext';
 import { IV_ADDONS, IV_SESSIONS, IM_SHOTS } from '@/config/verticals';
 import { COVERED_ZIPS, extractZip } from '@/lib/serviceArea';
+import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
 import { useSeo } from '@/lib/seo';
 import {
   appendActivity,
@@ -219,9 +220,14 @@ const OUTCOMES = [
 		    icon: SlidersHorizontal,
 		    productKeys: ['nad', 'cbd', 'myers'],
 		  },
-	];
+	]
+  .filter((outcome) => !(CBD_HIDDEN && outcome.key === 'cbd'))
+  .map((outcome) => CBD_HIDDEN
+    ? { ...outcome, productKeys: outcome.productKeys.filter((key) => !isCbdProtocolKey(key)) }
+    : outcome);
 
-const OTHER_PROTOCOL_KEYS = ['hydration', 'recovery', 'energy', 'myers', 'postnight', 'jetlag', 'immunity', 'beauty', 'nad', 'cbd'];
+const OTHER_PROTOCOL_KEYS = ['hydration', 'recovery', 'energy', 'myers', 'postnight', 'jetlag', 'immunity', 'beauty', 'nad', 'cbd']
+  .filter((key) => !(CBD_HIDDEN && isCbdProtocolKey(key)));
 const BOOKING_THERAPY_KEYS = [
   'hydration',
   'myers',
@@ -244,7 +250,7 @@ const BOOKING_THERAPY_KEYS = [
   'nad-1000mg',
   'nad-1250mg',
   'nad-1500mg',
-];
+].filter((key) => !(CBD_HIDDEN && (isCbdProtocolKey(key) || key.startsWith('cbd-'))));
 const THERAPY_GROUPS = [
   {
     key: 'vitamin',
@@ -274,7 +280,7 @@ const THERAPY_GROUPS = [
     icon: FlaskConical,
     keys: ['nad-250mg', 'nad-500mg', 'nad-750mg', 'nad-vitality', 'nad-1000mg', 'nad-1250mg', 'nad-1500mg'],
   },
-];
+].filter((group) => !(CBD_HIDDEN && group.key === 'cbd'));
 const STACK_LAYERS = [
   { key: 'iv', label: 'IVs', status: 'Base', icon: Droplets, active: true },
   { key: 'addons', label: 'Add-ons', status: 'Step 2', icon: Plus, active: true },
@@ -297,7 +303,7 @@ const CUSTOM_BASE_OPTIONS = [
   { key: 'travel', label: 'Travel IV', productKey: 'jetlag', icon: Plane },
   { key: 'advanced', label: 'IV NAD+', productKey: 'nad', icon: FlaskConical },
   { key: 'cbd', label: 'IV CBD', productKey: 'cbd', icon: CannabisLeaf, badge: 'Review' },
-];
+].filter((option) => !(CBD_HIDDEN && isCbdProtocolKey(option.productKey)));
 
 const CUSTOM_SUBSCRIPTION_VISITS = [
   { key: 1, label: '1x', icon: Calendar },
@@ -579,6 +585,8 @@ function buildDoseProduct(parentKey, key, label) {
 }
 
 function getBookingTherapyByKey(key) {
+  if (CBD_HIDDEN && (isCbdProtocolKey(key) || key?.startsWith('cbd-'))) return null;
+
   const overrides = {
     hydration: { source: 'hydration', label: 'Hydration' },
     myers: { source: 'myers', label: "Myers' Cocktail" },
@@ -591,7 +599,6 @@ function getBookingTherapyByKey(key) {
     'food-poisoning': { source: 'recovery', label: 'Food Poisoning', tagline: 'Hydration support after GI distress.', icon: Thermometer },
   };
 
-  if (key?.startsWith('cbd-')) return buildDoseProduct('cbd', key, `CBD ${key.replace('cbd-', '').toUpperCase()}`);
   if (key?.startsWith('nad-')) return buildDoseProduct('nad', key, `NAD+ ${key.replace('nad-', '').toUpperCase()}`);
 
   const override = overrides[key];
@@ -619,6 +626,11 @@ function therapyGroupForKey(key) {
 
 function safeProtocol(protocol) {
   if (!protocol) return null;
+  if (CBD_HIDDEN && (
+    isCbdProtocolKey(protocol.key)
+    || protocol.parentProtocolKey === 'cbd'
+    || String(protocol.key || '').startsWith('cbd-')
+  )) return null;
   if (protocol.key === 'cbd') return { ...protocol, label: 'CBD', tagline: 'Clinician-reviewed CBD IV wellness appointment.' };
   return protocol;
 }
@@ -5778,9 +5790,7 @@ export default function BookNow() {
   const activeTherapies = activeTherapyGroupData?.items || [];
   const activeTherapyDisplayTitle = activeTherapyGroupData?.key === 'vitamin'
     ? 'IV THERAPY'
-    : activeTherapyGroupData?.key === 'cbd'
-      ? 'IV CBD'
-      : 'IV NAD+ THERAPY';
+    : 'IV NAD+ THERAPY';
   const isIvTherapyMenuStep = step === 0 && !therapyCategoryScreen && activeTherapyGroupData?.key === 'vitamin';
   const progressDisplay = {
     index: step === 0
@@ -5813,7 +5823,6 @@ export default function BookNow() {
     };
     if (overrides[item?.key]) return overrides[item.key];
     if (item?.parentProtocolKey === 'nad') return { label: item.label, line: 'Advanced protocol.' };
-    if (item?.parentProtocolKey === 'cbd') return { label: item.label, line: 'Clinical review.' };
     return { label: item?.tabLabel || item?.label || 'Therapy', line: 'Clinical review.' };
   };
 
@@ -6197,7 +6206,7 @@ export default function BookNow() {
       // Merged base + therapy: a compact category toggle (replaces the old
       // "Choose your base" screen) sits above the therapy list and swaps it
       // inline — no separate screen to click through.
-      const categoryShortLabels = { vitamin: 'IV Vitamins', cbd: 'IV CBD', nad: 'IV NAD+' };
+      const categoryShortLabels = { vitamin: 'IV Vitamins', nad: 'IV NAD+' };
 
       return (
         <div className="grid h-full min-h-0 grid-rows-[auto_1fr] gap-2.5 md:gap-3">

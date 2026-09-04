@@ -119,7 +119,7 @@ export default function Hotel() {
               <h2 className="font-heading text-[2.8rem] uppercase leading-none text-foreground">Coverage</h2>
             </div>
             <p className="relative mt-3 font-body text-sm font-semibold leading-relaxed text-foreground/60">
-              SF, Marin, Peninsula, South Bay, and East Bay hotels. Room number collected at booking.
+              Hotels in San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties. Room number collected at booking.
             </p>
           </GlassCard>
         </Reveal>

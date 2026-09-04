@@ -20,6 +20,7 @@ import {
 } from '@/data/guidedCommerce';
 import { ANALYTICS_EVENTS, trackConsented } from '@/lib/analytics';
 import { clearGuidedFlow, readGuidedFlow, timestampGuidedFlow } from '@/lib/guidedSession';
+import { CBD_HIDDEN, isCbdProtocolKey } from '@/lib/cbdVisibility';
 
 // Nurse Delivery owns the unrestricted entry surface and the single intake.
 // Guided commerce is route-state driven and hands its selection to /start.
@@ -98,7 +99,23 @@ function requestRows({ therapyName, duration }) {
   ];
 }
 
-const BAY_AREA_REGIONS = 'San Francisco · Marin · East Bay · Peninsula · South Bay';
+const BAY_AREA_REGIONS = 'San Francisco · San Mateo · Santa Clara · Alameda · Contra Costa';
+
+const HOMEPAGE_PICKER_LABELS = Object.freeze({
+  hydration: 'Rehydrate',
+  recover: 'Recover',
+  immunity: 'Immune support',
+  energy: 'Energy',
+  beauty: 'Skin and hair',
+  travel: 'Travel reset',
+  today: 'Today',
+  tomorrow: 'Tomorrow',
+  week: 'This week',
+  home: 'Home',
+  hotel: 'Hotel',
+  office: 'Office',
+  other: 'Somewhere else',
+});
 
 function MobileServiceCoverage() {
   return (
@@ -425,12 +442,23 @@ export default function NurseDelivery({ entry = null }) {
     path: entry === 'book' ? '/start' : '/nurse-delivery',
   });
 
-  const therapyParam = searchParams.get('therapy') || '';
+  const rawTherapyParam = searchParams.get('therapy') || '';
+  const therapyParam = CBD_HIDDEN && /(^|[-_\s])cbd($|[-_\s])/i.test(rawTherapyParam)
+    ? ''
+    : rawTherapyParam;
   const guidedSource = searchParams.get('source') === 'guided';
+  const homepagePickerSource = searchParams.get('source') === 'homepage-v2';
   const guidedSelection = guidedSource ? location.state?.guided : null;
-  const guidedOffering = guidedSource ? getGuidedOffering(therapyParam) : null;
+  const guidedOffering = guidedSource || homepagePickerSource ? getGuidedOffering(therapyParam) : null;
   const therapyName = guidedOffering?.name || therapyParam;
-  const protocolKey = searchParams.get('protocol') || '';
+  const rawProtocolKey = searchParams.get('protocol') || '';
+  const protocolKey = CBD_HIDDEN
+    && (isCbdProtocolKey(rawProtocolKey) || rawProtocolKey.toLowerCase().startsWith('cbd-'))
+    ? ''
+    : rawProtocolKey;
+  const homepageGoal = searchParams.get('goal') || '';
+  const homepageTiming = searchParams.get('timing') || '';
+  const homepageLocation = searchParams.get('location') || '';
   const focusedBooking = entryPath === 'book';
   // ProtocolPage deep-links with &protocol=<key>; use its real duration in the
   // request rail instead of the generic range.
@@ -439,6 +467,15 @@ export default function NurseDelivery({ entry = null }) {
     [protocolKey],
   );
   const guidedPrefill = useMemo(() => {
+    if (homepagePickerSource && guidedOffering) {
+      return {
+        GuidedSource: 'Homepage picker',
+        GuidedTherapy: guidedOffering.name,
+        GuidedGoal: HOMEPAGE_PICKER_LABELS[homepageGoal] || homepageGoal,
+        GuidedContext: HOMEPAGE_PICKER_LABELS[homepageLocation] || homepageLocation,
+        GuidedTiming: HOMEPAGE_PICKER_LABELS[homepageTiming] || homepageTiming,
+      };
+    }
     const selectedAnswers = guidedSelection?.answers;
     const goal = getGuidedGoal(selectedAnswers?.goal);
     const context = getGuidedContext(selectedAnswers?.goal, selectedAnswers?.context);
@@ -451,7 +488,7 @@ export default function NurseDelivery({ entry = null }) {
       GuidedContext: context.label,
       GuidedTiming: timing.label,
     };
-  }, [guidedOffering, guidedSelection]);
+  }, [guidedOffering, guidedSelection, homepageGoal, homepageLocation, homepagePickerSource, homepageTiming]);
   useEffect(() => {
     if (focusedBooking && !guidedSource) clearGuidedFlow();
   }, [focusedBooking, guidedSource]);

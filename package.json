@@ -34,6 +34,7 @@
     "test:compliance": "node scripts/compliance-copy-qa.mjs",
     "test:privacy": "node scripts/privacy-qa.mjs",
     "test:front-door": "node scripts/front-door-qa.mjs",
+    "test:homepage-v2": "node scripts/homepage-v2-qa.mjs",
     "test:cbd": "node scripts/cbd-visibility-qa.mjs",
     "test:no-phi-in-stripe": "node scripts/no-phi-in-stripe-qa.mjs",
     "test:no-phi-in-hubspot": "node scripts/no-phi-in-hubspot-qa.mjs",

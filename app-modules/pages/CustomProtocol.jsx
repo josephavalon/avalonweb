@@ -9,6 +9,7 @@ import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import Navbar from '@/components/landing/Navbar';
 import ConsumerFooter from '@/components/landing/ConsumerFooter';
 import { useSeo } from '@/lib/seo';
+import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
 const EASE = [0.16, 1, 0.3, 1];
 const QTY_OPTIONS = [1, 2, 3, 4];
@@ -201,12 +202,12 @@ export default function CustomProtocol() {
 
   // ── Price calculation ─────────────────────────────────────────────────
   const effectiveVitaminsQty = isSubscription ? vitaminsQty : 1;
-  const effectiveCbdQty = isSubscription ? cbdQty : 1;
+  const effectiveCbdQty = CBD_HIDDEN ? 0 : isSubscription ? cbdQty : 1;
   const effectiveNadQty = isSubscription ? nadQty : 1;
   const effectiveImQty = (key) => isSubscription ? imQty[key] : 1;
 
   const vitaminsCost = vitaminsOn ? vitaminsVariant.price * effectiveVitaminsQty : 0;
-  const cbdCost      = cbdOn      ? cbdDose.price      * effectiveCbdQty        : 0;
+  const cbdCost      = !CBD_HIDDEN && cbdOn ? cbdDose.price * effectiveCbdQty : 0;
   const nadCost      = nadOn      ? nadDose.price       * effectiveNadQty        : 0;
   const imCost       = IM_OPTIONS
     .filter(s => imSelected.includes(s.key))
@@ -221,7 +222,7 @@ export default function CustomProtocol() {
       price: vitaminsVariant.price,
       total: vitaminsCost,
     },
-    cbdOn && {
+    !CBD_HIDDEN && cbdOn && {
       label: `IV CBD — ${cbdDose.label}`,
       qty:   effectiveCbdQty,
       price: cbdDose.price,
@@ -254,7 +255,7 @@ export default function CustomProtocol() {
       for (let i = 0; i < effectiveNadQty; i++)
         items.push({ cartKey: `iv-nad-${i}`, label: `NAD+ ${nadDose.label}`, price: nadDose.price, type: 'iv' });
     }
-    if (cbdOn && cbdDose) {
+    if (!CBD_HIDDEN && cbdOn && cbdDose) {
       for (let i = 0; i < effectiveCbdQty; i++)
         items.push({ cartKey: `iv-cbd-${i}`, label: `CBD ${cbdDose.label}`, price: cbdDose.price, type: 'iv' });
     }
@@ -346,28 +347,29 @@ export default function CustomProtocol() {
                 </div>
               </TreatmentRow>
 
-              {/* ── IV CBD ── */}
-              <TreatmentRow
-                icon={CannabisLeaf}
-                title="CBD IV Review"
-                tag="Approval gated"
-                fromPrice={250}
-                active={cbdOn}
-                onToggle={() => setCbdOn(v => !v)}
-              >
-                <div className="space-y-2">
-                  <StyledSelect
-                    value={cbdDose.label}
-                    onChange={val => setCbdDose(CBD_DOSES.find(d => d.label === val))}
-                    options={CBD_DOSES.map(d => ({ value: d.label, label: `${d.label}  —  $${d.price}` }))}
-                  />
-                  {isSubscription ? (
-                    <QtyPicker value={cbdQty} onChange={setCbdQty} />
-                  ) : (
-                    <OneTimeNote />
-                  )}
-                </div>
-              </TreatmentRow>
+              {!CBD_HIDDEN && (
+                <TreatmentRow
+                  icon={CannabisLeaf}
+                  title="CBD IV Review"
+                  tag="Approval gated"
+                  fromPrice={250}
+                  active={cbdOn}
+                  onToggle={() => setCbdOn(v => !v)}
+                >
+                  <div className="space-y-2">
+                    <StyledSelect
+                      value={cbdDose.label}
+                      onChange={val => setCbdDose(CBD_DOSES.find(d => d.label === val))}
+                      options={CBD_DOSES.map(d => ({ value: d.label, label: `${d.label}  —  $${d.price}` }))}
+                    />
+                    {isSubscription ? (
+                      <QtyPicker value={cbdQty} onChange={setCbdQty} />
+                    ) : (
+                      <OneTimeNote />
+                    )}
+                  </div>
+                </TreatmentRow>
+              )}
 
               {/* ── IV NAD+ ── */}
               <TreatmentRow
@@ -395,8 +397,7 @@ export default function CustomProtocol() {
               {/* ── IM Shots ── */}
               <div className="av-glass-card relative overflow-hidden rounded-[1.35rem] border border-foreground/12 bg-background/80 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.10),0_22px_86px_hsl(var(--foreground)/0.075)] backdrop-blur-2xl md:rounded-[1.6rem]">
                 <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,hsl(var(--foreground)/0.12),transparent_38%),linear-gradient(135deg,hsl(var(--foreground)/0.055),transparent_55%,hsl(var(--foreground)/0.028))]" />
-                {/* Audit finding H3: section header parity with IV VITAMINS /
-                    IV NAD+ / IV CBD — same size, tracking, and eyebrow style. */}
+              {/* Keep section header sizing consistent with the IV treatment rows. */}
                 <div className="mb-1 flex items-center gap-2">
                   <Syringe className="h-4 w-4 text-foreground/65" strokeWidth={1.5} />
                   <span className="font-heading text-2xl uppercase leading-none tracking-normal text-foreground md:text-[2rem]">IM Shots</span>

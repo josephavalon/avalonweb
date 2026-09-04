@@ -49,6 +49,18 @@ function FooterLink({ link }) {
   return <Link to={link.to}>{link.label}</Link>;
 }
 
+function CookieSettingsLink() {
+  return (
+    <button
+      type="button"
+      className="nd-footer__cookie-link"
+      onClick={() => window.dispatchEvent(new CustomEvent('avalon:cookiePreferencesRequested'))}
+    >
+      Cookie settings
+    </button>
+  );
+}
+
 export default function ConsumerFooter({ globalMobile = false }) {
   const idPrefix = useId().replace(/:/g, '');
 
@@ -77,6 +89,7 @@ export default function ConsumerFooter({ globalMobile = false }) {
               <h2 id={`${idPrefix}-footer-${group.label.toLowerCase()}-desktop`}>{group.label}</h2>
               <nav aria-label={group.label}>
                 {group.links.map((link) => <FooterLink key={link.label} link={link} />)}
+                {group.label === 'Legal' ? <CookieSettingsLink /> : null}
               </nav>
             </section>
 
@@ -87,6 +100,7 @@ export default function ConsumerFooter({ globalMobile = false }) {
               </summary>
               <nav aria-label={group.label}>
                 {group.links.map((link) => <FooterLink key={link.label} link={link} />)}
+                {group.label === 'Legal' ? <CookieSettingsLink /> : null}
               </nav>
             </details>
           </Fragment>

@@ -26,13 +26,11 @@ export const LOCAL_BUSINESS_PROFILE = {
     addressCountry: 'US',
   },
   areaServed: [
-    { '@type': 'AdministrativeArea', name: 'San Francisco Bay Area' },
-    { '@type': 'City', name: 'San Francisco' },
-    { '@type': 'City', name: 'Oakland' },
-    { '@type': 'City', name: 'San Jose' },
-    { '@type': 'City', name: 'Palo Alto' },
-    { '@type': 'City', name: 'Napa' },
-    { '@type': 'City', name: 'Sonoma' },
+    { '@type': 'AdministrativeArea', name: 'San Francisco County' },
+    { '@type': 'AdministrativeArea', name: 'San Mateo County' },
+    { '@type': 'AdministrativeArea', name: 'Santa Clara County' },
+    { '@type': 'AdministrativeArea', name: 'Alameda County' },
+    { '@type': 'AdministrativeArea', name: 'Contra Costa County' },
   ],
   medicalSpecialty: 'Mobile wellness and IV therapy review',
   openingHoursSpecification: [{
@@ -84,7 +82,7 @@ export const servicePillars = [
     title: 'Mobile IV Therapy Bay Area — Avalon Vitality',
     description: 'Premium mobile IV therapy across the Bay Area with licensed registered nurses, clinician-reviewed intake, and mobile appointments at homes, hotels, offices, and events.',
     intro: 'Avalon brings clinician-reviewed mobile IV appointments to eligible clients across the San Francisco Bay Area. Sessions are designed to support hydration, recovery, and wellness while keeping medical clearance and registered nurse execution at the center.',
-    angle: 'The core Avalon service page for clients comparing premium mobile IV therapy across San Francisco, the East Bay, Marin, Peninsula, South Bay, Napa, and Sonoma.',
+    angle: 'The core Avalon service page for clients comparing premium mobile IV therapy across San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.',
     services: defaultServiceMix,
     relatedLocations: regionalLinks,
     relatedArticles: articleLinks,
@@ -112,7 +110,7 @@ export const servicePillars = [
     intro: 'NAD+ is a coenzyme involved in cellular energy metabolism. Avalon offers mobile NAD+ appointments only when the clinical team confirms eligibility, dose approach, visit length, and appointment setting.',
     angle: 'For performance and longevity-minded clients who want a premium mobile workflow with careful screening and conservative expectations.',
     services: ['NAD+ appointment review', 'Dose and duration guidance by clinical team', 'Licensed Registered Nurse administration', 'Home, hotel, and office appointments when eligible', 'Follow-up routing when needed'],
-    relatedLocations: ['san-francisco', 'palo-alto', 'san-jose', 'marin', 'napa', 'sonoma'],
+    relatedLocations: ['san-francisco', 'palo-alto', 'san-jose', 'san-mateo', 'oakland', 'walnut-creek'],
     relatedArticles: ['what-is-nad-iv-therapy', 'nad-iv-therapy-bay-area-guide', 'how-long-does-nad-iv-therapy-take'],
   },
   {
@@ -179,7 +177,7 @@ export const servicePillars = [
     intro: 'Avalon supports hotel-based mobile appointments for eligible guests across key Bay Area markets. The flow is designed for concierge simplicity: request, intake, clinical review, registered nurse dispatch, and follow-up.',
     angle: 'Hospitality and concierge page for hotels, VIP guests, and partner properties.',
     services: ['Hotel room appointments', 'Concierge coordination', 'VIP recovery support', 'Group visit planning', 'Clinical clearance before service'],
-    relatedLocations: ['san-francisco', 'napa', 'sonoma', 'marin', 'palo-alto', 'san-jose'],
+    relatedLocations: ['san-francisco', 'palo-alto', 'san-jose', 'san-mateo', 'oakland', 'walnut-creek'],
     relatedArticles: ['hotel-recovery-service-for-vip-guests', 'what-to-expect-during-a-mobile-iv-appointment', 'how-clinical-clearance-works-before-iv-therapy'],
   },
   {
@@ -192,7 +190,7 @@ export const servicePillars = [
     intro: 'Avalon launch service supports private parties, brand activations, corporate groups, festivals, and hotel programs with clinician-reviewed guest workflows and licensed registered nurse staffing.',
     angle: 'The money page for group bookings, launch presales, branded recovery lounges, and festival support.',
     services: ['Event recovery lounges', 'Presale and guest registration support', 'Licensed Registered Nurse staffing', 'Group intake and clearance planning', 'On-site recovery support'],
-    relatedLocations: ['san-francisco', 'oakland', 'san-jose', 'napa', 'sonoma', 'marin'],
+    relatedLocations: ['san-francisco', 'oakland', 'san-jose', 'san-mateo', 'palo-alto', 'walnut-creek'],
     relatedArticles: ['iv-therapy-for-events', 'recovery-lounges-for-festivals', 'mobile-iv-therapy-for-private-parties'],
   },
   {
@@ -218,7 +216,7 @@ export const servicePillars = [
     intro: 'Avalon supports festival recovery concepts with presale pages, guest registration, clinical routing before the event, and staffing plans designed around throughput and safety.',
     angle: 'Event producer page for recovery lounges, presales, and high-volume festival guest flow.',
     services: ['Festival recovery lounges', 'Presale page support', 'Guest intake and GFE routing', 'On-site registered nurse staffing', 'Throughput planning'],
-    relatedLocations: ['san-francisco', 'oakland', 'napa', 'sonoma', 'san-jose', 'marin'],
+    relatedLocations: ['san-francisco', 'oakland', 'san-jose', 'san-mateo', 'palo-alto', 'walnut-creek'],
     relatedArticles: ['recovery-lounges-for-festivals', 'iv-therapy-for-events', 'mobile-recovery-therapy-for-events'],
   },
   {
@@ -231,7 +229,7 @@ export const servicePillars = [
     intro: 'Avalon is built for high-touch wellness requests that need speed, discretion, clinical review, and a premium guest experience. Mobile appointments are available only when the client is clinically eligible.',
     angle: 'Premium concierge page for private assistants, hotels, VIP guests, and event hosts.',
     services: ['Concierge intake support', 'Private home and hotel appointments', 'VIP group coordination', 'Event and travel recovery support', 'Clinical review before service'],
-    relatedLocations: ['san-francisco', 'marin', 'napa', 'sonoma', 'palo-alto', 'walnut-creek'],
+    relatedLocations: ['san-francisco', 'oakland', 'san-jose', 'san-mateo', 'palo-alto', 'walnut-creek'],
     relatedArticles: ['hotel-recovery-service-for-vip-guests', 'what-to-expect-during-a-mobile-iv-appointment', 'mobile-recovery-therapy-bay-area-guide'],
   },
 ];
@@ -623,7 +621,7 @@ const article = (slug, cluster, title, description, points, relatedPillars = ['m
 
 export const educationArticles = [
   article('what-is-mobile-iv-therapy', 'IV Therapy', 'What is mobile IV therapy?', 'A plain-language guide to mobile IV therapy, clinical review, licensed registered nurse appointments, and Bay Area mobile service expectations.', ['Mobile IV therapy brings an eligible IV appointment to a home, hotel, office, or event setting.', 'Avalon uses clinician-reviewed intake before service, not self-prescribed IV selection.', 'The goal is hydration and wellness support when the clinical team determines the appointment is appropriate.']),
-  article('how-mobile-iv-therapy-works-in-the-bay-area', 'IV Therapy', 'How mobile IV therapy works in the Bay Area', 'How Avalon coordinates mobile IV therapy across San Francisco, the East Bay, Peninsula, South Bay, Marin, Napa, and Sonoma.', ['Clients request a service window and location.', 'Intake and clearance happen before registered nurse dispatch.', 'Timing depends on nurse coverage, supplies, location, and clinical eligibility.']),
+  article('how-mobile-iv-therapy-works-in-the-bay-area', 'IV Therapy', 'How mobile IV therapy works in the Bay Area', 'How Avalon coordinates mobile IV therapy across San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.', ['Clients request a service window and location.', 'Intake and clearance happen before registered nurse dispatch.', 'Timing depends on nurse coverage, supplies, location, and clinical eligibility.']),
   article('iv-therapy-vs-clinic-based-hydration', 'IV Therapy', 'IV therapy vs. clinic-based hydration', 'Compare mobile IV appointments with clinic-based hydration settings using safe, practical expectations.', ['Mobile appointments reduce travel and waiting room friction.', 'Clinic-based care may be better for clients needing in-person physician evaluation.', 'Avalon mobile service is only for eligible wellness-support use cases.']),
   article('what-to-expect-during-a-mobile-iv-appointment', 'IV Therapy', 'What to expect during a mobile IV appointment', 'What clients can expect before, during, and after a mobile IV therapy appointment with Avalon.', ['Expect intake, consent, and clinical review before service.', 'A licensed registered nurse confirms identity, supplies, and appointment details.', 'The protocol may be adjusted or declined by the clinical team.']),
   article('how-clinical-clearance-works-before-iv-therapy', 'IV Therapy', 'How clinical clearance works before IV therapy', 'How Avalon handles intake, clinical review, GFE routing, and eligibility before a mobile IV appointment.', ['New clients may need a Good Faith Exam before service.', 'Clinical review can change the protocol or route a client to other care.', 'Clearance supports safety, documentation, and legal operation.']),
@@ -657,7 +655,7 @@ export const educationArticles = [
   article('mobile-iv-therapy-in-san-mateo', 'Locations', 'Mobile IV therapy in San Mateo', 'Mobile IV therapy and recovery support expectations for eligible clients in San Mateo.', ['San Mateo supports Peninsula appointment planning.', 'Hotel, home, and office requests can be reviewed.', 'Clinical clearance comes before registered nurse dispatch.'], ['mobile-iv-therapy-bay-area']),
   article('mobile-iv-therapy-in-palo-alto', 'Locations', 'Mobile IV therapy in Palo Alto', 'Mobile IV therapy and recovery support expectations for eligible clients in Palo Alto.', ['Palo Alto requests often include home, office, and executive wellness settings.', 'NAD+ appointments may require longer scheduling windows.', 'Eligibility and protocol are clinician-reviewed.'], ['nad-iv-therapy-bay-area', 'mobile-iv-therapy-bay-area']),
   article('mobile-iv-therapy-in-san-jose', 'Locations', 'Mobile IV therapy in San Jose', 'Mobile IV therapy and recovery support expectations for eligible clients in San Jose.', ['San Jose appointments depend on routing and nurse availability.', 'Corporate and event requests can be planned in advance.', 'Final service depends on clinical approval.'], ['mobile-iv-therapy-bay-area', 'corporate-wellness-bay-area']),
-  article('mobile-recovery-therapy-across-the-bay-area', 'Locations', 'Mobile recovery therapy across the Bay Area', 'How Avalon approaches mobile recovery therapy across San Francisco, East Bay, Peninsula, South Bay, Marin, Napa, and Sonoma.', ['Bay Area coverage varies by market and appointment type.', 'Events and hotels should be planned early.', 'Mobile recovery support stays wellness-focused and eligibility-reviewed.'], ['mobile-recovery-therapy-bay-area', 'recovery-therapy-bay-area']),
+  article('mobile-recovery-therapy-across-the-bay-area', 'Locations', 'Mobile recovery therapy across the Bay Area', 'How Avalon approaches mobile recovery therapy across San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.', ['Bay Area coverage varies by market and appointment type.', 'Events and hotels should be planned early.', 'Mobile recovery support stays wellness-focused and eligibility-reviewed.'], ['mobile-recovery-therapy-bay-area', 'recovery-therapy-bay-area']),
 ];
 
 export const educationClusters = [...new Set(educationArticles.map((item) => item.cluster))];
@@ -850,7 +848,7 @@ export const publicStaticRoutes = [
   {
     path: '/service-area',
     title: 'Bay Area Service Area — Avalon Vitality',
-    description: 'Avalon Vitality service area coverage for San Francisco, East Bay, Peninsula, South Bay, Marin, Napa, and Sonoma.',
+    description: 'Avalon Vitality service area coverage for San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.',
     h1: 'Bay Area Service Area',
     priority: '0.8',
     changefreq: 'monthly',

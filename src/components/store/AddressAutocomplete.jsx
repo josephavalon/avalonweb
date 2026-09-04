@@ -52,6 +52,14 @@ export default function AddressAutocomplete({
       return;
     }
     const q = (value || '').trim();
+    // A complete ZIP is handled by the host form's coverage logic. Do not
+    // leave an irrelevant street-search menu open over that result.
+    if (/^\d{5}(?:-\d{4})?$/.test(q)) {
+      setResults([]);
+      setOpen(false);
+      setLoading(false);
+      return;
+    }
     if (q.length < minChars) {
       setResults([]);
       setOpen(false);

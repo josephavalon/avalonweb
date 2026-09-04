@@ -10142,18 +10142,24 @@ body:has(.nd-hero) {
 .nd-safari-tint-bar {
   display: flex;
   width: 100%;
-  height: 2rem;
+  height: 2.75rem;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
   background: #2b211b;
   color: #fffdf8;
   font-family: var(--font-body);
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.nd-safari-tint-bar > span {
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
 }
 
 .nd-safari-tint-bar a {
@@ -10186,7 +10192,7 @@ body:has(.nd-hero) {
 }
 
 .nd-global-corner-header__spacer--with-tint {
-  height: 7.4rem;
+  height: 8.15rem;
 }
 
 .nd-corner-header {
@@ -10453,11 +10459,11 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
   .nd-safari-tint-bar {
     display: flex;
     box-sizing: border-box;
-    height: 2.15rem;
+    height: 2.75rem;
     padding: 0 0.8rem;
     flex-wrap: nowrap;
     gap: 0.65rem;
-    font-size: 0.58rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
   }
 
@@ -10468,7 +10474,7 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
 
   .nd-safari-tint-bar a {
     display: inline-flex;
-    min-height: 0 !important;
+    min-height: 2.75rem !important;
     align-items: center;
   }
 
@@ -10477,7 +10483,7 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
   }
 
   .nd-global-corner-header__spacer--with-tint {
-    height: 6.4rem;
+    height: 7rem;
   }
 
   .nd-corner-header {
@@ -10538,12 +10544,12 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
    safe-area inset; use that value without inventing additional vertical space. */
 @media (max-width: 900px) and (hover: none) and (pointer: coarse) {
   html.av-ios-browser .nd-safari-tint-bar {
-    height: calc(2.15rem + env(safe-area-inset-top, 0px));
+    height: calc(2.75rem + env(safe-area-inset-top, 0px));
     padding-top: env(safe-area-inset-top, 0px);
   }
 
   html.av-ios-browser .nd-global-corner-header__spacer--with-tint {
-    height: calc(6.4rem + env(safe-area-inset-top, 0px));
+    height: calc(7rem + env(safe-area-inset-top, 0px));
   }
 }
 
@@ -10552,8 +10558,8 @@ body:has(.nd-corner-header) .av-scroll-progress__bar {
     gap: 0.45rem;
     padding-right: 0.6rem;
     padding-left: 0.6rem;
-    font-size: 0.52rem;
-    letter-spacing: 0.07em;
+    font-size: 0.65rem;
+    letter-spacing: 0.025em;
   }
 }
 
@@ -12051,7 +12057,7 @@ html.av-cream :where(.bg-foreground, .bg-accent, .bg-primary, .bg-neutral-900, .
   }
 
   body:has(.nd-home) .nd-global-corner-header__spacer--with-tint {
-    height: 7rem;
+    height: 7.75rem;
   }
 
   body:has(.nd-home) .nd-corner-header {
@@ -14051,7 +14057,7 @@ html.av-browser-espresso #root {
    the intake. The header is decoration; the form is the job, so the space comes
    out of the logo, the round action buttons, and the announcement bar rather
    than out of the fields a patient has to read and fill.
-   The announcement bar reads "MOBILE WELLNESS, DELIVERED. START YOUR VISIT" —
+   The announcement bar promotes founder pricing and links to the visit flow —
    a call to action pointing at the page it is already on. It is the first 32px
    to go when the window is short. */
 @media (min-width: 1024px) and (max-height: 899px) {
@@ -14184,6 +14190,24 @@ html.av-browser-espresso #root {
     font-size: 0.65rem !important;
     line-height: 1.3 !important;
   }
+}
+
+/* Cookie controls belong in the footer on compact screens. Keeping the
+   post-consent launcher fixed over the page covered the homepage START card. */
+.nd-footer__cookie-link {
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nd-footer__cookie-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
 }
 /* Once Cognito swaps in its confirmation it sets .is-success on the form. The
    surrounding Avalon microcopy is written in the future tense ("we'll text

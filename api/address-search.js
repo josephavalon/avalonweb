@@ -61,6 +61,10 @@ export default async function handler(req, res) {
     q: query,
     addressdetails: '1',
     countrycodes: 'us',
+    // Keep predictive results local to Avalon's operating region instead of
+    // surfacing same-named streets from elsewhere in the country.
+    viewbox: '-123.25,38.95,-121.55,36.75',
+    bounded: '1',
     limit: '6',
   });
 
@@ -85,7 +89,7 @@ export default async function handler(req, res) {
       const stateCode = stateFromAddress(address);
       const zip = String(address.postcode || '').split(';')[0].trim().slice(0, 5);
       // Only surface results precise enough to use (need a street + city).
-      if (!street || !city) continue;
+      if (!street || !city || stateCode !== 'CA') continue;
       const label = [street, city, [stateCode, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
       if (seen.has(label)) continue;
       seen.add(label);

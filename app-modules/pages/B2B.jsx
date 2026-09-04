@@ -4,6 +4,7 @@ import { motion } from '@/components/ui/PageTransitionMotion';
 import { ArrowRight, Plus } from 'lucide-react';
 import { B2B_PRODUCTS, COMPRESSION_ADDON, COUPONS, B2B_IV_INVENTORY, B2B_IV_SOLD, IM_SHOT_INVENTORY, IM_SHOT_SOLD } from '@/data/b2bProducts';
 import { useSeo } from '@/lib/seo';
+import { CBD_HIDDEN } from '@/lib/cbdVisibility';
 
 // Group recovery landing for teams, events, hotels, and offices.
 
@@ -22,6 +23,14 @@ function StarBurst({ className, style }) {
 // Skeleton + reveal primitives (Apple-polish, premium-medical feel)
 // ----------------------------------------------------------------------------
 const REVEAL_EASE = [0.22, 1, 0.36, 1];
+const PUBLIC_B2B_PRODUCTS = B2B_PRODUCTS.filter((product) => !(
+  CBD_HIDDEN
+  && (
+    String(product.id || '').toLowerCase().includes('cbd')
+    || String(product.name || '').toLowerCase().includes('cbd')
+    || product.consumes?.some((item) => String(item).toLowerCase().includes('cbd'))
+  )
+));
 
 function SkeletonBar({ className = '', extraClass = '' }) {
   return <div className={`skeleton-bar rounded-md ${className} ${extraClass}`} aria-hidden="true" />;
@@ -129,7 +138,7 @@ export default function B2B() {
   });
 
   // ---- state ----
-  const [productId, setProductId] = useState(B2B_PRODUCTS[0].id);
+  const [productId, setProductId] = useState(PUBLIC_B2B_PRODUCTS[0].id);
   const [compression, setCompression] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -140,7 +149,7 @@ export default function B2B() {
   const b2bRef = useMemo(() => `B2B-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, []);
   const [quantities, setQuantities] = useState(() => {
     const q = {};
-    B2B_PRODUCTS.forEach((p) => { q[p.id] = 1; });
+    PUBLIC_B2B_PRODUCTS.forEach((p) => { q[p.id] = 1; });
     return q;
   });
   const setQuantity = (id, n) => setQuantities((prev) => ({ ...prev, [id]: Math.max(1, Math.min(25, parseInt(n, 10) || 1)) }));
@@ -151,7 +160,7 @@ export default function B2B() {
 
   // ---- derived ----
   const product = useMemo(
-    () => B2B_PRODUCTS.find((p) => p.id === productId),
+    () => PUBLIC_B2B_PRODUCTS.find((p) => p.id === productId),
     [productId]
   );
   const b2bIvRemaining = Math.max(0, B2B_IV_INVENTORY - B2B_IV_SOLD);
@@ -617,7 +626,7 @@ export default function B2B() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
             {isLoading
               ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`sk-s-${i}`} variant="single" />)
-              : B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p, i) => {
+              : PUBLIC_B2B_PRODUCTS.filter((p) => p.kind === 'single').map((p, i) => {
                   const showIvCount = p.consumes?.includes('b2bIv');
                   const ivCardSoldOut = showIvCount && b2bIvSoldOut;
                   const showImCount = !showIvCount && p.consumes?.includes('imShot');
@@ -720,7 +729,7 @@ export default function B2B() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
             {isLoading
               ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={`sk-b-${i}`} variant="bundle" />)
-              : B2B_PRODUCTS.filter((p) => p.kind === 'bundle').map((p, i) => {
+              : PUBLIC_B2B_PRODUCTS.filter((p) => p.kind === 'bundle').map((p, i) => {
                   const active = p.id === productId;
                   const savings = p.originalPrice ? p.originalPrice - p.price : 0;
                   const showIvCount = p.consumes?.includes('b2bIv');

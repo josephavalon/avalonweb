@@ -17,7 +17,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'What areas do you serve?',
-        a: 'San Francisco and five surrounding Bay Area counties. Enter your address at checkout to confirm availability.',
+        a: 'Avalon currently serves San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties. Enter your address at checkout to confirm availability.',
       },
       {
         q: 'What are your hours?',
@@ -71,7 +71,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Do I need a consultation first?',
-        a: 'Standard IV sessions do not require a prior consultation. NAD+ and CBD sessions require a brief health screening completed at booking.',
+        a: 'Standard IV sessions do not require a prior consultation. NAD+ sessions require a brief health screening completed at booking.',
       },
       {
         q: 'Is IV therapy safe?',

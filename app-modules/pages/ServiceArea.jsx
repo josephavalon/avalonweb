@@ -27,15 +27,6 @@ const ZONES = [
     ],
   },
   {
-    region: 'Marin County',
-    sub: 'San Rafael, Mill Valley, Tiburon, and more',
-    areas: [
-      'San Rafael', 'Mill Valley', 'Tiburon', 'Sausalito', 'Corte Madera',
-      'Larkspur', 'Fairfax', 'Novato', 'Greenbrae', 'Kentfield',
-      'Ross', 'San Anselmo', 'Belvedere', 'Strawberry',
-    ],
-  },
-  {
     region: 'Peninsula & South Bay',
     sub: 'Palo Alto through San Jose — same-day available',
     areas: [
@@ -84,11 +75,6 @@ const PRIMARY_SERVICE_AREAS = [
   'Cupertino',
   'Santa Clara',
   'San Jose',
-  'Mill Valley',
-  'Sausalito',
-  'Tiburon',
-  'San Rafael',
-  'Novato',
 ];
 
 const serviceAreaJsonLd = {
@@ -100,7 +86,7 @@ const serviceAreaJsonLd = {
       url: 'https://www.avalonvitality.co/service-area',
       name: 'Mobile IV Therapy Service Area in the San Francisco Bay Area',
       description:
-        'Avalon Vitality provides mobile IV therapy and IM injections across San Francisco, Marin, the Peninsula, South Bay, and East Bay.',
+        'Avalon Vitality provides mobile IV therapy and IM injections across San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.',
       isPartOf: { '@id': 'https://www.avalonvitality.co/#website' },
       about: { '@id': 'https://www.avalonvitality.co/#localbusiness' },
     },
@@ -283,7 +269,7 @@ export default function ServiceArea() {
   useSeo({
     title: 'Mobile IV Therapy Service Area in the San Francisco Bay Area — Avalon Vitality',
     description:
-      'Avalon Vitality delivers administered by registered nurses mobile IV therapy and IM injections across San Francisco, Oakland, Berkeley, Marin, Peninsula, South Bay, and East Bay cities.',
+      'Avalon Vitality delivers registered-nurse mobile IV therapy and IM injections across San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.',
     path: '/service-area',
     jsonLd: serviceAreaJsonLd,
   });
@@ -306,7 +292,7 @@ export default function ServiceArea() {
               className="font-body text-sm md:text-base text-foreground/55 max-w-xl mb-10"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.12 }}
             >
-              Licensed Registered Nurse visits across San Francisco, Marin, the Peninsula, South Bay, and East Bay.
+              Licensed Registered Nurse visits across San Francisco, San Mateo, Santa Clara, Alameda, and Contra Costa counties.
             </motion.p>
 
             {/* Zip code checker */}

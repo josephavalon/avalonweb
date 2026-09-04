@@ -38,6 +38,7 @@ export const ANALYTICS_EVENTS = Object.freeze({
 
   // Intake front door — anonymous only. No submit event: the form payload is PHI.
   START_CLICKED: 'start_clicked',
+  SECTION_VIEWED: 'section_viewed',
   COGNITO_FORM_LOADED: 'cognito_form_loaded',
   GUIDED_FLOW_STARTED: 'guided_flow_started',
   GOAL_SELECTED: 'goal_selected',

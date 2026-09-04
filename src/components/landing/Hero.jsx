@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, List } from 'lucide-react';
 import AsSeenAt from '@/components/landing/AsSeenAt';
@@ -9,7 +9,7 @@ import ConsumerFooter from '@/components/landing/ConsumerFooter';
 // only card; the other two are ghost pills at an obviously lower tier.
 const PRIMARY_PATH = {
   title: 'Start',
-  description: 'Begin your care in seconds.',
+  description: 'Care in seconds.',
   to: '/start',
   ariaLabel: 'Start a therapy request with an Avalon concierge',
 };
@@ -17,7 +17,7 @@ const PRIMARY_PATH = {
 const SECONDARY_PATHS = [
   {
     title: 'Help me choose',
-    description: 'We’ll help you find your therapy.',
+    description: '',
     // A bare glyph, not lucide's HelpCircle: the mark already sits inside a
     // bordered circle, and HelpCircle would draw a second ring inside the first.
     glyph: '?',
@@ -26,14 +26,14 @@ const SECONDARY_PATHS = [
   },
   {
     title: 'Therapies',
-    description: 'Browse all therapies.',
+    description: '',
     icon: List,
     to: '/protocols',
     ariaLabel: 'Browse the therapy menu',
   },
 ];
 
-export default function Hero() {
+export default function Hero({ showTail = true, showPress = showTail, enhanced = false }) {
   const sectionRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -48,6 +48,17 @@ export default function Hero() {
   useLayoutEffect(() => {
     const section = sectionRef.current;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (section && enhanced && !reduceMotion) {
+      try {
+        if (!window.sessionStorage.getItem('avalon.home.hero-entered.v2')) {
+          section.classList.add('nd-hero--enter');
+          window.sessionStorage.setItem('avalon.home.hero-entered.v2', '1');
+        }
+      } catch {
+        section.classList.add('nd-hero--enter');
+      }
+    }
 
     if (!section || reduceMotion || !('IntersectionObserver' in window)) {
       return undefined;
@@ -130,7 +141,11 @@ export default function Hero() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="nd-hero" aria-labelledby="nd-hero-title">
+    <section
+      ref={sectionRef}
+      className={`nd-hero${enhanced ? ' nd-hero--enhanced' : ''}`}
+      aria-labelledby="nd-hero-title"
+    >
       <div className="nd-hero__split">
         <div className="nd-hero__editorial">
           <div className="nd-hero__mobile-panel">
@@ -206,7 +221,7 @@ export default function Hero() {
                   </span>
                   <span className="nd-ghost__copy">
                     <strong>{path.title}</strong>
-                    <span className="nd-ghost__description">{path.description}</span>
+                    {path.description ? <span className="nd-ghost__description">{path.description}</span> : null}
                   </span>
                   {/* Mobile only. On desktop the two cells sit side by side and
                       the hairline between them carries the affordance; stacked
@@ -239,11 +254,13 @@ export default function Hero() {
         <span>Human verified</span>
       </div>
 
-      <div className="nd-press">
-        <AsSeenAt tone="light" />
-      </div>
+      {showPress ? (
+        <div className="nd-press">
+          <AsSeenAt tone="light" />
+        </div>
+      ) : null}
 
-      <ConsumerFooter />
+      {showTail ? <ConsumerFooter /> : null}
     </section>
   );
 }

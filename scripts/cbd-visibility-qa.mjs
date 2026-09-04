@@ -1,17 +1,15 @@
 // CBD visibility QA.
 //
-// CBD IV is held from the public apex pending clinical + legal review, but it
-// stays reachable on beta so that review can continue. VITE_HIDE_CBD is the
-// single lever (src/lib/cbdVisibility.js), and a build flag with no runtime
-// preview is exactly the kind of thing that rots silently — nobody notices a
-// hidden category quietly coming back.
+// CBD IV is permanently suppressed from every customer-facing build. The
+// catalog retains compatibility data for historical orders, so each public
+// read site must still apply the shared CBD_HIDDEN gate.
 //
 // This is the tripwire. Two classes of check:
 //
 //   * SOURCE checks (always run) — the gates are still wired at each read site,
 //     and the Node-side copy of the route matcher in build-seo-html.mjs has not
 //     drifted from the browser-side one in src/lib/cbdVisibility.js.
-//   * BUILD checks (only when dist/ exists) — the prerendered HTML and
+//   * BUILD checks (when dist/ exists) — the prerendered HTML and
 //     sitemap.xml actually came out clean.
 //
 // The drift check matters most. build-seo-html.mjs cannot import
@@ -42,7 +40,7 @@ async function exists(rel) {
 }
 
 // Every read site that must consult CBD_HIDDEN. If someone deletes a gate, the
-// category reappears on the apex with no other signal.
+// category can reappear with no other signal.
 const GATED_READ_SITES = [
   ['src/pages/ConsumerMenu.jsx', 'the /protocols IV CBD section (THE ROUTED MENU)'],
   ['app-modules/pages/Menu.jsx', 'the legacy unrouted menu, kept in sync in case it is revived'],
@@ -53,6 +51,10 @@ const GATED_READ_SITES = [
   ['src/pages/therapies/ProtocolPage.jsx', '/therapies/cbd'],
   ['src/pages/LearnPage.jsx', 'the /learn CBD guides'],
   ['src/App.jsx', '/services/cbd, /events/cannabis-ce and the CBD service pillar'],
+  ['app-modules/pages/BookNow.jsx', 'the active /book catalog and custom base picker'],
+  ['app-modules/pages/NurseDelivery.jsx', 'therapy and protocol deep links into /nurse-delivery'],
+  ['app-modules/pages/CustomProtocol.jsx', 'the /custom treatment builder'],
+  ['app-modules/pages/B2B.jsx', 'the /b2b product catalog'],
 ];
 
 async function checkReadSitesAreGated(failures) {
@@ -199,6 +201,12 @@ async function checkRobotsDoesNotDisallowCbd(failures) {
 async function checkRouteMatcherHasNotDrifted(failures) {
   const browser = await read('src/lib/cbdVisibility.js');
   const node = await read('scripts/build-seo-html.mjs');
+  if (!/export const CBD_HIDDEN\s*=\s*true/.test(browser)) {
+    failures.push('src/lib/cbdVisibility.js: CBD_HIDDEN must remain permanently true.');
+  }
+  if (!/const HIDE_CBD\s*=\s*true/.test(node)) {
+    failures.push('scripts/build-seo-html.mjs: HIDE_CBD must remain permanently true.');
+  }
   const extract = (src) => {
     const m = src.match(/CBD_ROUTE_PREFIXES\s*=\s*\[([\s\S]*?)\]/);
     if (!m) return null;
@@ -218,10 +226,8 @@ async function checkRouteMatcherHasNotDrifted(failures) {
   return undefined;
 }
 
-// Only meaningful after `VITE_HIDE_CBD=true npm run build`. Skipped otherwise so
-// the check is safe to run on a clean checkout.
+// Validate the generated public surface whenever a build is present.
 async function checkBuildOutput(failures) {
-  if (String(process.env.VITE_HIDE_CBD || '').trim().toLowerCase() !== 'true') return;
   if (!(await exists('dist'))) return;
 
   if (await exists('dist/sitemap.xml')) {
@@ -233,13 +239,25 @@ async function checkBuildOutput(failures) {
   }
 
   for (const dir of ['dist/products/cbd', 'dist/therapies/cbd', 'dist/services/cbd', 'dist/cbd-iv-therapy-bay-area']) {
-    if (await exists(dir)) failures.push(`${dir} was prerendered despite VITE_HIDE_CBD=true.`);
+    if (await exists(dir)) failures.push(`${dir} was prerendered despite permanent CBD suppression.`);
   }
 
   if (await exists('dist/learn')) {
     const entries = await fs.readdir(path.join(ROOT, 'dist/learn'));
     const cbd = entries.filter((e) => e.toLowerCase().includes('cbd'));
     if (cbd.length) failures.push(`dist/learn still contains CBD guides: ${cbd.join(', ')}`);
+  }
+}
+
+async function checkActivePublicCopy(failures) {
+  for (const rel of [
+    'app-modules/source/components/landing/FAQ.jsx',
+    'src/content/avalonConciergeKnowledge.js',
+  ]) {
+    const src = await read(rel);
+    if (/\bcbd\b/i.test(src)) {
+      failures.push(`${rel} contains customer-facing CBD copy outside the shared catalog gates.`);
+    }
   }
 }
 
@@ -276,6 +294,7 @@ export async function runCbdVisibilityChecks() {
   await checkVercelRedirect(failures);
   await checkRobotsDoesNotDisallowCbd(failures);
   await checkRouteMatcherHasNotDrifted(failures);
+  await checkActivePublicCopy(failures);
   await checkPublicDirHasNoCbd(failures);
   await checkBuildOutput(failures);
   return failures;
@@ -293,6 +312,6 @@ if (invokedDirectly) {
   }
   console.log(
     `CBD visibility QA passed. ${GATED_READ_SITES.length} read sites gated, `
-    + 'apex 301 scoped to both hosts, route matcher in sync.',
+    + 'public copy clean, route matcher in sync.',
   );
 }

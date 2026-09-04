@@ -1,30 +1,24 @@
 // Main-URL CBD suppression.
 //
-// CBD IV is not abandoned work — seoArchitecture.js says the category is "held
-// from public indexing until Avalon confirms clinical approval and legal
-// review," and beta is where that review continues. So the apex hides it; beta
-// keeps it reachable.
+// CBD IV is retained only as backend compatibility data for historical orders.
+// It must not render on any customer-facing surface or resolve as a public page.
 //
-// This is a BUILD flag, not a host gate. Two reasons:
+// This is a build-wide constant, not a host gate. Two reasons:
 //
 //  1. scripts/build-seo-html.mjs runs in Node at build time and cannot see
 //     window.location, so a host gate could never drop CBD from the prerendered
-//     HTML or sitemap.xml. Each Vercel project runs its own `npm run build` with
-//     its own env, so one flag governs the SPA and the prerender together. Same
-//     pattern as VITE_AVALON_OS_BETA (src/App.jsx + build-seo-html.mjs).
+//     HTML or sitemap.xml, so scripts/build-seo-html.mjs mirrors this permanent
+//     suppression when it creates route files.
 //  2. The host lists in src/lib/frontDoor.js and CareAcuityForward.jsx are
 //     load-bearing for PHI scope and asserted byte-identical against
 //     api/_lib/pre-api-guard.js by scripts/front-door-qa.mjs. Marketing
 //     visibility must not ride on a HIPAA-scope gate.
 //
-// GOTCHA: ?care=1 / ?frontdoor=1 CANNOT preview this. Those arm runtime host
-// gates; this is baked in at build time. To preview locally:
+// GOTCHA: ?care=1 / ?frontdoor=1 are unrelated runtime host gates. CBD is
+// suppressed in every local and hosted build. To preview the result locally:
 //
-//     VITE_HIDE_CBD=true npm run build && node scripts/preview-server.mjs
-//
-// Set VITE_HIDE_CBD=true on the `avalonweb` Vercel project only.
-export const CBD_HIDDEN =
-  String(import.meta.env?.VITE_HIDE_CBD || '').trim().toLowerCase() === 'true';
+//     npm run build && node scripts/preview-server.mjs
+export const CBD_HIDDEN = true;
 
 // Protocol keys treated as CBD. Kept as a set so a future 2nd cannabinoid
 // protocol is a one-line change rather than a grep-and-pray.

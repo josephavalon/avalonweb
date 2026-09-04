@@ -7,6 +7,7 @@ import { transform as swcTransform } from '@swc/core'
 const RETIRED_DEMO_PASSWORD = ['Jon', 'Jones', '1986'].join('');
 
 const API_ROUTES = {
+  '/api/address-search': './api/address-search.js',
   '/api/acuity-availability': './api/acuity-availability.js',
   '/api/acuity-book': './api/acuity-book.js',
   '/api/create-checkout-session': './api/create-checkout-session.js',

@@ -103,6 +103,17 @@ export default function CookieConsent() {
     };
   }, [showConsent, suppressed, view]);
 
+  useEffect(() => {
+    const openPreferences = () => {
+      setView('preferences');
+      setAnalyticsEnabled(storedConsent === 'allowed');
+      setPreferencesOpen(false);
+      setShowConsent(true);
+    };
+    window.addEventListener('avalon:cookiePreferencesRequested', openPreferences);
+    return () => window.removeEventListener('avalon:cookiePreferencesRequested', openPreferences);
+  }, [storedConsent]);
+
   const saveConsent = (value) => {
     writeStoredConsent(value);
     setStoredConsent(value);
@@ -127,7 +138,7 @@ export default function CookieConsent() {
   if (!showConsent && storedConsent) {
     return (
       <div
-        className="av-cookie-control pointer-events-none fixed bottom-[max(env(safe-area-inset-bottom),1rem)] left-4 z-[80] sm:left-5"
+        className="av-cookie-control pointer-events-none fixed bottom-[max(env(safe-area-inset-bottom),1rem)] left-4 z-[80] hidden md:block md:left-5"
         data-testid="cookie-preferences-control"
       >
         <Popover open={preferencesOpen} onOpenChange={handlePreferencesOpenChange}>

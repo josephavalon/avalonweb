@@ -13,11 +13,11 @@ const RESPONSE_BANK = {
   booking:
     'Book in five steps: choose therapy, add-ons, date/time, address, then confirm and pay. After checkout, Avalon reviews intake and a nurse texts you shortly.',
   services:
-    'Avalon offers mobile IV therapy bases including Hydration, Myers Cocktail, Night Out, Immunity, Energy, Recovery, Performance, Jet Lag, and Food Poisoning support. Advanced paths include NAD+ and CBD dose selections when clinically appropriate.',
+    'Avalon offers mobile IV therapy bases including Hydration, Myers Cocktail, Night Out, Immunity, Energy, Recovery, Performance, Jet Lag, and Food Poisoning support. Advanced NAD+ dose selections are available when clinically appropriate.',
   pricing:
     'One-time IV visits use a $50 deposit to book. The remaining balance is due after the visit is completed. Hydration is $200. Most core IV bases are $250 before add-ons, tax, or eligible discounts.',
   advanced:
-    'NAD+ and CBD are dose-based. NAD+ ranges from 250mg to 1500mg with longer appointment windows. CBD ranges from 33mg to 132mg and remains approval-gated. Final eligibility is reviewed clinically.',
+    'NAD+ is dose-based, ranging from 250mg to 1500mg with longer appointment windows. Final eligibility is reviewed clinically.',
   memberships:
     'Memberships are monthly. Starter is $199/mo, Pro is $389/mo, and VIP is $899/mo. Membership checkout charges the first month today and uses the current plan terms shown before payment.',
   discount:
@@ -49,7 +49,7 @@ const INTENTS = [
   },
   {
     key: 'advanced',
-    terms: ['nad', 'cbd', 'dose', 'mg', 'advanced'],
+    terms: ['nad', 'dose', 'mg', 'advanced'],
   },
   {
     key: 'services',

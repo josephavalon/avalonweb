@@ -32,7 +32,7 @@ export default function MobileShell() {
       <div className={`nd-global-corner-header${showSafariTintBar ? ' nd-global-corner-header--with-tint' : ''}`}>
         {showSafariTintBar ? (
           <div className="nd-safari-tint-bar">
-            <span>Mobile wellness, delivered.</span>
+            <span>Founder pricing — IVs from $175.</span>
             <Link to="/start">Start your visit</Link>
           </div>
         ) : null}
