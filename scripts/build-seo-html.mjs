@@ -406,7 +406,7 @@ renderRoutes.forEach((route) => {
 });
 
 writeSitemap(dropCbd(dedupeRoutes([
-  ...publicStaticRoutes,
+  ...publicStaticRoutes.filter((page) => !page.noindex),
   ...indexedServicePillars.map((page) => ({ ...page, priority: '0.85', changefreq: 'weekly' })),
   ...protocolRoutes.filter((page) => !page.noindex),
   ...productRoutes.filter((page) => !page.noindex),

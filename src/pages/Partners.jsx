@@ -14,6 +14,7 @@ export default function Partners() {
     <div className="av-page-surface min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 pt-24 md:pt-28">
+        <h1 className="sr-only">Partnerships</h1>
         <B2BSection />
       </main>
       <ConsumerFooter />
