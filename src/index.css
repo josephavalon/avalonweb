@@ -14438,6 +14438,17 @@ html.av-browser-espresso #root {
   }
 }
 
+/* At 320px, native date/time suffix icons compete with the full values inside
+   half-width fields. Stack only at this smallest tier; the compact rhythm still
+   keeps START inside a 664px viewport. */
+@media (max-width: 350px) {
+  .nd-flow--focused-booking .cognito .cog-row:has(input[type='date']):has(input[type='time']),
+  .nd-flow--focused-booking .cognito-skeleton__appointment-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    row-gap: 0.12rem !important;
+  }
+}
+
 /* Cookie controls belong in the footer on compact screens. Keeping the
    post-consent launcher fixed over the page covered the homepage START card. */
 .nd-footer__cookie-link {
